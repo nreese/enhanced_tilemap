@@ -4,11 +4,11 @@ The existing tilemap visualization's code is contained in serval places
 * [ui/public/vislib/visualizations](https://github.com/elastic/kibana/tree/master/src/ui/public/vislib/visualizations) contains the underpinnins of the visualization itself
 
 Vislib visualizations are created by the following chain. 
- [ui/public/vislib/visualizations/vis_types.js](https://github.com/elastic/kibana/blob/master/src/ui/public/vislib/visualizations/vis_types.js)
- <- 
- [ui/public/vislib/vislib.js](https://github.com/elastic/kibana/blob/master/src/ui/public/vislib/vislib.js) 
- <-  
- [ui/public/vislib/vis.js](https://github.com/elastic/kibana/blob/master/src/ui/public/vislib/vis.js)
+[ui/public/vislib/visualizations/vis_types.js](https://github.com/elastic/kibana/blob/master/src/ui/public/vislib/visualizations/vis_types.js)
+<- 
+[ui/public/vislib/vislib.js](https://github.com/elastic/kibana/blob/master/src/ui/public/vislib/vislib.js) 
+<-  
+[ui/public/vislib/vis.js](https://github.com/elastic/kibana/blob/master/src/ui/public/vislib/vis.js)
 
 ## VislibVisType
 I ran into a road block when trying to migrate tilemap to an external plugin when using the visualization type VislibVisType.
