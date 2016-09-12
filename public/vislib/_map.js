@@ -34,7 +34,7 @@ define(function (require) {
 
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
-      this._markerType = markerTypes[params.markerType] ? params.markerType : defaultMarkerType;
+      this._setMarkerType(params.mapType);
       this._mapCenter = _.get(params, 'center') || defaultMapCenter;
       this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
       this._valueFormatter = params.valueFormatter || _.identity;
@@ -163,7 +163,10 @@ define(function (require) {
      *
      * @method _addMarkers
      */
-    TileMapMap.prototype.addMarkers = function (chartData) {
+    TileMapMap.prototype.addMarkers = function (chartData, newParams) {
+      if(newParams) {
+        this._setMarkerType(newParams.mapType);
+      }
       this._chartData = chartData;
       this._geoJson = _.get(chartData, 'geoJson');
       if (this._markers) this._markers.destroy();
@@ -189,6 +192,10 @@ define(function (require) {
     TileMapMap.prototype._createMarkers = function (options) {
       var MarkerType = markerTypes[this._markerType];
       return new MarkerType(this.map, this._geoJson, options);
+    };
+
+    TileMapMap.prototype._setMarkerType = function (markerType) {
+      this._markerType = markerTypes[markerType] ? markerType : defaultMarkerType;
     };
 
     TileMapMap.prototype._attachEvents = function () {

@@ -38,7 +38,7 @@ define(function (require) {
         chartData.geoJson.properties.allmin = geoMinMax.min;
         chartData.geoJson.properties.allmax = geoMinMax.max;
         if (map === null) appendMap();
-        map.addMarkers(chartData);
+        map.addMarkers(chartData, $scope.vis.params);
       }
     });
 
@@ -55,7 +55,7 @@ define(function (require) {
           mapZoomEnd: mapZoomEnd,
           rectangle: rectangle
         },
-        markerType: params.mapType,
+        mapType: params.mapType,
         tooltipFormatter: Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
         valueFormatter: _.identity,
         attr: params
