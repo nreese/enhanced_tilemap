@@ -35,37 +35,6 @@ define(function (require) {
         canDesaturate: !!supports.cssFilters,
         editor: require('plugins/enhanced_tilemap/options.html')
       },
-      listeners: {
-        rectangle: function (event) {
-          const agg = _.get(event, 'chart.geohashGridAgg');
-          if (!agg) return;
-
-          const pushFilter = Private(FilterBarPushFilterProvider)(getAppState());
-          const indexPatternName = agg.vis.indexPattern.id;
-          const field = agg.fieldName();
-          const filter = {geo_bounding_box: {}};
-          filter.geo_bounding_box[field] = event.bounds;
-
-          pushFilter(filter, false, indexPatternName);
-        },
-        mapMoveEnd: function (event) {
-          const vis = _.get(event, 'chart.geohashGridAgg.vis');
-          if (vis && vis.hasUiState()) {
-            vis.getUiState().set('mapCenter', event.center);
-          }
-        },
-        mapZoomEnd: function (event) {
-          const vis = _.get(event, 'chart.geohashGridAgg.vis');
-          if (vis && vis.hasUiState()) {
-            vis.getUiState().set('mapZoom', event.zoom);
-          }
-
-          const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
-          if (autoPrecision) {
-            courier.fetch();
-          }
-        }
-      },
       schemas: new Schemas([
         {
           group: 'metrics',

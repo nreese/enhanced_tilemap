@@ -7,7 +7,7 @@ import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 define(function (require) {
   var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana']);
   
-  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private) {
+  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config) {
     let aggResponse = Private(require('ui/agg_response/index'));
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
@@ -50,7 +50,10 @@ define(function (require) {
       map = new TileMapMap(container, {
         center: params.mapCenter,
         zoom: params.mapZoom,
-        events: null,
+        callbacks: {
+          mapMoveEnd: mapMoveEnd,
+          mapZoomEnd: mapZoomEnd
+        },
         markerType: params.mapType,
         tooltipFormatter: Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
         valueFormatter: _.identity,
@@ -59,6 +62,57 @@ define(function (require) {
 
       map.addFitControl();
       map.addBoundingControl();
+    }
+
+    const mapMoveEnd = function (event) {
+      const agg = _.get(event, 'chart.geohashGridAgg');
+      if (!agg) return;
+
+      agg.params.mapZoom = event.zoom;
+      agg.params.mapCenter = [event.center.lat, event.center.lng];
+
+      const editableVis = agg.vis.getEditableVis();
+      if (!editableVis) return;
+
+      const editableAgg = editableVis.aggs.byId[agg.id];
+      if (editableAgg) {
+        editableAgg.params.mapZoom = event.zoom;
+        editableAgg.params.mapCenter = [event.center.lat, event.center.lng];
+      }
+    }
+
+    const mapZoomEnd = function (event) {
+      const agg = _.get(event, 'chart.geohashGridAgg');
+      if (!agg || !agg.params.autoPrecision) return;
+
+      // zoomPrecision maps event.zoom to a geohash precision value
+      // event.limit is the configurable max geohash precision
+      // default max precision is 7, configurable up to 12
+      const zoomPrecision = {
+        1: 2,
+        2: 2,
+        3: 2,
+        4: 3,
+        5: 3,
+        6: 4,
+        7: 4,
+        8: 5,
+        9: 5,
+        10: 6,
+        11: 6,
+        12: 7,
+        13: 7,
+        14: 8,
+        15: 9,
+        16: 10,
+        17: 11,
+        18: 12
+      };
+
+      const precision = config.get('visualization:tileMap:maxPrecision');
+      agg.params.precision = Math.min(zoomPrecision[event.zoom], precision);
+
+      courier.fetch();
     }
   });
 });

@@ -33,7 +33,7 @@ define(function (require) {
       this._container = container;
 
       // keep a reference to all of the optional params
-      this._events = _.get(params, 'events');
+      this._callbacks = _.get(params, 'callbacks');
       this._markerType = markerTypes[params.markerType] ? params.markerType : defaultMarkerType;
       this._mapCenter = _.get(params, 'center') || defaultMapCenter;
       this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
@@ -164,6 +164,7 @@ define(function (require) {
      * @method _addMarkers
      */
     TileMapMap.prototype.addMarkers = function (chartData) {
+      this._chartData = chartData;
       this._geoJson = _.get(chartData, 'geoJson');
       if (this._markers) this._markers.destroy();
 
@@ -205,11 +206,8 @@ define(function (require) {
         // update internal center and zoom references
         self._mapCenter = self.map.getCenter();
         self._mapZoom = self.map.getZoom();
-        self._addMarkers();
 
-        if (!self._events) return;
-
-        self._events.emit('mapMoveEnd', {
+        self._callbacks.mapMoveEnd({
           chart: self._chartData,
           map: self.map,
           center: self._mapCenter,
@@ -217,7 +215,7 @@ define(function (require) {
         });
       });
 
-      this.map.on('draw:created', function (e) {
+      /*this.map.on('draw:created', function (e) {
         var drawType = e.layerType;
         if (!self._events || !self._events.listenerCount(drawType)) return;
 
@@ -238,14 +236,15 @@ define(function (require) {
             }
           }
         });
-      });
+      });*/
 
       this.map.on('zoomend', function () {
         if (!self.map) return;
+        self._mapCenter = self.map.getCenter();
         self._mapZoom = self.map.getZoom();
-        if (!self._events) return;
+        if (!self._callbacks) return;
 
-        self._events.emit('mapZoomEnd', {
+        self._callbacks.mapZoomEnd({
           chart: self._chartData,
           map: self.map,
           zoom: self._mapZoom,
@@ -269,8 +268,7 @@ define(function (require) {
       mapOptions.zoom = this._mapZoom;
 
       this.map = L.map(this._container, mapOptions);
-      //this._attachEvents();
-      //this._addMarkers();
+      this._attachEvents();
     };
 
     /**
