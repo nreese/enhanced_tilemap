@@ -11,13 +11,9 @@ define(function (require) {
     var mapTiles = {
       url: 'http://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
       options: {
-        attribution: 'Tiles by <a href="http://www.mapquest.com/">MapQuest</a> &mdash; ' +
-          'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
-          '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
-        subdomains: '1234'
+        attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
       }
     };
-
     var markerTypes = {
       'Scaled Circle Markers': Private(require('./marker_types/scaled_circles')),
       'Shaded Circle Markers': Private(require('./marker_types/shaded_circles')),
@@ -31,19 +27,18 @@ define(function (require) {
      * @class Map
      * @constructor
      * @param container {HTML Element} Element to render map into
-     * @param chartData {Object} Elasticsearch query results for this map
      * @param params {Object} Parameters used to build a map
      */
-    function TileMapMap(container, chartData, params) {
-      this._container = $(container).get(0);
-      this._chartData = chartData;
+    function TileMapMap(container, params) {
+      this._container = container;
 
       // keep a reference to all of the optional params
       this._events = _.get(params, 'events');
       this._markerType = markerTypes[params.markerType] ? params.markerType : defaultMarkerType;
+      this._mapCenter = _.get(params, 'center') || defaultMapCenter;
+      this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
       this._valueFormatter = params.valueFormatter || _.identity;
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
-      this._geoJson = _.get(this._chartData, 'geoJson');
       this._attr = params.attr || {};
 
       var mapOptions = {
@@ -168,8 +163,8 @@ define(function (require) {
      *
      * @method _addMarkers
      */
-    TileMapMap.prototype._addMarkers = function () {
-      if (!this._geoJson) return;
+    TileMapMap.prototype.addMarkers = function (chartData) {
+      this._geoJson = _.get(chartData, 'geoJson');
       if (this._markers) this._markers.destroy();
 
       this._markers = this._createMarkers({
@@ -261,10 +256,6 @@ define(function (require) {
     TileMapMap.prototype._createMap = function (mapOptions) {
       if (this.map) this.destroy();
 
-      // get center and zoom from mapdata, or use defaults
-      this._mapCenter = _.get(this._geoJson, 'properties.center') || defaultMapCenter;
-      this._mapZoom = _.get(this._geoJson, 'properties.zoom') || defaultMapZoom;
-
       // add map tiles layer, using the mapTiles object settings
       if (this._attr.wms && this._attr.wms.enabled) {
         this._tileLayer = L.tileLayer.wms(this._attr.wms.url, this._attr.wms.options);
@@ -278,8 +269,8 @@ define(function (require) {
       mapOptions.zoom = this._mapZoom;
 
       this.map = L.map(this._container, mapOptions);
-      this._attachEvents();
-      this._addMarkers();
+      //this._attachEvents();
+      //this._addMarkers();
     };
 
     /**
