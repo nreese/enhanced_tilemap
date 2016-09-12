@@ -7,7 +7,7 @@ import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 define(function (require) {
   var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana']);
   
-  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config) {
+  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
     let aggResponse = Private(require('ui/agg_response/index'));
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
@@ -52,7 +52,8 @@ define(function (require) {
         zoom: params.mapZoom,
         callbacks: {
           mapMoveEnd: mapMoveEnd,
-          mapZoomEnd: mapZoomEnd
+          mapZoomEnd: mapZoomEnd,
+          rectangle: rectangle
         },
         markerType: params.mapType,
         tooltipFormatter: Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
@@ -114,5 +115,19 @@ define(function (require) {
 
       courier.fetch();
     }
+
+    const rectangle = function (event) {
+      const agg = _.get(event, 'chart.geohashGridAgg');
+      if (!agg) return;
+
+      const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
+      const indexPatternName = agg.vis.indexPattern.id;
+      const field = agg.fieldName();
+      const filter = {geo_bounding_box: {}};
+      filter.geo_bounding_box[field] = event.bounds;
+
+      pushFilter(filter, false, indexPatternName);
+    }
+
   });
 });

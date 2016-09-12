@@ -60,7 +60,7 @@ define(function (require) {
       var drawOptions = { draw: {} };
 
       _.each(['polyline', 'polygon', 'circle', 'marker', 'rectangle'], function (drawShape) {
-        if (self._events && !self._events.listenerCount(drawShape)) {
+        if (!self._callbacks || !_.has(self._callbacks, drawShape)) {
           drawOptions.draw[drawShape] = false;
         } else {
           drawOptions.draw[drawShape] = {
@@ -215,14 +215,14 @@ define(function (require) {
         });
       });
 
-      /*this.map.on('draw:created', function (e) {
+      this.map.on('draw:created', function (e) {
         var drawType = e.layerType;
-        if (!self._events || !self._events.listenerCount(drawType)) return;
+        if (!self._callbacks || !_.has(self._callbacks, drawType)) return;
 
         // TODO: Different drawTypes need differ info. Need a switch on the object creation
         var bounds = e.layer.getBounds();
 
-        self._events.emit(drawType, {
+        self._callbacks[drawType]({
           e: e,
           chart: self._chartData,
           bounds: {
@@ -236,7 +236,7 @@ define(function (require) {
             }
           }
         });
-      });*/
+      });
 
       this.map.on('zoomend', function () {
         if (!self.map) return;
