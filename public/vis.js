@@ -5,6 +5,7 @@ import FilterBarPushFilterProvider from 'ui/filter_bar/push_filter';
 define(function (require) {
   require('ui/registry/vis_types').register(EnhancedTileMapVisProvider);
   require('plugins/enhanced_tilemap/vis.less');
+  require('plugins/enhanced_tilemap/directives/bands.js');
   require('plugins/enhanced_tilemap/visController');
 
   function EnhancedTileMapVisProvider(Private, getAppState, courier, config) {
@@ -20,6 +21,12 @@ define(function (require) {
       params: {
         defaults: {
           mapType: 'Scaled Circle Markers',
+          scaleType: 'dynamic',
+          scaleBands: [{
+            low: 0,
+            high: 10,
+            color: "#ffffcc"
+          }],
           isDesaturated: true,
           addTooltip: true,
           heatMaxZoom: 16,
@@ -32,8 +39,12 @@ define(function (require) {
           wms: config.get('visualization:tileMap:WMSdefaults')
         },
         mapTypes: ['Scaled Circle Markers', 'Shaded Circle Markers', 'Shaded Geohash Grid', 'Heatmap'],
+        scaleTypes: ['dynamic', 'static'],
         canDesaturate: !!supports.cssFilters,
         editor: require('plugins/enhanced_tilemap/options.html')
+      },
+      hierarchicalData: function (vis) {
+        return false;
       },
       schemas: new Schemas([
         {

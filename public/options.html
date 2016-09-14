@@ -10,6 +10,23 @@
   </select>
 </div>
 
+<div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
+  <div class="form-group">
+    <label>Quantize scale type</label>
+    <select name="scaleType"
+      class="form-control"
+      ng-model="vis.params.scaleType"
+      ng-init="vis.params.scaleType || vis.type.params.scaleTypes[0]"
+      ng-options="scaleType as scaleType for scaleType in vis.type.params.scaleTypes"
+      >
+    </select>
+  </div>
+
+  <div ng-if="vis.params.scaleType === 'static'" class="form-group">
+    <bands bands="vis.params.scaleBands"></bands>
+  </div>
+</div>
+
 <div ng-if="vis.params.mapType === 'Heatmap'" class="form-group">
   <div>
     <label>
