@@ -42,8 +42,13 @@ define(function (require) {
       }
     });
 
+    var changeVisOff = $rootScope.$on(
+      'change:vis', 
+      _.debounce(resizeArea, 200, false));
+    
     $scope.$on("$destroy", function() {
       if (map) map.destroy();
+      changeVisOff();
     });
 
     function appendMap() {
@@ -67,6 +72,10 @@ define(function (require) {
 
       map.addFitControl();
       map.addBoundingControl();
+    }
+
+    function resizeArea() {
+      if (map) map.updateSize();
     }
 
     const mapMoveEnd = function (event) {
