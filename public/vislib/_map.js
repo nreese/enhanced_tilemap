@@ -39,7 +39,7 @@ define(function (require) {
       this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
       this._valueFormatter = params.valueFormatter || _.identity;
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
-      this._attr = params.attr || {};
+      this._setAttr(params.attr);
 
       var mapOptions = {
         minZoom: 1,
@@ -166,9 +166,12 @@ define(function (require) {
     TileMapMap.prototype.addMarkers = function (chartData, newParams) {
       if(newParams) {
         this._setMarkerType(newParams.mapType);
+        this._setAttr(newParams);
       }
-      this._chartData = chartData;
-      this._geoJson = _.get(chartData, 'geoJson');
+      if(chartData) {
+        this._chartData = chartData;
+        this._geoJson = _.get(chartData, 'geoJson');
+      }
       if (this._markers) this._markers.destroy();
 
       this._markers = this._createMarkers({
@@ -198,6 +201,10 @@ define(function (require) {
       this._markerType = markerTypes[markerType] ? markerType : defaultMarkerType;
     };
 
+    TileMapMap.prototype._setAttr = function (attr) {
+      this._attr = attr || {};
+    };
+
     TileMapMap.prototype._attachEvents = function () {
       var self = this;
       var saturateTiles = self.saturateTiles.bind(self);
@@ -213,6 +220,7 @@ define(function (require) {
         // update internal center and zoom references
         self._mapCenter = self.map.getCenter();
         self._mapZoom = self.map.getZoom();
+        self.addMarkers();
 
         self._callbacks.mapMoveEnd({
           chart: self._chartData,

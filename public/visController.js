@@ -42,6 +42,10 @@ define(function (require) {
       }
     });
 
+    $scope.$on("$destroy", function() {
+      if (map) map.destroy();
+    });
+
     function appendMap() {
       console.log("Width" + $element[0].offsetWidth);
       console.log("Height" + $element[0].offsetHeight);
