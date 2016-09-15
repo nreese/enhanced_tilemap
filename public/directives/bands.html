@@ -2,7 +2,7 @@
   <div ng-repeat="band in bands" class="form-inline">
     <input
       ng-model="band.low"
-      required
+      ng-disabled="true"
       type="number"
       class="form-control"
       name="low"
@@ -11,6 +11,8 @@
     to
     <input
       ng-model="band.high"
+      ng-change="updateOlderSibling($index)"
+      ng-model-options="{ debounce: 750 }"
       required
       type="number"
       class="form-control"

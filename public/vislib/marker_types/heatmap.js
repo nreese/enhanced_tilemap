@@ -4,7 +4,7 @@ define(function (require) {
     let _ = require('lodash');
     let L = require('leaflet');
 
-    let BaseMarker = Private(require('ui/vislib/visualizations/marker_types/base_marker'));
+    let BaseMarker = Private(require('./base_marker'));
 
     /**
      * Map overlay: canvas layer with leaflet.heat plugin

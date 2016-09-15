@@ -25,6 +25,14 @@ module.directive('bands', function () {
     scope.removeBand = function() {
       if(scope.bands.length > 0) scope.bands.pop();
     }
+
+    //The end of one band marks the beginning of the next
+    //Automatically update the next band's low value to reflect the change in the current band.
+    scope.updateOlderSibling = function(index) {
+      if(index !== scope.bands.length - 1) {
+        scope.bands[index + 1].low = scope.bands[index].high;
+      }
+    }
   }
 
   return {

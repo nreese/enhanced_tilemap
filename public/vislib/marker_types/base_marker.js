@@ -240,25 +240,36 @@ define(function (require) {
      * return {undefined}
      */
     BaseMarker.prototype.quantizeLegendColors = function () {
-      let min = _.get(this.geoJson, 'properties.allmin', 0);
-      let max = _.get(this.geoJson, 'properties.allmax', 1);
-      let quantizeDomain = (min !== max) ? [min, max] : d3.scale.quantize().domain();
-
-      let reds1 = ['#ff6128'];
-      let reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
-      let reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
-      let bottomCutoff = 2;
-      let middleCutoff = 24;
-
-      if (max - min <= bottomCutoff) {
-        this._legendColors = reds1;
-      } else if (max - min <= middleCutoff) {
-        this._legendColors = reds3;
+      if ('static' === this._attr.scaleType) {
+        const domain = [];
+        const colors = [];
+        this._attr.scaleBands.forEach(function(band) {
+          domain.push(band.high);
+          colors.push(band.color);
+        });
+        this._legendColors = colors;
+        this._legendQuantizer = d3.scale.threshold().domain(domain).range(this._legendColors);
       } else {
-        this._legendColors = reds5;
-      }
+        let min = _.get(this.geoJson, 'properties.allmin', 0);
+        let max = _.get(this.geoJson, 'properties.allmax', 1);
+        let quantizeDomain = (min !== max) ? [min, max] : d3.scale.quantize().domain();
 
-      this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
+        let reds1 = ['#ff6128'];
+        let reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
+        let reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
+        let bottomCutoff = 2;
+        let middleCutoff = 24;
+
+        if (max - min <= bottomCutoff) {
+          this._legendColors = reds1;
+        } else if (max - min <= middleCutoff) {
+          this._legendColors = reds3;
+        } else {
+          this._legendColors = reds5;
+        }
+
+        this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
+      }
     };
 
     return BaseMarker;
