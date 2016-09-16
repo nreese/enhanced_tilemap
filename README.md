@@ -79,3 +79,7 @@ Sync map movements when dashboard contains multiple map visualizations.
 
 ### geo aggregation filtered by geo_bounding_box collar
 [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
+
+# Compatibility
+The plugin is compatible with following Versions (other not tested yet):
+* kibana (=4.4+)
