@@ -150,6 +150,10 @@ define(function (require) {
       }
     };
 
+    BaseMarker.prototype.getMarkerGroup = function () {
+      return this._markerGroup;
+    }
+
     BaseMarker.prototype._addToMap = function () {
       this.map.addLayer(this._markerGroup);
     };

@@ -52,14 +52,14 @@ define(function (require) {
     });
 
     function appendMap() {
-      console.log("Width" + $element[0].offsetWidth);
-      console.log("Height" + $element[0].offsetHeight);
       var params = $scope.vis.params;
       var container = $element[0].querySelector('.tilemap');
       map = new TileMapMap(container, {
         center: params.mapCenter,
         zoom: params.mapZoom,
         callbacks: {
+          createMarker: createMarker,
+          deleteMarkers: deleteMarkers,
           mapMoveEnd: mapMoveEnd,
           mapZoomEnd: mapZoomEnd,
           rectangle: rectangle
@@ -67,11 +67,9 @@ define(function (require) {
         mapType: params.mapType,
         tooltipFormatter: Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
         valueFormatter: _.identity,
-        attr: params
+        attr: params,
+        editable: $scope.vis.getEditableVis() ? true : false
       });
-
-      map.addFitControl();
-      map.addBoundingControl();
     }
 
     function resizeArea() {
@@ -142,5 +140,26 @@ define(function (require) {
       pushFilter(filter, false, indexPatternName);
     }
 
+    const createMarker = function (event) {
+      const editableVis = $scope.vis.getEditableVis();
+      if (!editableVis) return;
+      const newPoint = [_.round(event.latlng.lat, 5), _.round(event.latlng.lng, 5)];
+      editableVis.params.markers.push(newPoint);
+    }
+
+    const deleteMarkers = function (event) {
+      const editableVis = $scope.vis.getEditableVis();
+      if (!editableVis) return;
+
+      event.deletedLayers.eachLayer(function (layer) {
+        editableVis.params.markers = editableVis.params.markers.filter(function(point) {
+          if(point[0] === layer._latlng.lat && point[1] === layer._latlng.lng) {
+            return false;
+          } else {
+            return true;
+          }
+        });
+      });
+    }
   });
 });

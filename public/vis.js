@@ -36,6 +36,7 @@ define(function (require) {
           heatNormalizeData: true,
           mapZoom: 2,
           mapCenter: [15, 5],
+          markers: [],
           wms: config.get('visualization:tileMap:WMSdefaults')
         },
         mapTypes: ['Scaled Circle Markers', 'Shaded Circle Markers', 'Shaded Geohash Grid', 'Heatmap'],

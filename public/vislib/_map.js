@@ -4,6 +4,12 @@ define(function (require) {
     var $ = require('jquery');
     var L = require('leaflet');
 
+    var markerIcon = L.icon({
+      iconUrl: require('./images/marker-icon.png'),
+      iconRetinaUrl: require('./images/marker-icon-2x.png'),
+      iconSize: [25, 41]
+    });
+
     var defaultMapZoom = 2;
     var defaultMapCenter = [15, 5];
     var defaultMarkerType = 'Scaled Circle Markers';
@@ -40,6 +46,7 @@ define(function (require) {
       this._valueFormatter = params.valueFormatter || _.identity;
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
       this._setAttr(params.attr);
+      this._isEditable = params.editable || false;
 
       var mapOptions = {
         minZoom: 1,
@@ -53,30 +60,53 @@ define(function (require) {
       this._createMap(mapOptions);
     }
 
-    TileMapMap.prototype.addBoundingControl = function () {
+    TileMapMap.prototype._addDrawControl = function () {
       if (this._boundingControl) return;
 
+      //create Markers feature group and add saved markers 
+      this._drawnItems = new L.FeatureGroup();
       var self = this;
-      var drawOptions = { draw: {} };
+      this._attr.markers.forEach(function(point) {
+        self._drawnItems.addLayer(
+          L.marker(
+            point, 
+            {icon: markerIcon}));
+      });
+      this.map.addLayer(this._drawnItems);
+      this._layerControl.addOverlay(this._drawnItems, "Markers");
 
-      _.each(['polyline', 'polygon', 'circle', 'marker', 'rectangle'], function (drawShape) {
-        if (!self._callbacks || !_.has(self._callbacks, drawShape)) {
-          drawOptions.draw[drawShape] = false;
-        } else {
-          drawOptions.draw[drawShape] = {
+      //https://github.com/Leaflet/Leaflet.draw
+      const drawOptions = {
+        draw: {
+          circle: false,
+          marker: {
+            icon: markerIcon
+          },
+          polygon: false,
+          polyline: false,
+          rectangle: {
             shapeOptions: {
               stroke: false,
               color: '#000'
             }
-          };
-        }
-      });
+          }
+        },
+        edit: {
+          featureGroup: this._drawnItems,
+          edit: false
+        } 
+      }
+      //Do not show marker and remove buttons when visualization is displayed in dashboard, i.e. not editable 
+      if(!this._isEditable) {
+        drawOptions.draw.marker = false;
+        drawOptions.edit.remove = false;
+      }
 
       this._boundingControl = new L.Control.Draw(drawOptions);
       this.map.addControl(this._boundingControl);
     };
 
-    TileMapMap.prototype.addFitControl = function () {
+    TileMapMap.prototype._addFitControl = function () {
       if (this._fitControl) return;
 
       var self = this;
@@ -179,7 +209,7 @@ define(function (require) {
         valueFormatter: this._valueFormatter,
         attr: this._attr
       });
-
+      
       if (this._geoJson.features.length > 1) {
         this._markers.addLegend();
       }
@@ -231,25 +261,41 @@ define(function (require) {
       });
 
       this.map.on('draw:created', function (e) {
-        var drawType = e.layerType;
-        if (!self._callbacks || !_.has(self._callbacks, drawType)) return;
+        switch (e.layerType) {
+          case "marker":
+            self._drawnItems.addLayer(e.layer);
+            self._callbacks.createMarker({
+              e: e,
+              chart: self._chartData,
+              latlng: e.layer._latlng
+            });
+            break;
+          case "rectangle":
+            var bounds = e.layer.getBounds();
+            self._callbacks.rectangle({
+              e: e,
+              chart: self._chartData,
+              bounds: {
+                top_left: {
+                  lat: bounds.getNorthWest().lat,
+                  lon: bounds.getNorthWest().lng
+                },
+                bottom_right: {
+                  lat: bounds.getSouthEast().lat,
+                  lon: bounds.getSouthEast().lng
+                }
+              }
+            });
+            break;
+          default:
+            console.log("draw:created, unexpected layerType: " + drawType);
+        }
+      });
 
-        // TODO: Different drawTypes need differ info. Need a switch on the object creation
-        var bounds = e.layer.getBounds();
-
-        self._callbacks[drawType]({
-          e: e,
+      this.map.on('draw:deleted', function (e) {
+        self._callbacks.deleteMarkers({
           chart: self._chartData,
-          bounds: {
-            top_left: {
-              lat: bounds.getNorthWest().lat,
-              lon: bounds.getNorthWest().lng
-            },
-            bottom_right: {
-              lat: bounds.getSouthEast().lat,
-              lon: bounds.getSouthEast().lng
-            }
-          }
+          deletedLayers: e.layers,
         });
       });
 
@@ -283,6 +329,10 @@ define(function (require) {
       mapOptions.zoom = this._mapZoom;
 
       this.map = L.map(this._container, mapOptions);
+      this._layerControl = L.control.layers();
+      this._layerControl.addTo(this.map);
+      this._addFitControl();
+      this._addDrawControl();
       this._attachEvents();
     };
 
