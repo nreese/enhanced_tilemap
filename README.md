@@ -1,7 +1,13 @@
 # enhanced_tilemap
-Kibana ships with a functional tilemap visualization. This plugin provides an additional tilemap visualization that provides a richer GIS experience.
+Kibana ships with a functional tilemap visualization. This plugin provides an additional tilemap visualization containing the enhancments listed below.
 
 ## Enhancements
+
+### Add Markers to map
+Allows for the placement of markers on the tilemap. Markers are displayed when in the visualization panel or the dashboard panel. Markers can only be added and removed when in the visualization panel.
+
+### Static quantized range bands
+The existing tilemap generates quantized range bands dynamically. The enhanced_tilemap provides the ability to set static quantized range bands.
 
 ## Planned Enhancements
 
@@ -70,9 +76,6 @@ Provide the ablity to add additional WFS and WMS layers to the map.
 
 ### Sync maps
 Sync map movements when dashboard contains multiple map visualizations.
-
-### Static quantized range bands
-The existing tilemap generates quantized range bands dynamically. The enhanced_tilemap provides the ability to set static quantized range bands.
 
 ### geo aggregation filtered by geo_bounding_box collar
 [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
