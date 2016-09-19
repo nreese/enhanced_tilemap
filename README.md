@@ -11,6 +11,13 @@ The existing tilemap generates quantized range bands dynamically. The enhanced_t
 
 ## Planned Enhancements
 
+### backport kibana 5.x tilemap improvements to 4.x.
+The kibana tilemap plugin has been updated with several pull-requests but none of these have been merged with the 4.x branch. This plugin supports 4.x so it is a way to use integrate the tilemap improvements in kibana 4.x releases.
+* https://github.com/elastic/kibana/pull/6001
+* https://github.com/elastic/kibana/pull/8000
+* https://github.com/elastic/kibana/pull/6914
+* https://github.com/elastic/kibana/pull/6835
+
 ### Improved navigation
 * Display mouse latitude and longitude location in upper right corner
 * Provide inputs to set view location
@@ -38,7 +45,7 @@ Kibana's tilemap visualization has a neat feature where you can draw a rectangle
 The enhanced tilemap visualization will allow for the creation of multiple bounding box filters that will be ORed together. Each drawn rectangle will append a geo_bounding_box filter to an ORed array like the example below.
 ```
 {
-  "OR": [
+  "or": [
     {
       "geo_bounding_box": {
         "name_of_field_with_geopoint_type": {
