@@ -76,6 +76,24 @@ define(function (require) {
       if (map) map.updateSize();
     }
 
+    function isBoundingBoxFilter(filter, field) {
+      let isBBFilter = false;
+      if (filter.meta.key === field) {
+        isBBFilter = true;
+      } else if (_.has(filter, 'or') 
+        && _.isArray(filter.or) 
+        && filter.or.length > 0
+        && _.has(filter.or[0], 'geo_bounding_box')
+        && _.has(filter.or[0].geo_bounding_box, field)) {
+        isBBFilter = true;
+      }
+      return isBBFilter;
+    }
+
+    function filterAlias(field, numBoxes) {
+      return field + ": " + numBoxes + " bounding boxes"
+    }
+
     const mapMoveEnd = function (event) {
       const agg = _.get(event, 'chart.geohashGridAgg');
       if (!agg) return;
@@ -130,14 +148,38 @@ define(function (require) {
     const rectangle = function (event) {
       const agg = _.get(event, 'chart.geohashGridAgg');
       if (!agg) return;
-
-      const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
+      
       const indexPatternName = agg.vis.indexPattern.id;
       const field = agg.fieldName();
-      const filter = {geo_bounding_box: {}};
-      filter.geo_bounding_box[field] = event.bounds;
+      
+      const newFilter = {geo_bounding_box: {}};
+      newFilter.geo_bounding_box[field] = event.bounds;
 
-      pushFilter(filter, false, indexPatternName);
+      var queryFilter = Private(require('ui/filter_bar/query_filter'));
+      let existingFilter = null;
+      _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
+        if (isBoundingBoxFilter(it, field)) {
+          existingFilter = it;
+        }
+      });
+
+      if (existingFilter) {
+        let boundingBoxes = [newFilter];
+        if (_.has(existingFilter, 'geo_bounding_box')) {
+          boundingBoxes.push({geo_bounding_box: existingFilter.geo_bounding_box});
+        } else if (_.has(existingFilter, 'or')) {
+          boundingBoxes = boundingBoxes.concat(existingFilter.or);
+        }
+        queryFilter.updateFilter({
+          model: { or : boundingBoxes },
+          source: existingFilter,
+          type: 'geo_bounding_box',
+          alias: filterAlias(field, boundingBoxes.length)
+        });
+      } else {
+        const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
+        pushFilter(newFilter, false, indexPatternName);
+      }
     }
 
     const createMarker = function (event) {
