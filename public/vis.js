@@ -27,6 +27,7 @@ define(function (require) {
             high: 10,
             color: "#ffffcc"
           }],
+          scrollWheelZoom: true,
           isDesaturated: true,
           addTooltip: true,
           heatMaxZoom: 16,

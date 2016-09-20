@@ -124,6 +124,18 @@
 <div class="vis-option-item form-group">
   <label>
     <input type="checkbox"
+    name="scrollToZoom"
+    ng-model="vis.params.scrollWheelZoom">
+
+    Scroll Wheel Zoom
+
+    <kbn-info info="Whether the map can be zoomed by using the mouse wheel."></kbn-info>
+  </label>
+</div>
+
+<div class="vis-option-item form-group">
+  <label>
+    <input type="checkbox"
     name="isDesaturated"
     ng-disabled="!vis.type.params.canDesaturate"
     ng-model="vis.params.isDesaturated">

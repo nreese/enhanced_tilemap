@@ -57,7 +57,7 @@ define(function (require) {
         maxZoom: 18,
         noWrap: true,
         maxBounds: L.latLngBounds([-90, -220], [90, 220]),
-        scrollWheelZoom: false,
+        scrollWheelZoom: _.get(params.attr, 'scrollWheelZoom', true),
         fadeAnimation: false,
       };
 
@@ -238,6 +238,15 @@ define(function (require) {
 
     TileMapMap.prototype._setAttr = function (attr) {
       this._attr = attr || {};
+
+      //update map options based on new attributes
+      if(this.map) {
+        if(this._attr.scrollWheelZoom) {
+          this.map.scrollWheelZoom.enable();
+        } else {
+          this.map.scrollWheelZoom.disable();
+        }
+      }
     };
 
     TileMapMap.prototype._attachEvents = function () {
