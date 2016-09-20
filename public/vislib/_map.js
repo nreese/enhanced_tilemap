@@ -3,6 +3,8 @@ define(function (require) {
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
+    require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
+    require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
     var syncMaps = require('./sync_maps');
 
     var markerIcon = L.icon({
@@ -353,6 +355,7 @@ define(function (require) {
       this.map = L.map(this._container, mapOptions);
       this._layerControl = L.control.layers();
       this._layerControl.addTo(this.map);
+      L.control.mousePosition().addTo(this.map);
       this._addFitControl();
       this._addDrawControl();
       this._attachEvents();
