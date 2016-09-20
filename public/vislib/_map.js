@@ -3,6 +3,7 @@ define(function (require) {
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
+    var syncMaps = require('./sync_maps');
 
     var markerIcon = L.icon({
       iconUrl: require('./images/marker-icon.png'),
@@ -41,7 +42,8 @@ define(function (require) {
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
       this._setMarkerType(params.mapType);
-      this._mapCenter = _.get(params, 'center') || defaultMapCenter;
+      const centerArray = _.get(params, 'center') || defaultMapCenter;
+      this._mapCenter = L.latLng(centerArray[0], centerArray[1]);
       this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
       this._valueFormatter = params.valueFormatter || _.identity;
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
@@ -183,6 +185,7 @@ define(function (require) {
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._boundingControl) this._boundingControl.removeFrom(this.map);
       if (this._markers) this._markers.destroy();
+      syncMaps.remove(this.map);
       this.map.remove();
       this.map = undefined;
     };
@@ -245,8 +248,10 @@ define(function (require) {
         self._tileLayer.off('tileload', saturateTiles);
       });
 
-      this.map.on('moveend', function setZoomCenter(ev) {
+      this.map.on('moveend', _.debounce(function setZoomCenter(ev) {
         if (!self.map) return;
+        if (self._hasSameLocation()) return;
+
         // update internal center and zoom references
         self._mapCenter = self.map.getCenter();
         self._mapZoom = self.map.getZoom();
@@ -258,7 +263,7 @@ define(function (require) {
           center: self._mapCenter,
           zoom: self._mapZoom,
         });
-      });
+      }, 500, false));
 
       this.map.on('draw:created', function (e) {
         switch (e.layerType) {
@@ -299,8 +304,10 @@ define(function (require) {
         });
       });
 
-      this.map.on('zoomend', function () {
+      this.map.on('zoomend', _.debounce(function () {
         if (!self.map) return;
+        if (self._hasSameLocation()) return;
+
         self._mapCenter = self.map.getCenter();
         self._mapZoom = self.map.getZoom();
         if (!self._callbacks) return;
@@ -308,10 +315,25 @@ define(function (require) {
         self._callbacks.mapZoomEnd({
           chart: self._chartData,
           map: self.map,
+          center: self._mapCenter,
           zoom: self._mapZoom,
         });
-      });
+      }, 500, false));
     };
+
+    TileMapMap.prototype._hasSameLocation = function () {
+      const oldLat = this._mapCenter.lat.toFixed(5);
+      const oldLon = this._mapCenter.lng.toFixed(5);
+      const newLat = this.map.getCenter().lat.toFixed(5);
+      const newLon = this.map.getCenter().lng.toFixed(5);
+      let isSame = false;
+      if (oldLat === newLat 
+        && oldLon === newLon 
+        && this.map.getZoom() === this._mapZoom) {
+        isSame = true;
+      }
+      return isSame;
+    }
 
     TileMapMap.prototype._createMap = function (mapOptions) {
       if (this.map) this.destroy();
@@ -334,6 +356,7 @@ define(function (require) {
       this._addFitControl();
       this._addDrawControl();
       this._attachEvents();
+      syncMaps.add(this.map);
     };
 
     /**

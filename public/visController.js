@@ -1,3 +1,9 @@
+/*
+ * Had to rework original tilemap functionallity to migrate 
+ * to TemplateVisType. Combined pieces from 
+ *   plugins/kbn_vislib_vis_types/public/tileMap.js
+ *   ui/public/vislib/visualizations/tile_map.js
+ */
 import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
@@ -37,7 +43,12 @@ define(function (require) {
         const geoMinMax = getGeoExtents(chartData);
         chartData.geoJson.properties.allmin = geoMinMax.min;
         chartData.geoJson.properties.allmax = geoMinMax.max;
-        if (map === null) appendMap();
+        if (map === null) {
+          appendMap({
+            center: _.get(chartData, 'geoJson.properties.center'),
+            zoom: _.get(chartData, 'geoJson.properties.zoom')
+          });
+        }
         map.addMarkers(chartData, $scope.vis.params);
       }
     });
@@ -51,12 +62,12 @@ define(function (require) {
       changeVisOff();
     });
 
-    function appendMap() {
+    function appendMap(options) {
       var params = $scope.vis.params;
       var container = $element[0].querySelector('.tilemap');
       map = new TileMapMap(container, {
-        center: params.mapCenter,
-        zoom: params.mapZoom,
+        center: options.center,
+        zoom: options.zoom,
         callbacks: {
           createMarker: createMarker,
           deleteMarkers: deleteMarkers,
@@ -98,8 +109,13 @@ define(function (require) {
       const agg = _.get(event, 'chart.geohashGridAgg');
       if (!agg) return;
 
+      const center = [
+        _.round(event.center.lat, 5),
+        _.round(event.center.lng, 5)
+      ]
+
       agg.params.mapZoom = event.zoom;
-      agg.params.mapCenter = [event.center.lat, event.center.lng];
+      agg.params.mapCenter = center;
 
       const editableVis = agg.vis.getEditableVis();
       if (!editableVis) return;
@@ -107,13 +123,16 @@ define(function (require) {
       const editableAgg = editableVis.aggs.byId[agg.id];
       if (editableAgg) {
         editableAgg.params.mapZoom = event.zoom;
-        editableAgg.params.mapCenter = [event.center.lat, event.center.lng];
+        editableAgg.params.mapCenter = center;
       }
     }
 
     const mapZoomEnd = function (event) {
       const agg = _.get(event, 'chart.geohashGridAgg');
       if (!agg || !agg.params.autoPrecision) return;
+
+      agg.params.mapZoom = event.zoom;
+      agg.params.mapCenter = [event.center.lat, event.center.lng];
 
       // zoomPrecision maps event.zoom to a geohash precision value
       // event.limit is the configurable max geohash precision
