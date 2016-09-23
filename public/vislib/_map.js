@@ -5,6 +5,7 @@ define(function (require) {
     var L = require('leaflet');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
+    require('./../lib/leaflet.setview/L.Control.SetView');
     var syncMaps = require('./sync_maps');
 
     var markerIcon = L.icon({
@@ -137,6 +138,13 @@ define(function (require) {
 
       this._fitControl = new FitControl();
       this.map.addControl(this._fitControl);
+    };
+
+    TileMapMap.prototype._addSetViewControl = function () {
+      if (this._setViewControl) return;
+
+      this._setViewControl = new L.Control.SetView();
+      this.map.addControl(this._setViewControl);
     };
 
     /**
@@ -366,6 +374,7 @@ define(function (require) {
       this._layerControl.addTo(this.map);
       L.control.mousePosition().addTo(this.map);
       this._addFitControl();
+      this._addSetViewControl();
       this._addDrawControl();
       this._attachEvents();
       syncMaps.add(this.map);
