@@ -25,6 +25,14 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 
 ## Planned Enhancements
 
+### Jump to location inputs
+Add leaflet control that when clicked provides lat/lon/zoom inputs and a button. The inputs will allow a user to jump the map to a specific location and zoom level.
+
+### Load markers without blocking user interface
+The existing tilemap loads all of the geohash grids at a single time. This can result in adding hundreds or even thousands of DOM elements at a single time. The browser is locked up while this process occurs.
+
+The enhanced tilemap plugin will phase-in geohash grids (for example, load 25 every 200 milliseconds) so that the browser never locks up. A control with a spinning icon will be added to the map while grids are being phased-in. The control will be removed once everything is finished.
+
 ### backport kibana 5.x tilemap improvements to 4.x.
 The kibana tilemap plugin has been updated with several pull-requests but none of these have been merged with the 4.x branch. This plugin supports 4.x so it is a way to use integrate the tilemap improvements in kibana 4.x releases.
 * https://github.com/elastic/kibana/pull/6001
