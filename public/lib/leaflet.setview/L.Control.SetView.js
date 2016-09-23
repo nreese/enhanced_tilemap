@@ -23,26 +23,37 @@ L.SetViewToolbar = L.Class.extend({
     container.appendChild(this._toolbarContainer);
     container.appendChild(this._actionsContainer);
 
-    this._map = map;
-
     var self = this;
-    this._setViewButton = this._createButton({
+    this._map = map;
+    this._tools = [];
+
+    this._tools.push(this._createButton({
+      title: "Fit Data Bounds",
+      className: 'fa fa-crop',
+      container: this._toolbarContainer,
+      callback: function() {
+        self._hideActionsToolbar();
+        self._map.fire('setview:fitBounds', {});
+      },
+      context: {}
+    }));
+    this._tools.push(this._createButton({
       title: "Set View Location",
       className: 'fa fa-eye',
       container: this._toolbarContainer,
       callback: function() {
-        console.log("set view location calledback");
         self._showInputs();
       },
       context: {}
-    });
-    
+    }));
     
     return container;
 
   },
   removeToolbar: function () {
-    this._disposeButton(this._setViewButton);
+    this._tools.forEach(function (tool) {
+      this._dispose(tool);
+    });
   },
   _createButton: function (options) {
     var link = L.DomUtil.create('a', options.className || '', options.container);
@@ -72,6 +83,9 @@ L.SetViewToolbar = L.Class.extend({
     if (options.value) {
       input.value = options.value;
     }
+     L.DomEvent
+      .on(input, 'mousedown', L.DomEvent.stopPropagation)
+      .on(input, 'dblclick', L.DomEvent.stopPropagation)
     if (options.callback) {
       L.DomEvent
         .on(input, 'change', options.callback);
@@ -88,9 +102,13 @@ L.SetViewToolbar = L.Class.extend({
         option.selected = 'selected';
       }
     });
+    if (options.callback) {
+      L.DomEvent
+        .on(select, 'change', options.callback);
+    }
     return select;
   },
-  _disposeButton: function (button, callback) {
+  _dispose: function (button, callback) {
     L.DomEvent
       .off(button, 'click', L.DomEvent.stopPropagation)
       .off(button, 'mousedown', L.DomEvent.stopPropagation)
@@ -156,7 +174,7 @@ L.SetViewToolbar = L.Class.extend({
       selectedValue: this._map.getZoom(),
       choices: choices,
       callback: function(event) {
-        //self._lon = event.srcElement.value;
+        self._zoom = event.srcElement.value;
       }
     });
     this._createButton({
@@ -164,7 +182,8 @@ L.SetViewToolbar = L.Class.extend({
       text: "Set View",
       container: container,
       callback: function() {
-        self._map.setView(L.latLng(self._lat, self._lon), this._zoom);
+        self._map.setView(L.latLng(self._lat, self._lon), self._zoom);
+        self._hideActionsToolbar();
       }
     });
     this._createButton({
@@ -175,6 +194,9 @@ L.SetViewToolbar = L.Class.extend({
         self._hideActionsToolbar();
       }
     });
+    L.DomUtil.addClass(this._toolbarContainer, 'leaflet-draw-toolbar-nobottom');
+    L.DomUtil.addClass(this._actionsContainer, 'leaflet-draw-actions-bottom');
+    this._actionsContainer.style.top = '25px';
     this._actionsContainer.style.display = 'block';
   }
 });

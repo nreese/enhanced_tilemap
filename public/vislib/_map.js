@@ -111,35 +111,6 @@ define(function (require) {
       this.map.addControl(this._boundingControl);
     };
 
-    TileMapMap.prototype._addFitControl = function () {
-      if (this._fitControl) return;
-
-      var self = this;
-      var fitContainer = L.DomUtil.create('div', 'leaflet-control leaflet-bar leaflet-control-fit');
-
-      // Add button to fit container to points
-      var FitControl = L.Control.extend({
-        options: {
-          position: 'topleft'
-        },
-        onAdd: function (map) {
-          $(fitContainer).html('<a class="fa fa-crop" href="#" title="Fit Data Bounds"></a>')
-          .on('click', function (e) {
-            e.preventDefault();
-            self._fitBounds();
-          });
-
-          return fitContainer;
-        },
-        onRemove: function (map) {
-          $(fitContainer).off('click');
-        }
-      });
-
-      this._fitControl = new FitControl();
-      this.map.addControl(this._fitControl);
-    };
-
     TileMapMap.prototype._addSetViewControl = function () {
       if (this._setViewControl) return;
 
@@ -284,6 +255,10 @@ define(function (require) {
         });
       }, 500, false));
 
+      this.map.on('setview:fitBounds', function (e) {
+        self._fitBounds();
+      });
+
       this.map.on('draw:created', function (e) {
         switch (e.layerType) {
           case "marker":
@@ -373,7 +348,6 @@ define(function (require) {
       this._layerControl = L.control.layers();
       this._layerControl.addTo(this.map);
       L.control.mousePosition().addTo(this.map);
-      this._addFitControl();
       this._addSetViewControl();
       this._addDrawControl();
       this._attachEvents();
