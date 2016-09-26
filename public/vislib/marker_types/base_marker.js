@@ -133,6 +133,10 @@ define(function (require) {
     BaseMarker.prototype.destroy = function () {
       let self = this;
 
+      if(this._intervalId) {
+        window.clearInterval(this._intervalId);
+      }
+
       // remove popups
       self.popups = self.popups.filter(function (popup) {
         popup.off('mouseover').off('mouseout');
@@ -177,7 +181,31 @@ define(function (require) {
         filter: self._filterToMapBounds()
       };
 
-      this._markerGroup = L.geoJson(this.geoJson, _.defaults(defaultOptions, options));
+      if(self.geoJson.features.length <= 250) {
+        this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
+      } else {
+        //don't block UI when processing lots of features
+        this._markerGroup = L.geoJson(self.geoJson.features.slice(0,100), _.defaults(defaultOptions, options));
+        if(this._intervalId) {
+          window.clearInterval(this._intervalId);
+        }
+        var place = 100;
+        this._intervalId = setInterval(
+          function() {
+            var stopIndex = place + 100;
+            if(stopIndex > self.geoJson.features.length) {
+              stopIndex = self.geoJson.features.length;
+              window.clearInterval(self._intervalId);
+            }
+            console.log("place: " + place + ", stop: " + stopIndex);
+            for(var i=place; i<stopIndex; i++) {
+              place++;
+              self._markerGroup.addData(self.geoJson.features[i]);
+            }
+          },
+          200);
+      }
+
       this._addToMap();
     };
 
