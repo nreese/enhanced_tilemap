@@ -5,6 +5,7 @@ define(function (require) {
     var L = require('leaflet');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
+    require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
     var syncMaps = require('./sync_maps');
 

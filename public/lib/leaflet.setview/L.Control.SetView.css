@@ -1,0 +1,22 @@
+.middle-btn {
+  border-left: none !important;
+}
+
+.leaflet-draw select {
+  height: 27px;
+  padding: 0px 5px 0px 5px;
+  border-top-color: #dddddd;
+  border-bottom-color: #dddddd;
+  -webkit-appearance: none;
+  -webkit-border-radius: 0px; 
+}
+
+.leaflet-draw input {
+  width:10em;
+  height: 27px;
+  padding: 0px 5px 0px 5px;
+  border: 1px solid #AAA;
+  border-right-style: hidden;
+  border-top-color: #dddddd;
+  border-bottom-color: #dddddd;
+}

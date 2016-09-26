@@ -6,7 +6,7 @@ L.Control.SetView = L.Control.extend({
     this._toolbar = new L.SetViewToolbar(options);
   },
   onAdd: function (map) {
-    var container = L.DomUtil.create('div', 'leaflet-setview');
+    var container = L.DomUtil.create('div', 'leaflet-draw');
     container.appendChild(this._toolbar.addToolbar(map));
     return container;
   },
@@ -17,8 +17,8 @@ L.Control.SetView = L.Control.extend({
 
 L.SetViewToolbar = L.Class.extend({
   addToolbar: function (map) {
-    var container = L.DomUtil.create('div', 'leaflet-setview-section');
-    this._toolbarContainer = L.DomUtil.create('div', 'leaflet-setview-toolbar leaflet-bar');
+    var container = L.DomUtil.create('div', 'leaflet-draw-section');
+    this._toolbarContainer = L.DomUtil.create('div', 'leaflet-bar');
     this._actionsContainer = L.DomUtil.create('ul', 'leaflet-draw-actions');
     container.appendChild(this._toolbarContainer);
     container.appendChild(this._actionsContainer);
@@ -79,6 +79,7 @@ L.SetViewToolbar = L.Class.extend({
     input.type = options.inputType;
     if (options.placeholder) {
       input.placeholder = options.placeholder;
+      input.title = options.placeholder;
     }
     if (options.value) {
       input.value = options.value;
@@ -94,6 +95,9 @@ L.SetViewToolbar = L.Class.extend({
   },
   _createSelect: function (options) {
     var select = L.DomUtil.create('select', options.className || '', options.container);
+    if (options.title) {
+      select.title = options.title;
+    }
     options.choices.forEach(function (choice) {
       var option = L.DomUtil.create('option', '', select);
       option.innerHTML = choice.display;
@@ -138,7 +142,7 @@ L.SetViewToolbar = L.Class.extend({
     this._zoom = this._map.getZoom();
 
     this._createInput({
-      container: container,
+      container: L.DomUtil.create('li', '', container),
       inputType: 'number',
       placeholder: 'lat',
       name: 'lat',
@@ -150,7 +154,7 @@ L.SetViewToolbar = L.Class.extend({
       }
     });
     this._createInput({
-      container: container,
+      container: L.DomUtil.create('li', '', container),
       inputType: 'number',
       name: 'lon',
       placeholder: 'lon',
@@ -169,8 +173,9 @@ L.SetViewToolbar = L.Class.extend({
       });
     }
     this._createSelect({
-      container: container,
+      container: L.DomUtil.create('li', '', container),
       name: 'zoom',
+      title: 'zoom level',
       selectedValue: this._map.getZoom(),
       choices: choices,
       callback: function(event) {
@@ -178,18 +183,19 @@ L.SetViewToolbar = L.Class.extend({
       }
     });
     this._createButton({
-      title: "Set View",
+      title: "Click to set map view to provided values.",
       text: "Set View",
-      container: container,
+      className: "middle-btn",
+      container: L.DomUtil.create('li', '', container),
       callback: function() {
         self._map.setView(L.latLng(self._lat, self._lon), self._zoom);
         self._hideActionsToolbar();
       }
     });
     this._createButton({
-      title: "Cancel",
+      title: "Click to cancel.",
       text: "Cancel",
-      container: container,
+      container: L.DomUtil.create('li', '', container),
       callback: function() {
         self._hideActionsToolbar();
       }
