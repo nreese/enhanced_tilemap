@@ -362,7 +362,10 @@ define(function (require) {
      * @return {boolean}
      */
     TileMapMap.prototype._fitBounds = function () {
-      this.map.fitBounds(this._getDataRectangles());
+      var bounds = this._getDataRectangles();
+      if(bounds.length > 0) {
+        this.map.fitBounds(bounds);
+      }
     };
 
     /**
