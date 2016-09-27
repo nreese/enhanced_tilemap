@@ -46,7 +46,8 @@ define(function (require) {
         if (map === null) {
           appendMap({
             center: _.get(chartData, 'geoJson.properties.center'),
-            zoom: _.get(chartData, 'geoJson.properties.zoom')
+            zoom: _.get(chartData, 'geoJson.properties.zoom'),
+            valueFormatter: _.get(chartData, 'valueFormatter')
           });
         }
         map.addMarkers(chartData, $scope.vis.params);
@@ -77,7 +78,7 @@ define(function (require) {
         },
         mapType: params.mapType,
         tooltipFormatter: Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
-        valueFormatter: _.identity,
+        valueFormatter: options.valueFormatter || _.identity,
         attr: params,
         editable: $scope.vis.getEditableVis() ? true : false
       });
