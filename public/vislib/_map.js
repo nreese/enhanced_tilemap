@@ -3,6 +3,7 @@ define(function (require) {
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
+    var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
@@ -53,6 +54,7 @@ define(function (require) {
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
       this._setAttr(params.attr);
       this._isEditable = params.editable || false;
+      this._decimalDegrees = true;
 
       var mapOptions = {
         minZoom: 1,
@@ -117,6 +119,48 @@ define(function (require) {
 
       this._setViewControl = new L.Control.SetView();
       this.map.addControl(this._setViewControl);
+    };
+
+    TileMapMap.prototype._addMousePositionControl = function () {
+      let self = this;
+      if (this._mousePositionControl) {
+        $('.leaflet-control-mouseposition').off();
+        this.map.removeControl(this._mousePositionControl);
+        this._mousePositionControl = null;
+        this._decimalDegrees = !this._decimalDegrees;
+      }
+
+      let latFormatter = undefined;
+      let lonFormatter = undefined;
+      if(!this._decimalDegrees) {
+        const space = "replaceMe";
+        latFormatter = function(lat) {
+          var dms = formatcoords(lat,0).format('DD MM ss X', {
+            latLonSeparator: space,
+            decimalPlaces: 2
+          });
+          return dms.substring(0, dms.indexOf(space));
+        }
+        lonFormatter = function(lon) {
+          var dms = formatcoords(0, lon).format('DD MM ss X', {
+            latLonSeparator: space,
+            decimalPlaces: 2
+          });
+          return dms.substring(dms.indexOf(space) + space.length);
+        }
+      }
+
+      this._mousePositionControl = L.control.mousePosition({
+        emptyString: '',
+        lngFormatter: lonFormatter,
+        latFormatter: latFormatter
+      });
+      this.map.addControl(this._mousePositionControl);
+
+      $('.leaflet-control-mouseposition').on('click', function (e) {
+        e.preventDefault();
+        self._addMousePositionControl();
+      });
     };
 
     /**
@@ -348,9 +392,10 @@ define(function (require) {
       this.map = L.map(this._container, mapOptions);
       this._layerControl = L.control.layers();
       this._layerControl.addTo(this.map);
-      L.control.mousePosition().addTo(this.map);
+      
       this._addSetViewControl();
       this._addDrawControl();
+      this._addMousePositionControl();
       this._attachEvents();
       syncMaps.add(this.map);
     };
