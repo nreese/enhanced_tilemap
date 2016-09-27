@@ -133,14 +133,13 @@ define(function (require) {
     BaseMarker.prototype.destroy = function () {
       let self = this;
 
-      if(this._intervalId) {
-        window.clearInterval(this._intervalId);
-      }
+      this._stopLoadingGeohash();
 
       // remove popups
       self.popups = self.popups.filter(function (popup) {
         popup.off('mouseover').off('mouseout');
       });
+      self._hidePopup();
 
       if (self._legend) {
         self.map.removeControl(self._legend);
@@ -186,22 +185,23 @@ define(function (require) {
       } else {
         //don't block UI when processing lots of features
         this._markerGroup = L.geoJson(self.geoJson.features.slice(0,100), _.defaults(defaultOptions, options));
-        if(this._intervalId) {
-          window.clearInterval(this._intervalId);
-        }
+        this._stopLoadingGeohash();
+
+        this._createSpinControl();
         var place = 100;
         this._intervalId = setInterval(
           function() {
             var stopIndex = place + 100;
+            var halt = false;
             if(stopIndex > self.geoJson.features.length) {
               stopIndex = self.geoJson.features.length;
-              window.clearInterval(self._intervalId);
+              halt = true;
             }
-            console.log("place: " + place + ", stop: " + stopIndex);
             for(var i=place; i<stopIndex; i++) {
               place++;
               self._markerGroup.addData(self.geoJson.features[i]);
             }
+            if(halt) self._stopLoadingGeohash();
           },
           200);
       }
@@ -264,6 +264,42 @@ define(function (require) {
 
       this.map.closePopup();
     };
+
+    BaseMarker.prototype._createSpinControl = function () {
+      if(this._spinControl) return;
+
+      var SpinControl = L.Control.extend({
+        options: {
+          position: 'topright'
+        },
+        onAdd: function (map) {
+          var container = L.DomUtil.create('div', 'leaflet-control leaflet-spin-control');
+          container.innerHTML = '<a class="fa fa-spinner fa-pulse fa-2x fa-fw" href="#" title="Loading Geohash Grids"></a>';
+          return container;
+        },
+        onRemove: function (map) {
+        }
+      });
+
+      this._spinControl = new SpinControl();
+      this.map.addControl(this._spinControl);
+    }
+
+    BaseMarker.prototype._removeSpinControl = function () {
+      if(!this._spinControl) return;
+
+      this.map.removeControl(this._spinControl);
+      this._spinControl = null;
+    }
+
+    BaseMarker.prototype._stopLoadingGeohash = function () {
+      if(this._intervalId) {
+        window.clearInterval(this._intervalId);
+      }
+      this._intervalId = null;
+
+      this._removeSpinControl();
+    }
 
     /**
      * d3 quantize scale returns a hex color, used for marker fill color
