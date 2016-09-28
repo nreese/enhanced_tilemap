@@ -47,6 +47,12 @@ Provide the ablity to add additional WFS and WMS layers to the map.
 ### geo aggregation filtered by geo_bounding_box collar
 [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
 
+# Install
+## Kibana 4.x
+```bash
+bin/kibana plugin -i enhanced_tilemap -u https://github.com/nreese/enhanced_tilemap/archive/master.zip
+```
+
 # Compatibility
 The plugin is compatible with following Versions (other not tested yet):
 * kibana (=4.4+)
