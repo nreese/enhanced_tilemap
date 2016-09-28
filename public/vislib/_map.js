@@ -54,7 +54,6 @@ define(function (require) {
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
       this._setAttr(params.attr);
       this._isEditable = params.editable || false;
-      this._decimalDegrees = true;
 
       var mapOptions = {
         minZoom: 1,
@@ -122,45 +121,36 @@ define(function (require) {
     };
 
     TileMapMap.prototype._addMousePositionControl = function () {
-      let self = this;
-      if (this._mousePositionControl) {
-        $('.leaflet-control-mouseposition').off();
-        this.map.removeControl(this._mousePositionControl);
-        this._mousePositionControl = null;
-        this._decimalDegrees = !this._decimalDegrees;
-      }
+      if (this._mousePositionControl) return;
 
-      let latFormatter = undefined;
-      let lonFormatter = undefined;
-      if(!this._decimalDegrees) {
-        const space = "replaceMe";
-        latFormatter = function(lat) {
-          var dms = formatcoords(lat,0).format('DD MM ss X', {
-            latLonSeparator: space,
-            decimalPlaces: 2
-          });
-          return dms.substring(0, dms.indexOf(space));
-        }
-        lonFormatter = function(lon) {
-          var dms = formatcoords(0, lon).format('DD MM ss X', {
-            latLonSeparator: space,
-            decimalPlaces: 2
-          });
-          return dms.substring(dms.indexOf(space) + space.length);
-        }
+      const dd = function(val) {
+        return L.Util.formatNum(val, 5);
       }
-
+      const space = "replaceMe";
       this._mousePositionControl = L.control.mousePosition({
         emptyString: '',
-        lngFormatter: lonFormatter,
-        latFormatter: latFormatter
+        lngFormatters: [
+          dd,
+          function(lon) {
+            var dms = formatcoords(0, lon).format('DD MM ss X', {
+              latLonSeparator: space,
+              decimalPlaces: 2
+            });
+            return dms.substring(dms.indexOf(space) + space.length);
+          }
+        ],
+        latFormatters: [
+          dd,
+          function(lat) {
+            var dms = formatcoords(lat,0).format('DD MM ss X', {
+              latLonSeparator: space,
+              decimalPlaces: 2
+            });
+            return dms.substring(0, dms.indexOf(space));
+          }
+        ]
       });
       this.map.addControl(this._mousePositionControl);
-
-      $('.leaflet-control-mouseposition').on('click', function (e) {
-        e.preventDefault();
-        self._addMousePositionControl();
-      });
     };
 
     /**
