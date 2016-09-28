@@ -89,7 +89,12 @@ define(function (require) {
           marker: {
             icon: markerIcon
           },
-          polygon: false,
+          polygon: {
+            shapeOptions: {
+              stroke: false,
+              color: '#000'
+            }
+          },
           polyline: false,
           rectangle: {
             shapeOptions: {
@@ -304,6 +309,18 @@ define(function (require) {
               latlng: e.layer._latlng
             });
             break;
+          case "polygon":
+            const points = [];
+            e.layer._latlngs.forEach(function(latlng){
+              const lat = L.Util.formatNum(latlng.lat, 5);
+              const lon = L.Util.formatNum(latlng.lng, 5);
+              points.push([lon, lat]);
+            });
+            self._callbacks.polygon({
+              chart: self._chartData,
+              points: points
+            });
+            break;
           case "rectangle":
             var bounds = e.layer.getBounds();
             self._callbacks.rectangle({
@@ -322,7 +339,7 @@ define(function (require) {
             });
             break;
           default:
-            console.log("draw:created, unexpected layerType: " + drawType);
+            console.log("draw:created, unexpected layerType: " + e.layerType);
         }
       });
 
