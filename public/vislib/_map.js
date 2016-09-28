@@ -293,7 +293,7 @@ define(function (require) {
           center: self._mapCenter,
           zoom: self._mapZoom,
         });
-      }, 500, false));
+      }, 150, false));
 
       this.map.on('setview:fitBounds', function (e) {
         self._fitBounds();
@@ -353,18 +353,13 @@ define(function (require) {
       this.map.on('zoomend', _.debounce(function () {
         if (!self.map) return;
         if (self._hasSameLocation()) return;
-
-        self._mapCenter = self.map.getCenter();
-        self._mapZoom = self.map.getZoom();
         if (!self._callbacks) return;
-
         self._callbacks.mapZoomEnd({
           chart: self._chartData,
           map: self.map,
-          center: self._mapCenter,
-          zoom: self._mapZoom,
+          zoom: self.map.getZoom(),
         });
-      }, 500, false));
+      }, 150, false));
     };
 
     TileMapMap.prototype._hasSameLocation = function () {

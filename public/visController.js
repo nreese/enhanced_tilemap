@@ -114,11 +114,10 @@ define(function (require) {
         _.round(event.center.lng, 5)
       ]
 
-      agg.params.mapZoom = event.zoom;
-      agg.params.mapCenter = center;
-
       const editableVis = agg.vis.getEditableVis();
       if (!editableVis) return;
+      editableVis.params.mapCenter = center;
+      editableVis.params.mapZoom = event.zoom;
 
       const editableAgg = editableVis.aggs.byId[agg.id];
       if (editableAgg) {
@@ -132,8 +131,7 @@ define(function (require) {
       if (!agg || !agg.params.autoPrecision) return;
 
       agg.params.mapZoom = event.zoom;
-      agg.params.mapCenter = [event.center.lat, event.center.lng];
-
+      
       // zoomPrecision maps event.zoom to a geohash precision value
       // event.limit is the configurable max geohash precision
       // default max precision is 7, configurable up to 12

@@ -6,8 +6,8 @@ Kibana ships with a functional tilemap visualization. This plugin provides an ad
 ### Add Markers to map
 Allows for the placement of markers on the tilemap. Markers are displayed when in the visualization panel or the dashboard panel. Markers can only be added and removed when in the visualization panel.
 
-### Geo Polygon Query support
-Click the polygon icon and draw a polygon on the map. The enhanced tilemap plugin will create a geo_polygon filter using this polygon. 
+### Geo Polygon Query
+Click the polygon icon and draw a polygon on the map. The enhanced tilemap plugin will create a geo_polygon filter.
 
 ### Load geohash grids without blocking user interface
 The existing tilemap loads all of the geohash grids at a single time. This can result in adding hundreds or even thousands of DOM elements at a single time. The browser is locked up while this process occurs.
@@ -18,6 +18,7 @@ The enhanced tilemap plugin phases-in geohash grids, loading 100 every 200 milli
 * Leaflet control that when clicked provides lat/lon/zoom inputs. The inputs allow users to set the map view to a specific location and zoom level.
 * Display mouse latitude and longitude location in lower left corner. Click display to toggle decimal degrees and degrees minutes seconds.
 * Scroll map on mouse zoom. Feature can be turned off in options.
+* Enable **Apply Changes** button when map is moved or zoomed while in the visualization panel. This allows users to easily position map and save the visualization with the desired location.
 
 ### OR geospatial queries
 Kibana's tilemap visualization has a neat feature where you can draw a rectangle on the map and create a geo_bounding_box filter. The limitation arises when multiple bounding boxes are needed. Each drawn rectangle creates a new geo_bounding_box filter that are ANDed together resulting in "No results found" messages across all visualizations. 
