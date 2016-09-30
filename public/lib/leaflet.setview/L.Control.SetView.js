@@ -16,6 +16,9 @@ L.Control.SetView = L.Control.extend({
 });
 
 L.SetViewToolbar = L.Class.extend({
+  initialize: function (options) {
+    this._decimalDegrees = true;
+  },
   addToolbar: function (map) {
     var container = L.DomUtil.create('div', 'leaflet-draw-section');
     this._toolbarContainer = L.DomUtil.create('div', 'leaflet-bar');
@@ -137,34 +140,94 @@ L.SetViewToolbar = L.Class.extend({
     }
 
     var center = this._map.getCenter();
-    this._lat = center.lat.toFixed(5);
-    this._lon = center.lng.toFixed(5);
+    this._lat = L.Util.formatNum(center.lat, 5);
+    this._lon = L.Util.formatNum(center.lng, 5);
     this._zoom = this._map.getZoom();
 
-    this._createInput({
+    let unitValue = 'dd';
+    if(!this._decimalDegrees) unitValue = 'dms';
+    this._createSelect({
       container: L.DomUtil.create('li', '', container),
-      inputType: 'number',
-      placeholder: 'lat',
-      name: 'lat',
-      value: this._lat,
+      name: 'unit',
+      title: 'Select coordinate units; decimal degrees (dd) or degrees minutes seconds (dms)',
+      selectedValue: unitValue,
+      choices: [{display:'dd', value: 'dd'}, {display:'dms', value: 'dms'}],
       callback: function(event) {
-        if (event.srcElement.value < -90) event.srcElement.value = -90;
-        if (event.srcElement.value > 90) event.srcElement.value = 90;
-        self._lat = event.srcElement.value;
+        self._decimalDegrees = !self._decimalDegrees;
+        self._hideActionsToolbar();
+        self._showInputs();
       }
     });
-    this._createInput({
-      container: L.DomUtil.create('li', '', container),
-      inputType: 'number',
-      name: 'lon',
-      placeholder: 'lon',
-      value: this._lon,
-      callback: function(event) {
-        if (event.srcElement.value < -180) event.srcElement.value = -180;
-        if (event.srcElement.value > 180) event.srcElement.value = 180;
-        self._lon = event.srcElement.value;
-      }
-    });
+    if (this._decimalDegrees) {
+      this._createInput({
+        container: L.DomUtil.create('li', '', container),
+        inputType: 'number',
+        placeholder: 'lat',
+        name: 'lat',
+        value: this._lat,
+        callback: function(event) {
+          self._setLat(event.srcElement.value);
+        }
+      });
+      this._createInput({
+        container: L.DomUtil.create('li', '', container),
+        inputType: 'number',
+        name: 'lon',
+        placeholder: 'lon',
+        value: this._lon,
+        callback: function(event) {
+          self._setLon(event.srcElement.value);
+        }
+      });
+    } else {
+      this._latDms = this._ddToDms(this._lat);
+      this._createInput({
+        container: L.DomUtil.create('li', '', container),
+        inputType: 'text',
+        placeholder: 'lat DDMMSS',
+        name: 'latDms',
+        value: this._latDms,
+        callback: function(event) {
+          self._latDms = event.srcElement.value;
+        }
+      });
+      this._latDirection = 'n';
+      if(this._lat < 0) this._latDirection = 's';
+      this._createSelect({
+        container: L.DomUtil.create('li', '', container),
+        name: 'latDirection',
+        title: 'Latitude: North or South',
+        selectedValue: this._latDirection,
+        choices: [{display:'n', value: 'n'}, {display:'s', value: 's'}],
+        callback: function(event) {
+          self._latDirection = event.srcElement.value;
+        }
+      });
+      this._lonDms = this._ddToDms(this._lon);
+      this._createInput({
+        container: L.DomUtil.create('li', '', container),
+        inputType: 'text',
+        placeholder: 'lon DDMMSS',
+        name: 'lonDms',
+        value: this._lonDms,
+        callback: function(event) {
+          self._lonDms = event.srcElement.value;
+        }
+      });
+      this._lonDirection = 'e';
+      if(this._lon < 0) this._lonDirection = 'w';
+      this._createSelect({
+        container: L.DomUtil.create('li', '', container),
+        name: 'lonDirection',
+        title: 'Longitude: East or West',
+        selectedValue: this._lonDirection,
+        choices: [{display:'e', value: 'e'}, {display:'w', value: 'w'}],
+        callback: function(event) {
+          self._lonDirection = event.srcElement.value;
+        }
+      });
+
+    }
     var choices = [];
     for(var i = this._map.getMinZoom(); i <= this._map.getMaxZoom(); i++) {
       choices.push({
@@ -185,9 +248,12 @@ L.SetViewToolbar = L.Class.extend({
     this._createButton({
       title: "Click to set map view to provided values.",
       text: "Set View",
-      className: "middle-btn",
       container: L.DomUtil.create('li', '', container),
       callback: function() {
+        if(!self._decimalDegrees) {
+          self._setLat(self._dmsToDd(self._latDms, self._latDirection));
+          self._setLon(self._dmsToDd(self._lonDms, self._lonDirection));
+        }
         self._map.setView(L.latLng(self._lat, self._lon), self._zoom);
         self._hideActionsToolbar();
       }
@@ -204,5 +270,50 @@ L.SetViewToolbar = L.Class.extend({
     L.DomUtil.addClass(this._actionsContainer, 'leaflet-draw-actions-bottom');
     this._actionsContainer.style.top = '25px';
     this._actionsContainer.style.display = 'block';
+  },
+  _setLat: function(lat) {
+    if (event.srcElement.value < -90) event.srcElement.value = -90;
+    if (event.srcElement.value > 90) event.srcElement.value = 90;
+    this._lat = lat;
+  },
+  _setLon: function(lon) {
+    if (event.srcElement.value < -180) event.srcElement.value = -180;
+    if (event.srcElement.value > 180) event.srcElement.value = 180;
+    this._lon = lon;
+  },
+  _formatNumber: function(num) {
+    let sNum = parseInt(num, 10) + '';
+    if(num < 10) sNum = '0' + sNum;
+    return sNum;
+  },
+  _ddToDms: function(dd) {
+    let deg = parseInt(Math.abs(dd), 10);
+    let frac = Math.abs(Math.abs(dd) - deg);
+    let min = parseInt(frac * 60, 10);
+    let sec = frac * 3600 - min * 60;
+    if(sec >= 60) sec = 0;
+    return this._formatNumber(deg) + this._formatNumber(min) + this._formatNumber(sec);
+  },
+  _dmsToDd: function(dms, dir) {
+    let safeDms = '';
+    //remove any non-numerical characters
+    dms.split('').forEach(function(char) {
+      if (char >= '0' && char <= '9') safeDms += char;
+    });
+    //Ensure dms is at least 6 characters
+    while(safeDms.length < 6) {
+      safeDms += '0';
+    }
+
+    let degLength = 2;
+    if(safeDms.length > 6) {
+      degLength = 3;
+    }
+    let deg = parseInt(safeDms.substring(0, degLength), 10);
+    let min = parseInt(safeDms.substring(degLength, degLength+2), 10);
+    let sec = parseInt(safeDms.substring(degLength+2, degLength+4), 10);
+    let dd = deg + (min / 60.0) + (sec / 3600.0);
+    if (dir.toLowerCase() === 'w' || dir.toLowerCase() === 's') dd = dd * -1;
+    return dd;
   }
 });
