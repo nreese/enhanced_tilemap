@@ -240,6 +240,31 @@ define(function (require) {
     };
 
     /**
+     * Display geospatial filters as map layer to provide 
+     * users context for all applied filters
+     */
+    TileMapMap.prototype.addFilters = function (filters) {
+      if(this._filters) {
+        this._layerControl.removeLayer(this._filters);
+        this.map.removeLayer(this._filters);
+      }
+
+      const style = {
+        fillColor: "#ccc",
+        color: "#ccc",
+        weight: 1.5,
+        opacity: 1,
+        fillOpacity: 0.75
+      }
+      this._filters = L.geoJson(filters, {
+        clickable: false,
+        style: style
+      });
+      this.map.addLayer(this._filters);
+      this._layerControl.addOverlay(this._filters, "Applied Filters");
+    };
+
+    /**
      * Create the marker instance using the given options
      *
      * @method _createMarkers

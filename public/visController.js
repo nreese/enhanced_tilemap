@@ -15,6 +15,7 @@ define(function (require) {
   
   module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
     let aggResponse = Private(require('ui/agg_response/index'));
+    const queryFilter = Private(require('ui/filter_bar/query_filter'));
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
     let map = null;
@@ -50,6 +51,10 @@ define(function (require) {
             valueFormatter: _.get(chartData, 'valueFormatter')
           });
         }
+        if (_.has(chartData, 'geohashGridAgg')) {
+          const agg = _.get(chartData, 'geohashGridAgg');
+          map.addFilters(getGeoFilters(agg.fieldName()));
+        }
         map.addMarkers(chartData, $scope.vis.params);
       }
     });
@@ -62,6 +67,53 @@ define(function (require) {
       if (map) map.destroy();
       changeVisOff();
     });
+
+    function getGeoFilters(field) {
+      let filters = [];
+      _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
+        if (isGeoFilter(it, field) && !_.get(it, 'meta.disabled', false)) {
+          const features = filterToGeoJson(it, field);
+          filters = filters.concat(filterToGeoJson(it, field));
+        }
+      });
+      return filters;
+    }
+
+    function filterToGeoJson(filter, field) {
+      let features = [];
+      if (_.has(filter, 'or')) {
+        _.get(filter, 'or', []).forEach(function(it) {
+          features = features.concat(filterToGeoJson(it, field));
+        });
+      } else if (_.has(filter, 'geo_bounding_box.' + field)) {
+        const topLeft = _.get(filter, 'geo_bounding_box.' + field + '.top_left');
+        const bottomRight = _.get(filter, 'geo_bounding_box.' + field + '.bottom_right');
+        if(topLeft && bottomRight) {
+          const coords = [];
+          coords.push([topLeft.lon, topLeft.lat]);
+          coords.push([bottomRight.lon, topLeft.lat]);
+          coords.push([bottomRight.lon, bottomRight.lat]);
+          coords.push([topLeft.lon, bottomRight.lat]);
+          features.push({
+            type: 'Polygon',
+            coordinates: [coords]
+          });
+        }
+      } else if (_.has(filter, 'geo_polygon.' + field)) {
+        const points = _.get(filter, 'geo_polygon.' + field + '.points', []);
+        const coords = [];
+        points.forEach(function(point) {
+          const lat = point[1];
+          const lon = point[0];
+          coords.push([lon, lat]);
+        });
+        if(polygon.length > 0) features.push({
+            type: 'Polygon',
+            coordinates: [coords]
+          });
+      }
+      return features;
+    }
 
     function appendMap(options) {
       var params = $scope.vis.params;
@@ -189,7 +241,6 @@ define(function (require) {
     }
 
     function addGeoFilter(newFilter, field, indexPatternName) {
-      var queryFilter = Private(require('ui/filter_bar/query_filter'));
       let existingFilter = null;
       _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
         if (isGeoFilter(it, field)) {
