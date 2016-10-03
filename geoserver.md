@@ -36,7 +36,7 @@ Servlets are deployed in web containers. A web container is an application that 
 View the page http://localhost:8080/geoserver/web/wicket/bookmarkable/org.geoserver.web.data.store.NewDataPage and ensure that Elasticsearch is an option under Vector Data Source.
 
 ## Setting up a WMS layer
-Must be logged in as admin and have elasticsearch 2.2 instance running on the standard ports with an index containing a top level field with either a geo_point or geo_shape type.
+Must have elasticsearch 2.2 instance running on the standard ports with an index containing a top level field with either a geo_point or geo_shape type.
 
 ### Login as admin
 username: admin
@@ -47,7 +47,7 @@ A workspace is a namespace. The value will be in the WMS layer URL. Use them to 
 * Workspaces -> Add new workspace
 * Set Name and Namespace URI to 'elastic', check 'Default Workspace',  and click Submit
 
-### Create an elasticsearch data store
+### Create an elasticsearch data store + layer
 * Stores -> Add new Store -> Elasticsearch
 * Fill in the following fields
 ```
@@ -64,7 +64,17 @@ A workspace is a namespace. The value will be in the WMS layer URL. Use them to 
 * The screen 'Edit Layer' will appear. Fill out the 'Bounding Boxes' section. Just use -90 and 90 for lat constraints and -180 and 180 for lon constraints. Click Save.
 * Test out the layer. Go to Layer Preview and select OpenLayers in your layer's row.
 
-### View WMS layer in kibana - with kibana filters
+## View WMS layer in kibana - with kibana filters
+Must have kibana instance with enhanced tilemap plugin installed
+
+### Create enhanced tilemap visualization
+
+### Add WMS overlay
+* Under options, check 'WMS Overlays'
+* Set WMS URL to http://localhost:8080/geoserver/your-workspace-name/wms
+* In geoserver, go to the Layers page. The WMS Layer value will be the name column for your layer row. Set WMS Layers to this value
+* Check 'Sync kibana filters'
+* Click 'Apply changes'
 
 
 
