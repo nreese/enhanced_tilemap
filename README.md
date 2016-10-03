@@ -33,6 +33,13 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 
 **Performance tip** Store enhanced_tilemaps belonging to the same dashboard at identical zoom levels. When enhanced_tilemaps are stored with different zoom levels, the browser will have to make 2 requests to elasticsearch for data. The first will get all data at different zoom levels. Then the next, will fetch all data at identical zoom levels. The second request can be avoided if all maps are stored at identical zoom levels. Check the map zoom level by clicking the set view control (eye icon) in the upper left corner of the map display.
 
+### WMS Overlay
+Add a WMS overlay to the tilemap.
+
+View aggregated results and document features in the same map. 
+When **Sync kibana filters** is checked, kibana filters are sent to the WMS server resulting in tiles that reflect the time range, search query, and filters of your kibana application. 
+Requires WMS to be served from an elasticsearch Store.
+
 ## Planned Enhancements
 
 ### backport kibana 5.x tilemap improvements to 4.x.
@@ -40,9 +47,6 @@ The kibana tilemap plugin has been updated with several pull-requests but none o
 * https://github.com/elastic/kibana/pull/6001
 * https://github.com/elastic/kibana/pull/8000
 * https://github.com/elastic/kibana/pull/6835
-
-### add additional layers
-Provide the ablity to add additional WFS and WMS layers to the map.
 
 ### geo aggregation filtered by geo_bounding_box collar
 [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)

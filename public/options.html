@@ -222,5 +222,57 @@
 
   <p>* if this parameter is incorrect, maps will fail to load.</p>
 
+</div>
 
+<div class="vis-option-item form-group">
+  <label>
+    <input type="checkbox"
+    name="overlay.wms.enabled"
+    ng-model="vis.params.overlay.wms.enabled">
+
+    WMS Overlays
+
+    <kbn-info info="Use WMS compliant map tile server. Layer can be toggled on/off in layer control."></kbn-info>
+  </label>
+</div>
+
+<div ng-show="vis.params.overlay.wms.enabled" class="well">
+  <div class="vis-option-item form-group">
+    <label>
+      WMS url
+    </label>
+    <input type="text" class="form-control"
+      name="overlay.wms.url"
+      ng-model="vis.params.overlay.wms.url">    
+  </div>
+
+  <div class="vis-option-item form-group">
+    <label>
+      WMS layers <kbn-info info="A comma seperated list of layers to use."></kbn-info>
+    </label>
+    <input type="text" class="form-control"
+      ng-model="vis.params.overlay.wms.options.layers"   
+      name="overlay.wms.options.layers">
+  </div>
+
+  <div class="vis-option-item form-group">
+    <label>
+      Display name <kbn-info info="Layer name displayed in layer control."></kbn-info>
+    </label>
+    <input type="text" class="form-control"
+      ng-model="vis.params.overlay.wms.options.displayName"   
+      name="overlay.wms.options.displayName">
+  </div>
+
+  <div class="vis-option-item form-group">
+    <label>
+      <input type="checkbox"
+      name="overlay.wms.options.viewparams.enabled"
+      ng-model="vis.params.overlay.wms.options.viewparams.enabled">
+
+      Sync kibana filters
+
+      <kbn-info info="View aggregated results and document features in the same map. When true, kibana filters are sent to the WMS server resulting in tiles that reflect the time range, search query, and filters of your kibana application. Requires WMS to be served from an elasticsearch Store."></kbn-info>
+    </label>
+  </div>
 </div>

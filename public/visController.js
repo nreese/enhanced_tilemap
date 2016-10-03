@@ -55,7 +55,9 @@ define(function (require) {
           const agg = _.get(chartData, 'geohashGridAgg');
           map.addFilters(getGeoFilters(agg.fieldName()));
         }
-        updateWmsOverlays();
+        if (_.get($scope.vis.params, 'overlay.wms.enabled')) {
+          addWmsOverlays();
+        }
         map.addMarkers(chartData, $scope.vis.params);
       }
     });
@@ -80,35 +82,46 @@ define(function (require) {
       return filters;
     }
 
-    function updateWmsOverlays() {
-      const source = new courier.SearchSource();
-      const appState = getAppState();
-      source.set('filter', queryFilter.getFilters());
-      if (appState.query && !appState.linked) {
-        source.set('query', appState.query);
+    function addWmsOverlays() {
+      const url = _.get($scope.vis.params, 'overlay.wms.url');
+      const name = _.get($scope.vis.params, 'overlay.wms.options.displayName', 'WMS Overlay');
+      const options = {
+        format: 'image/png',
+        layers: _.get($scope.vis.params, 'overlay.wms.options.layers'),
+        transparent: true,
+        version: '1.1.1'
+      };
+      if (_.get($scope.vis.params, 'overlay.wms.options.viewparams.enabled')) {
+        const source = new courier.SearchSource();
+        const appState = getAppState();
+        source.set('filter', queryFilter.getFilters());
+        if (appState.query && !appState.linked) {
+          source.set('query', appState.query);
+        }
+        source._flatten().then(function (fetchParams) {
+          const esQuery = fetchParams.body.query;
+          //remove kibana parts of query
+          const cleanedMust = [];
+          if (_.has(esQuery, 'filtered.filter.bool.must')) {
+            esQuery.filtered.filter.bool.must.forEach(function(must) {
+              cleanedMust.push(_.omit(must, ['$state', '$$hashKey']));
+            });
+          }
+          esQuery.filtered.filter.bool.must = cleanedMust;
+          const cleanedMustNot = [];
+          if (_.has(esQuery, 'filtered.filter.bool.must_not')) {
+            esQuery.filtered.filter.bool.must_not.forEach(function(mustNot) {
+              cleanedMustNot.push(_.omit(mustNot, ['$state', '$$hashKey']));
+            });
+          }
+          esQuery.filtered.filter.bool.must_not = cleanedMustNot;
+          
+          options.viewparams = 'q:' + JSON.stringify(esQuery).replace(new RegExp('[,]', 'g'), '\\,');
+          map.addWmsOverlay(url, name, options);
+        });
+      } else {
+        map.addWmsOverlay(url, name, options);
       }
-      source._flatten().then(function (fetchParams) {
-        const esQuery = fetchParams.body.query;
-        //remove kibana parts of query
-        const cleanedMust = [];
-        if (_.has(esQuery, 'filtered.filter.bool.must')) {
-          esQuery.filtered.filter.bool.must.forEach(function(must) {
-            cleanedMust.push(_.omit(must, ['$state', '$$hashKey']));
-          });
-        }
-        esQuery.filtered.filter.bool.must = cleanedMust;
-        const cleanedMustNot = [];
-        if (_.has(esQuery, 'filtered.filter.bool.must_not')) {
-          esQuery.filtered.filter.bool.must_not.forEach(function(mustNot) {
-            cleanedMustNot.push(_.omit(mustNot, ['$state', '$$hashKey']));
-          });
-        }
-        esQuery.filtered.filter.bool.must_not = cleanedMustNot;
-        
-        let esQueryString = JSON.stringify(esQuery);
-        esQueryString = esQueryString.replace(new RegExp('[,]', 'g'), '\\,');
-        console.log(esQueryString);
-      });
     }
 
     function filterToGeoJson(filter, field) {

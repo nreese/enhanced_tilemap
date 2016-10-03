@@ -260,8 +260,22 @@ define(function (require) {
         clickable: false,
         style: style
       });
-      this.map.addLayer(this._filters);
+      //this.map.addLayer(this._filters);
       this._layerControl.addOverlay(this._filters, "Applied Filters");
+    };
+
+    /**
+     * 
+     */
+    TileMapMap.prototype.addWmsOverlay = function (url, name, options) {
+      if(this._overlay) {
+        this._layerControl.removeLayer(this._overlay);
+        this.map.removeLayer(this._overlay);
+      }
+      
+      this._overlay = L.tileLayer.wms(url, options);
+      this.map.addLayer(this._overlay);
+      this._layerControl.addOverlay(this._overlay, name);
     };
 
     /**
