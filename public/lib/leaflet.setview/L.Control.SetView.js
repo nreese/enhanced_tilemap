@@ -166,7 +166,7 @@ L.SetViewToolbar = L.Class.extend({
         name: 'lat',
         value: this._lat,
         callback: function(event) {
-          self._setLat(event.srcElement.value);
+          self._setLat(self._getValue(event));
         }
       });
       this._createInput({
@@ -176,7 +176,7 @@ L.SetViewToolbar = L.Class.extend({
         placeholder: 'lon',
         value: this._lon,
         callback: function(event) {
-          self._setLon(event.srcElement.value);
+          self._setLon(self._getValue(event));
         }
       });
     } else {
@@ -188,7 +188,7 @@ L.SetViewToolbar = L.Class.extend({
         name: 'latDms',
         value: this._latDms,
         callback: function(event) {
-          self._latDms = event.srcElement.value;
+          self._latDms = self._getValue(event);
         }
       });
       this._latDirection = 'n';
@@ -200,7 +200,7 @@ L.SetViewToolbar = L.Class.extend({
         selectedValue: this._latDirection,
         choices: [{display:'n', value: 'n'}, {display:'s', value: 's'}],
         callback: function(event) {
-          self._latDirection = event.srcElement.value;
+          self._latDirection = self._getValue(event);
         }
       });
       this._lonDms = this._ddToDms(this._lon);
@@ -211,7 +211,7 @@ L.SetViewToolbar = L.Class.extend({
         name: 'lonDms',
         value: this._lonDms,
         callback: function(event) {
-          self._lonDms = event.srcElement.value;
+          self._lonDms = self._getValue(event);
         }
       });
       this._lonDirection = 'e';
@@ -223,7 +223,7 @@ L.SetViewToolbar = L.Class.extend({
         selectedValue: this._lonDirection,
         choices: [{display:'e', value: 'e'}, {display:'w', value: 'w'}],
         callback: function(event) {
-          self._lonDirection = event.srcElement.value;
+          self._lonDirection = self._getValue(event);
         }
       });
 
@@ -242,7 +242,7 @@ L.SetViewToolbar = L.Class.extend({
       selectedValue: this._map.getZoom(),
       choices: choices,
       callback: function(event) {
-        self._zoom = event.srcElement.value;
+        self._zoom = self._getValue(event);
       }
     });
     this._createButton({
@@ -271,14 +271,18 @@ L.SetViewToolbar = L.Class.extend({
     this._actionsContainer.style.top = '25px';
     this._actionsContainer.style.display = 'block';
   },
+  _getValue: function(event) {
+    const el = event.target || event.srcElement;
+    return el.value;
+  },
   _setLat: function(lat) {
-    if (event.srcElement.value < -90) event.srcElement.value = -90;
-    if (event.srcElement.value > 90) event.srcElement.value = 90;
+    if (lat < -90) lat = -90;
+    if (lat > 90) lat = 90;
     this._lat = lat;
   },
   _setLon: function(lon) {
-    if (event.srcElement.value < -180) event.srcElement.value = -180;
-    if (event.srcElement.value > 180) event.srcElement.value = 180;
+    if (lon < -180) lon = -180;
+    if (lon > 180) lon = 180;
     this._lon = lon;
   },
   _formatNumber: function(num) {
