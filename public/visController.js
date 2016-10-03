@@ -55,6 +55,7 @@ define(function (require) {
           const agg = _.get(chartData, 'geohashGridAgg');
           map.addFilters(getGeoFilters(agg.fieldName()));
         }
+        updateWmsOverlays();
         map.addMarkers(chartData, $scope.vis.params);
       }
     });
@@ -73,10 +74,41 @@ define(function (require) {
       _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
         if (isGeoFilter(it, field) && !_.get(it, 'meta.disabled', false)) {
           const features = filterToGeoJson(it, field);
-          filters = filters.concat(filterToGeoJson(it, field));
+          filters = filters.concat(features);
         }
       });
       return filters;
+    }
+
+    function updateWmsOverlays() {
+      const source = new courier.SearchSource();
+      const appState = getAppState();
+      source.set('filter', queryFilter.getFilters());
+      if (appState.query && !appState.linked) {
+        source.set('query', appState.query);
+      }
+      source._flatten().then(function (fetchParams) {
+        const esQuery = fetchParams.body.query;
+        //remove kibana parts of query
+        const cleanedMust = [];
+        if (_.has(esQuery, 'filtered.filter.bool.must')) {
+          esQuery.filtered.filter.bool.must.forEach(function(must) {
+            cleanedMust.push(_.omit(must, ['$state', '$$hashKey']));
+          });
+        }
+        esQuery.filtered.filter.bool.must = cleanedMust;
+        const cleanedMustNot = [];
+        if (_.has(esQuery, 'filtered.filter.bool.must_not')) {
+          esQuery.filtered.filter.bool.must_not.forEach(function(mustNot) {
+            cleanedMustNot.push(_.omit(mustNot, ['$state', '$$hashKey']));
+          });
+        }
+        esQuery.filtered.filter.bool.must_not = cleanedMustNot;
+        
+        let esQueryString = JSON.stringify(esQuery);
+        esQueryString = esQueryString.replace(new RegExp('[,]', 'g'), '\\,');
+        console.log(esQueryString);
+      });
     }
 
     function filterToGeoJson(filter, field) {
