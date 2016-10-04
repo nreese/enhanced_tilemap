@@ -10,10 +10,14 @@ Geoserver provides the tools needed to turn geospatial data into map tiles.
 Out of the box, geoserver supports data stores such as PostGis and static files - but not Elasticsearch.
 [ElasticGeo](https://github.com/ngageoint/elasticgeo) provides the plumbing needed to hook up geoserver to Elasticsearch.
 
-In Java land, a servlet is a Java program that implements the Java Servlet API - a standard for Java classes that respond to requests.
+A servlet is a Java program that implements the Java Servlet API - a standard for Java classes that respond to requests.
 Geoserver is a servlet.
 Servlets are deployed in web containers. A web container is an application that manages one to many servlets.
 [Apache Tomcat](http://tomcat.apache.org/) is an easy to use web container.
+
+### Passing Elasticsearch queries over WMS
+ElasticGeo exposes native Elasticsearch query functionality with the WMS parameter [viewparams](https://github.com/ngageoint/elasticgeo/blob/master/gs-web-elasticsearch/doc/index.rst#custom-q-and-f-parameters).
+The enhanced tilemap plugin uses this mechanism to pass the identical query Kibana used for aggregations to the WMS server.
 
 ## Installation
 
