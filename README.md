@@ -38,7 +38,8 @@ Add a WMS overlay to the tilemap.
 
 View aggregated results and document features in the same map. 
 When **Sync kibana filters** is checked, kibana filters are sent to the WMS server resulting in tiles that reflect the time range, search query, and filters of your kibana application. 
-Requires WMS to be served from an elasticsearch Store.
+Requires WMS to be served from an elasticsearch Store. 
+Follow the [geoserver guide](geoserver.md) for instructions on setting up a WMS layer pulling data from your elasticsearch cluster.
 
 ## Planned Enhancements
 
