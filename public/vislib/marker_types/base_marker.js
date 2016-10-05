@@ -176,8 +176,7 @@ define(function (require) {
         style: function (feature) {
           let value = _.get(feature, 'properties.value');
           return self.applyShadingStyle(value);
-        },
-        filter: self._filterToMapBounds()
+        }
       };
 
       if(self.geoJson.features.length <= 250) {
@@ -207,22 +206,6 @@ define(function (require) {
       }
 
       this._addToMap();
-    };
-
-    /**
-     * return whether feature is within map bounds
-     *
-     * @method _filterToMapBounds
-     * @param map {Leaflet Object}
-     * @return {boolean}
-     */
-    BaseMarker.prototype._filterToMapBounds = function () {
-      let self = this;
-      return function (feature) {
-        let mapBounds = self.map.getBounds();
-        let bucketRectBounds = _.get(feature, 'properties.rectangle');
-        return mapBounds.intersects(bucketRectBounds);
-      };
     };
 
     /**

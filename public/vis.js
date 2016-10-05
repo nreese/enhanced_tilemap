@@ -21,6 +21,7 @@ define(function (require) {
       params: {
         defaults: {
           mapType: 'Scaled Circle Markers',
+          collarScale: 1.5,
           scaleType: 'dynamic',
           scaleBands: [{
             low: 0,

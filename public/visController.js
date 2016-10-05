@@ -21,10 +21,48 @@ define(function (require) {
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
     let map = null;
+    let collar = null;
     appendMap();
+
+    $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
+    $scope.vis.aggs.toDsl = function() {
+      resizeArea();
+      const dsl = $scope.vis.aggs.origToDsl();
+      
+      //append map collar filter to geohash_grid aggregation
+      _.keys(dsl).forEach(function(key) {
+        if(_.has(dsl[key], "geohash_grid")) {
+          const origAgg = dsl[key];
+          dsl[key] = {
+            filter: aggFilter(origAgg.geohash_grid.field),
+            aggs: {
+              filtered_geohash: origAgg
+            }
+          }
+        }
+      });
+      return dsl;
+    }
+    function aggFilter(field) {
+      collar = utils.scaleBounds(
+        map.mapBounds(), 
+        $scope.vis.params.collarScale);
+      var filter = {geo_bounding_box: {}};
+      filter.geo_bounding_box[field] = collar;
+      return filter;
+    }
 
     //Useful bits of ui/public/vislib_vis_type/buildChartData.js
     function buildChartData(resp) {
+      const aggs = resp.aggregations;
+      _.keys(aggs).forEach(function(key) {
+        if(_.has(aggs[key], "filtered_geohash")) {
+          aggs[key].buckets = aggs[key].filtered_geohash.buckets;
+          delete aggs[key].filtered_geohash;
+          console.log("geogrids: " + aggs[key].buckets.length);
+          if(aggs[key].buckets.length === 0) return;
+        }
+      });
       var tableGroup = aggResponse.tabify($scope.vis, resp, {
         canSplit: true,
         asAggConfigResults: true
@@ -59,7 +97,8 @@ define(function (require) {
           chartData, 
           $scope.vis.params,
           Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
-          _.get(chartData, 'valueFormatter', _.identity));
+          _.get(chartData, 'valueFormatter', _.identity),
+          collar);
       }
     });
 

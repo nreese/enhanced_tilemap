@@ -10,6 +10,15 @@
   </select>
 </div>
 
+<div class="form-group">
+  <label>
+    Map Collar Scale <kbn-info info="Use this input to increase or decrease the size of the geo aggregation filter. A value of 1 will size the filter to the map bounds. A value of 2 will size the filter to 2X the map bounds. A value too small could result in excessive fetches. A value too large could result in trimmed results and slow performance."></kbn-info>
+  </label>
+  <input type="number" class="form-control"
+    name="collarScale"
+    ng-model="vis.params.collarScale">
+</div>
+
 <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
   <div class="form-group">
     <label>Quantize scale type</label>

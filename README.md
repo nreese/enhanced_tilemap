@@ -6,6 +6,9 @@ Kibana ships with a functional tilemap visualization. This plugin provides an ad
 ### Add Markers to map
 Allows for the placement of markers on the tilemap. Markers are displayed when in the visualization panel or the dashboard panel. Markers can only be added and removed when in the visualization panel.
 
+### Filter geohash_grid aggregation by geo_bounding_box collar
+Resolves issue [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
+
 ### Geo Polygon Query
 Click the polygon icon and draw a polygon on the map. The enhanced tilemap plugin will create a geo_polygon filter.
 
@@ -48,9 +51,6 @@ The kibana tilemap plugin has been updated with several pull-requests but none o
 * https://github.com/elastic/kibana/pull/6001
 * https://github.com/elastic/kibana/pull/8000
 * https://github.com/elastic/kibana/pull/6835
-
-### geo aggregation filtered by geo_bounding_box collar
-[Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
 
 # Install
 ## Kibana 4.x

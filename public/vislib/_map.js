@@ -215,24 +215,18 @@ define(function (require) {
      *
      * @method _addMarkers
      */
-    TileMapMap.prototype.addMarkers = function (chartData, newParams, tooltipFormatter, valueFormatter) {
-      if(newParams) {
-        this._setMarkerType(newParams.mapType);
-        this._setAttr(newParams);
-      }
-      if(chartData) {
-        this._chartData = chartData;
-        this._geoJson = _.get(chartData, 'geoJson');
-      }
-      if(tooltipFormatter) this._tooltipFormatter = tooltipFormatter;
-      if(valueFormatter) this._valueFormatter = valueFormatter;
-      if(!this._tooltipFormatter) return;
+    TileMapMap.prototype.addMarkers = function (chartData, newParams, tooltipFormatter, valueFormatter, collar) {
+      this._setMarkerType(newParams.mapType);
+      this._setAttr(newParams);
+      this._chartData = chartData;
+      this._geoJson = _.get(chartData, 'geoJson');
+      this._collar = collar;
       
       if (this._markers) this._markers.destroy();
 
       this._markers = this._createMarkers({
-        tooltipFormatter: this._tooltipFormatter,
-        valueFormatter: this._valueFormatter,
+        tooltipFormatter: tooltipFormatter,
+        valueFormatter: valueFormatter,
         attr: this._attr
       });
       
@@ -278,6 +272,10 @@ define(function (require) {
       this._overlay = L.tileLayer.wms(url, options);
       this.map.addLayer(this._overlay);
       this._layerControl.addOverlay(this._overlay, name);
+    };
+
+    TileMapMap.prototype.mapBounds = function () {
+      return this.map.getBounds();
     };
 
     /**
@@ -326,10 +324,11 @@ define(function (require) {
         // update internal center and zoom references
         self._mapCenter = self.map.getCenter();
         self._mapZoom = self.map.getZoom();
-        self.addMarkers();
 
         self._callbacks.mapMoveEnd({
           chart: self._chartData,
+          collar: self._collar,
+          mapBounds: self.mapBounds(),
           map: self.map,
           center: self._mapCenter,
           zoom: self._mapZoom,
