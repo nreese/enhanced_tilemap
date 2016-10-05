@@ -21,6 +21,7 @@ define(function (require) {
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
     let map = null;
+    appendMap();
 
     //Useful bits of ui/public/vislib_vis_type/buildChartData.js
     function buildChartData(resp) {
@@ -42,17 +43,11 @@ define(function (require) {
 
     $scope.$watch('esResponse', function (resp) {
       if(resp) {
+        resizeArea();
         const chartData = buildChartData(resp);
         const geoMinMax = getGeoExtents(chartData);
         chartData.geoJson.properties.allmin = geoMinMax.min;
         chartData.geoJson.properties.allmax = geoMinMax.max;
-        if (map === null) {
-          appendMap({
-            center: _.get(chartData, 'geoJson.properties.center'),
-            zoom: _.get(chartData, 'geoJson.properties.zoom'),
-            valueFormatter: _.get(chartData, 'valueFormatter')
-          });
-        }
         if (_.has(chartData, 'geohashGridAgg')) {
           const agg = _.get(chartData, 'geohashGridAgg');
           map.addFilters(getGeoFilters(agg.fieldName()));
@@ -60,7 +55,11 @@ define(function (require) {
         if (_.get($scope.vis.params, 'overlay.wms.enabled')) {
           addWmsOverlays();
         }
-        map.addMarkers(chartData, $scope.vis.params);
+        map.addMarkers(
+          chartData, 
+          $scope.vis.params,
+          Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
+          _.get(chartData, 'valueFormatter', _.identity));
       }
     });
 
@@ -162,16 +161,15 @@ define(function (require) {
       return features;
     }
 
-    function appendMap(options) {
+    function appendMap() {
+      const initialMapState = utils.getMapStateFromVis($scope.vis);
       var params = $scope.vis.params;
       var container = $element[0].querySelector('.tilemap');
       map = new TileMapMap(container, {
-        center: options.center,
-        zoom: options.zoom,
+        center: initialMapState.center,
+        zoom: initialMapState.zoom,
         callbacks: callbacks,
         mapType: params.mapType,
-        tooltipFormatter: Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
-        valueFormatter: options.valueFormatter || _.identity,
         attr: params,
         editable: $scope.vis.getEditableVis() ? true : false
       });

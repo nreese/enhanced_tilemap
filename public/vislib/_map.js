@@ -50,8 +50,6 @@ define(function (require) {
       const centerArray = _.get(params, 'center') || defaultMapCenter;
       this._mapCenter = L.latLng(centerArray[0], centerArray[1]);
       this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
-      this._valueFormatter = params.valueFormatter || _.identity;
-      this._tooltipFormatter = params.tooltipFormatter || _.identity;
       this._setAttr(params.attr);
       this._isEditable = params.editable || false;
 
@@ -217,7 +215,7 @@ define(function (require) {
      *
      * @method _addMarkers
      */
-    TileMapMap.prototype.addMarkers = function (chartData, newParams) {
+    TileMapMap.prototype.addMarkers = function (chartData, newParams, tooltipFormatter, valueFormatter) {
       if(newParams) {
         this._setMarkerType(newParams.mapType);
         this._setAttr(newParams);
@@ -226,6 +224,10 @@ define(function (require) {
         this._chartData = chartData;
         this._geoJson = _.get(chartData, 'geoJson');
       }
+      if(tooltipFormatter) this._tooltipFormatter = tooltipFormatter;
+      if(valueFormatter) this._valueFormatter = valueFormatter;
+      if(!this._tooltipFormatter) return;
+      
       if (this._markers) this._markers.destroy();
 
       this._markers = this._createMarkers({
