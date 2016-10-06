@@ -23,26 +23,30 @@ define(function (require) {
     let map = null;
     let collar = null;
     appendMap();
+    modifyToDsl();
 
-    $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
-    $scope.vis.aggs.toDsl = function() {
-      resizeArea();
-      const dsl = $scope.vis.aggs.origToDsl();
-      
-      //append map collar filter to geohash_grid aggregation
-      _.keys(dsl).forEach(function(key) {
-        if(_.has(dsl[key], "geohash_grid")) {
-          const origAgg = dsl[key];
-          dsl[key] = {
-            filter: aggFilter(origAgg.geohash_grid.field),
-            aggs: {
-              filtered_geohash: origAgg
+    function modifyToDsl() {
+      $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
+      $scope.vis.aggs.toDsl = function() {
+        resizeArea();
+        const dsl = $scope.vis.aggs.origToDsl();
+        
+        //append map collar filter to geohash_grid aggregation
+        _.keys(dsl).forEach(function(key) {
+          if(_.has(dsl[key], "geohash_grid")) {
+            const origAgg = dsl[key];
+            dsl[key] = {
+              filter: aggFilter(origAgg.geohash_grid.field),
+              aggs: {
+                filtered_geohash: origAgg
+              }
             }
           }
-        }
-      });
-      return dsl;
+        });
+        return dsl;
+      }
     }
+    
     function aggFilter(field) {
       collar = utils.scaleBounds(
         map.mapBounds(), 
@@ -81,6 +85,15 @@ define(function (require) {
 
     $scope.$watch('esResponse', function (resp) {
       if(resp) {
+        /*
+         * 'apply changes' creates new vis.aggs object
+         * Modify toDsl function and refetch data.
+         */ 
+        if(!_.has($scope.vis.aggs, "origToDsl")) {
+          modifyToDsl();
+          courier.fetch();
+          return;
+        }
         resizeArea();
         const chartData = buildChartData(resp);
         const geoMinMax = getGeoExtents(chartData);
