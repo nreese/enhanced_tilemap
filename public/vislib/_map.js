@@ -3,6 +3,7 @@ define(function (require) {
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
+    const utils = require('plugins/enhanced_tilemap/utils');
     var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
@@ -362,20 +363,10 @@ define(function (require) {
             });
             break;
           case "rectangle":
-            var bounds = e.layer.getBounds();
             self._callbacks.rectangle({
               e: e,
               chart: self._chartData,
-              bounds: {
-                top_left: {
-                  lat: bounds.getNorthWest().lat,
-                  lon: bounds.getNorthWest().lng
-                },
-                bottom_right: {
-                  lat: bounds.getSouthEast().lat,
-                  lon: bounds.getSouthEast().lng
-                }
-              }
+              bounds: utils.scaleBounds(e.layer.getBounds(), 1)
             });
             break;
           default:

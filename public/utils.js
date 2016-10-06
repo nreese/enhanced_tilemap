@@ -1,7 +1,7 @@
 define(function (require) {
   const _ = require('lodash');
   return {
-    /*
+    /* 
      * @param bounds {LatLngBounds}
      * @param scale {number}
      * @return {object}
@@ -10,23 +10,32 @@ define(function (require) {
       let safeScale = scale;
       if(safeScale < 1) scale = 1;
       if(safeScale > 5) scale = 5;
+      safeScale = safeScale - 1;
 
-      const topLeft = bounds.getNorthEast();
-      const bottomRight = bounds.getSouthWest();
-      let latDiff = Math.abs(topLeft.lat - bottomRight.lat);
-      let lonDiff = Math.abs(bottomRight.lng - topLeft.lng);
+      const topLeft = bounds.getNorthWest();
+      const bottomRight = bounds.getSouthEast();
+      let latDiff = _.round(Math.abs(topLeft.lat - bottomRight.lat), 5);
+      let lonDiff = _.round(Math.abs(bottomRight.lng - topLeft.lng), 5);
       //map height can be zero when vis is first created
       if(latDiff === 0) latDiff = lonDiff;
 
-      let topLeftLat = topLeft.lat + (latDiff * safeScale);
+      const latDelta = latDiff * safeScale;
+      let topLeftLat = _.round(topLeft.lat, 5) + latDelta;
       if(topLeftLat > 90) topLeftLat = 90;
-      let bottomRightLat = bottomRight.lat - (latDiff * safeScale);
+      let bottomRightLat = _.round(bottomRight.lat, 5) - latDelta;
       if(bottomRightLat < -90) bottomRightLat = -90;
-      let topLeftLon = topLeft.lng - (lonDiff * safeScale);
+      const lonDelta = lonDiff * safeScale;
+      let topLeftLon = _.round(topLeft.lng, 5) - lonDelta;
       if(topLeftLon < -180) topLeftLon = -180;
-      let bottomRightLon = bottomRight.lng + (lonDiff * safeScale);
+      let bottomRightLon = _.round(bottomRight.lng, 5) + lonDelta;
       if(bottomRightLon > 180) bottomRightLon = 180;
 
+      //console.log("scale:" + safeScale + ", latDelta: " + latDelta + ", lonDelta: " + lonDelta);
+      //console.log("top left lat " + _.round(topLeft.lat, 5) + " -> " + topLeftLat);
+      //console.log("bottom right lat " + _.round(bottomRight.lat, 5) + " -> " + bottomRightLat);
+      //console.log("top left lon " + _.round(topLeft.lng, 5) + " -> " + topLeftLon);
+      //console.log("bottom right lon " + _.round(bottomRight.lng, 5) + " -> " + bottomRightLon);
+      
       return {
         "top_left": {lat: topLeftLat, lon: topLeftLon},
         "bottom_right": {lat: bottomRightLat, lon: bottomRightLon}
