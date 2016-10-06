@@ -2,9 +2,10 @@ define(function (require) {
   return function CallbacksFactory(Private, courier, config, getAppState) {
     const _ = require('lodash');
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
-    const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const utils = require('plugins/enhanced_tilemap/utils');
     
+    let pushFilter = null;
+
     function filterAlias(field, numBoxes) {
       return field + ": " + numBoxes + " geo filters"
     }
@@ -37,7 +38,11 @@ define(function (require) {
           alias: filterAlias(field, geoFilters.length)
         });
       } else {
-        pushFilter(newFilter, false, indexPatternName);
+        if(!pushFilter) {
+          console.error("pushFilter not provided. Call setPushFilter!");
+        } else {
+          pushFilter(newFilter, false, indexPatternName);
+        }
       }
     }
 
@@ -87,6 +92,15 @@ define(function (require) {
     }
 
     return {
+      /*
+       * Need to pass in pushFilter
+       * super weird bug occurs if pushFilter loaded in this file
+       * On first page view - everything worked great
+       * After that - all pushes went nowhere - like it was a different state instance
+       */
+      setPushFilter: function(f) {
+        pushFilter = f;
+      },
       createMarker: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
         if (!agg) return;

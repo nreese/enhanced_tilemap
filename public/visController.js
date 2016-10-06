@@ -16,6 +16,7 @@ define(function (require) {
   module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
     let aggResponse = Private(require('ui/agg_response/index'));
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
+    const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
@@ -181,6 +182,7 @@ define(function (require) {
     }
 
     function appendMap() {
+      callbacks.setPushFilter(pushFilter);
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       var params = $scope.vis.params;
       var container = $element[0].querySelector('.tilemap');
