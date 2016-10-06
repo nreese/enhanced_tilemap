@@ -115,6 +115,12 @@ define(function (require) {
         const agg = _.get(event, 'chart.geohashGridAgg');
         if (!agg) return;
 
+        //Fetch new data if map bounds are outsize of collar
+        const bounds = utils.scaleBounds(event.mapBounds, 1);
+        if(!utils.contains(event.collar, bounds)) {
+          courier.fetch();
+        }
+
         const center = [
           _.round(event.center.lat, 5),
           _.round(event.center.lng, 5)
@@ -129,12 +135,6 @@ define(function (require) {
         if (editableAgg) {
           editableAgg.params.mapZoom = event.zoom;
           editableAgg.params.mapCenter = center;
-        }
-
-        //Fetch new data if map bounds are outsize of collar
-        const bounds = utils.scaleBounds(event.mapBounds, 1);
-        if(!utils.contains(event.collar, bounds)) {
-          courier.fetch();
         }
       },
       mapZoomEnd: function (event) {
