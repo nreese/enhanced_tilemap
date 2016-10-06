@@ -429,6 +429,7 @@ define(function (require) {
       this._addSetViewControl();
       this._addDrawControl();
       this._addMousePositionControl();
+      L.control.scale().addTo(this.map);
       this._attachEvents();
       syncMaps.add(this.map);
     };
