@@ -59,14 +59,16 @@ define(function (require) {
     //Useful bits of ui/public/vislib_vis_type/buildChartData.js
     function buildChartData(resp) {
       const aggs = resp.aggregations;
+      let numGeoBuckets = 0;
       _.keys(aggs).forEach(function(key) {
         if(_.has(aggs[key], "filtered_geohash")) {
           aggs[key].buckets = aggs[key].filtered_geohash.buckets;
           delete aggs[key].filtered_geohash;
-          console.log("geogrids: " + aggs[key].buckets.length);
-          if(aggs[key].buckets.length === 0) return;
+          numGeoBuckets = aggs[key].buckets.length;
         }
       });
+      console.log("geogrids: " + numGeoBuckets);
+      if(numGeoBuckets === 0) return;
       var tableGroup = aggResponse.tabify($scope.vis, resp, {
         canSplit: true,
         asAggConfigResults: true
@@ -96,6 +98,7 @@ define(function (require) {
         }
         resizeArea();
         const chartData = buildChartData(resp);
+        if(!chartData) return;
         const geoMinMax = getGeoExtents(chartData);
         chartData.geoJson.properties.allmin = geoMinMax.min;
         chartData.geoJson.properties.allmax = geoMinMax.max;
