@@ -46,7 +46,7 @@ define(function (require) {
         return dsl;
       }
     }
-    
+
     function aggFilter(field) {
       collar = utils.scaleBounds(
         map.mapBounds(), 
@@ -99,8 +99,8 @@ define(function (require) {
         const geoMinMax = getGeoExtents(chartData);
         chartData.geoJson.properties.allmin = geoMinMax.min;
         chartData.geoJson.properties.allmax = geoMinMax.max;
-        if (_.has(chartData, 'geohashGridAgg')) {
-          const agg = _.get(chartData, 'geohashGridAgg');
+        const agg = _.get(chartData, 'geohashGridAgg');
+        if (agg) {
           map.addFilters(getGeoFilters(agg.fieldName()));
         }
         if (_.get($scope.vis.params, 'overlay.wms.enabled')) {
