@@ -4,7 +4,7 @@ define(function (require) {
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
     const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const utils = require('plugins/enhanced_tilemap/utils');
-
+    
     function filterAlias(field, numBoxes) {
       return field + ": " + numBoxes + " geo filters"
     }
@@ -38,6 +38,51 @@ define(function (require) {
         });
       } else {
         pushFilter(newFilter, false, indexPatternName);
+      }
+    }
+
+    /**
+     * Get the number of geohash cells for a given precision
+     *
+     * @param {number} precision the geohash precision (1<=precision<=12).
+     * @param {number} axis constant for the axis 0=lengthwise (ie. columns, along longitude), 1=heightwise (ie. rows, along latitude).
+     * @returns {number} Number of geohash cells (rows or columns) at that precision
+     */
+    function geohashCells(precision, axis) {
+      let cells = 1;
+      for (let i = 1; i <= precision; i += 1) {
+        //On odd precisions, rows divide by 4 and columns by 8. Vice-versa on even precisions.
+        cells *= (i % 2 === axis) ? 4 : 8;
+      }
+      return cells;
+    }
+
+    /**
+     * Get the number of geohash columns (world-wide) for a given precision
+     * @param precision the geohash precision
+     * @returns {number} the number of columns
+     */
+    function geohashColumns(precision) {
+      return geohashCells(precision, 0);
+    }
+
+    const maxPrecision = parseInt(config.get('visualization:tileMap:maxPrecision'), 10) || 12;
+    /**
+     * Map Leaflet zoom levels to geohash precision levels.
+     * The size of a geohash column-width on the map should be at least `minGeohashPixels` pixels wide.
+     */
+    let zoomPrecision = {};
+    const minGeohashPixels = 16;
+    for (let zoom = 0; zoom <= 21; zoom += 1) {
+      const worldPixels = 256 * Math.pow(2, zoom);
+      zoomPrecision[zoom] = 1;
+      for (let precision = 2; precision <= maxPrecision; precision += 1) {
+        const columns = geohashColumns(precision);
+        if ((worldPixels / columns) >= minGeohashPixels) {
+          zoomPrecision[zoom] = precision;
+        } else {
+          break;
+        }
       }
     }
 
@@ -98,30 +143,6 @@ define(function (require) {
 
         agg.params.mapZoom = event.zoom;
         
-        // zoomPrecision maps event.zoom to a geohash precision value
-        // event.limit is the configurable max geohash precision
-        // default max precision is 7, configurable up to 12
-        const zoomPrecision = {
-          1: 2,
-          2: 2,
-          3: 2,
-          4: 3,
-          5: 3,
-          6: 4,
-          7: 4,
-          8: 5,
-          9: 5,
-          10: 6,
-          11: 6,
-          12: 7,
-          13: 7,
-          14: 8,
-          15: 9,
-          16: 10,
-          17: 11,
-          18: 12
-        };
-
         const precision = config.get('visualization:tileMap:maxPrecision');
         agg.params.precision = Math.min(zoomPrecision[event.zoom], precision);
 
