@@ -131,7 +131,7 @@ define(function (require) {
       let filters = [];
       _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
         if (utils.isGeoFilter(it, field) && !_.get(it, 'meta.disabled', false)) {
-          const features = filterToGeoJson(it, field);
+          const features = utils.filterToGeoJson(it, field);
           filters = filters.concat(features);
         }
       });
@@ -178,42 +178,6 @@ define(function (require) {
       } else {
         map.addWmsOverlay(url, name, options);
       }
-    }
-
-    function filterToGeoJson(filter, field) {
-      let features = [];
-      if (_.has(filter, 'or')) {
-        _.get(filter, 'or', []).forEach(function(it) {
-          features = features.concat(filterToGeoJson(it, field));
-        });
-      } else if (_.has(filter, 'geo_bounding_box.' + field)) {
-        const topLeft = _.get(filter, 'geo_bounding_box.' + field + '.top_left');
-        const bottomRight = _.get(filter, 'geo_bounding_box.' + field + '.bottom_right');
-        if(topLeft && bottomRight) {
-          const coords = [];
-          coords.push([topLeft.lon, topLeft.lat]);
-          coords.push([bottomRight.lon, topLeft.lat]);
-          coords.push([bottomRight.lon, bottomRight.lat]);
-          coords.push([topLeft.lon, bottomRight.lat]);
-          features.push({
-            type: 'Polygon',
-            coordinates: [coords]
-          });
-        }
-      } else if (_.has(filter, 'geo_polygon.' + field)) {
-        const points = _.get(filter, 'geo_polygon.' + field + '.points', []);
-        const coords = [];
-        points.forEach(function(point) {
-          const lat = point[1];
-          const lon = point[0];
-          coords.push([lon, lat]);
-        });
-        if(polygon.length > 0) features.push({
-            type: 'Polygon',
-            coordinates: [coords]
-          });
-      }
-      return features;
     }
 
     function appendMap() {
