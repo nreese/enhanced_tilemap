@@ -3,9 +3,6 @@ Kibana ships with a functional tilemap visualization. This plugin provides an ad
 
 ## Enhancements
 
-### Add Markers to map
-Allows for the placement of markers on the tilemap. Markers are displayed when in the visualization panel or the dashboard panel. Markers can only be added and removed when in the visualization panel.
-
 ### Filter geohash_grid aggregation by geo_bounding_box collar
 Resolves issue [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
 
@@ -18,8 +15,10 @@ The existing tilemap loads all of the geohash grids at a single time. This can r
 The enhanced tilemap plugin phases-in geohash grids, loading 100 every 200 milliseconds, so that the browser never locks up. A control with a spinning icon is added to the map while grids are being phased-in. The control is removed once all grids are processed.
 
 ### Minor stuff
-* Leaflet control that when clicked provides lat/lon/zoom inputs. The inputs allow users to set the map view to a specific location and zoom level.
-* Display mouse latitude and longitude location in lower left corner. Click display to toggle decimal degrees and degrees minutes seconds.
+* Add Markers to map.
+* Set view Leaflet control.
+* mouse latitude and longitude display control. Click display to toggle decimal degrees and degrees minutes seconds.
+* Map scale control. Click for measurement tool.
 * Scroll map on mouse zoom. Feature can be turned off in options.
 * Enable **Apply Changes** button when map is moved or zoomed while in the visualization panel. This allows users to easily position map and save the visualization with the desired location.
 
