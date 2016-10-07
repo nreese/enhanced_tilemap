@@ -9,6 +9,8 @@ define(function (require) {
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
+    require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
+    require('./../lib/leaflet.measurescale/L.Control.MeasureScale');
     var syncMaps = require('./sync_maps');
 
     var markerIcon = L.icon({
@@ -88,12 +90,7 @@ define(function (require) {
           marker: {
             icon: markerIcon
           },
-          polygon: {
-            shapeOptions: {
-              stroke: false,
-              color: '#000'
-            }
-          },
+          polygon: {},
           polyline: false,
           rectangle: {
             shapeOptions: {
@@ -429,7 +426,7 @@ define(function (require) {
       this._addSetViewControl();
       this._addDrawControl();
       this._addMousePositionControl();
-      L.control.scale().addTo(this.map);
+      L.control.measureScale().addTo(this.map);
       this._attachEvents();
       syncMaps.add(this.map);
     };
