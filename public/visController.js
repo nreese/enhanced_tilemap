@@ -21,10 +21,18 @@ define(function (require) {
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
+    const Binder = require('ui/Binder');
+    const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
     let map = null;
     let collar = null;
     appendMap();
     modifyToDsl();
+
+    const binder = new Binder();
+    const resizeChecker = new ResizeChecker($element);
+    binder.on(resizeChecker, 'resize', function() {
+      resizeArea();
+    });
 
     function modifyToDsl() {
       $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
@@ -97,7 +105,6 @@ define(function (require) {
           courier.fetch();
           return;
         }
-        resizeArea();
         const chartData = buildChartData(resp);
         if(!chartData) return;
         const geoMinMax = getGeoExtents(chartData);
@@ -119,13 +126,10 @@ define(function (require) {
       }
     });
 
-    var changeVisOff = $rootScope.$on(
-      'change:vis', 
-      _.debounce(resizeArea, 200, false));
-    
     $scope.$on("$destroy", function() {
+      binder.destroy();
+      resizeChecker.destroy();
       if (map) map.destroy();
-      changeVisOff();
     });
 
     function getGeoFilters(field) {
