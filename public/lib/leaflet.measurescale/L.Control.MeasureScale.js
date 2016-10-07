@@ -24,7 +24,7 @@ L.Control.MeasureScale = L.Control.Scale.extend({
     this.polyline = new L.Draw.Polyline(this._map, options);
   },
   startMeasure: function() {
-    if(!this.polygon) this.initMeasure();
+    if(!this.polyline) this.initMeasure();
     this.polyline.enable();
   }
 });
