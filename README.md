@@ -54,7 +54,7 @@ The kibana tilemap plugin has been updated with several pull-requests but none o
 # Install
 ## Kibana 4.x
 ```bash
-bin/kibana plugin -i enhanced_tilemap -u https://github.com/nreese/enhanced_tilemap/archive/master.zip
+bin/kibana plugin -i enhanced_tilemap -u https://github.com/nreese/enhanced_tilemap/archive/4.x.zip
 ```
 
 # Compatibility
