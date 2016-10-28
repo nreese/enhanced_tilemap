@@ -67,7 +67,3 @@ The kibana tilemap plugin has been updated with several pull-requests but none o
 ```bash
 ./bin/kibana-plugin remove enhanced_tilemap
 ```
-
-# Compatibility
-The plugin is compatible with following Versions (other not tested yet):
-* kibana (=4.4+)
