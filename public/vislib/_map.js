@@ -273,7 +273,21 @@ define(function (require) {
     };
 
     TileMapMap.prototype.mapBounds = function () {
-      return this.map.getBounds();
+      let bounds = this.map.getBounds();
+      
+      //When map is not visible, there is no width or height. 
+      //Need to manually create bounds based on container width/height
+      if(bounds.getNorthWest().equals(bounds.getSouthEast())) {
+        let parent = this._container.parentNode;
+        while(parent.clientWidth === 0 && parent.clientHeight === 0) {
+          parent = parent.parentNode;
+        }
+        
+        const southWest = this.map.layerPointToLatLng(L.point(parent.clientWidth/2 * -1, parent.clientHeight/2 * -1));
+        const northEast = this.map.layerPointToLatLng(L.point(parent.clientWidth/2, parent.clientHeight/2));
+        bounds = L.latLngBounds(southWest, northEast);
+      }
+      return bounds;
     };
 
     /**
