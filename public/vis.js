@@ -1,6 +1,9 @@
 import _ from 'lodash';
 import supports from 'ui/utils/supports';
+import AggResponseGeoJsonGeoJsonProvider from 'ui/agg_response/geo_json/geo_json';
 import FilterBarPushFilterProvider from 'ui/filter_bar/push_filter';
+import TemplateVisTypeTemplateVisTypeProvider from 'ui/template_vis_type/template_vis_type';
+import VisSchemasProvider from 'ui/vis/schemas';
 
 define(function (require) {
   require('ui/registry/vis_types').register(EnhancedTileMapVisProvider);
@@ -9,8 +12,9 @@ define(function (require) {
   require('plugins/enhanced_tilemap/visController');
 
   function EnhancedTileMapVisProvider(Private, getAppState, courier, config) {
-    var TemplateVisType = Private(require('ui/template_vis_type/TemplateVisType'));
-    var Schemas = Private(require('ui/Vis/Schemas'));
+    const TemplateVisType = Private(TemplateVisTypeTemplateVisTypeProvider);
+    const Schemas = Private(VisSchemasProvider);
+    const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
     
     return new TemplateVisType({
       name: 'enhanced_tilemap',
@@ -49,6 +53,7 @@ define(function (require) {
       hierarchicalData: function (vis) {
         return false;
       },
+      responseConverter: geoJsonConverter,
       schemas: new Schemas([
         {
           group: 'metrics',

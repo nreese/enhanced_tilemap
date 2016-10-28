@@ -7,21 +7,20 @@
 import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
-import AggResponseGeoJsonGeoJsonProvider from 'ui/agg_response/geo_json/geo_json';
+import Binder from 'ui/binder';
 import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
+import VislibVisTypeBuildChartDataProvider from 'ui/vislib_vis_type/build_chart_data';
 
 define(function (require) {
   var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana']);
   
   module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
-    let aggResponse = Private(require('ui/agg_response/index'));
+    let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
     const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
-    const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
-    const Binder = require('ui/Binder');
     const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
     let map = null;
     let collar = null;
@@ -33,6 +32,25 @@ define(function (require) {
     binder.on(resizeChecker, 'resize', function() {
       resizeArea();
     });
+
+    const respProcessor = {
+      buildChartData: buildChartData,
+      process: function(resp) {
+        const aggs = resp.aggregations;
+        let numGeoBuckets = 0;
+        _.keys(aggs).forEach(function(key) {
+          if(_.has(aggs[key], "filtered_geohash")) {
+            aggs[key].buckets = aggs[key].filtered_geohash.buckets;
+            delete aggs[key].filtered_geohash;
+            numGeoBuckets = aggs[key].buckets.length;
+          }
+        });
+        console.log("geogrids: " + numGeoBuckets);
+        if(numGeoBuckets === 0) return;
+        return this.buildChartData(resp);
+      },
+      vis: $scope.vis
+    }
 
     function modifyToDsl() {
       $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
@@ -65,28 +83,6 @@ define(function (require) {
       return filter;
     }
 
-    //Useful bits of ui/public/vislib_vis_type/buildChartData.js
-    function buildChartData(resp) {
-      const aggs = resp.aggregations;
-      let numGeoBuckets = 0;
-      _.keys(aggs).forEach(function(key) {
-        if(_.has(aggs[key], "filtered_geohash")) {
-          aggs[key].buckets = aggs[key].filtered_geohash.buckets;
-          delete aggs[key].filtered_geohash;
-          numGeoBuckets = aggs[key].buckets.length;
-        }
-      });
-      console.log("geogrids: " + numGeoBuckets);
-      if(numGeoBuckets === 0) return;
-      var tableGroup = aggResponse.tabify($scope.vis, resp, {
-        canSplit: true,
-        asAggConfigResults: true
-      });
-      var tables = tableGroup.tables;
-      var firstChild = tables[0];
-      return geoJsonConverter($scope.vis, firstChild);
-    }
-
     function getGeoExtents(visData) {
       return {
         min: visData.geoJson.properties.min,
@@ -95,7 +91,7 @@ define(function (require) {
     }
 
     $scope.$watch('esResponse', function (resp) {
-      if(resp) {
+      if(_.has(resp, 'aggregations')) {
         /*
          * 'apply changes' creates new vis.aggs object
          * Modify toDsl function and refetch data.
@@ -105,7 +101,7 @@ define(function (require) {
           courier.fetch();
           return;
         }
-        const chartData = buildChartData(resp);
+        const chartData = respProcessor.process(resp);
         if(!chartData) return;
         const geoMinMax = getGeoExtents(chartData);
         chartData.geoJson.properties.allmin = geoMinMax.min;

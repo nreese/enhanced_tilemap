@@ -98,12 +98,12 @@ define(function (require) {
         center: [15, 5],
         zoom: 2
       }
-      _.keys(vis.aggs).forEach(function(key) {
-        if(key !== 'vis' && _.has(vis.aggs[key], "params.mapCenter")) {
-          mapState.center = vis.aggs[key].params.mapCenter;
-          mapState.zoom = vis.aggs[key].params.mapZoom;
-        }
-      });
+      if (vis.hasUiState()) {
+        const uiStateCenter = vis.uiStateVal('mapCenter');
+        if(uiStateCenter) mapState.center = uiStateCenter;
+        const uiStateZoom = vis.uiStateVal('mapZoom');
+        if(uiStateZoom) mapState.zoom = uiStateZoom;
+      }
       return mapState;
     },
     isGeoFilter: function(filter, field) {
