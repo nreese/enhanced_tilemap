@@ -52,9 +52,20 @@ The kibana tilemap plugin has been updated with several pull-requests but none o
 * https://github.com/elastic/kibana/pull/6835
 
 # Install
+## Kibana 5.0.0
+```bash
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v5.0.0-2016-10-28/kibana.zip
+```
+
 ## Kibana 4.x
 ```bash
-bin/kibana plugin -i enhanced_tilemap -u https://github.com/nreese/enhanced_tilemap/archive/4.x.zip
+./bin/kibana plugin -i enhanced_tilemap -u https://github.com/nreese/enhanced_tilemap/archive/4.x.zip
+```
+
+# Uninstall
+## Kibana 5.x
+```bash
+./bin/kibana-plugin remove enhanced_tilemap
 ```
 
 # Compatibility
