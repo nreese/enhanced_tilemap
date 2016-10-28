@@ -21,9 +21,9 @@ define(function (require) {
       if (existingFilter) {
         let geoFilters = [newFilter];
         let type = '';
-        if (_.has(existingFilter, 'or')) {
-          geoFilters = geoFilters.concat(existingFilter.or);
-          type = 'or';
+        if (_.has(existingFilter, 'bool.should')) {
+          geoFilters = geoFilters.concat(existingFilter.bool.should);
+          type = 'bool';
         } else if (_.has(existingFilter, 'geo_bounding_box')) {
           geoFilters.push({geo_bounding_box: existingFilter.geo_bounding_box});
           type = 'geo_bounding_box';
@@ -32,7 +32,11 @@ define(function (require) {
           type = 'geo_polygon';
         }
         queryFilter.updateFilter({
-          model: { or : geoFilters },
+          model: { 
+            bool : { 
+              should : geoFilters
+            } 
+          },
           source: existingFilter,
           type: type,
           alias: filterAlias(field, geoFilters.length)
@@ -83,10 +87,6 @@ define(function (require) {
       mapMoveEnd: function (event) {
         const vis = _.get(event, 'chart.geohashGridAgg.vis');
         if (vis && vis.hasUiState()) {
-          const center = [
-            _.round(event.center.lat, 5),
-            _.round(event.center.lng, 5)
-          ];
           vis.getUiState().set('mapCenter', [
             _.round(event.center.lat, 5),
             _.round(event.center.lng, 5)
