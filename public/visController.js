@@ -24,6 +24,7 @@ define(function (require) {
     const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
     let map = null;
     let collar = null;
+    let chartData = null;
     appendMap();
     modifyToDsl();
 
@@ -46,8 +47,13 @@ define(function (require) {
           }
         });
         console.log("geogrids: " + numGeoBuckets);
-        if(numGeoBuckets === 0) return;
-        return this.buildChartData(resp);
+        if(numGeoBuckets === 0) return null;
+
+        const chartData = this.buildChartData(resp);
+        const geoMinMax = utils.getGeoExtents(chartData);
+        chartData.geoJson.properties.allmin = geoMinMax.min;
+        chartData.geoJson.properties.allmax = geoMinMax.max;
+        return chartData;
       },
       vis: $scope.vis
     }
@@ -83,42 +89,21 @@ define(function (require) {
       return filter;
     }
 
-    function getGeoExtents(visData) {
-      return {
-        min: visData.geoJson.properties.min,
-        max: visData.geoJson.properties.max
+    $scope.$watch('vis.aggs', function (resp) {
+      //'apply changes' creates new vis.aggs object - ensure toDsl is overwritten again
+      if(!_.has($scope.vis.aggs, "origToDsl")) {
+        modifyToDsl();
       }
-    }
+    });
+
+    $scope.$watch('vis.params', function (resp) {
+      draw();
+    });
 
     $scope.$watch('esResponse', function (resp) {
       if(_.has(resp, 'aggregations')) {
-        /*
-         * 'apply changes' creates new vis.aggs object
-         * Modify toDsl function and refetch data.
-         */ 
-        if(!_.has($scope.vis.aggs, "origToDsl")) {
-          modifyToDsl();
-          courier.fetch();
-          return;
-        }
-        const chartData = respProcessor.process(resp);
-        if(!chartData) return;
-        const geoMinMax = getGeoExtents(chartData);
-        chartData.geoJson.properties.allmin = geoMinMax.min;
-        chartData.geoJson.properties.allmax = geoMinMax.max;
-        const agg = _.get(chartData, 'geohashGridAgg');
-        if (agg) {
-          map.addFilters(getGeoFilters(agg.fieldName()));
-        }
-        if (_.get($scope.vis.params, 'overlay.wms.enabled')) {
-          addWmsOverlays();
-        }
-        map.addMarkers(
-          chartData, 
-          $scope.vis.params,
-          Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
-          _.get(chartData, 'valueFormatter', _.identity),
-          collar);
+        chartData = respProcessor.process(resp);
+        draw();
       }
     });
 
@@ -127,6 +112,23 @@ define(function (require) {
       resizeChecker.destroy();
       if (map) map.destroy();
     });
+
+    function draw() {
+      if(!chartData) return;
+      const agg = _.get(chartData, 'geohashGridAgg');
+      if (agg) {
+        map.addFilters(getGeoFilters(agg.fieldName()));
+      }
+      if (_.get($scope.vis.params, 'overlay.wms.enabled')) {
+        addWmsOverlays();
+      }
+      map.addMarkers(
+        chartData, 
+        $scope.vis.params,
+        Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
+        _.get(chartData, 'valueFormatter', _.identity),
+        collar);
+    }
 
     function getGeoFilters(field) {
       let filters = [];

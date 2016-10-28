@@ -38,6 +38,12 @@ define(function (require) {
   }
 
   return {
+    getGeoExtents: function(visData) {
+      return {
+        min: visData.geoJson.properties.min,
+        max: visData.geoJson.properties.max
+      }
+    },
     /* 
      * @param bounds {LatLngBounds}
      * @param scale {number}
