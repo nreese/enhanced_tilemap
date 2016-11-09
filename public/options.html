@@ -130,6 +130,23 @@
   </div>
 </div>
 
+<div ng-if="$root.etm.shapeFields.length > 0" class="vis-option-item form-group">
+  <label>
+    <input type="checkbox"
+    name="filterByShape"
+    ng-model="vis.params.filterByShape">
+
+    Filter by geo_shape field
+
+    <kbn-info info="Filter by geo_shape field instead of geo_point field used for Geohash aggregation."></kbn-info>
+  </label>
+  <select name="shapeField"
+    class="form-control"
+    ng-model="vis.params.shapeField"
+    ng-options="shapeField as shapeField for shapeField in $root.etm.shapeFields">
+  </select>
+</div>
+
 <div class="vis-option-item form-group">
   <label>
     <input type="checkbox"

@@ -33,6 +33,27 @@ define(function (require) {
           type: 'Polygon',
           coordinates: [coords]
         });
+    } else if (_.has(filter, 'geo_shape.' + field)) {
+      const type = _.get(filter, 'geo_shape.' + field + '.shape.type');
+      if (type.toLowerCase() === 'envelope') {
+        const envelope = _.get(filter, 'geo_shape.' + field + '.shape.coordinates');
+        const tl = envelope[0]; //topleft
+        const br = envelope[1]; //bottomright
+        const coords = [];
+        coords.push([ tl[0], tl[1] ]);
+        coords.push([ br[0], tl[1] ]);
+        coords.push([ br[0], br[1] ]);
+        coords.push([ tl[0], br[1] ]);
+        features.push({
+          type: 'Polygon',
+          coordinates: [coords]
+        });
+      } else {
+        features.push({
+          type: type,
+          coordinates: _.get(filter, 'geo_shape.' + field + '.shape.coordinates')
+        });
+      }
     }
     return features;
   }
@@ -116,8 +137,10 @@ define(function (require) {
       if (filter.meta.key === field
         || _.has(filter, 'geo_bounding_box.' + field)
         || _.has(filter, 'geo_polygon.' + field)
+        || _.has(filter, 'geo_shape.' + field)
         || _.has(filter, 'bool.should[0].geo_bounding_box.' + field)
-        || _.has(filter, 'bool.should[0].geo_polygon.' + field)) {
+        || _.has(filter, 'bool.should[0].geo_polygon.' + field)
+        || _.has(filter, 'bool.should[0].geo_shape.' + field)) {
         return true;
       } else {
         return false;

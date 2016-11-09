@@ -3,10 +3,16 @@ Kibana ships with a functional tilemap visualization. This plugin provides an ad
 
 ## Enhancements
 
-### Filter geohash_grid aggregation by geo_bounding_box collar
+### Geohash aggregation filtered by geo_bounding_box collar
 Resolves issue [Filter geohash_grid aggregation to map view box with collar](https://github.com/elastic/kibana/issues/8087)
 
-### Geo Polygon Query
+### geo_shape datatype query support
+The geohash_grid aggregation only supports the geo_point datatype.
+Geospatial queries created by the existing tilemap plugin can only be applied to the geo_point field selected for the aggregation. When your data represents large geospatial shapes, this limitation can provide misleading results as documents that intersect the query my be omitted if their point representation is not accurately reflected in a geo_point field.
+
+While the enhanced tilemap plugin cannot provide geohash_grid aggregation support for the geo_shape datatype, it does provide the ability to create geospatial queries on a geo_shape datatype. That way, queries accurately represent the results for geospatial shape intersection. **Note:** The index still requires a geo_point field for the aggregation (storing the center of the shape as a geo_point field works well).
+
+### Geo polygon query support
 Click the polygon icon and draw a polygon on the map. The enhanced tilemap plugin will create a geo_polygon filter.
 
 ### Load geohash grids without blocking user interface
