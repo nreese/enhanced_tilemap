@@ -53,14 +53,6 @@ When **Sync kibana filters** is checked, kibana filters are sent to the WMS serv
 Requires WMS to be served from an elasticsearch Store. 
 Follow the [geoserver guide](geoserver.md) for instructions on setting up a WMS layer pulling data from your elasticsearch cluster.
 
-## Planned Enhancements
-
-### backport kibana 5.x tilemap improvements to 4.x.
-The kibana tilemap plugin has been updated with several pull-requests but none of these have been merged with the 4.x branch. This plugin supports 4.x so it is a way to use integrate the tilemap improvements in kibana 4.x releases.
-* https://github.com/elastic/kibana/pull/6001
-* https://github.com/elastic/kibana/pull/8000
-* https://github.com/elastic/kibana/pull/6835
-
 # Install
 ## Kibana 5.0.0
 ```bash
