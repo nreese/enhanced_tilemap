@@ -370,6 +370,7 @@ define(function (require) {
             });
             self._callbacks.polygon({
               chart: self._chartData,
+              params: self._attr,
               points: points
             });
             break;
@@ -377,6 +378,7 @@ define(function (require) {
             self._callbacks.rectangle({
               e: e,
               chart: self._chartData,
+              params: self._attr,
               bounds: utils.scaleBounds(e.layer.getBounds(), 1)
             });
             break;

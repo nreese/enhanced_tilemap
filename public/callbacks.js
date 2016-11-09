@@ -30,6 +30,9 @@ define(function (require) {
         } else if (_.has(existingFilter, 'geo_polygon')) {
           geoFilters.push({geo_polygon: existingFilter.geo_polygon});
           type = 'geo_polygon';
+        } else if (_.has(existingFilter, 'geo_shape')) {
+          geoFilters.push({geo_shape: existingFilter.geo_shape});
+          type = 'geo_shape';
         }
         queryFilter.updateFilter({
           model: { or : geoFilters },
@@ -165,24 +168,54 @@ define(function (require) {
       polygon: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
         if (!agg) return;
-        
         const indexPatternName = agg.vis.indexPattern.id;
-        const field = agg.fieldName();
-        
-        const newFilter = {geo_polygon: {}};
-        newFilter.geo_polygon[field] = { points: event.points};
+
+        let newFilter;
+        let field;
+        if (event.params.filterByShape && event.params.shapeField) {
+          const firstPoint = event.points[0];
+          const closed = event.points;
+          closed.push(firstPoint);
+          field = event.params.shapeField;
+          newFilter = {geo_shape: {}};
+          newFilter.geo_shape[field] = {
+            shape: {
+              type: 'Polygon',
+              coordinates: [ closed ]
+            }
+          };
+        } else {
+          field = agg.fieldName();
+          newFilter = {geo_polygon: {}};
+          newFilter.geo_polygon[field] = { points: event.points};
+        }
 
         addGeoFilter(newFilter, field, indexPatternName);
       },
       rectangle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
         if (!agg) return;
-        
         const indexPatternName = agg.vis.indexPattern.id;
-        const field = agg.fieldName();
-        
-        const newFilter = {geo_bounding_box: {}};
-        newFilter.geo_bounding_box[field] = event.bounds;
+
+        let newFilter;
+        let field;
+        if (event.params.filterByShape && event.params.shapeField) {
+          field = event.params.shapeField;
+          newFilter = {geo_shape: {}};
+          newFilter.geo_shape[field] = {
+            shape: {
+              type: 'envelope',
+              coordinates: [
+                [event.bounds.top_left.lon, event.bounds.top_left.lat],
+                [event.bounds.bottom_right.lon, event.bounds.bottom_right.lat]
+              ]
+            }
+          };
+        } else {
+          field = agg.fieldName();
+          newFilter = {geo_bounding_box: {}};
+          newFilter.geo_bounding_box[field] = event.bounds;
+        }
 
         addGeoFilter(newFilter, field, indexPatternName);
       }

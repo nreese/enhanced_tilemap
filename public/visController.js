@@ -28,6 +28,16 @@ define(function (require) {
     appendMap();
     modifyToDsl();
 
+    const shapeFields = $scope.vis.indexPattern.fields.filter(function (field) {
+      return field.type === 'geo_shape';
+    }).map(function (field) {
+      return field.name;
+    });
+    //Using $root as mechanism to pass data to vis-editor-vis-options scope
+    $scope.$root.etm = {
+      shapeFields: shapeFields
+    };
+
     const binder = new Binder();
     const resizeChecker = new ResizeChecker($element);
     binder.on(resizeChecker, 'resize', function() {
@@ -110,10 +120,21 @@ define(function (require) {
         const geoMinMax = getGeoExtents(chartData);
         chartData.geoJson.properties.allmin = geoMinMax.min;
         chartData.geoJson.properties.allmax = geoMinMax.max;
-        const agg = _.get(chartData, 'geohashGridAgg');
-        if (agg) {
-          map.addFilters(getGeoFilters(agg.fieldName()));
+
+        //add overlay layer to provide visibility of filtered area
+        let fieldName;
+        if ($scope.vis.params.filterByShape && $scope.vis.params.shapeField) {
+          fieldName = $scope.vis.params.shapeField;
+        } else {
+          const agg = _.get(chartData, 'geohashGridAgg');
+          if (agg) {
+            fieldName = agg.fieldName();
+          }
         }
+        if (fieldName) {
+          map.addFilters(getGeoFilters(fieldName));
+        }
+
         if (_.get($scope.vis.params, 'overlay.wms.enabled')) {
           addWmsOverlays();
         }
