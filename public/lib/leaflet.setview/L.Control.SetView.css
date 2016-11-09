@@ -19,3 +19,7 @@
   border-bottom-color: #dddddd;
   text-align: center;
 }
+
+.small-screen {
+  display: block !important;
+}
