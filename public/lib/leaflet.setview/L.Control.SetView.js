@@ -139,6 +139,11 @@ L.SetViewToolbar = L.Class.extend({
       container.removeChild(container.firstChild);
     }
 
+    var listItemClass = '';
+    if (this._map.getSize().x < 375) {
+      listItemClass = 'small-screen';
+    }
+
     var center = this._map.getCenter();
     this._lat = L.Util.formatNum(center.lat, 5);
     this._lon = L.Util.formatNum(center.lng, 5);
@@ -147,7 +152,7 @@ L.SetViewToolbar = L.Class.extend({
     let unitValue = 'dd';
     if(!this._decimalDegrees) unitValue = 'dms';
     this._createSelect({
-      container: L.DomUtil.create('li', '', container),
+      container: L.DomUtil.create('li', listItemClass, container),
       name: 'unit',
       title: 'Select coordinate units; decimal degrees (dd) or degrees minutes seconds (dms)',
       selectedValue: unitValue,
@@ -160,7 +165,7 @@ L.SetViewToolbar = L.Class.extend({
     });
     if (this._decimalDegrees) {
       this._createInput({
-        container: L.DomUtil.create('li', '', container),
+        container: L.DomUtil.create('li', listItemClass, container),
         inputType: 'number',
         placeholder: 'lat',
         name: 'lat',
@@ -170,7 +175,7 @@ L.SetViewToolbar = L.Class.extend({
         }
       });
       this._createInput({
-        container: L.DomUtil.create('li', '', container),
+        container: L.DomUtil.create('li', listItemClass, container),
         inputType: 'number',
         name: 'lon',
         placeholder: 'lon',
@@ -182,7 +187,7 @@ L.SetViewToolbar = L.Class.extend({
     } else {
       this._latDms = this._ddToDms(this._lat);
       this._createInput({
-        container: L.DomUtil.create('li', '', container),
+        container: L.DomUtil.create('li', listItemClass, container),
         inputType: 'text',
         placeholder: 'lat DDMMSS',
         name: 'latDms',
@@ -194,7 +199,7 @@ L.SetViewToolbar = L.Class.extend({
       this._latDirection = 'n';
       if(this._lat < 0) this._latDirection = 's';
       this._createSelect({
-        container: L.DomUtil.create('li', '', container),
+        container: L.DomUtil.create('li', listItemClass, container),
         name: 'latDirection',
         title: 'Latitude: North or South',
         selectedValue: this._latDirection,
@@ -205,7 +210,7 @@ L.SetViewToolbar = L.Class.extend({
       });
       this._lonDms = this._ddToDms(this._lon);
       this._createInput({
-        container: L.DomUtil.create('li', '', container),
+        container: L.DomUtil.create('li', listItemClass, container),
         inputType: 'text',
         placeholder: 'lon DDMMSS',
         name: 'lonDms',
@@ -217,7 +222,7 @@ L.SetViewToolbar = L.Class.extend({
       this._lonDirection = 'e';
       if(this._lon < 0) this._lonDirection = 'w';
       this._createSelect({
-        container: L.DomUtil.create('li', '', container),
+        container: L.DomUtil.create('li', listItemClass, container),
         name: 'lonDirection',
         title: 'Longitude: East or West',
         selectedValue: this._lonDirection,
@@ -236,7 +241,7 @@ L.SetViewToolbar = L.Class.extend({
       });
     }
     this._createSelect({
-      container: L.DomUtil.create('li', '', container),
+      container: L.DomUtil.create('li', listItemClass, container),
       name: 'zoom',
       title: 'zoom level',
       selectedValue: this._map.getZoom(),
@@ -248,7 +253,7 @@ L.SetViewToolbar = L.Class.extend({
     this._createButton({
       title: "Click to set map view to provided values.",
       text: "Set View",
-      container: L.DomUtil.create('li', '', container),
+      container: L.DomUtil.create('li', listItemClass, container),
       callback: function() {
         if(!self._decimalDegrees) {
           self._setLat(self._dmsToDd(self._latDms, self._latDirection));
@@ -261,7 +266,7 @@ L.SetViewToolbar = L.Class.extend({
     this._createButton({
       title: "Click to cancel.",
       text: "Cancel",
-      container: L.DomUtil.create('li', '', container),
+      container: L.DomUtil.create('li', listItemClass, container),
       callback: function() {
         self._hideActionsToolbar();
       }
