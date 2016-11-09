@@ -16,7 +16,7 @@ define(function (require) {
       name: 'enhanced_tilemap',
       title: 'Enhanced Tile map',
       icon: 'fa-map-marker',
-      description: 'Enhanced tile map',
+      description: 'Tile map plugin that provides better performance, complete geospatial query support, and more features than the built in Tile map.',
       template: require('plugins/enhanced_tilemap/vis.html'),
       params: {
         defaults: {
