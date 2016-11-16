@@ -290,6 +290,10 @@ define(function (require) {
       return bounds;
     };
 
+    TileMapMap.prototype.mapZoom = function () {
+      return this.map.getZoom();
+    };
+
     /**
      * Create the marker instance using the given options
      *

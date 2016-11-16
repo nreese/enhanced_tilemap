@@ -54,6 +54,7 @@ define(function (require) {
         _.keys(dsl).forEach(function(key) {
           if(_.has(dsl[key], "geohash_grid")) {
             const origAgg = dsl[key];
+            origAgg.geohash_grid.precision = utils.getPrecision(map.mapZoom(), config.get('visualization:tileMap:maxPrecision'));
             dsl[key] = {
               filter: aggFilter(origAgg.geohash_grid.field),
               aggs: {
