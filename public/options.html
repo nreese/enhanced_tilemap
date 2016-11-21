@@ -283,6 +283,16 @@
 
   <div class="vis-option-item form-group">
     <label>
+      Max features <kbn-info info="Sets a limit on the amount of features rendered per tile."></kbn-info>
+    </label>
+    <input type="number" min="1" class="form-control"
+      placeholder="1000" 
+      ng-model="vis.params.overlay.wms.options.maxFeatures"   
+      name="overlay.wms.options.maxFeatures">
+  </div>
+
+  <div class="vis-option-item form-group">
+    <label>
       Display name <kbn-info info="Layer name displayed in layer control."></kbn-info>
     </label>
     <input type="text" class="form-control"
@@ -298,7 +308,7 @@
 
       Sync kibana filters
 
-      <kbn-info info="View aggregated results and document features in the same map. When true, kibana filters are sent to the WMS server resulting in tiles that reflect the time range, search query, and filters of your kibana application. Requires WMS to be served from an elasticsearch Store."></kbn-info>
+      <kbn-info info="When true, kibana filters are sent to the WMS server resulting in tiles that reflect the time range, search query, and filters of your kibana application. Requires WMS to be served from an elasticsearch Store."></kbn-info>
     </label>
   </div>
 </div>

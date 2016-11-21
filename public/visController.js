@@ -171,6 +171,7 @@ define(function (require) {
       const options = {
         format: 'image/png',
         layers: _.get($scope.vis.params, 'overlay.wms.options.layers'),
+        maxFeatures: _.get($scope.vis.params, 'overlay.wms.options.maxFeatures', 1000),
         transparent: true,
         version: '1.1.1'
       };
