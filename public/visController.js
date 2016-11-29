@@ -12,13 +12,14 @@ import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 import VislibVisTypeBuildChartDataProvider from 'ui/vislib_vis_type/build_chart_data';
 
 define(function (require) {
-  var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana']);
+  var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana', 'etm-ui.bootstrap.accordion']);
   
   module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
     let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
     const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
+    const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
@@ -106,8 +107,16 @@ define(function (require) {
       }
     });
 
-    $scope.$watch('vis.params', function (resp) {
+    $scope.$watch('vis.params', function (visParams) {
       draw();
+
+      map.clearPOILayers();
+      visParams.overlays.savedSearches.forEach(function (layerParams) {
+        const poi = new POIsProvider(layerParams);
+        poi.getPOIs(points => {
+          map.addPOILayer(layerParams.savedSearchId, points, layerParams.color);
+        });
+      });
     });
 
     $scope.$watch('esResponse', function (resp) {
