@@ -7,6 +7,7 @@ define(function (require) {
   require('plugins/enhanced_tilemap/vis.less');
   require('plugins/enhanced_tilemap/directives/bands');
   require('plugins/enhanced_tilemap/directives/savedSearches');
+  require('plugins/enhanced_tilemap/directives/wmsOverlays');
   require('plugins/enhanced_tilemap/visController');
 
   function EnhancedTileMapVisProvider(Private, getAppState, courier, config) {
@@ -41,7 +42,8 @@ define(function (require) {
           mapCenter: [15, 5],
           markers: [],
           overlays: {
-            savedSearches: []
+            savedSearches: [],
+            wmsOverlays: []
           },
           wms: config.get('visualization:tileMap:WMSdefaults')
         },

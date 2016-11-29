@@ -1,0 +1,46 @@
+<div class="form-group">
+  <div class="vis-option-item form-group">
+    <label>
+      Layer Name <kbn-info info="Layer name displayed in map layer control."></kbn-info>
+    </label>
+    <input type="text" class="form-control"
+      ng-model="layer.displayName"   
+      name="displayName">
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Url
+    </label>
+    <input required type="text" class="form-control"
+      name="url"
+      ng-model="layer.url">    
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Layers <kbn-info info="A comma seperated list of layers to use."></kbn-info>
+    </label>
+    <input required type="text" class="form-control"
+      ng-model="layer.layers"   
+      name="layer.layers">
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Max Features <kbn-info info="Sets a limit on the amount of features rendered per tile."></kbn-info>
+    </label>
+    <input type="number" min="1" class="form-control"
+      placeholder="1000" 
+      ng-model="layer.maxFeatures"   
+      name="layer.maxFeatures">
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      <input type="checkbox"
+      name="viewparams"
+      ng-model="layer.viewparams">
+
+      Sync Kibana Filters
+
+      <kbn-info info="When true, kibana filters are sent to the WMS server resulting in tiles that reflect the time range, search query, and filters of your kibana application. Requires WMS to be served from an elasticsearch Store."></kbn-info>
+    </label>
+  </div>
+</div>

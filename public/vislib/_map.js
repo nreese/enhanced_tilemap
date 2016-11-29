@@ -53,6 +53,7 @@ define(function (require) {
     function TileMapMap(container, params) {
       this._container = container;
       this._poiLayers = [];
+      this._wmsOverlays = [];
 
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
@@ -295,18 +296,20 @@ define(function (require) {
       this._layerControl.addOverlay(this._filters, "Applied Filters");
     };
 
-    /**
-     * 
-     */
+    TileMapMap.prototype.clearWMSOverlays = function () {
+      const self = this;
+      this._wmsOverlays.forEach(function(layer) {
+        self._layerControl.removeLayer(layer);
+        self.map.removeLayer(layer);
+      });
+      this._wmsOverlays = [];
+    };
+
     TileMapMap.prototype.addWmsOverlay = function (url, name, options) {
-      if(this._overlay) {
-        this._layerControl.removeLayer(this._overlay);
-        this.map.removeLayer(this._overlay);
-      }
-      
-      this._overlay = L.tileLayer.wms(url, options);
-      this.map.addLayer(this._overlay);
-      this._layerControl.addOverlay(this._overlay, name);
+      const overlay = L.tileLayer.wms(url, options);
+      this.map.addLayer(overlay);
+      this._layerControl.addOverlay(overlay, name);
+      this._wmsOverlays.push(overlay);
     };
 
     TileMapMap.prototype.mapBounds = function () {
