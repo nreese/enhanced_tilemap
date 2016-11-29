@@ -18,6 +18,7 @@ define(function (require) {
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
     const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
+    const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
     const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
@@ -105,6 +106,16 @@ define(function (require) {
       }
     }
 
+    $scope.$watch('vis.params', function (visParams) {
+      map.clearPOILayers();
+      visParams.overlays.savedSearches.forEach(function (layerParams) {
+        const poi = new POIsProvider(layerParams);
+        poi.getPOIs(points => {
+          map.addPOILayer(layerParams.savedSearchId, points, layerParams.color);
+        });
+      });
+    });
+
     $scope.$watch('esResponse', function (resp) {
       if(resp) {
         /*
@@ -116,6 +127,7 @@ define(function (require) {
           courier.fetch();
           return;
         }
+
         const chartData = buildChartData(resp);
         if(!chartData) return;
         const geoMinMax = getGeoExtents(chartData);

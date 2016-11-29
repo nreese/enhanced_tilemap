@@ -13,12 +13,18 @@ define(function (require) {
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale');
     var syncMaps = require('./sync_maps');
 
-    var markerIcon = L.icon({
-      iconUrl: require('./images/marker-icon.png'),
-      iconRetinaUrl: require('./images/marker-icon-2x.png'),
-      iconSize: [25, 41]
-    });
-
+    function markerIcon(color) {
+      const path = 'M16,1 C7.7146,1 1,7.65636364 1,15.8648485 C1,24.0760606 16,51 16,51 C16,51 31,24.0760606 31,15.8648485 C31,7.65636364 24.2815,1 16,1 L16,1 Z';
+      const markerSvg = '<svg width="32px" height="52px" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="' + path + '" fill="' + color + '" stroke="#E0E0E0"></path></svg>';
+      const markerUrl = "data:image/svg+xml;base64," + btoa(markerSvg);
+      return L.icon({
+        iconUrl: markerUrl,
+        iconSize: [30, 50],
+        iconAnchor: [15, 50],
+        className: "vector-marker",
+      });
+    }
+    
     var defaultMapZoom = 2;
     var defaultMapCenter = [15, 5];
     var defaultMarkerType = 'Scaled Circle Markers';
@@ -46,6 +52,7 @@ define(function (require) {
      */
     function TileMapMap(container, params) {
       this._container = container;
+      this._poiLayers = [];
 
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
@@ -75,10 +82,14 @@ define(function (require) {
       this._drawnItems = new L.FeatureGroup();
       var self = this;
       this._attr.markers.forEach(function(point) {
+        let color = 'green';
+        if (point.length === 3) {
+          color = point.pop();
+        }
         self._drawnItems.addLayer(
           L.marker(
             point, 
-            {icon: markerIcon}));
+            {icon: markerIcon(color)}));
       });
       this.map.addLayer(this._drawnItems);
       this._layerControl.addOverlay(this._drawnItems, "Markers");
@@ -88,7 +99,7 @@ define(function (require) {
         draw: {
           circle: false,
           marker: {
-            icon: markerIcon
+            icon: markerIcon('green')
           },
           polygon: {},
           polyline: false,
@@ -205,6 +216,32 @@ define(function (require) {
       syncMaps.remove(this.map);
       this.map.remove();
       this.map = undefined;
+    };
+
+    TileMapMap.prototype.clearPOILayers = function () {
+      const self = this;
+      this._poiLayers.forEach(function(layer) {
+        self._layerControl.removeLayer(layer);
+        self.map.removeLayer(layer);
+      });
+      this._poiLayers = [];
+    };
+
+    TileMapMap.prototype.addPOILayer = function (layerName, points, color) {
+      const featureGroup = new L.FeatureGroup();
+      points.forEach(function(point) {
+        featureGroup.addLayer(
+          L.marker(
+            point.latlng, 
+            {
+              icon: markerIcon(color),
+              title: point.label
+            })
+          );
+      });
+      this.map.addLayer(featureGroup);
+      this._layerControl.addOverlay(featureGroup, layerName);
+      this._poiLayers.push(featureGroup);
     };
 
     /**

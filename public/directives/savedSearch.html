@@ -1,0 +1,53 @@
+<div class="form-group">
+  <div class="form-group">
+    <label>
+      Saved Search
+    </label>
+    <p>
+      {{warn}}
+    </p>
+    <select required class="form-control"
+      ng-change="updateIndex()"
+      ng-model="savedSearch"
+      ng-options="item.label for item in items">
+    </select>
+  </div>
+  <div class="form-group">
+    <label>
+      Geo Point Field
+    </label>
+    <select required class="form-control"
+      ng-model="layer.geoPointField"
+      ng-options="item for item in geoPointFields">
+    </select>
+  </div>
+  <div class="form-group">
+    <label>
+      Marker Color
+    </label>
+    <input
+      ng-model="layer.color"
+      type="text"
+      class="form-control"
+      name="color"
+      style="background-color: {{layer.color}};" />
+  </div>
+  <div class="form-group">
+    <label>
+      Label Field
+    </label>
+    <select class="form-control"
+      ng-model="layer.labelField"
+      ng-options="item for item in labelFields">
+    </select>
+  </div>
+  <div class="form-group">
+    <label>
+      Limit
+    </label>
+    <input class="form-control"
+      type="number" min="1" max="1000"
+      placeholder="100" 
+      ng-model="layer.limit" />
+  </div>
+</div>

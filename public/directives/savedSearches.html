@@ -1,0 +1,20 @@
+<div class="form-group">
+  <label class="etm-options-section">
+    Points of Interest Layers
+    <kbn-info info="Overlay the results of a saved search on the map as colored markers."></kbn-info>
+  </label>
+  <ul class="etm-options-list">
+    <li ng-repeat="layer in layers" class="etm-option-item">
+      <label>POI Layer {{$index + 1}}</label>
+      <saved-search layer="layer"></saved-search>
+      <div class="btn-group rightCorner">
+        <button class="btn btn-xs btn-danger" ng-click="removeLayer($index)" > 
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+    </li>
+  </ul>
+  <button class="btn btn-xs btn-success" ng-click="addLayer()">
+    <i class="fa fa-plus"></i> <span>POI Layer</span>
+  </button>
+</div>

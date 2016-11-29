@@ -1,0 +1,25 @@
+const _ = require('lodash');
+const module = require('ui/modules').get('kibana');
+
+define(function (require) {
+  require('plugins/enhanced_tilemap/directives/savedSearch');
+
+  module.directive('savedSearches', function (Private, indexPatterns) {
+    return {
+      restrict: 'E',
+      replace: true,
+      scope: {
+        layers: '='
+      },
+      template: require('./savedSearches.html'),
+      link: function (scope, element, attrs) {
+        scope.addLayer = function() {
+          scope.layers.push({color: 'green'});
+        }
+        scope.removeLayer = function(layerIndex) {
+          scope.layers.splice(layerIndex, 1);
+        }
+      }
+    };
+  });
+});
