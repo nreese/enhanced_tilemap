@@ -1,0 +1,19 @@
+<div class="form-group">
+  <label class="etm-options-section">
+    WMS Layers <kbn-info info="Overlay raster tiles served from an external WMS server (like geoserver)."></kbn-info>
+  </label>
+  <ul class="etm-options-list">
+    <li ng-repeat="layer in layers" class="etm-option-item">
+      <label>WMS Layer {{$index + 1}}</label>
+      <wms-overlay layer="layer"></wms-overlay>
+      <div class="btn-group rightCorner">
+        <button class="btn btn-xs btn-danger" ng-click="removeLayer($index)" > 
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+    </li>
+  </ul>
+  <button class="btn btn-xs btn-success" ng-click="addLayer()">
+    <i class="fa fa-plus"></i> <span>WMS Layer</span>
+  </button>
+</div>
