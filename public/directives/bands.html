@@ -1,33 +1,35 @@
-<div style="padding-left: 15px;">
+<div style="padding-left: 15px;" class="bands">
   <div ng-repeat="band in bands" class="form-inline">
-    <input
-      ng-model="band.low"
-      ng-disabled="true"
-      type="number"
-      class="form-control"
-      name="low"
-      style="width: 25%;"
-    >
-    to
-    <input
-      ng-model="band.high"
-      ng-change="updateOlderSibling($index)"
-      ng-model-options="{ debounce: 750 }"
-      required
-      type="number"
-      class="form-control"
-      name="high"
-      style="width: 25%;"
-    >
-    <input
-      ng-model="band.color"
-      required
-      type="text"
-      class="form-control"
-      name="color"
-      style="width: 25%; background-color: {{band.color}};"
-    >
-    <input type="button" value="-" ng-click="removeBand()" class="btn btn-default btn-xs" ng-if="$index !== 0 && $last">
+    <div class="band">
+      <input
+        ng-model="band.low"
+        ng-disabled="true"
+        type="number"
+        class="form-control"
+        name="low"
+        style="width: 25%;"
+      >
+      to
+      <input
+        ng-model="band.high"
+        ng-change="updateOlderSibling($index)"
+        ng-model-options="{ debounce: 750 }"
+        required
+        type="number"
+        class="form-control"
+        name="high"
+        style="width: 25%;"
+      >
+      <input
+        minicolors="minicolorsSettings"
+        ng-model="band.color"
+        required
+        type="text"
+        class="form-control"
+        name="color"
+      >
+      <input type="button" value="-" ng-click="removeBand()" class="btn btn-default btn-xs band-remove" ng-if="$index !== 0 && $last">
+    </div>
   </div>
-  <input type="button" value="+" ng-click="addBand()" class="btn btn-default btn-xs">
+  <input type="button" value="+" ng-click="addBand()" class="btn btn-default btn-xs band-add">
 </div>
