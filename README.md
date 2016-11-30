@@ -58,9 +58,13 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 **Performance tip** Store enhanced_tilemaps belonging to the same dashboard at identical zoom levels. When enhanced_tilemaps are stored with different zoom levels, the browser will have to make 2 requests to elasticsearch for data. The first will get all data at different zoom levels. Then the next, will fetch all data at identical zoom levels. The second request can be avoided if all maps are stored at identical zoom levels. Check the map zoom level by clicking the set view control (eye icon) in the upper left corner of the map display.
 
 # Install
-## Kibana 5.0.0
+## Kibana 5.x
 ```bash
-./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v5.0.0-2016-10-28/kibana.zip
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v5.0.0-2016-11-30/kibana.zip
+```
+
+```bash
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v5.0.1-2016-11-30/kibana.zip
 ```
 
 ## Kibana 4.x
