@@ -198,9 +198,9 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
-      if (this._label) this._label.removeFrom(this.map);
-      if (this._fitControl) this._fitControl.removeFrom(this.map);
-      if (this._boundingControl) this._boundingControl.removeFrom(this.map);
+      if (this._label) this._label.remove(this.map);
+      if (this._fitControl) this._fitControl.remove(this.map);
+      if (this._boundingControl) this._boundingControl.remove(this.map);
       if (this._markers) this._markers.destroy();
       syncMaps.remove(this.map);
       this.map.remove();
