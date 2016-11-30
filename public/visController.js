@@ -49,16 +49,12 @@ define(function (require) {
       buildChartData: buildChartData,
       process: function(resp) {
         const aggs = resp.aggregations;
-        let numGeoBuckets = 0;
         _.keys(aggs).forEach(function(key) {
           if(_.has(aggs[key], "filtered_geohash")) {
             aggs[key].buckets = aggs[key].filtered_geohash.buckets;
             delete aggs[key].filtered_geohash;
-            numGeoBuckets = aggs[key].buckets.length;
           }
         });
-        console.log("geogrids: " + numGeoBuckets);
-        if(numGeoBuckets === 0) return null;
 
         const chartData = this.buildChartData(resp);
         const geoMinMax = utils.getGeoExtents(chartData);
