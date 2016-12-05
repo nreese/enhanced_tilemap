@@ -4,6 +4,7 @@ define(function (require) {
     var $ = require('jquery');
     var L = require('leaflet');
     var LDrawToolbench = require('./LDrawToolbench');
+    require('leaflet-draw');
     const utils = require('plugins/enhanced_tilemap/utils');
     var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
