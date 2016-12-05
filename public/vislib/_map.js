@@ -526,6 +526,7 @@ define(function (require) {
       mapOptions.layers = this._tileLayer;
       mapOptions.center = this._mapCenter;
       mapOptions.zoom = this._mapZoom;
+      mapOptions.renderer = L.canvas();
 
       this.map = L.map(this._container, mapOptions);
       this._layerControl = L.control.layers();
