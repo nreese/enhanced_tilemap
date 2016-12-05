@@ -3,6 +3,7 @@ define(function (require) {
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
+    require('leaflet-draw');
     const utils = require('plugins/enhanced_tilemap/utils');
     var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
