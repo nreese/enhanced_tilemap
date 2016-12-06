@@ -278,7 +278,11 @@ define(function (require) {
      * users context for all applied filters
      */
     TileMapMap.prototype.addFilters = function (filters) {
+      let isVisible = false;
       if(this._filters) {
+        if (this.map.hasLayer(this._filters)) {
+          isVisible = true;
+        }
         this._layerControl.removeLayer(this._filters);
         this.map.removeLayer(this._filters);
       }
@@ -294,7 +298,7 @@ define(function (require) {
         clickable: false,
         style: style
       });
-      //this.map.addLayer(this._filters);
+      if (isVisible) this.map.addLayer(this._filters);
       this._layerControl.addOverlay(this._filters, "Applied Filters");
     };
 
