@@ -107,6 +107,7 @@ define(function (require) {
       draw();
 
       map.clearPOILayers();
+      map.saturateTiles(visParams.isDesaturated);
       visParams.overlays.savedSearches.forEach(function (layerParams) {
         const poi = new POIsProvider(layerParams);
         poi.getPOIs(points => {
