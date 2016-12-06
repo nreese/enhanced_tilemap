@@ -197,9 +197,11 @@ define(function (require) {
      * @method saturateTiles
      * @return undefined
      */
-    TileMapMap.prototype.saturateTiles = function () {
-      if (!this._attr.isDesaturated) {
-        $('img.leaflet-tile-loaded').addClass('filters-off');
+    TileMapMap.prototype.saturateTiles = function (isDesaturated) {
+      if (isDesaturated) {
+        $(this._tileLayer.getContainer()).removeClass('no-filter');
+      } else {
+        $(this._tileLayer.getContainer()).addClass('no-filter');
       }
     };
 
@@ -310,6 +312,7 @@ define(function (require) {
       this.map.addLayer(overlay);
       this._layerControl.addOverlay(overlay, name);
       this._wmsOverlays.push(overlay);
+      $(overlay.getContainer()).addClass('no-filter');
     };
 
     TileMapMap.prototype.mapBounds = function () {
@@ -365,14 +368,7 @@ define(function (require) {
 
     TileMapMap.prototype._attachEvents = function () {
       var self = this;
-      var saturateTiles = self.saturateTiles.bind(self);
-
-      this._tileLayer.on('tileload', saturateTiles);
-
-      this.map.on('unload', function () {
-        self._tileLayer.off('tileload', saturateTiles);
-      });
-
+      
       this.map.on('moveend', _.debounce(function setZoomCenter(ev) {
         if (!self.map) return;
         if (self._hasSameLocation()) return;
