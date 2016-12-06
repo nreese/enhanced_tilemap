@@ -10,6 +10,7 @@ import VisSchemasProvider from 'ui/vis/schemas';
 define(function (require) {
   require('ui/registry/vis_types').register(EnhancedTileMapVisProvider);
   require('plugins/enhanced_tilemap/vis.less');
+  require('plugins/enhanced_tilemap/lib/jquery.minicolors/minicolors');
   require('plugins/enhanced_tilemap/directives/bands');
   require('plugins/enhanced_tilemap/directives/savedSearches');
   require('plugins/enhanced_tilemap/directives/wmsOverlays');

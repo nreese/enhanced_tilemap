@@ -1,5 +1,5 @@
-<div style="padding-left: 15px;">
-  <div ng-repeat="band in bands" class="form-inline">
+<div style="padding-left: 15px;" class="bands">
+  <div ng-repeat="band in bands" class="form-inline band">
     <input
       ng-model="band.low"
       ng-disabled="true"
@@ -20,14 +20,14 @@
       style="width: 25%;"
     >
     <input
+      minicolors
       ng-model="band.color"
       required
       type="text"
       class="form-control"
       name="color"
-      style="width: 25%; background-color: {{band.color}};"
     >
-    <input type="button" value="-" ng-click="removeBand()" class="btn btn-default btn-xs" ng-if="$index !== 0 && $last">
+    <input type="button" value="-" ng-click="removeBand()" class="btn btn-default btn-xs band-remove" ng-if="$index !== 0 && $last">
   </div>
-  <input type="button" value="+" ng-click="addBand()" class="btn btn-default btn-xs">
+  <input type="button" value="+" ng-click="addBand()" class="btn btn-default btn-xs band-add">
 </div>
