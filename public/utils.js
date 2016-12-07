@@ -1,63 +1,6 @@
 define(function (require) {
   const _ = require('lodash');
 
-  function filterToGeoJson(filter, field) {
-    let features = [];
-    if (_.has(filter, 'or')) {
-      _.get(filter, 'or', []).forEach(function(it) {
-        features = features.concat(filterToGeoJson(it, field));
-      });
-    } else if (_.has(filter, 'geo_bounding_box.' + field)) {
-      const topLeft = _.get(filter, 'geo_bounding_box.' + field + '.top_left');
-      const bottomRight = _.get(filter, 'geo_bounding_box.' + field + '.bottom_right');
-      if(topLeft && bottomRight) {
-        const coords = [];
-        coords.push([topLeft.lon, topLeft.lat]);
-        coords.push([bottomRight.lon, topLeft.lat]);
-        coords.push([bottomRight.lon, bottomRight.lat]);
-        coords.push([topLeft.lon, bottomRight.lat]);
-        features.push({
-          type: 'Polygon',
-          coordinates: [coords]
-        });
-      }
-    } else if (_.has(filter, 'geo_polygon.' + field)) {
-      const points = _.get(filter, 'geo_polygon.' + field + '.points', []);
-      const coords = [];
-      points.forEach(function(point) {
-        const lat = point[1];
-        const lon = point[0];
-        coords.push([lon, lat]);
-      });
-      if(coords.length > 0) features.push({
-          type: 'Polygon',
-          coordinates: [coords]
-        });
-    } else if (_.has(filter, 'geo_shape.' + field)) {
-      const type = _.get(filter, 'geo_shape.' + field + '.shape.type');
-      if (type.toLowerCase() === 'envelope') {
-        const envelope = _.get(filter, 'geo_shape.' + field + '.shape.coordinates');
-        const tl = envelope[0]; //topleft
-        const br = envelope[1]; //bottomright
-        const coords = [];
-        coords.push([ tl[0], tl[1] ]);
-        coords.push([ br[0], tl[1] ]);
-        coords.push([ br[0], br[1] ]);
-        coords.push([ tl[0], br[1] ]);
-        features.push({
-          type: 'Polygon',
-          coordinates: [coords]
-        });
-      } else {
-        features.push({
-          type: type,
-          coordinates: _.get(filter, 'geo_shape.' + field + '.shape.coordinates')
-        });
-      }
-    }
-    return features;
-  }
-
   /**
    * Get the number of geohash cells for a given precision
    *
@@ -173,19 +116,6 @@ define(function (require) {
     getPrecision: function(zoom, maxPrecision) {
       const scale = precisionScale(maxPrecision);
       return scale[zoom];
-    },
-    isGeoFilter: function(filter, field) {
-      if (filter.meta.key === field
-        || _.has(filter, 'geo_bounding_box.' + field)
-        || _.has(filter, 'geo_polygon.' + field)
-        || _.has(filter, 'or[0].geo_bounding_box.' + field)
-        || _.has(filter, 'or[0].geo_polygon.' + field)
-        || _.has(filter, 'geo_shape.' + field)
-        || _.has(filter, 'or[0].geo_shape.' + field)) {
-        return true;
-      } else {
-        return false;
-      }
     }
   }
 });
