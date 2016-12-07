@@ -17,8 +17,8 @@ define(function (require) {
   module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
     let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
-    const pushFilter = Private(require('ui/filter_bar/push_filter'))(getAppState());
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
+    const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
@@ -143,7 +143,7 @@ define(function (require) {
         }
       }
       if (fieldName) {
-        map.addFilters(getGeoFilters(fieldName));
+        map.addFilters(geoFilter.toGeoJson(fieldName));
       }
 
       drawWmsOverlays();
@@ -154,17 +154,6 @@ define(function (require) {
         Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
         _.get(chartData, 'valueFormatter', _.identity),
         collar);
-    }
-
-    function getGeoFilters(field) {
-      let filters = [];
-      _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
-        if (utils.isGeoFilter(it, field) && !_.get(it, 'meta.disabled', false)) {
-          const features = utils.filterToGeoJson(it, field);
-          filters = filters.concat(features);
-        }
-      });
-      return filters;
     }
 
     function drawWmsOverlays() {
@@ -216,7 +205,6 @@ define(function (require) {
     }
 
     function appendMap() {
-      callbacks.setPushFilter(pushFilter);
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       var params = $scope.vis.params;
       var container = $element[0].querySelector('.tilemap');

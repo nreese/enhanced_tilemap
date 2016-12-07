@@ -1,68 +1,10 @@
 define(function (require) {
-  return function CallbacksFactory(Private, courier, config, getAppState) {
+  return function CallbacksFactory(Private, courier, config) {
     const _ = require('lodash');
-    const queryFilter = Private(require('ui/filter_bar/query_filter'));
+    const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const utils = require('plugins/enhanced_tilemap/utils');
     
-    let pushFilter = null;
-
-    function filterAlias(field, numBoxes) {
-      return field + ": " + numBoxes + " geo filters"
-    }
-
-    function addGeoFilter(newFilter, field, indexPatternName) {
-      let existingFilter = null;
-      _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
-        if (utils.isGeoFilter(it, field)) {
-          existingFilter = it;
-        }
-      });
-
-      if (existingFilter) {
-        let geoFilters = [newFilter];
-        let type = '';
-        if (_.has(existingFilter, 'bool.should')) {
-          geoFilters = geoFilters.concat(existingFilter.bool.should);
-          type = 'bool';
-        } else if (_.has(existingFilter, 'geo_bounding_box')) {
-          geoFilters.push({geo_bounding_box: existingFilter.geo_bounding_box});
-          type = 'geo_bounding_box';
-        } else if (_.has(existingFilter, 'geo_polygon')) {
-          geoFilters.push({geo_polygon: existingFilter.geo_polygon});
-          type = 'geo_polygon';
-        } else if (_.has(existingFilter, 'geo_shape')) {
-          geoFilters.push({geo_shape: existingFilter.geo_shape});
-          type = 'geo_shape';
-        }
-        queryFilter.updateFilter({
-          model: { 
-            bool : { 
-              should : geoFilters
-            } 
-          },
-          source: existingFilter,
-          type: type,
-          alias: filterAlias(field, geoFilters.length)
-        });
-      } else {
-        if(!pushFilter) {
-          console.error("pushFilter not provided. Call setPushFilter!");
-        } else {
-          pushFilter(newFilter, false, indexPatternName);
-        }
-      }
-    }
-
     return {
-      /*
-       * Need to pass in pushFilter
-       * super weird bug occurs if pushFilter loaded in this file
-       * On first page view - everything worked great
-       * After that - all pushes went nowhere - like it was a different state instance
-       */
-      setPushFilter: function(f) {
-        pushFilter = f;
-      },
       createMarker: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
         if (!agg) return;
@@ -139,7 +81,7 @@ define(function (require) {
           newFilter.geo_polygon[field] = { points: event.points};
         }
 
-        addGeoFilter(newFilter, field, indexPatternName);
+        geoFilter.add(newFilter, field, indexPatternName);
       },
       rectangle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
@@ -166,7 +108,7 @@ define(function (require) {
           newFilter.geo_bounding_box[field] = event.bounds;
         }
 
-        addGeoFilter(newFilter, field, indexPatternName);
+        geoFilter.add(newFilter, field, indexPatternName);
       }
     }
   }
