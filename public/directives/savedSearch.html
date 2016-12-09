@@ -23,7 +23,7 @@
   </div>
   <div class="form-group">
     <label>
-      Marker Color
+      Marker Styling
     </label>
     <input
       minicolors
@@ -31,6 +31,14 @@
       type="text"
       class="form-control"
       name="color"/>
+    <select ng-model="layer.markerSize" class="form-control">
+      <option value="xs">xs</option>
+      <option value="s">s</option>
+      <option value="m">m</option>
+      <option value="l">l</option>
+      <option value="xl">xl</option>
+    </select>
+
   </div>
   <div class="form-group">
     <label>
