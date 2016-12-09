@@ -99,7 +99,6 @@ define(function (require) {
       //both corners are inside collar so collar contains 
       return true;
     },
-    filterToGeoJson: filterToGeoJson,
     getMapStateFromVis: function(vis) {
       const mapState = {
         center: [15, 5],

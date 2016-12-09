@@ -15,7 +15,10 @@ define(function (require) {
       link: function (scope, element, attrs) {
         scope.addLayer = function() {
           if (!scope.layers) scope.layers = [];
-          scope.layers.push({color: '#008000'});
+          scope.layers.push({
+            color: '#008000',
+            markerSize: 'm'
+          });
         }
         scope.removeLayer = function(layerIndex) {
           scope.layers.splice(layerIndex, 1);
