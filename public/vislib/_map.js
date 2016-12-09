@@ -278,11 +278,16 @@ define(function (require) {
       this._geoJson = _.get(chartData, 'geoJson');
       this._collar = collar;
       
-      if (this._markers) this._markers.destroy();
+      let visible = true;
+      if (this._markers) {
+        visible = this._markers.isVisible();
+        this._markers.destroy();
+      }
 
       this._markers = this._createMarkers({
         tooltipFormatter: tooltipFormatter,
         valueFormatter: valueFormatter,
+        visible: visible,
         attr: this._attr
       });
       
@@ -364,7 +369,7 @@ define(function (require) {
      */
     TileMapMap.prototype._createMarkers = function (options) {
       var MarkerType = markerTypes[this._markerType];
-      return new MarkerType(this.map, this._geoJson, options);
+      return new MarkerType(this.map, this._geoJson, this._layerControl, options);
     };
 
     TileMapMap.prototype._setMarkerType = function (markerType) {
@@ -462,6 +467,18 @@ define(function (require) {
           zoom: self.map.getZoom(),
         });
       }, 150, false));
+
+      this.map.on('overlayadd', function(e) {
+        if (self._markers && e.name === "Aggregation") {
+          self._markers.show();
+        }
+      });
+
+      this.map.on('overlayremove', function(e) {
+        if (self._markers && e.name === "Aggregation") {
+          self._markers.hide();
+        }
+      });
     };
 
     TileMapMap.prototype._hasSameLocation = function () {
