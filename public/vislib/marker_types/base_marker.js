@@ -12,9 +12,10 @@ define(function (require) {
      * @param geoJson {geoJson Object}
      * @param params {Object}
      */
-    function BaseMarker(map, geoJson, params) {
+    function BaseMarker(map, geoJson, layerControl, params) {
       this.map = map;
       this.geoJson = geoJson;
+      this.layerControl = layerControl;
       this.popups = [];
 
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
@@ -142,22 +143,45 @@ define(function (require) {
       self._hidePopup();
 
       if (self._legend) {
-        self.map.removeControl(self._legend);
+        if (self._legend._map) {
+          self.map.removeControl(self._legend);
+        }
         self._legend = undefined;
       }
 
       // remove marker layer from map
       if (self._markerGroup) {
-        self.map.removeLayer(self._markerGroup);
+        self.layerControl.removeLayer(self._markerGroup);
+        if (self.map.hasLayer(self._markerGroup)) {
+          self.map.removeLayer(self._markerGroup);
+        }
         self._markerGroup = undefined;
       }
     };
 
-    BaseMarker.prototype.getMarkerGroup = function () {
-      return this._markerGroup;
+    BaseMarker.prototype.hide = function () {
+      this._stopLoadingGeohash();
+      if (this._legend) {
+        this.map.removeControl(this._legend);
+      }
+    }
+
+    BaseMarker.prototype.show = function () {
+      if (this._legend) {
+        this._legend.addTo(this.map);
+      }
+    }
+
+    BaseMarker.prototype.isVisible = function () {
+      let visible = false;
+      if (this._markerGroup && this.map.hasLayer(this._markerGroup)) {
+        visible = true;
+      }
+      return visible;
     }
 
     BaseMarker.prototype._addToMap = function () {
+      this.layerControl.addOverlay(this._markerGroup, "Aggregation");
       this.map.addLayer(this._markerGroup);
     };
 
