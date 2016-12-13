@@ -64,7 +64,7 @@ define(function (require) {
       let min = orgMax / 3;
       let max = orgMax;
       let value = this._scaleValueBetween(feature.properties.value, min, max, orgMin, orgMax);
-      return radius * (value / orgMax);
+      return radius * (value / max);
     };
 
     /**
@@ -80,7 +80,7 @@ define(function (require) {
      * @return {Number}
      */
     ScaledCircleMarker.prototype._scaleValueBetween = function(value, min, max, orgMin, orgMax) {
-      return ((max-min)*(value-orgMin))/(orgMax-orgMin) + min;
+      return (orgMin != orgMax) ? ((max-min)*(value-orgMin))/(orgMax-orgMin) + min : value;
     }
 
     return ScaledCircleMarker;
