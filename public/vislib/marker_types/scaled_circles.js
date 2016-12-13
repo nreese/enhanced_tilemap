@@ -79,7 +79,7 @@ define(function (require) {
       let min = orgMax / 3;
       let max = orgMax;
       let value = this._scaleValueBetween(feature.properties.value, min, max, orgMin, orgMax);
-      return radius * (feature.properties.value / max) / this._metersPerPixel;
+      return radius * (value / max) / this._metersPerPixel;
     }
 
     /**
