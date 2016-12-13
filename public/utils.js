@@ -99,6 +99,16 @@ define(function (require) {
       //both corners are inside collar so collar contains 
       return true;
     },
+    getAggConfig: function (aggs, aggName) {
+      let aggConfig = null;
+      index = _.findIndex(aggs, function (agg) {
+        return agg.schema.name === aggName;
+      });
+      if (index !== -1) {
+        aggConfig = aggs[index];
+      }
+      return aggConfig;
+    },
     getMapStateFromVis: function(vis) {
       const mapState = {
         center: [15, 5],

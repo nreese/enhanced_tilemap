@@ -64,6 +64,26 @@ define(function (require) {
 
         courier.fetch();
       },
+      poiFilter: function (event) {
+        const agg = _.get(event, 'chart.geohashGridAgg');
+        if (!agg) return;
+
+        const field = agg.fieldName();
+        const indexPatternName = agg.vis.indexPattern.id;
+
+        const filters = [];
+        event.poiLayers.forEach(function (poiLayer) {
+          poiLayer.getLayers().forEach(function (feature) {
+            const filter = {geo_distance: {distance: event.radius + "km"}};
+            filter.geo_distance[field] = {
+              "lat" : feature.getLatLng().lat,
+              "lon" : feature.getLatLng().lng
+            }
+            filters.push(filter);
+          });
+        });
+        geoFilter.add(filters, field, indexPatternName);
+      },
       polygon: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
         if (!agg) return;
