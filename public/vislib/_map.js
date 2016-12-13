@@ -3,6 +3,7 @@ define(function (require) {
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
+    var LDrawToolbench = require('./LDrawToolbench');
     const utils = require('plugins/enhanced_tilemap/utils');
     var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
@@ -40,6 +41,7 @@ define(function (require) {
         iconSize: iconSize,
         iconAnchor: [iconSize[0]/2, iconSize[1]],
         className: "vector-marker",
+        popupAnchor: [0, -10]
       });
     }
     
@@ -95,7 +97,7 @@ define(function (require) {
     }
 
     TileMapMap.prototype._addDrawControl = function () {
-      if (this._boundingControl) return;
+      if (this._drawControl) return;
 
       //create Markers feature group and add saved markers 
       this._drawnItems = new L.FeatureGroup();
@@ -140,8 +142,10 @@ define(function (require) {
         drawOptions.edit.remove = false;
       }
 
-      this._boundingControl = new L.Control.Draw(drawOptions);
-      this.map.addControl(this._boundingControl);
+      this._drawControl = new L.Control.Draw(drawOptions);
+      this.map.addControl(this._drawControl);
+
+      this._toolbench = new LDrawToolbench(this.map, this._drawControl);
     };
 
     TileMapMap.prototype._addSetViewControl = function () {
@@ -232,7 +236,7 @@ define(function (require) {
     TileMapMap.prototype.destroy = function () {
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
-      if (this._boundingControl) this._boundingControl.removeFrom(this.map);
+      if (this._drawControl) this._drawControl.removeFrom(this.map);
       if (this._markers) this._markers.destroy();
       syncMaps.remove(this.map);
       this.map.remove();
@@ -246,23 +250,29 @@ define(function (require) {
         self.map.removeLayer(layer);
       });
       this._poiLayers = [];
+
+      if (this._toolbench) this._toolbench.removeTools();
     };
 
     TileMapMap.prototype.addPOILayer = function (layerName, points, options) {
       const featureGroup = new L.FeatureGroup();
       points.forEach(function(point) {
-        featureGroup.addLayer(
-          L.marker(
-            point.latlng, 
-            {
-              icon: markerIcon(options.color, options.size),
-              title: point.label
-            })
-          );
+        const poi = L.marker(
+          point.latlng, 
+          {
+            icon: markerIcon(options.color, options.size)
+          });
+        featureGroup.addLayer(poi);
       });
       this.map.addLayer(featureGroup);
       this._layerControl.addOverlay(featureGroup, layerName);
       this._poiLayers.push(featureGroup);
+
+      //Add tool to l.draw.toolbar so users can filter by POIs
+      if (this._poiLayers.length === 1) {
+        if (!this._toolbench) this._addDrawControl();
+        this._toolbench.addTool();
+      }
     };
 
     /**
@@ -317,10 +327,8 @@ define(function (require) {
         opacity: 1,
         fillOpacity: 0.75
       }
-      this._filters = L.geoJson(filters, {
-        clickable: false,
-        style: style
-      });
+      this._filters = L.featureGroup(filters);
+      this._filters.setStyle(style);
       if (isVisible) this.map.addLayer(this._filters);
       this._layerControl.addOverlay(this._filters, "Applied Filters");
     };
@@ -412,6 +420,14 @@ define(function (require) {
 
       this.map.on('setview:fitBounds', function (e) {
         self._fitBounds();
+      });
+
+      this.map.on('toolbench:poiFilter', function (e) {
+        self._callbacks.poiFilter({
+          chart: self._chartData,
+          poiLayers: self._poiLayers,
+          radius: _.get(e, 'radius', 10)
+        });
       });
 
       this.map.on('draw:created', function (e) {
