@@ -83,7 +83,7 @@ define(function (require) {
     }
 
     /**
-     * _scaleValueBewteen returns the given value between the new min and max based
+     * _scaleValueBetween returns the given value between the new min and max based
      * on the original scale
      *
      * @method _scaleValueBetween
@@ -91,7 +91,7 @@ define(function (require) {
      * @param min {Number} - The new minimum
      * @param max {Number} - The new maximum
      * @param orgMin {Number} - The original minimum
-     * @param feature {Number} - The original maximum
+     * @param orgMax {Number} - The original maximum
      * @return {Number}
      */
     ScaledCircleMarker.prototype._scaleValueBetween = function(value, min, max, orgMin, orgMax) {
