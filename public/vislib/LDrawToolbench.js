@@ -12,10 +12,11 @@ define(function (require) {
     const self = this;
     _createButton({
       title: "Create geo_distance filter around POIs",
-      className: 'leaflet-draw-draw-circle leaflet-toolbench-tool',
+      className: 'fa fa-bullseye leaflet-toolbench-tool',
       container: this._toolbarContainer,
       callback: function() {
-        self.displayActions();
+        self._cancelOldActions();
+        self._displayActions();
       },
       context: {}
     });
@@ -29,16 +30,34 @@ define(function (require) {
     }
   }
 
-  LDrawToolbench.prototype.clearActions = function () {
+  LDrawToolbench.prototype._clearActions = function () {
     while (this._actionsContainer.firstChild) {
       this._actionsContainer.removeChild(this._actionsContainer.firstChild);
     }
   }
 
-  LDrawToolbench.prototype.displayActions = function () {
+  /**
+   * In the event that a users selects a toolbench tool prior to Canceling a Draw tool,
+   * this function guarantees that the cancel action gets triggered to allow
+   * Leaflet.Draw to clean up the UI.
+   * 
+   * @method cancelOldActions
+   */
+  LDrawToolbench.prototype._cancelOldActions = function () {
+    for (var i=0; i<this._actionsContainer.children.length; i++) {
+      const liElem = this._actionsContainer.children[i];
+      const actionElem = liElem.firstChild;
+      if (actionElem.innerText === 'Cancel') {
+        actionElem.click();
+        break;
+      }
+    }
+  }
+
+  LDrawToolbench.prototype._displayActions = function () {
     const self = this;
 
-    self.clearActions();
+    self._clearActions();
 
     let radius = 10;
     
@@ -48,7 +67,7 @@ define(function (require) {
       name: 'radius',
       placeholder: 'radius (km)',
       callback: function(event) {
-        radius = getValue(event);
+        radius = _getValue(event);
         if (radius <= 0) radius = 10; 
       }
     });
@@ -59,7 +78,7 @@ define(function (require) {
       callback: function() {
         self._map.fire('toolbench:poiFilter', {radius: radius});
         self._actionsContainer.style.display = 'none';
-        self.clearActions();
+        self._clearActions();
       }
     });
     _createButton({
@@ -68,7 +87,7 @@ define(function (require) {
       container: L.DomUtil.create('li', '', this._actionsContainer),
       callback: function() {
         self._actionsContainer.style.display = 'none';
-        self.clearActions();
+        self._clearActions();
       }
     });
 
@@ -119,7 +138,7 @@ define(function (require) {
     return input;
   }
 
-  function getValue (event) {
+  function _getValue (event) {
     const el = event.target || event.srcElement;
     return el.value;
   }
