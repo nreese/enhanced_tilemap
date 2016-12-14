@@ -13,7 +13,7 @@ define(function (require) {
     function addGeoFilter(newFilter, field, indexPatternName) {
       let existingFilter = null;
       _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
-        if (utils.isGeoFilter(it, field)) {
+        if (isGeoFilter(it, field)) {
           existingFilter = it;
         }
       });
@@ -48,7 +48,11 @@ define(function (require) {
         let numFilters = 1;
         if (_.isArray(newFilter)) {
           numFilters = newFilter.length;
-          newFilter = { or: newFilter };
+          newFilter = { 
+            bool: {
+              should: newFilter
+            }
+          };
         }
         newFilter.meta = {
           alias: filterAlias(field, numFilters), 

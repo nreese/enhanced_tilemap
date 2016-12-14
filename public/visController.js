@@ -139,7 +139,7 @@ define(function (require) {
       //add overlay layer to provide visibility of filtered area
       let fieldName = getGeoField();
       if (fieldName) {
-        map.addFilters(geoFilter.toGeoJson(fieldName));
+        map.addFilters(geoFilter.getGeoFilters(fieldName));
       }
 
       drawWmsOverlays();
