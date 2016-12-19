@@ -199,8 +199,6 @@ define(function (require) {
      */
     BaseMarker.prototype._createMarkerGroup = function (options) {
       let self = this;
-
-
       let defaultOptions = {
         onEachFeature: function (feature, layer) {
           self.bindPopup(feature, layer);
