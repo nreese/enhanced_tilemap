@@ -57,8 +57,7 @@ define(function (require) {
 
           let icon = $('<i>').css({
             background: color,
-            'border-color': self.darkerColor(color),
-            'opacitiy': 0.75
+            'border-color': self.darkerColor(color)
           });
 
           label.append(icon);
