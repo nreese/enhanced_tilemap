@@ -57,7 +57,8 @@ define(function (require) {
 
           let icon = $('<i>').css({
             background: color,
-            'border-color': self.darkerColor(color)
+            'border-color': self.darkerColor(color),
+            'opacitiy': 0.75
           });
 
           label.append(icon);
@@ -79,6 +80,12 @@ define(function (require) {
      */
     BaseMarker.prototype.applyShadingStyle = function (value) {
       let color = this._legendQuantizer(value);
+      if(color == undefined && 'Dynamic - Uneven' === this._attr.scaleType) {
+        // Because this scale is threshold based and we added just as many ranges
+        // as we did for the domain the max value is counted as being outside the
+        // range so we get undefined.  We want to count this as part of the last domain.
+        color = this._legendColors[this._legendColors.length - 1];
+      }
 
       return {
         fillColor: color,
@@ -193,6 +200,8 @@ define(function (require) {
      */
     BaseMarker.prototype._createMarkerGroup = function (options) {
       let self = this;
+
+
       let defaultOptions = {
         onEachFeature: function (feature, layer) {
           self.bindPopup(feature, layer);
@@ -315,7 +324,7 @@ define(function (require) {
      * return {undefined}
      */
     BaseMarker.prototype.quantizeLegendColors = function () {
-      if ('static' === this._attr.scaleType) {
+      if ('Static' === this._attr.scaleType) {
         const domain = [];
         const colors = [];
         this._attr.scaleBands.forEach(function(band) {
@@ -343,7 +352,34 @@ define(function (require) {
           this._legendColors = reds5;
         }
 
-        this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
+        if('Dynamic - Linear' === this._attr.scaleType) {
+          this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
+        } else { // Dynamic - Uneven
+          // A legend scale that will create uneven ranges for the legend in an attempt
+          // to split the map features uniformly across the ranges.  Useful when data is unevenly
+          // distributed across the minimum - maximum range.
+          let features = this.geoJson.features;
+          features.sort(function(x, y) {
+            return d3.ascending(x.properties.value, y.properties.value);
+          });
+          let featureLength = features.length;
+          let count = 0;
+          let ranges = [];
+          let max = 0;
+          let bands = this._legendColors.length;
+          features.forEach(function(obj) {
+            max = Math.max(max, obj.properties.value);
+            count++;
+            if(count >= featureLength/bands) {
+              count = 0;
+              ranges.push(obj.properties.value);
+            }
+          });
+          if(ranges.length < bands) {
+            ranges.push(max);
+          }
+          this._legendQuantizer = d3.scale.threshold().domain(ranges).range(this._legendColors);
+        }
       }
     };
 
