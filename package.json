@@ -3,6 +3,7 @@
 	"version": "5.0.2",
 	"dependencies":{
 		"leaflet": "1.0.2",
-		"leaflet-draw": "0.4.7"
+		"leaflet-draw": "0.4.7",
+		"cesiumjs": "1.10.0"
 	}
 }
