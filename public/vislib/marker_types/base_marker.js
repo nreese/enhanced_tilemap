@@ -321,9 +321,6 @@ define(function (require) {
      * return {undefined}
      */
     BaseMarker.prototype.quantizeLegendColors = function () {
-      let reds1 = ['#ff6128'];
-      let reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
-      let reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
       if ('Static' === this._attr.scaleType) {
         const domain = [];
         const colors = [];
@@ -333,35 +330,20 @@ define(function (require) {
         });
         this._legendColors = colors;
         this._legendQuantizer = d3.scale.threshold().domain(domain).range(this._legendColors);
-      } else if('Dynamic - Linear' == this._attr.scaleType) {
+      } else {
         let min = _.get(this.geoJson, 'properties.allmin', 0);
         let max = _.get(this.geoJson, 'properties.allmax', 1);
         let quantizeDomain = (min !== max) ? [min, max] : d3.scale.quantize().domain();
 
-        let bottomCutoff = 2;
-        let middleCutoff = 24;
+        let reds1 = ['#ff6128'];
+        let reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
+        let reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
 
-        if (max - min <= bottomCutoff) {
-          this._legendColors = reds1;
-        } else if (max - min <= middleCutoff) {
-          this._legendColors = reds3;
-        } else {
-          this._legendColors = reds5;
-        }
-        this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
-
-      } else { // Dynamic - Uneven
-        // A legend scale that will create uneven ranges for the legend in an attempt
-        // to split the map features uniformly across the ranges.  Useful when data is unevenly
-        // distributed across the minimum - maximum range.
         let features = this.geoJson.features;
         let featureLength = features.length;
-        features.sort(function(x, y) {
-          return d3.ascending(x.properties.value, y.properties.value);
-        });
-
         let bottomCutoff = 1;
         let middleCutoff = 9;
+
         if (featureLength <= bottomCutoff) {
           this._legendColors = reds1;
         } else if (featureLength <= middleCutoff) {
@@ -369,20 +351,30 @@ define(function (require) {
         } else {
           this._legendColors = reds5;
         }
-
-        let ranges = [];
-        let bands = this._legendColors.length;
-        for(let i=1; i<bands; i++) {
-          let index = Math.round(i*featureLength/bands);
-          if(index <= featureLength - 1) {
-            ranges.push(features[index].properties.value);
-          }
-        };
-        if(ranges.length < bands) {
-          let max = _.get(this.geoJson, 'properties.allmax', 1);
-          ranges.push(max);
+        if('Dynamic - Linear' == this._attr.scaleType) {
+          this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
         }
-        this._legendQuantizer = d3.scale.threshold().domain(ranges).range(this._legendColors);
+        else { // Dynamic - Uneven
+          // A legend scale that will create uneven ranges for the legend in an attempt
+          // to split the map features uniformly across the ranges.  Useful when data is unevenly
+          // distributed across the minimum - maximum range.
+          features.sort(function(x, y) {
+            return d3.ascending(x.properties.value, y.properties.value);
+          });
+
+          let ranges = [];
+          let bands = this._legendColors.length;
+          for(let i=1; i<bands; i++) {
+            let index = Math.round(i*featureLength/bands);
+            if(index <= featureLength - 1) {
+              ranges.push(features[index].properties.value);
+            }
+          };
+          if(ranges.length < bands) {
+            ranges.push(max);
+          }
+          this._legendQuantizer = d3.scale.threshold().domain(ranges).range(this._legendColors);
+        }
       }
     };
 
