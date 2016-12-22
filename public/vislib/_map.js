@@ -443,7 +443,7 @@ define(function (require) {
             break;
           case "polygon":
             const points = [];
-            e.layer._latlngs.forEach(function(latlng){
+            e.layer._latlngs[0].forEach(function(latlng){
               const lat = L.Util.formatNum(latlng.lat, 5);
               const lon = L.Util.formatNum(latlng.lng, 5);
               points.push([lon, lat]);
