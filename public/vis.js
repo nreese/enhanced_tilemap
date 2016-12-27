@@ -31,7 +31,7 @@ define(function (require) {
         defaults: {
           mapType: 'Scaled Circle Markers',
           collarScale: 1.5,
-          scaleType: 'dynamic',
+          scaleType: 'Dynamic - Linear',
           scaleBands: [{
             low: 0,
             high: 10,
@@ -55,7 +55,7 @@ define(function (require) {
           wms: config.get('visualization:tileMap:WMSdefaults')
         },
         mapTypes: ['Scaled Circle Markers', 'Shaded Circle Markers', 'Shaded Geohash Grid', 'Heatmap'],
-        scaleTypes: ['dynamic', 'static'],
+        scaleTypes: ['Dynamic - Linear', 'Dynamic - Uneven', 'Static'],
         canDesaturate: !!supports.cssFilters,
         editor: require('plugins/enhanced_tilemap/options.html')
       },

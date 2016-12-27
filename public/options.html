@@ -21,7 +21,11 @@
     </div>
     <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
       <div class="form-group">
-        <label>Quantize scale type</label>
+        <label>
+          Legend scale type
+          <kbn-info ng-if="vis.params.scaleType === 'Dynamic - Linear'" info="A legend scale which linearly grows from minimum to maximum range."></kbn-info>
+          <kbn-info ng-if="vis.params.scaleType === 'Dynamic - Uneven'" info="A legend scale that will create uneven ranges for the legend in an attempt to split the map features uniformly across the ranges.  Useful when data is unevenly distributed across the minimum - maximum range."></kbn-info>
+        </label>
         <select name="scaleType"
           class="form-control"
           ng-model="vis.params.scaleType"
@@ -30,7 +34,7 @@
           >
         </select>
       </div>
-      <div ng-if="vis.params.scaleType === 'static'" class="form-group">
+      <div ng-if="vis.params.scaleType === 'Static'" class="form-group">
         <bands bands="vis.params.scaleBands"></bands>
       </div>
     </div>
