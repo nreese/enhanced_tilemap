@@ -262,6 +262,18 @@ define(function (require) {
           {
             icon: markerIcon(options.color, options.size)
           });
+        let popup = point.label;
+        if (!point.label) {
+          popup = '<p><strong>Label Field</strong> not set for Overlay Layer ' + layerName + '.</p>';
+          popup += '<p>Edit visualization and select Label Field to enable marker labels.</p>'
+        } 
+        poi.bindPopup('<div>' + popup + '</div>');
+        poi.on('mouseover', function (e) {
+            this.openPopup();
+        });
+        poi.on('mouseout', function (e) {
+            this.closePopup();
+        });
         featureGroup.addLayer(poi);
       });
       this.map.addLayer(featureGroup);
