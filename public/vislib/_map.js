@@ -403,6 +403,13 @@ define(function (require) {
     TileMapMap.prototype._setAttr = function (attr) {
       this._attr = attr || {};
 
+      //Ensure plugin is backwards compatible with old saved state values
+      if ('static' === this._attr.scaleType) {
+        this._attr.scaleType = 'Static';
+      } else if ('dynamic' === this._attr.scaleType) {
+        this._attr.scaleType = 'Dynamic - Linear';
+      }
+
       //update map options based on new attributes
       if(this.map) {
         if(this._attr.scrollWheelZoom) {
