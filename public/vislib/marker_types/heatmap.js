@@ -2,7 +2,7 @@ define(function (require) {
   return function HeatmapMarkerFactory(Private) {
     let d3 = require('d3');
     let _ = require('lodash');
-    let L = require('leaflet');
+    require('./../../lib/leaflet/leaflet.js');
 
     let BaseMarker = Private(require('./base_marker'));
 

@@ -2,9 +2,14 @@ define(function (require) {
   return function MapFactory(Private) {
     var _ = require('lodash');
     var $ = require('jquery');
-    var L = require('leaflet');
+    
+    var L = require('./../lib/leaflet/leaflet.js');
+    require('./../lib/leaflet/leaflet.css');
+    
     var LDrawToolbench = require('./LDrawToolbench');
-    require('leaflet-draw');
+    require('./../lib/leaflet.draw/leaflet.draw.js');
+    require('./../lib/leaflet.draw/leaflet.draw.css');
+    
     const utils = require('plugins/enhanced_tilemap/utils');
     var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');

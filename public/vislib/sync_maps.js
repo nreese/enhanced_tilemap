@@ -1,4 +1,4 @@
-require('leaflet');
+require('./../lib/leaflet/leaflet.js');
 require('./../lib/leaflet.sync/L.Map.Sync');
 
 var singleton = (function() {
