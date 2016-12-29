@@ -1,8 +1,4 @@
 {
 	"name": "enhanced_tilemap",
-	"version": "5.0.2",
-	"dependencies":{
-		"leaflet": "1.0.2",
-		"leaflet-draw": "0.4.7"
-	}
+	"version": "5.0.2"
 }
