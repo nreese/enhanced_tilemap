@@ -26,6 +26,12 @@ define(function (require) {
       this.quantizeLegendColors();
     }
 
+    BaseMarker.prototype.getMin = function () {
+      const min = _.get(this.geoJson, 'properties.allmin', 0);
+      const threshold = _.get(this._attr, 'minThreshold', 0);
+      return _.max([min, threshold]);
+    }
+
     /**
      * Adds legend div to each map when data is split
      * uses d3 scale from BaseMarker.prototype.quantizeLegendColors
@@ -208,6 +214,12 @@ define(function (require) {
           return self.applyShadingStyle(value);
         }
       };
+      if (self._attr.minThreshold) {
+        defaultOptions.filter = function(feature) {
+          const value = _.get(feature, 'properties.value', 0);
+          return value >= self._attr.minThreshold;
+        }
+      }
 
       if(self.geoJson.features.length <= 250) {
         this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
@@ -331,22 +343,28 @@ define(function (require) {
         this._legendColors = colors;
         this._legendQuantizer = d3.scale.threshold().domain(domain).range(this._legendColors);
       } else {
-        let min = _.get(this.geoJson, 'properties.allmin', 0);
-        let max = _.get(this.geoJson, 'properties.allmax', 1);
-        let quantizeDomain = (min !== max) ? [min, max] : d3.scale.quantize().domain();
+        const min = this.getMin();
+        const max = _.get(this.geoJson, 'properties.allmax', 1);
+        const range = max - min;
+        const quantizeDomain = (min !== max) ? [min, max] : d3.scale.quantize().domain();
 
-        let reds1 = ['#ff6128'];
-        let reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
-        let reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
+        const reds1 = ['#ff6128'];
+        const reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
+        const reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
 
         let features = this.geoJson.features;
-        let featureLength = features.length;
-        let bottomCutoff = 1;
-        let middleCutoff = 9;
+        if (this._attr.minThreshold) {
+          const minThreshold = this._attr.minThreshold;
+          features = _.filter(this.geoJson.features, function(feature) {
+            const value = _.get(feature, 'properties.value', 0);
+            return value >= minThreshold;
+          });
+        }
+        const featureLength = features.length;
 
-        if (featureLength <= bottomCutoff) {
+        if (featureLength <= 1 || range <= 1) {
           this._legendColors = reds1;
-        } else if (featureLength <= middleCutoff) {
+        } else if (featureLength <= 9  || range <= 3) {
           this._legendColors = reds3;
         } else {
           this._legendColors = reds5;
@@ -362,8 +380,8 @@ define(function (require) {
             return d3.ascending(x.properties.value, y.properties.value);
           });
 
-          let ranges = [];
-          let bands = this._legendColors.length;
+          const ranges = [];
+          const bands = this._legendColors.length;
           for(let i=1; i<bands; i++) {
             let index = Math.round(i*featureLength/bands);
             if(index <= featureLength - 1) {

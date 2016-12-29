@@ -19,10 +19,18 @@
         >
       </select>
     </div>
+    <div class="form-group">
+      <label>
+        Min Threshold <kbn-info info="Geogrid cells with a value less than or equal to this setting will not be displayed on the map."></kbn-info>
+      </label>
+      <input type="number" class="form-control"
+        name="minThreshold"
+        ng-model="vis.params.minThreshold">
+    </div>
     <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
       <div class="form-group">
         <label>
-          Legend scale type
+          Legend Scale
           <kbn-info ng-if="vis.params.scaleType === 'Dynamic - Linear'" info="A legend scale which linearly grows from minimum to maximum range."></kbn-info>
           <kbn-info ng-if="vis.params.scaleType === 'Dynamic - Uneven'" info="A legend scale that will create uneven ranges for the legend in an attempt to split the map features uniformly across the ranges.  Useful when data is unevenly distributed across the minimum - maximum range."></kbn-info>
         </label>
