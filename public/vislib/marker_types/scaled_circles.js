@@ -73,7 +73,7 @@ define(function (require) {
      */
     ScaledCircleMarker.prototype._radiusScale = function(feature) {
       let radius = this._geohashMinDistance(feature);
-      let orgMin = this.geoJson.properties.allmin;
+      let orgMin = this.getMin();
       let orgMax = this.geoJson.properties.allmax;
       // Don't let the circle size get any smaller than one-third the max size
       let min = orgMax / 3;
