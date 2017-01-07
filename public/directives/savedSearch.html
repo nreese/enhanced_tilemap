@@ -6,6 +6,10 @@
     <p>
       {{warn}}
     </p>
+    <input placeholder="Filter Saved Searches" class="form-control"
+      ng-model="layer.filter" 
+      ng-change="filterSavedSearches()" 
+      ng-model-options="{debounce:750}" />
     <select required class="form-control"
       ng-change="updateIndex()"
       ng-model="savedSearch"
