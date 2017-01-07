@@ -3,8 +3,7 @@ const module = require('ui/modules').get('kibana');
 
 define(function (require) {
   module.directive('savedSearch', function (Private, indexPatterns) {
-    const services = Private(require('ui/saved_objects/saved_object_registry')).byLoaderPropertiesName;
-    const service = services['searches'];
+    const service = Private(require('ui/saved_objects/saved_object_registry')).byLoaderPropertiesName.searches;
 
     return {
       restrict: 'E',
@@ -34,9 +33,14 @@ define(function (require) {
           })
         }
 
+        scope.filterSavedSearches = function() {
+          scope.layer.filter = this.layer.filter;
+          fetchSavedSearches();
+        }
+
         function fetchSavedSearches() {
           //TODO add filter to find to reduce results
-          service.find()
+          service.find(scope.layer.filter)
           .then(function (hits) {
             scope.items = _.map(hits.hits, function(hit) {
               return {
