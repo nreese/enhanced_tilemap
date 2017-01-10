@@ -78,27 +78,27 @@ define(function (require) {
         _.get(filter, 'bool.should', []).forEach(function(it) {
           features = features.concat(toVector(it, field));
         });
-      } else if (_.has(filter, 'geo_bounding_box.' + field)) {
-        const topLeft = _.get(filter, 'geo_bounding_box.' + field + '.top_left');
-        const bottomRight = _.get(filter, 'geo_bounding_box.' + field + '.bottom_right');
+      } else if (_.has(filter['geo_bounding_box'], field)) {
+        const topLeft = _.get(filter, ['geo_bounding_box', field, 'top_left']);
+        const bottomRight = _.get(filter, ['geo_bounding_box', field, 'bottom_right']);
         if(topLeft && bottomRight) {
           const bounds = L.latLngBounds(
             [topLeft.lat, topLeft.lon], 
             [bottomRight.lat, bottomRight.lon]);
           features.push(L.rectangle(bounds));
         }
-      } else if (_.has(filter, 'geo_distance.' + field)) {
+      } else if (_.has(filter['geo_distance'], field)) {
         let distance_str = _.get(filter, 'geo_distance.distance');
         let distance = 1000;
         if (_.includes(distance_str, 'km')) {
           distance = parseFloat(distance_str.replace('km', '')) * 1000;
         }
-        const center = _.get(filter, 'geo_distance.' + field);
+        const center = _.get(filter, ['geo_distance', field]);
         if(center) {
           features.push(L.circle([center.lat, center.lon], distance));
         }
-      } else if (_.has(filter, 'geo_polygon.' + field)) {
-        const points = _.get(filter, 'geo_polygon.' + field + '.points', []);
+      } else if (_.has(filter['geo_polygon'], field)) {
+        const points = _.get(filter, ['geo_polygon', field, 'points']);
         const latLngs = [];
         points.forEach(function(point) {
           const lat = point[LAT_INDEX];
@@ -107,10 +107,10 @@ define(function (require) {
         });
         if(latLngs.length > 0) 
           features.push(L.polygon(latLngs));
-      } else if (_.has(filter, 'geo_shape.' + field)) {
-        const type = _.get(filter, 'geo_shape.' + field + '.shape.type');
+      } else if (_.has(filter['geo_shape'], field)) {
+        const type = _.get(filter, ['geo_shape', field, 'shape.type']);
         if (type.toLowerCase() === 'envelope') {
-          const envelope = _.get(filter, 'geo_shape.' + field + '.shape.coordinates');
+          const envelope = _.get(filter, ['geo_shape', field, 'shape.coordinates']);
           const tl = envelope[0]; //topleft
           const br = envelope[1]; //bottomright
           const bounds = L.latLngBounds(
@@ -118,7 +118,7 @@ define(function (require) {
             [br[LAT_INDEX], br[LON_INDEX]]);
           features.push(L.rectangle(bounds));
         } else if (type.toLowerCase() === 'polygon') {
-          coords = _.get(filter, 'geo_shape.' + field + '.shape.coordinates')[0];
+          coords = _.get(filter, ['geo_shape', field, 'shape.coordinates'])[0];
           const latLngs = [];
           coords.forEach(function(point) {
             const lat = point[LAT_INDEX];
@@ -144,16 +144,24 @@ define(function (require) {
       return filters;
     }
 
+    function checkGeoFilterArray(path, key, field){
+      return (function (keyCopy){
+        return _.some(path, function(curField){
+          return _.has(curField[keyCopy], field);
+        });
+      })(key);
+    }
+
     function isGeoFilter(filter, field) {
       if (filter.meta.key === field
-        || _.has(filter, 'geo_bounding_box.' + field)
-        || _.has(filter, 'geo_distance.' + field)
-        || _.has(filter, 'geo_polygon.' + field)
-        || _.has(filter, 'geo_shape.' + field)
-        || _.has(filter, 'bool.should[0].geo_bounding_box.' + field)
-        || _.has(filter, 'bool.should[0].geo_distance.' + field)
-        || _.has(filter, 'bool.should[0].geo_polygon.' + field)
-        || _.has(filter, 'bool.should[0].geo_shape.' + field)) {
+        || _.has(filter['geo_bounding_box'], field)
+        || _.has(filter['geo_distance'], field)
+        || _.has(filter['geo_polygon'], field)
+        || _.has(filter['geo_shape'], field)
+        || checkGeoFilterArray(_.get(filter, ['bool', 'should']), 'geo_bounding_box', field)
+        || checkGeoFilterArray(_.get(filter, ['bool', 'should']), 'geo_distance', field)
+        || checkGeoFilterArray(_.get(filter, ['bool', 'should']), 'geo_polygon', field)
+        || checkGeoFilterArray(_.get(filter, ['bool', 'should']), 'geo_shape', field)) {
         return true;
       } else {
         return false;
