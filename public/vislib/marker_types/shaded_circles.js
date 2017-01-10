@@ -1,7 +1,7 @@
 define(function (require) {
   return function ShadedCircleMarkerFactory(Private) {
     let _ = require('lodash');
-    let L = require('leaflet');
+    let L = require('../../lib/leaflet/leaflet.js');
 
     let BaseMarker = Private(require('./base_marker'));
 
