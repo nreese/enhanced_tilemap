@@ -17,7 +17,8 @@ define(function (require) {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({
             color: '#008000',
-            markerSize: 'm'
+            markerSize: 'm',
+            syncFilters: true
           });
         }
         scope.removeLayer = function(layerIndex) {
