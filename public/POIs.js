@@ -5,6 +5,7 @@ define(function (require) {
   return function POIsFactory(Private, savedSearches) {
 
     const SearchSource = Private(require('ui/courier/data_source/search_source'));
+    const queryFilter = Private(require('ui/filter_bar/query_filter'));
 
     /**
      * Points of Interest
@@ -16,16 +17,22 @@ define(function (require) {
       this.geoPointField = params.geoPointField;
       this.labelField = _.get(params, 'labelField', null);
       this.limit = _.get(params, 'limit', 100);
+      this.syncFilters = _.get(params, 'syncFilters', false);
     }
 
     POIs.prototype.getPOIs = function (callback) {
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const searchSource = new SearchSource();
-        //Do not filter POIs by time so can not inherit from rootSearchSource
-        searchSource.inherits(false);
-        searchSource.query(savedSearch.searchSource.get('query'));
-        searchSource.filter(savedSearch.searchSource.get('filter'));
-        searchSource.index(savedSearch.searchSource._state.index);
+        if (this.syncFilters) {
+          searchSource.inherits(savedSearch.searchSource);
+          searchSource.filter(queryFilter.getFilters());
+        } else {
+          //Do not filter POIs by time so can not inherit from rootSearchSource
+          searchSource.inherits(false);
+          searchSource.index(savedSearch.searchSource._state.index);
+          searchSource.query(savedSearch.searchSource.get('query'));
+          searchSource.filter(savedSearch.searchSource.get('filter'));
+        }
         searchSource.size(this.limit);
         searchSource.source(_.compact([ this.geoPointField, this.labelField ]));
         searchSource.fetch()

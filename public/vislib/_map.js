@@ -72,7 +72,7 @@ define(function (require) {
      */
     function TileMapMap(container, params) {
       this._container = container;
-      this._poiLayers = [];
+      this._poiLayers = {};
       this._wmsOverlays = [];
 
       // keep a reference to all of the optional params
@@ -245,16 +245,23 @@ define(function (require) {
 
     TileMapMap.prototype.clearPOILayers = function () {
       const self = this;
-      this._poiLayers.forEach(function(layer) {
+      Object.keys(this._poiLayers).forEach(function(key) {
+        const layer = self._poiLayers[key];
         self._layerControl.removeLayer(layer);
         self.map.removeLayer(layer);
       });
-      this._poiLayers = [];
-
+      this._poiLayers = {};
       if (this._toolbench) this._toolbench.removeTools();
     };
 
     TileMapMap.prototype.addPOILayer = function (layerName, points, options) {
+      //remove layer if it already exists
+      if (_.has(this._poiLayers, layerName)) {
+        const layer = this._poiLayers[layerName];
+        this._layerControl.removeLayer(layer);
+        this.map.removeLayer(layer);
+        delete this._poiLayers[layerName];
+      }
       const featureGroup = new L.FeatureGroup();
       points.forEach(function(point) {
         const poi = L.marker(
@@ -278,10 +285,11 @@ define(function (require) {
       });
       this.map.addLayer(featureGroup);
       this._layerControl.addOverlay(featureGroup, layerName);
-      this._poiLayers.push(featureGroup);
+      this._poiLayers[layerName] = featureGroup;
 
       //Add tool to l.draw.toolbar so users can filter by POIs
-      if (this._poiLayers.length === 1) {
+      if (Object.keys(this._poiLayers).length === 1) {
+        if (this._toolbench) this._toolbench.removeTools();;
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
       }
@@ -446,9 +454,13 @@ define(function (require) {
       });
 
       this.map.on('toolbench:poiFilter', function (e) {
+        const poiLayers = [];
+        Object.keys(self._poiLayers).forEach(function (key) {
+          poiLayers.push(self._poiLayers[key]);
+        });
         self._callbacks.poiFilter({
           chart: self._chartData,
-          poiLayers: self._poiLayers,
+          poiLayers: poiLayers,
           radius: _.get(e, 'radius', 10)
         });
       });

@@ -106,18 +106,22 @@ define(function (require) {
       }
     }
 
+    function initPOILayer(layerParams) {
+      const layer = new POIsProvider(layerParams);
+      layer.getPOIs(points => {
+        const options = {
+          color: _.get(layerParams, 'color', '#008800'),
+          size: _.get(layerParams, 'markerSize', 'm')
+        };
+        map.addPOILayer(layerParams.savedSearchId, points, options);
+      });
+    }
+
     $scope.$watch('vis.params', function (visParams) {
-      map.clearPOILayers();
       map.saturateTiles(visParams.isDesaturated);
-      visParams.overlays.savedSearches.forEach(function (layerParams) {
-        const poi = new POIsProvider(layerParams);
-        poi.getPOIs(points => {
-          const options = {
-            color: _.get(layerParams, 'color', '#008800'),
-            size: _.get(layerParams, 'markerSize', 'm')
-          };
-          map.addPOILayer(layerParams.savedSearchId, points, options);
-        });
+      map.clearPOILayers();
+      $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
+        initPOILayer(layerParams);
       });
     });
 
@@ -153,6 +157,12 @@ define(function (require) {
           Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
           _.get(chartData, 'valueFormatter', _.identity),
           collar);
+
+        _.filter($scope.vis.params.overlays.savedSearches, function(layerParams) {
+          return layerParams.syncFilters
+        }).forEach(function (layerParams) {
+          initPOILayer(layerParams);
+        });
       }
     });
 

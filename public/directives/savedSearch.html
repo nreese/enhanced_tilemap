@@ -62,4 +62,15 @@
       placeholder="100" 
       ng-model="layer.limit" />
   </div>
+  <div class="form-group">
+    <label>
+      <input type="checkbox"
+        name="syncFilters"
+        ng-model="layer.syncFilters">
+
+      Apply Kibana Filters
+
+      <kbn-info info="Filter Saved Search results with kibana filters and time range. Additionally, the layer will be updated whenever new aggregation results are fetched."></kbn-info>
+    </label>
+  </div>
 </div>
