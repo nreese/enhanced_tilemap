@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const L = require('leaflet');
+const L = require('./lib/leaflet/leaflet.js');
 
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {

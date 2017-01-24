@@ -2,8 +2,14 @@ define(function (require) {
   return function MapFactory(Private) {
     var _ = require('lodash');
     var $ = require('jquery');
-    var L = require('leaflet');
+    
+    var L = require('./../lib/leaflet/leaflet.js');
+    require('./../lib/leaflet/leaflet.css');
+    
     var LDrawToolbench = require('./LDrawToolbench');
+    require('./../lib/leaflet.draw/leaflet.draw.js');
+    require('./../lib/leaflet.draw/leaflet.draw.css');
+    
     const utils = require('plugins/enhanced_tilemap/utils');
     var formatcoords = require('./../lib/formatcoords/index');
     require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
@@ -234,9 +240,9 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
-      if (this._label) this._label.removeFrom(this.map);
-      if (this._fitControl) this._fitControl.removeFrom(this.map);
-      if (this._drawControl) this._drawControl.removeFrom(this.map);
+      if (this._label) this._label.remove(this.map);
+      if (this._fitControl) this._fitControl.remove(this.map);
+      if (this._drawControl) this._boundingControl.remove(this.map);
       if (this._markers) this._markers.destroy();
       syncMaps.remove(this.map);
       this.map.remove();
@@ -473,7 +479,7 @@ define(function (require) {
             break;
           case "polygon":
             const points = [];
-            e.layer._latlngs.forEach(function(latlng){
+            e.layer._latlngs[0].forEach(function(latlng){
               const lat = L.Util.formatNum(latlng.lat, 5);
               const lon = L.Util.formatNum(latlng.lng, 5);
               points.push([lon, lat]);
@@ -556,6 +562,7 @@ define(function (require) {
       mapOptions.layers = this._tileLayer;
       mapOptions.center = this._mapCenter;
       mapOptions.zoom = this._mapZoom;
+      mapOptions.renderer = L.canvas();
 
       this.map = L.map(this._container, mapOptions);
       this._layerControl = L.control.layers();

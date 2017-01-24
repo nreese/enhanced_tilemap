@@ -3,7 +3,7 @@ define(function (require) {
     let d3 = require('d3');
     let _ = require('lodash');
     let $ = require('jquery');
-    let L = require('leaflet');
+    let L = require('./../../lib/leaflet/leaflet.js');
 
     /**
      * Base map marker overlay, all other markers inherit from this class
