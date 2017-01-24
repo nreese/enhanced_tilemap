@@ -18,17 +18,17 @@ define(function (require) {
         scope.updateIndex = function() {
           scope.warn = "";
           scope.layer.savedSearchId = scope.savedSearch.value;
-          scope.layer.geoPointField = null;
+          scope.layer.geoField = null;
           scope.layer.labelField = null;
 
-          refreshIndexFields(scope.savedSearch.indexId, function(geoPointFields, labelFields) {
-            scope.geoPointFields = geoPointFields;
+          refreshIndexFields(scope.savedSearch.indexId, function(geoFields, labelFields) {
+            scope.geoFields = geoFields;
             scope.labelFields = labelFields;
 
-            if (scope.geoPointFields.length === 0) {
-              scope.warn = "Unable to use selected saved search, index does not contain any geo_point fields."
-            } else if (scope.geoPointFields.length === 1) {
-              scope.layer.geoPointField = scope.geoPointFields[0];
+            if (scope.geoFields.length === 0) {
+              scope.warn = "Unable to use selected saved search, index does not contain any geospatial fields."
+            } else if (scope.geoFields.length === 1) {
+              scope.layer.geoField = scope.geoFields[0];
             }
           })
         }
@@ -57,8 +57,8 @@ define(function (require) {
             });
             if (selected.length > 0) {
               scope.savedSearch = selected[0];
-              refreshIndexFields(selected[0].indexId, function(geoPointFields, labelFields) {
-                scope.geoPointFields = geoPointFields;
+              refreshIndexFields(selected[0].indexId, function(geoFields, labelFields) {
+                scope.geoFields = geoFields;
                 scope.labelFields = labelFields;
               });
             }
@@ -69,8 +69,8 @@ define(function (require) {
 
     function refreshIndexFields(indexId, callback) {
       indexPatterns.get(indexId).then(function (index) {
-        const geoPointFields = index.fields.filter(function (field) {
-          return field.type === 'geo_point';
+        const geoFields = index.fields.filter(function (field) {
+          return field.type === 'geo_point' || field.type === 'geo_shape';
         }).map(function (field) {
           return field.name;
         });
@@ -87,7 +87,7 @@ define(function (require) {
           return field.name;
         });
 
-        callback(geoPointFields, labelFields);
+        callback(geoFields, labelFields);
       });
     }
 
