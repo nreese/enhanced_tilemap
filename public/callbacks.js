@@ -66,12 +66,14 @@ define(function (require) {
         const filters = [];
         event.poiLayers.forEach(function (poiLayer) {
           poiLayer.getLayers().forEach(function (feature) {
-            const filter = {geo_distance: {distance: event.radius + "km"}};
-            filter.geo_distance[field] = {
-              "lat" : feature.getLatLng().lat,
-              "lon" : feature.getLatLng().lng
+            if (feature instanceof L.Marker) {
+              const filter = {geo_distance: {distance: event.radius + "km"}};
+              filter.geo_distance[field] = {
+                "lat" : feature.getLatLng().lat,
+                "lon" : feature.getLatLng().lng
+              }
+              filters.push(filter);
             }
-            filters.push(filter);
           });
         });
         geoFilter.add(filters, field, indexPatternName);
