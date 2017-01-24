@@ -104,12 +104,12 @@ define(function (require) {
     });
 
     function initPOILayer(layerParams) {
-      const layer = new POIsProvider(layerParams);
+      const poi = new POIsProvider(layerParams);
       const options = {
         color: _.get(layerParams, 'color', '#008800'),
         size: _.get(layerParams, 'markerSize', 'm')
       };
-      layer.getLayer(options, function(layer) {
+      poi.getLayer(options, function(layer) {
         map.addPOILayer(layerParams.savedSearchId, layer);
       });
     }
