@@ -60,11 +60,11 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 # Install
 ## Kibana 5.x
 ```bash
-./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v5.0.0-2016-11-30/kibana.zip
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/2017-01-27/enhanced-tilemap-2017-01-27-5.0.2.zip
 ```
 
 ```bash
-./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v5.0.1-2016-11-30/kibana.zip
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/2017-01-27/enhanced-tilemap-2017-01-27-5.1.2.zip
 ```
 
 ## Kibana 4.x
