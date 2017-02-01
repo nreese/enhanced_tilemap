@@ -1,4 +1,18 @@
 {
-	"name": "enhanced_tilemap",
-	"version": "5.0.0"
+  "name": "enhanced_tilemap",
+  "version": "6.0.0-alpha1",
+  "scripts": {
+    "test": "gulp test"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "babel-core": "6.22.1",
+    "babel-preset-es2015": "^6.22.0",
+    "chai": "3.5.0",
+    "gulp": "3.9.1",
+    "gulp-mocha": "3.0.1",
+    "jsdom": "9.9.1",
+    "jsdom-global": "2.1.1"
+  }
 }

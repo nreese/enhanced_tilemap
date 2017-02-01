@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const L = require('leaflet');
-import {markerIcon} from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {
@@ -94,7 +95,6 @@ define(function (require) {
                     geojson: thisLayer.toGeoJSON()
                   });
                 });
-
               }
             },
             pointToLayer: function (feature, latlng) {
@@ -118,7 +118,7 @@ define(function (require) {
 
     POIs.prototype._createMarker = function (hit, options) {
       const feature = L.marker(
-        extractLatLng(hit._source[this.geoField]),
+        toLatLng(hit._source[this.geoField]),
         {
           icon: markerIcon(options.color, options.size)
         });
@@ -133,32 +133,6 @@ define(function (require) {
       }
       return feature;
     };
-
-    //Extract lat and lon from geo, geo can be an array, string, or object
-    function extractLatLng(geo) {
-      let lat = 0;
-      let lon = 0;
-      if(_.isArray(geo)) {
-        lat = geo[1];
-        lon = geo[0];
-      } else if (isString(geo)) {
-        const split = geo.split(',');
-        lat = split[0];
-        lon = split[1];
-      } else if (_.has(geo, 'lat') && _.has(geo, 'lon')) {
-        lat = geo.lat;
-        lon = geo.lon;
-      }
-      return L.latLng(lat, lon);
-    }
-
-    function isString(myVar) {
-      let isString = false;
-      if (typeof myVar === 'string' || myVar instanceof String) {
-        isString = true;
-      }
-      return isString;
-    }
 
     return POIs;
   }

@@ -77,3 +77,9 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 ```bash
 ./bin/kibana-plugin remove enhanced_tilemap
 ```
+
+# Development
+* clone git repo in kibana_home/plugins
+* `cd kibana_home/plugins/enhanced_tilemap`
+* `npm install`
+* `npm test`
