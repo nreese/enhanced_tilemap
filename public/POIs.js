@@ -87,6 +87,15 @@ define(function (require) {
                   this.closePopup();
                 });
               }
+
+              if (_.get(feature, 'geometry.type') === 'Polygon') {
+                thisLayer.on('click', function(e) {
+                  thisLayer._map.fire('etm:select-feature', {
+                    geojson: thisLayer.toGeoJSON()
+                  });
+                });
+
+              }
             },
             pointToLayer: function (feature, latlng) {
               return L.circleMarker(

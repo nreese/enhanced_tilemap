@@ -400,6 +400,14 @@ define(function (require) {
         self._fitBounds();
       });
 
+      this.map.on('etm:select-feature', function (e) {
+        self._callbacks.polygon({
+          chart: self._chartData,
+          params: self._attr,
+          points: e.geojson.geometry.coordinates[0]
+        });
+      });
+
       this.map.on('toolbench:poiFilter', function (e) {
         const poiLayers = [];
         Object.keys(self._poiLayers).forEach(function (key) {
