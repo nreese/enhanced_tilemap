@@ -219,6 +219,7 @@ define(function (require) {
             format: 'image/png',
             layers: layerParams.layers,
             maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
+            minZoom: _.get(layerParams, 'minZoom', 13),
             transparent: true,
             version: '1.1.1'
           };

@@ -15,7 +15,9 @@ define(function (require) {
       link: function (scope, element, attrs) {
         scope.addLayer = function() {
           if (!scope.layers) scope.layers = [];
-          scope.layers.push({});
+          scope.layers.push({
+            minZoom: 13
+          });
         }
         scope.removeLayer = function(layerIndex) {
           scope.layers.splice(layerIndex, 1);

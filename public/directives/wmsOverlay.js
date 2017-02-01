@@ -12,7 +12,10 @@ define(function (require) {
       },
       template: require('./wmsOverlay.html'),
       link: function (scope, element, attrs) {
-      
+        scope.zoomLevels = [];
+        for (var i=0; i<=18; i++) {
+          scope.zoomLevels.push(i);
+        }
       }
     };
 
