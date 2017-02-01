@@ -46,9 +46,10 @@ define(function (require) {
           searchSource.filter(savedSearch.searchSource.get('filter'));
         }
         searchSource.size(this.limit);
-        //TODO - set source
-        //source.excludes is undefined if source set. This causes courier to fail
-        //searchSource.source(_.compact([ this.geoPointField, this.labelField ]));
+        searchSource.source({
+          includes: _.compact([ this.geoField, this.labelField ]),
+          excludes: []
+        });
         searchSource.fetch()
         .then(searchResp => {
           callback(self._createLayer(searchResp.hits.hits, geoType, options));
