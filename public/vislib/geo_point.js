@@ -15,7 +15,9 @@ export const toLatLng = function (geo) {
     lat = geo.lat;
     lon = geo.lon;
   }
-  return L.latLng(lat, lon);
+  
+  point = L.latLng(lat, lon);
+  return (point == null) ? L.latLng(0, 0) : point;
 }
 
 function isString(myVar) {
