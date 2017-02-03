@@ -77,3 +77,11 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 ```bash
 ./bin/kibana-plugin remove enhanced_tilemap
 ```
+
+# Development
+Use npm@2 (as root `npm install -g 'npm@<3'`). npm@3 installs dependencies as [maximally flat](https://github.com/npm/npm/issues/9809). As a result, `kibana_home/plugins/enhanced_tilemap/node_modules` contains the folder lodash. During the kibana build process, require.js finds this version of lodash instead of the version under `kibana_home/node_moduldes`. If you don't want to install npm@3, then manually delete the folder `kibana_home/plugins/enhanced_tilemap/node_modules` before kibana builds `kibana_home/optimze/bundles/kibana.bundle.js`.
+
+* clone git repo in `kibana_home/plugins`
+* `cd kibana_home/plugins/enhanced_tilemap`
+* `npm install`
+* `npm test`
