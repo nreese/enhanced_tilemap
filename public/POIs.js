@@ -59,7 +59,7 @@ define(function (require) {
     };
 
     POIs.prototype._createLayer = function (hits, geoType, options) {
-      layer = null;
+      let layer = null;
       if ('geo_point' === geoType) {
         const markers = _.map(hits, hit => {
           return this._createMarker(hit, options);
@@ -67,12 +67,14 @@ define(function (require) {
         layer = new L.FeatureGroup(markers);
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
+          const geometry = hit._source[this.geoField];
+          geometry.type = capitalizeFirstLetter(geometry.type);
           return {
             type: 'Feature',
             properties: {
               label: _.get(hit._source, this.labelField)
             },
-            geometry: hit._source[this.geoField]
+            geometry: geometry
           }
         });
         layer = L.geoJson(
@@ -133,6 +135,10 @@ define(function (require) {
       }
       return feature;
     };
+
+    function capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
 
     return POIs;
   }
