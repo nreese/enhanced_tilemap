@@ -2,7 +2,7 @@ const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 
 define(function (require) {
-  module.directive('wmsOverlay', function (Private) {
+  module.directive('wmsOverlay', function (indexPatterns, Private) {
     
     return {
       restrict: 'E',
@@ -16,6 +16,9 @@ define(function (require) {
         for (var i=0; i<=18; i++) {
           scope.zoomLevels.push(i);
         }
+        indexPatterns.getIds().then(function(list) {
+          scope.indexPatternList = list;
+        });
       }
     };
 

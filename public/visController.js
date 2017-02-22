@@ -14,7 +14,7 @@ import VislibVisTypeBuildChartDataProvider from 'ui/vislib_vis_type/build_chart_
 define(function (require) {
   var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana', 'etm-ui.bootstrap.accordion']);
   
-  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState) {
+  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState, indexPatterns) {
     let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -187,46 +187,50 @@ define(function (require) {
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
-      
-      const source = new courier.SearchSource();
-      const appState = getAppState();
-      source.set('filter', queryFilter.getFilters());
-      if (appState.query && !appState.linked) {
-        source.set('query', appState.query);
-      }
-      source._flatten().then(function (fetchParams) {
-        const esQuery = fetchParams.body.query;
-        //remove kibana parts of query
-        const cleanedMust = [];
-        if (_.has(esQuery, 'bool.must')) {
-          esQuery.bool.must.forEach(function(must) {
-            cleanedMust.push(_.omit(must, ['$state', '$$hashKey']));
-          });
-        }
-        esQuery.bool.must = cleanedMust;
-        const cleanedMustNot = [];
-        if (_.has(esQuery, 'bool.must_not')) {
-          esQuery.bool.must_not.forEach(function(mustNot) {
-            cleanedMustNot.push(_.omit(mustNot, ['$state', '$$hashKey']));
-          });
-        }
-        esQuery.bool.must_not = cleanedMustNot;
-        const escapedQuery = JSON.stringify(esQuery).replace(new RegExp('[,]', 'g'), '\\,');
 
-        $scope.vis.params.overlays.wmsOverlays.forEach(function(layerParams) {
-          const name = _.get(layerParams, 'displayName', layerParams.layers);
-          const options = {
-            format: 'image/png',
-            layers: layerParams.layers,
-            maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
-            minZoom: _.get(layerParams, 'minZoom', 13),
-            transparent: true,
-            version: '1.1.1'
-          };
-          if (_.get(layerParams, 'viewparams')) {
-            options.viewparams = 'q:' + escapedQuery;
+      $scope.vis.params.overlays.wmsOverlays.forEach(function(layerParams) {
+        const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
+        indexPatterns.get(wmsIndexId).then(function(indexPattern) {
+          const source = new courier.SearchSource();
+          const appState = getAppState();
+          source.set('filter', queryFilter.getFilters());
+          if (appState.query && !appState.linked) {
+            source.set('query', appState.query);
           }
-          map.addWmsOverlay(layerParams.url, name, options);
+          source.index(indexPattern);
+          source._flatten().then(function (fetchParams) {
+            const esQuery = fetchParams.body.query;
+            //remove kibana parts of query
+            const cleanedMust = [];
+            if (_.has(esQuery, 'bool.must')) {
+              esQuery.bool.must.forEach(function(must) {
+                cleanedMust.push(_.omit(must, ['$state', '$$hashKey']));
+              });
+            }
+            esQuery.bool.must = cleanedMust;
+            const cleanedMustNot = [];
+            if (_.has(esQuery, 'bool.must_not')) {
+              esQuery.bool.must_not.forEach(function(mustNot) {
+                cleanedMustNot.push(_.omit(mustNot, ['$state', '$$hashKey']));
+              });
+            }
+            esQuery.bool.must_not = cleanedMustNot;
+            const escapedQuery = JSON.stringify(esQuery).replace(new RegExp('[,]', 'g'), '\\,');
+
+            const name = _.get(layerParams, 'displayName', layerParams.layers);
+            const options = {
+              format: 'image/png',
+              layers: layerParams.layers,
+              maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
+              minZoom: _.get(layerParams, 'minZoom', 13),
+              transparent: true,
+              version: '1.1.1'
+            };
+            if (_.get(layerParams, 'viewparams')) {
+              options.viewparams = 'q:' + escapedQuery;
+            }
+            map.addWmsOverlay(layerParams.url, name, options);
+          });
         });
       });
     }
