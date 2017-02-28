@@ -229,6 +229,10 @@ define(function (require) {
             if (_.get(layerParams, 'viewparams')) {
               options.viewparams = 'q:' + escapedQuery;
             }
+            const cqlFilter = _.get(layerParams, 'cqlFilter', '');
+            if (cqlFilter.length !== 0) {
+              options.CQL_FILTER = cqlFilter;
+            }
             map.addWmsOverlay(layerParams.url, name, options);
           });
         });
