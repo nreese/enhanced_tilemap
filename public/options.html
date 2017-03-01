@@ -11,7 +11,7 @@
     </div>
     <div class="form-group">
       <label>Map type</label>
-        <select name="agg"
+      <select name="agg"
         class="form-control"
         ng-model="vis.params.mapType"
         ng-init="vis.params.mapType || vis.type.params.mapTypes[0]"
@@ -19,6 +19,7 @@
         >
       </select>
     </div>
+    <tooltip-formatter tooltip="vis.params.tooltip"></tooltip-formatter>
     <div class="form-group">
       <label>
         Min Threshold <kbn-info info="Geogrid cells with a value less than or equal to this setting will not be displayed on the map."></kbn-info>

@@ -22,6 +22,11 @@
   width: 50%;
 }
 
+.form-control-inline {
+  display: inline;
+  width: auto !important;
+}
+
 ul.etm-options-list {
   list-style:none;
   padding-left:0;
@@ -54,6 +59,22 @@ div.rightCorner {
 
 .leaflet-draw-toolbar .leaflet-toolbench-tool {
     background-position: -100px -100px;
+}
+
+.leaflet-popup-content-wrapper .panel-content {
+  height:100%;
+}
+
+.tab-dashboard.theme-light {
+  .leaflet-popup-content-wrapper .panel-content {
+    color: rgb(68, 68, 68);
+  }
+}
+
+.tab-dashboard.theme-dark {
+  .leaflet-popup-content-wrapper .panel-content {
+    color: rgb(206, 206, 206);
+  }
 }
 
 div.leaflet-layer.no-filter > div.leaflet-tile-container > img.leaflet-tile {

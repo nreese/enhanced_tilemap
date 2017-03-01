@@ -23,11 +23,16 @@ define(function (require) {
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
+    const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
     let map = null;
     let collar = null;
     let chartData = null;
+    let tooltip = null;
+    let tooltipFormatter = null;
+
     appendMap();
     modifyToDsl();
+    setTooltipFormatter($scope.vis.params.tooltip);
 
     const shapeFields = $scope.vis.indexPattern.fields.filter(function (field) {
       return field.type === 'geo_shape';
@@ -115,6 +120,8 @@ define(function (require) {
     }
 
     $scope.$watch('vis.params', function (visParams) {
+      setTooltipFormatter(visParams.tooltip);
+
       draw();
 
       map.saturateTiles(visParams.isDesaturated);
@@ -141,6 +148,7 @@ define(function (require) {
       binder.destroy();
       resizeChecker.destroy();
       if (map) map.destroy();
+      if (tooltip) tooltip.destroy()
     });
 
     function draw() {
@@ -157,9 +165,30 @@ define(function (require) {
       map.addMarkers(
         chartData, 
         $scope.vis.params,
-        Private(require('ui/agg_response/geo_json/_tooltip_formatter')),
+        tooltipFormatter,
         _.get(chartData, 'valueFormatter', _.identity),
         collar);
+    }
+
+    function setTooltipFormatter(tooltipParams) {
+      if (tooltip) {
+        tooltip.destroy();
+      }
+
+      if (_.get(tooltipParams, 'type') === 'visualization') {
+        const options = {
+          xRatio: _.get(tooltipParams, 'options.xRatio', 0.6),
+          yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
+        }
+        tooltip = new VisTooltip(
+            _.get(tooltipParams, 'options.visId'),
+            getGeoField(),
+            options);
+        tooltipFormatter = tooltip.getFormatter();
+      } else {
+        tooltipFormatter = Private(require('ui/agg_response/geo_json/_tooltip_formatter'));
+      }
+
     }
 
     /**

@@ -122,7 +122,9 @@ define(function (require) {
           self._showTooltip(feature);
         },
         mouseout: function (e) {
-          self._hidePopup();
+          if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
+            self._hidePopup();
+          }
         }
       });
 
@@ -265,18 +267,77 @@ define(function (require) {
       let lng = _.get(feature, 'geometry.coordinates.0');
       latLng = latLng || L.latLng(lat, lng);
 
-      let content = this._tooltipFormatter(feature);
+      let content = this._tooltipFormatter(feature, this.map);
 
       if (!content) return;
       this._createTooltip(content, latLng);
     };
 
     BaseMarker.prototype._createTooltip = function (content, latLng) {
-      L.popup({autoPan: false})
+      L.popup({
+        autoPan: false,
+        maxHeight: 'auto',
+        maxWidth: 'auto',
+        offset: this._getOffset(content, latLng)
+      })
       .setLatLng(latLng)
       .setContent(content)
       .openOn(this.map);
     };
+
+    BaseMarker.prototype._getOffset = function(content, latLng) {
+      const mapWidth = this.map.getSize().x;
+      const mapHeight = this.map.getSize().y;
+      const popupPoint = this.map.latLngToContainerPoint(latLng);
+      //Create popup that is out of view to determine dimensions
+      const popup = L.popup({
+        autoPan: false,
+        maxHeight: 'auto',
+        maxWidth: 'auto',
+        offset: new L.Point(mapWidth * -2, mapHeight * -2)
+      })
+      .setLatLng(latLng)
+      .setContent(content)
+      .openOn(this.map);
+      const popupHeight = popup._contentNode.clientHeight;
+      const popupWidth = popup._contentNode.clientWidth / 2;
+
+      let widthOffset = 0;
+      const distToLeftEdge = popupPoint.x;
+      const distToRightEdge = mapWidth - popupPoint.x;
+      if (distToLeftEdge < popupWidth) {
+        if (distToRightEdge > popupWidth) {
+          //best case - entire popup fits to right
+          widthOffset = popupWidth;
+        } else {
+          //Move popup right as little as possible
+          widthOffset = popupWidth - distToLeftEdge;
+        }
+      } else if (distToRightEdge < popupWidth) {
+        if (distToLeftEdge > popupWidth) {
+          //best case - entire popup fits to left
+          widthOffset = -1 * popupWidth;
+        } else {
+          //Move popup left as little as possible
+          widthOffset = -1 * (popupWidth - distToRightEdge);
+        }
+      }
+
+      let heightOffset = 6; //leaflet default
+      const distToTopEdge = popupPoint.y;
+      const distToBottomEdge = mapHeight - popupPoint.y;
+      if (distToTopEdge < popupHeight) {
+        if (distToBottomEdge > popupHeight) {
+          //best case - entire popup fits under
+          heightOffset += popupHeight + 16;
+        } else {
+          //Move popup down as little as possible
+          heightOffset = popupHeight - distToTopEdge;
+        }
+      }
+
+      return new L.Point(widthOffset, heightOffset);
+    }
 
     /**
      * Closes the tooltip on the map

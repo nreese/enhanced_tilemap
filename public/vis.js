@@ -13,6 +13,7 @@ define(function (require) {
   require('plugins/enhanced_tilemap/lib/jquery.minicolors/minicolors');
   require('plugins/enhanced_tilemap/directives/bands');
   require('plugins/enhanced_tilemap/directives/savedSearches');
+  require('plugins/enhanced_tilemap/directives/tooltipFormatter');
   require('plugins/enhanced_tilemap/directives/wmsOverlays');
   require('plugins/enhanced_tilemap/visController');
 
