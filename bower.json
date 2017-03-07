@@ -1,0 +1,10 @@
+{
+  "name": "enhanced-tilemap",
+  "description": "Kibana plugin",
+  "version": "kibana",
+  "dependencies": {
+    "formatcoords": "https://github.com/nerik/formatcoords.git#1.1.2",
+    "mgrs": "https://github.com/proj4js/mgrs.git#1.0.0",
+    "Leaflet.MousePosition": "git@github.com:nreese/Leaflet.MousePosition.git"
+  }
+}

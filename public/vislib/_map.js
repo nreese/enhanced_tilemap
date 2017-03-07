@@ -1,4 +1,6 @@
+import formatcoords from 'plugins/enhanced_tilemap/bower_components/formatcoords/index';
 import {markerIcon} from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import mgrs from 'plugins/enhanced_tilemap/bower_components/mgrs/dist/mgrs.js';
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -7,9 +9,8 @@ define(function (require) {
     var L = require('leaflet');
     var LDrawToolbench = require('./LDrawToolbench');
     const utils = require('plugins/enhanced_tilemap/utils');
-    var formatcoords = require('./../lib/formatcoords/index');
-    require('./../lib/leaflet.mouseposition/L.Control.MousePosition.css');
-    require('./../lib/leaflet.mouseposition/L.Control.MousePosition');
+    require('plugins/enhanced_tilemap/bower_components/Leaflet.MousePosition/src/L.Control.MousePosition.css');
+    require('plugins/enhanced_tilemap/bower_components/Leaflet.MousePosition/src/L.Control.MousePosition');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
@@ -129,30 +130,20 @@ define(function (require) {
     TileMapMap.prototype._addMousePositionControl = function () {
       if (this._mousePositionControl) return;
 
-      const dd = function(val) {
-        return L.Util.formatNum(val, 5);
-      }
-      const space = "replaceMe";
       this._mousePositionControl = L.control.mousePosition({
         emptyString: '',
-        lngFormatters: [
-          dd,
-          function(lon) {
-            var dms = formatcoords(0, lon).format('DD MM ss X', {
-              latLonSeparator: space,
+        formatters: [
+          function(lat, lon) {
+            return L.Util.formatNum(lat, 5) + ':' + L.Util.formatNum(lon, 5);
+          },
+          function(lat, lon) {
+            return formatcoords(lat, lon).format('DD MM ss X', {
+              latLonSeparator: ':',
               decimalPlaces: 2
             });
-            return dms.substring(dms.indexOf(space) + space.length);
-          }
-        ],
-        latFormatters: [
-          dd,
-          function(lat) {
-            var dms = formatcoords(lat,0).format('DD MM ss X', {
-              latLonSeparator: space,
-              decimalPlaces: 2
-            });
-            return dms.substring(0, dms.indexOf(space));
+          },
+          function(lat, lon) {
+            return mgrs.forward([lon, lat]);
           }
         ]
       });

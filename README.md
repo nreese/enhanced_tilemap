@@ -83,5 +83,6 @@ Use npm@2 (as root `npm install -g 'npm@<3'`). npm@3 installs dependencies as [m
 
 * clone git repo in `kibana_home/plugins`
 * `cd kibana_home/plugins/enhanced_tilemap`
+* `bower install`
 * `npm install`
 * `npm test`
