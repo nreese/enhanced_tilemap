@@ -28,7 +28,7 @@ Requires WMS to be served from an elasticsearch Store.
 Follow the [geoserver guide](geoserver.md) for instructions on setting up a WMS layer pulling data from your elasticsearch cluster.
 
 ## Complete Geospatial Query Support
-
+![alt text](https://github.com/nreese/enhanced_tilemap/blob/gh-pages/images/geo_query.gif)
 #### Geo polygon query support
 Click the polygon icon and draw a polygon on the map. The enhanced tilemap plugin will create a geo_polygon filter.
 
