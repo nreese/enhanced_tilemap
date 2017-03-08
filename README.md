@@ -11,6 +11,10 @@ The existing tilemap loads all of the geohash grids at a single time. This can r
 
 The enhanced tilemap plugin phases-in geohash grids, loading 100 every 200 milliseconds, so that the browser never locks up. A control with a spinning icon is added to the map while grids are being phased-in. The control is removed once all grids are processed.
 
+## Richer Popups
+Show more than just the aggregation metric when mousing over a geohash grid marker. The enhanced tilemap allows for the display of any kibana visualization inside the popup. The visualization is filtered by the geogrid coordinates - showing just the results for the moused-over cell. 
+![alt text](https://github.com/nreese/enhanced_tilemap/blob/gh-pages/images/popup.gif)
+
 ## Contextual Overlays
 
 #### Overlay Saved Search results as map markers
