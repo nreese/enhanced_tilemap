@@ -262,10 +262,6 @@ define(function (require) {
         visible: visible,
         attr: this._attr
       });
-      
-      if (this._geoJson.features.length > 1) {
-        this._markers.addLegend();
-      }
     };
 
     /**

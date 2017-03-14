@@ -1,5 +1,7 @@
 import 'plugins/enhanced_tilemap/lib/angular-bootstrap/css/bootstrap-theme.css';
 import 'plugins/enhanced_tilemap/lib/angular-bootstrap/js/accordion-tpls.js';
+import 'plugins/enhanced_tilemap/bower_components/angularjs-slider/dist/rzslider.css';
+import 'plugins/enhanced_tilemap/bower_components/angularjs-slider/dist/rzslider.js';
 import _ from 'lodash';
 import supports from 'ui/utils/supports';
 import AggResponseGeoJsonGeoJsonProvider from 'ui/agg_response/geo_json/geo_json';

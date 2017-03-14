@@ -1,5 +1,5 @@
 define(function (require) {
-  return function MarkerFactory() {
+  return function MarkerFactory($compile, $rootScope) {
     let d3 = require('d3');
     let _ = require('lodash');
     let $ = require('jquery');
@@ -17,6 +17,10 @@ define(function (require) {
       this.geoJson = geoJson;
       this.layerControl = layerControl;
       this.popups = [];
+      this.threshold = {
+        min: _.get(geoJson, 'properties.allmin', 0),
+        max: _.get(geoJson, 'properties.allmax', 1)
+      };
 
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
       this._valueFormatter = params.valueFormatter || _.identity;
@@ -24,12 +28,6 @@ define(function (require) {
 
       // set up the default legend colors
       this.quantizeLegendColors();
-    }
-
-    BaseMarker.prototype.getMin = function () {
-      const min = _.get(this.geoJson, 'properties.allmin', 0);
-      const threshold = _.get(this._attr, 'minThreshold', 0);
-      return _.max([min, threshold]);
     }
 
     /**
@@ -52,6 +50,25 @@ define(function (require) {
         // creates all the neccessary DOM elements for the control, adds listeners
         // on relevant map events, and returns the element containing the control
         let $div = $('<div>').addClass('tilemap-legend');
+
+        const $sliderScope = $rootScope.$new();
+        $sliderScope.slider = {
+          min: self.threshold.min,
+          max: self.threshold.max,
+          options: {
+            floor: _.get(self.geoJson, 'properties.allmin', 0),
+            ceil: _.get(self.geoJson, 'properties.allmax', 1),
+            onEnd: function(sliderId, modelValue, highValue, pointerType) {
+              self.threshold.min = modelValue;
+              self.threshold.max = highValue;
+              self.destroy();
+              self._createMarkerGroup(self.markerOptions);
+            }
+          }
+        };
+        const linkFn = $compile(require('./legendSlider.html'));
+        const $sliderEl = linkFn($sliderScope);
+        $div.append($sliderEl);
 
         _.each(self._legendColors, function (color, i) {
           let labelText = self._legendQuantizer
@@ -197,6 +214,10 @@ define(function (require) {
     BaseMarker.prototype._addToMap = function () {
       this.layerControl.addOverlay(this._markerGroup, "Aggregation");
       this.map.addLayer(this._markerGroup);
+
+      if (this.geoJson.features.length > 1) {
+        this.addLegend();
+      }
     };
 
     /**
@@ -207,7 +228,12 @@ define(function (require) {
      */
     BaseMarker.prototype._createMarkerGroup = function (options) {
       let self = this;
+      self.markerOptions = options;
       let defaultOptions = {
+        filter: function(feature) {
+          const value = _.get(feature, 'properties.value', 0);
+          return value >= self.threshold.min && value <= self.threshold.max;
+        },
         onEachFeature: function (feature, layer) {
           self.bindPopup(feature, layer);
         },
@@ -216,13 +242,7 @@ define(function (require) {
           return self.applyShadingStyle(value);
         }
       };
-      if (self._attr.minThreshold) {
-        defaultOptions.filter = function(feature) {
-          const value = _.get(feature, 'properties.value', 0);
-          return value >= self._attr.minThreshold;
-        }
-      }
-
+      
       if(self.geoJson.features.length <= 250) {
         this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
       } else {
@@ -404,7 +424,7 @@ define(function (require) {
         this._legendColors = colors;
         this._legendQuantizer = d3.scale.threshold().domain(domain).range(this._legendColors);
       } else {
-        const min = this.getMin();
+        const min = _.get(this.geoJson, 'properties.allmin', 0);
         const max = _.get(this.geoJson, 'properties.allmax', 1);
         const range = max - min;
         const quantizeDomain = (min !== max) ? [min, max] : d3.scale.quantize().domain();
@@ -414,13 +434,6 @@ define(function (require) {
         const reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
 
         let features = this.geoJson.features;
-        if (this._attr.minThreshold) {
-          const minThreshold = this._attr.minThreshold;
-          features = _.filter(this.geoJson.features, function(feature) {
-            const value = _.get(feature, 'properties.value', 0);
-            return value >= minThreshold;
-          });
-        }
         const featureLength = features.length;
 
         if (featureLength <= 1 || range <= 1) {
