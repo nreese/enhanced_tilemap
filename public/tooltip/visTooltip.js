@@ -36,10 +36,7 @@ define(function (require) {
           self.$tooltipScope.uiState = new PersistedState();
           self.$visEl = linkFn(self.$tooltipScope);
           $timeout(function() {
-            renderbot = savedVis.vis.type.createRenderbot(
-                savedVis.vis, 
-                self.$visEl.find('div.visualize-chart'),
-                self.$tooltipScope.uiState);
+            renderbot = self.$visEl[0].getScope().renderbot;
           });
         });
 
@@ -86,6 +83,7 @@ define(function (require) {
               width: width,
               height: height
             });
+
             const $popup = $(map.getContainer()).find('.leaflet-popup-content');
             
             //A lot can happed between calling fetch and getting a response
