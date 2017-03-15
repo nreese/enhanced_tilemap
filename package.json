@@ -1,6 +1,6 @@
 {
   "name": "enhanced_tilemap",
-  "version": "6.0.0-alpha1",
+  "version": "5.2.2",
   "scripts": {
     "test": "gulp test"
   },
