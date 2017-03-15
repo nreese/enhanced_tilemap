@@ -65,8 +65,8 @@ define(function (require) {
         // on relevant map events, and returns the element containing the control
         let $div = $('<div>').addClass('tilemap-legend');
 
-        const $sliderScope = $rootScope.$new();
-        $sliderScope.slider = {
+        self.$sliderScope = $rootScope.$new();
+        self.$sliderScope.slider = {
           min: self.threshold.min,
           max: self.threshold.max,
           options: {
@@ -81,7 +81,7 @@ define(function (require) {
           }
         };
         const linkFn = $compile(require('./legendSlider.html'));
-        const $sliderEl = linkFn($sliderScope);
+        const $sliderEl = linkFn(self.$sliderScope);
         $div.append($sliderEl);
 
         _.each(self._legendColors, function (color, i) {
@@ -106,6 +106,19 @@ define(function (require) {
 
       self._legend.addTo(self.map);
     };
+
+    BaseMarker.prototype.removeLegend = function () {
+      if (this.$sliderScope) {
+        this.$sliderScope.$destroy();
+      }
+
+      if (this._legend) {
+        if (this._legend._map) {
+          this.map.removeControl(this._legend);
+        }
+        this._legend = undefined;
+      }
+    }
 
     /**
      * Apply style with shading to feature
@@ -199,12 +212,7 @@ define(function (require) {
       });
       this._hidePopup();
 
-      if (this._legend) {
-        if (this._legend._map) {
-          this.map.removeControl(this._legend);
-        }
-        this._legend = undefined;
-      }
+      this.removeLegend();
 
       // remove marker layer from map
       if (this._markerGroup) {

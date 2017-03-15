@@ -19,10 +19,10 @@ define(function (require) {
       }
 
       destroy() {
+        this.$tooltipScope.$destroy();
         if (this.$visEl) {
           this.$visEl.remove();
         }
-        this.$tooltipScope.$destroy();
       }
 
       getFormatter() {
