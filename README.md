@@ -45,13 +45,13 @@ The enhanced tilemap visualization allows for the creation of multiple geospatia
 
 ## And More
 
-#### Minor stuff
-* Add Markers to map.
+![alt text](https://github.com/nreese/enhanced_tilemap/blob/gh-pages/images/andMore.gif)
+
 * Set view Leaflet control.
-* mouse latitude and longitude display control. Click display to toggle decimal degrees and degrees minutes seconds.
+* mouse latitude and longitude display control. Click display to toggle decimal degrees, degrees minutes seconds,  and MGRS.
 * Map scale control. Click for measurement tool.
 * Scroll map on mouse zoom. Feature can be turned off in options.
-* Enable **Apply Changes** button when map is moved or zoomed while in the visualization panel. This allows users to easily position map and save the visualization with the desired location.
+* Slider control in legend to hide aggregation grids outside of selected range.
 
 #### Static quantized range bands
 The existing tilemap generates quantized range bands dynamically. The enhanced_tilemap provides the ability to set static quantized range bands.
