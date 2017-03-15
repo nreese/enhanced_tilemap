@@ -4,13 +4,15 @@ import $ from 'jquery';
 define(function (require) {
   return function VisTooltipFactory($compile, $rootScope, $timeout, getAppState, Private, savedVisualizations) {
 
+    const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const PersistedState = Private(require('ui/persisted_state/persisted_state'));
     const SearchSource = Private(require('ui/courier/data_source/search_source'));
 
     class VisTooltip {
-      constructor(visId, geoFieldName, options) {
+      constructor(visId, fieldname, geotype, options) {
         this.visId = visId;
-        this.geoFieldName = geoFieldName;
+        this.fieldname = fieldname;
+        this.geotype = geotype;
         this.options = options;
         this.$tooltipScope = $rootScope.$new();
         this.$visEl = null;
@@ -54,18 +56,15 @@ define(function (require) {
             if (vertex[RECT_LON_INDEX] < lonMin) lonMin = vertex[RECT_LON_INDEX];
             if (vertex[RECT_LON_INDEX] > lonMax) lonMax = vertex[RECT_LON_INDEX];
           });
-          const gridFilter = {geo_bounding_box: {}};
-          gridFilter.geo_bounding_box[self.geoFieldName] = {
-            top_left: {
-              lat: latMax,
-              lon: lonMin
-            }, 
-            bottom_right: {
-              lat: latMin,
-              lon: lonMax
-            }
+          const top_left = {
+            lat: latMax,
+            lon: lonMin
+          };
+          const bottom_right = {
+            lat: latMin,
+            lon: lonMax
           }
-          return gridFilter;
+          return geoFilter.rectFilter(self.fieldname, self.geotype, top_left, bottom_right);
         }
 
         return function(feature, map) {

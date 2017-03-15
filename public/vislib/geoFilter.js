@@ -5,7 +5,7 @@ define(function (require) {
   return function GeoFilterFactory(Private) {
     const _ = require('lodash');
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
-    
+
     function filterAlias(field, numBoxes) {
       return field + ": " + numBoxes + " geo filters"
     }
@@ -160,10 +160,46 @@ define(function (require) {
       }
     }
 
+    /**
+     * Create elasticsearch geospatial rectangle filter
+     *
+     * @method rectFilter
+     * @param fieldname {String} name of geospatial field in IndexPattern
+     * @param geotype {String} geospatial datatype of field, geo_point or geo_shape
+     * @param top_left {Object} top left lat and lon (decimal degrees)
+     * @param bottom_right {Object} bottom right at and lon (decimal degrees)
+     * @return {Object} elasticsearch geospatial rectangle filter
+     */
+    function rectFilter(fieldname, geotype, top_left, bottom_right) {
+      let geofilter = null;
+      if ('geo_point' === geotype) {
+        geofilter = {geo_bounding_box: {}};
+        geofilter.geo_bounding_box[fieldname] = {
+          top_left: top_left,
+          bottom_right: bottom_right
+        };
+      } else if ('geo_shape' === geotype) {
+        geofilter = {geo_shape: {}};
+        geofilter.geo_shape[fieldname] = {
+          shape: {
+            type: 'envelope',
+            coordinates: [
+              [top_left.lon, top_left.lat],
+              [bottom_right.lon, bottom_right.lat]
+            ]
+          }
+        };
+      } else {
+        console.warn('unexpected geotype: ' + geotype);
+      }
+      return geofilter;
+    }
+
     return {
       add: addGeoFilter,
       isGeoFilter: isGeoFilter,
-      getGeoFilters: getGeoFilters
+      getGeoFilters: getGeoFilters,
+      rectFilter: rectFilter
     }
   }
 });

@@ -155,7 +155,7 @@ define(function (require) {
       if(!chartData) return;
 
       //add overlay layer to provide visibility of filtered area
-      let fieldName = getGeoField();
+      let fieldName = getGeoField().fieldname;
       if (fieldName) {
         map.addFilters(geoFilter.getGeoFilters(fieldName));
       }
@@ -180,9 +180,11 @@ define(function (require) {
           xRatio: _.get(tooltipParams, 'options.xRatio', 0.6),
           yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
         }
+        const geoField = getGeoField();
         tooltip = new VisTooltip(
             _.get(tooltipParams, 'options.visId'),
-            getGeoField(),
+            geoField.fieldname,
+            geoField.geotype,
             options);
         tooltipFormatter = tooltip.getFormatter();
       } else {
@@ -194,21 +196,26 @@ define(function (require) {
     /**
      * Field used for Geospatial filtering can be set in multiple places
      * 1) field specified by geohash_grid aggregation
-     * 2) field specified under options in event no aggregation is used
+     * 2) field specified under options. Allows for filtering by geo_shape
      *
      * Use this method to locate the field
      */
     function getGeoField() {
-      let fieldName = null;
+      let fieldname = null;
+      let geotype = 'geo_point';
       if ($scope.vis.params.filterByShape && $scope.vis.params.shapeField) {
-        fieldName = $scope.vis.params.shapeField;
+        fieldname = $scope.vis.params.shapeField;
+        geotype = 'geo_shape';
       } else {
         const agg = utils.getAggConfig($scope.vis.aggs, 'segment');
         if (agg) {
-          fieldName = agg.fieldName();
+          fieldname = agg.fieldName();
         }
       }
-      return fieldName;
+      return {
+        fieldname: fieldname,
+        geotype: geotype
+      };
     }
 
     function drawWmsOverlays() {

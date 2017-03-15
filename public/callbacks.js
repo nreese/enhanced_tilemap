@@ -110,25 +110,14 @@ define(function (require) {
         if (!agg) return;
         const indexPatternName = agg.vis.indexPattern.id;
 
-        let newFilter;
-        let field;
+        let field = agg.fieldName();
+        let geotype = 'geo_point';
         if (event.params.filterByShape && event.params.shapeField) {
           field = event.params.shapeField;
-          newFilter = {geo_shape: {}};
-          newFilter.geo_shape[field] = {
-            shape: {
-              type: 'envelope',
-              coordinates: [
-                [event.bounds.top_left.lon, event.bounds.top_left.lat],
-                [event.bounds.bottom_right.lon, event.bounds.bottom_right.lat]
-              ]
-            }
-          };
-        } else {
-          field = agg.fieldName();
-          newFilter = {geo_bounding_box: {}};
-          newFilter.geo_bounding_box[field] = event.bounds;
+          geotype = 'geo_shape';
         }
+        const newFilter = geoFilter.rectFilter(
+          field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
         geoFilter.add(newFilter, field, indexPatternName);
       }
