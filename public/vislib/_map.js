@@ -250,16 +250,15 @@ define(function (require) {
       this._geoJson = _.get(chartData, 'geoJson');
       this._collar = collar;
       
-      let visible = true;
+      let prevState = null;
       if (this._markers) {
-        visible = this._markers.isVisible();
-        this._markers.destroy();
+        prevState = this._markers.destroy();
       }
 
       this._markers = this._createMarkers({
         tooltipFormatter: tooltipFormatter,
         valueFormatter: valueFormatter,
-        visible: visible,
+        prevState: prevState,
         attr: this._attr
       });
     };

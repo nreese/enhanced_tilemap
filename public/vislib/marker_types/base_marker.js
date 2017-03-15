@@ -21,6 +21,20 @@ define(function (require) {
         min: _.get(geoJson, 'properties.allmin', 0),
         max: _.get(geoJson, 'properties.allmax', 1)
       };
+      
+      if (params.prevState) {
+        //Scale threshold to have same shape as previous zoom level
+        const prevRange = params.prevState.threshold.ceil - params.prevState.threshold.floor;
+        const newRange = _.get(geoJson, 'properties.allmax', 1) - _.get(geoJson, 'properties.allmin', 0);
+        if (params.prevState.threshold.min > params.prevState.threshold.floor) {
+          const prevMinRatio = (params.prevState.threshold.min - params.prevState.threshold.floor) / prevRange;
+          this.threshold.min = prevMinRatio * newRange;
+        }
+        if (params.prevState.threshold.max < params.prevState.threshold.floor) {
+          const prevMaxRatio = (params.prevState.threshold.max - params.prevState.threshold.floor) / prevRange;
+          this.threshold.max = prevMaxRatio * newRange;
+        }
+      }
 
       this._tooltipFormatter = params.tooltipFormatter || _.identity;
       this._valueFormatter = params.valueFormatter || _.identity;
@@ -162,32 +176,46 @@ define(function (require) {
       return d3.hcl(color).darker(amount).toString();
     };
 
+    /**
+     * Remove marker layer, popup, and legend from map
+     * @return {Object} marker layer display state 
+     */
     BaseMarker.prototype.destroy = function () {
-      let self = this;
+      const state = {
+        isVisible: this.isVisible(),
+        threshold: {
+          floor: _.get(this.geoJson, 'properties.allmin', 0),
+          ceil: _.get(this.geoJson, 'properties.allmax', 1),
+          min: this.threshold.min,
+          max: this.threshold.max
+        }
+      };
 
       this._stopLoadingGeohash();
 
       // remove popups
-      self.popups = self.popups.filter(function (popup) {
+      this.popups = this.popups.filter(function (popup) {
         popup.off('mouseover').off('mouseout');
       });
-      self._hidePopup();
+      this._hidePopup();
 
-      if (self._legend) {
-        if (self._legend._map) {
-          self.map.removeControl(self._legend);
+      if (this._legend) {
+        if (this._legend._map) {
+          this.map.removeControl(this._legend);
         }
-        self._legend = undefined;
+        this._legend = undefined;
       }
 
       // remove marker layer from map
-      if (self._markerGroup) {
-        self.layerControl.removeLayer(self._markerGroup);
-        if (self.map.hasLayer(self._markerGroup)) {
-          self.map.removeLayer(self._markerGroup);
+      if (this._markerGroup) {
+        this.layerControl.removeLayer(this._markerGroup);
+        if (this.map.hasLayer(this._markerGroup)) {
+          this.map.removeLayer(this._markerGroup);
         }
-        self._markerGroup = undefined;
+        this._markerGroup = undefined;
       }
+
+      return state;
     };
 
     BaseMarker.prototype.hide = function () {
