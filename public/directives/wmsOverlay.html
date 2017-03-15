@@ -1,39 +1,27 @@
 <div class="form-group">
   <div class="vis-option-item form-group">
     <label>
-      Server <kbn-info info="Select WMS server. Manage server list with Kibana Configuration item enhanced-tilemap:wms-overlay-servers."></kbn-info>
-    </label>
-    <input required type="text" class="form-control"
-      ng-show="wmsServers.length === 0"
-      ng-model="layer.url"
-      ng-change="getCapabilities()"
-      ng-model-options="{debounce:2000}">
-    <select required class="form-control"
-      ng-show="wmsServers.length > 0"
-      ng-model="layer.url"
-      ng-options="layer.value as layer.name for layer in wmsServers"
-      ng-change="getCapabilities()">
-    </select>
-  </div>
-  <div class="vis-option-item form-group side-by-side">
-    <label>
-      Layers
-    </label>
-    <input required type="text" class="form-control"
-      ng-show="layersList.length === 0"
-      ng-model="layer.layers">
-    <select required class="form-control"
-      ng-show="layersList.length !== 0"
-      ng-model="layer.layers"
-      ng-options="layer.id as layer.text for layer in layersList">
-    </select>
-  </div>
-  <div class="vis-option-item form-group side-by-side">
-    <label>
-      Display Name <kbn-info info="Layer name displayed in map layer control."></kbn-info>
+      Layer Name <kbn-info info="Layer name displayed in map layer control."></kbn-info>
     </label>
     <input type="text" class="form-control"
-      ng-model="layer.displayName">
+      ng-model="layer.displayName"   
+      name="displayName">
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Url
+    </label>
+    <input required type="text" class="form-control"
+      name="url"
+      ng-model="layer.url">    
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Layers <kbn-info info="A comma seperated list of layers to use."></kbn-info>
+    </label>
+    <input required type="text" class="form-control"
+      ng-model="layer.layers"   
+      name="layer.layers">
   </div>
   <div class="vis-option-item form-group">
     <label>

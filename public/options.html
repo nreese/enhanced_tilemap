@@ -20,6 +20,14 @@
       </select>
     </div>
     <tooltip-formatter tooltip="vis.params.tooltip"></tooltip-formatter>
+    <div class="form-group">
+      <label>
+        Min Threshold <kbn-info info="Geogrid cells with a value less than or equal to this setting will not be displayed on the map."></kbn-info>
+      </label>
+      <input type="number" class="form-control"
+        name="minThreshold"
+        ng-model="vis.params.minThreshold">
+    </div>
     <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
       <div class="form-group">
         <label>

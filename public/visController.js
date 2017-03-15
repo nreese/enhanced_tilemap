@@ -12,7 +12,7 @@ import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 import VislibVisTypeBuildChartDataProvider from 'ui/vislib_vis_type/build_chart_data';
 
 define(function (require) {
-  var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana', 'etm-ui.bootstrap.accordion', 'rzModule']);
+  var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana', 'etm-ui.bootstrap.accordion']);
   
   module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState, indexPatterns) {
     let buildChartData = Private(VislibVisTypeBuildChartDataProvider);

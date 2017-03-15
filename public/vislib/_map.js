@@ -250,17 +250,22 @@ define(function (require) {
       this._geoJson = _.get(chartData, 'geoJson');
       this._collar = collar;
       
-      let prevState = null;
+      let visible = true;
       if (this._markers) {
-        prevState = this._markers.destroy();
+        visible = this._markers.isVisible();
+        this._markers.destroy();
       }
 
       this._markers = this._createMarkers({
         tooltipFormatter: tooltipFormatter,
         valueFormatter: valueFormatter,
-        prevState: prevState,
+        visible: visible,
         attr: this._attr
       });
+      
+      if (this._geoJson.features.length > 1) {
+        this._markers.addLegend();
+      }
     };
 
     /**
