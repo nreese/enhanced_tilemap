@@ -16,7 +16,8 @@ define(function (require) {
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale');
     var syncMaps = require('./sync_maps');
-  
+    const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
+
     var defaultMapZoom = 2;
     var defaultMapCenter = [15, 5];
     var defaultMarkerType = 'Scaled Circle Markers';
@@ -46,7 +47,7 @@ define(function (require) {
       this._container = container;
       this._poiLayers = {};
       this._wmsOverlays = [];
-
+      this._internalShapeLayers = {};
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
       this._setMarkerType(params.mapType);
@@ -71,7 +72,7 @@ define(function (require) {
     TileMapMap.prototype._addDrawControl = function () {
       if (this._drawControl) return;
 
-      //create Markers feature group and add saved markers 
+      //create Markers feature group and add saved markers
       this._drawnItems = new L.FeatureGroup();
       var self = this;
       this._attr.markers.forEach(function(point) {
@@ -81,7 +82,7 @@ define(function (require) {
         }
         self._drawnItems.addLayer(
           L.marker(
-            point, 
+            point,
             {icon: markerIcon(color)}));
       });
       this.map.addLayer(this._drawnItems);
@@ -106,9 +107,9 @@ define(function (require) {
         edit: {
           featureGroup: this._drawnItems,
           edit: false
-        } 
+        }
       }
-      //Do not show marker and remove buttons when visualization is displayed in dashboard, i.e. not editable 
+      //Do not show marker and remove buttons when visualization is displayed in dashboard, i.e. not editable
       if(!this._isEditable) {
         drawOptions.draw.marker = false;
         drawOptions.edit.remove = false;
@@ -224,7 +225,7 @@ define(function (require) {
         this.map.removeLayer(layer);
         delete this._poiLayers[layerName];
       }
-      
+
       this.map.addLayer(layer);
       this._layerControl.addOverlay(layer, layerName);
       this._poiLayers[layerName] = layer;
@@ -236,6 +237,42 @@ define(function (require) {
         this._toolbench.addTool();
       }
     };
+
+
+    TileMapMap.prototype.clearInternalShapeLayers = function () {
+      const self = this;
+      Object.keys(this._poiLayers).forEach(function(key) {
+        const layer = self._poiLayers[key];
+        self._layerControl.removeLayer(layer);
+        self.map.removeLayer(layer);
+      });
+      this._poiLayers = {};
+      if (this._toolbench) this._toolbench.removeTools();
+    };
+
+    TileMapMap.prototype.addPOILayer = function (layerName, layer) {
+      //remove layer if it already exists
+      if (_.has(this._poiLayers, layerName)) {
+        const layer = this._poiLayers[layerName];
+        this._layerControl.removeLayer(layer);
+        this.map.removeLayer(layer);
+        delete this._poiLayers[layerName];
+      }
+
+      this.map.addLayer(layer);
+      this._layerControl.addOverlay(layer, layerName);
+      this._poiLayers[layerName] = layer;
+
+      //Add tool to l.draw.toolbar so users can filter by POIs
+      if (Object.keys(this._poiLayers).length === 1) {
+        if (this._toolbench) this._toolbench.removeTools();;
+        if (!this._toolbench) this._addDrawControl();
+        this._toolbench.addTool();
+      }
+    };
+
+
+
 
     /**
      * Switch type of data overlay for map:
@@ -249,22 +286,27 @@ define(function (require) {
       this._chartData = chartData;
       this._geoJson = _.get(chartData, 'geoJson');
       this._collar = collar;
-      
-      let prevState = null;
+
+      let visible = true;
       if (this._markers) {
-        prevState = this._markers.destroy();
+        visible = this._markers.isVisible();
+        this._markers.destroy();
       }
 
       this._markers = this._createMarkers({
         tooltipFormatter: tooltipFormatter,
         valueFormatter: valueFormatter,
-        prevState: prevState,
+        visible: visible,
         attr: this._attr
       });
+
+      if (this._geoJson.features.length > 1) {
+        this._markers.addLegend();
+      }
     };
 
     /**
-     * Display geospatial filters as map layer to provide 
+     * Display geospatial filters as map layer to provide
      * users context for all applied filters
      */
     TileMapMap.prototype.addFilters = function (filters) {
@@ -309,15 +351,15 @@ define(function (require) {
 
     TileMapMap.prototype.mapBounds = function () {
       let bounds = this.map.getBounds();
-      
-      //When map is not visible, there is no width or height. 
+
+      //When map is not visible, there is no width or height.
       //Need to manually create bounds based on container width/height
       if(bounds.getNorthWest().equals(bounds.getSouthEast())) {
         let parent = this._container.parentNode;
         while(parent.clientWidth === 0 && parent.clientHeight === 0) {
           parent = parent.parentNode;
         }
-        
+
         const southWest = this.map.layerPointToLatLng(L.point(parent.clientWidth/2 * -1, parent.clientHeight/2 * -1));
         const northEast = this.map.layerPointToLatLng(L.point(parent.clientWidth/2, parent.clientHeight/2));
         bounds = L.latLngBounds(southWest, northEast);
@@ -363,7 +405,7 @@ define(function (require) {
 
     TileMapMap.prototype._attachEvents = function () {
       var self = this;
-      
+
       this.map.on('moveend', _.debounce(function setZoomCenter(ev) {
         if (!self.map) return;
         if (self._hasSameLocation()) return;
@@ -399,7 +441,7 @@ define(function (require) {
         Object.keys(self._poiLayers).forEach(function (key) {
           poiLayers.push(self._poiLayers[key]);
         });
-        self._callbacks.poiFilter({
+        self._callbacks.p({
           chart: self._chartData,
           poiLayers: poiLayers,
           radius: _.get(e, 'radius', 10)
@@ -479,8 +521,8 @@ define(function (require) {
       const newLat = this.map.getCenter().lat.toFixed(5);
       const newLon = this.map.getCenter().lng.toFixed(5);
       let isSame = false;
-      if (oldLat === newLat 
-        && oldLon === newLon 
+      if (oldLat === newLat
+        && oldLon === newLon
         && this.map.getZoom() === this._mapZoom) {
         isSame = true;
       }
@@ -494,7 +536,8 @@ define(function (require) {
       if (this._attr.wms && this._attr.wms.enabled) {
         this._tileLayer = L.tileLayer.wms(this._attr.wms.url, this._attr.wms.options);
       } else {
-        this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
+        url = this._attr.tileUrl || mapTiles.url;
+        this._tileLayer = L.tileLayer(url, mapTiles.options);
       }
 
       // append tile layers, center and zoom to the map options
@@ -505,7 +548,7 @@ define(function (require) {
       this.map = L.map(this._container, mapOptions);
       this._layerControl = L.control.layers();
       this._layerControl.addTo(this.map);
-      
+
       this._addSetViewControl();
       this._addDrawControl();
       this._addMousePositionControl();
