@@ -330,8 +330,13 @@ define(function (require) {
     };
 
     BaseMarker.prototype._createTooltip = function (content, latLng) {
+      let className = '';
+      if (!_.get(this._attr, 'tooltip.closeOnMouseout', true)) {
+        className = 'interactive-popup';
+      }
       L.popup({
         autoPan: false,
+        className: className,
         maxHeight: 'auto',
         maxWidth: 'auto',
         offset: this._getOffset(content, latLng)
@@ -388,7 +393,7 @@ define(function (require) {
           heightOffset += popupHeight + 16;
         } else {
           //Move popup down as little as possible
-          heightOffset = popupHeight - distToTopEdge;
+          heightOffset = popupHeight - distToTopEdge + 16;
         }
       }
 
