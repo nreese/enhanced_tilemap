@@ -1,7 +1,9 @@
 <!-- vis type specific options -->
+
+<script src="https://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 <uib-accordion close-others="true">
   <div uib-accordion-group class="panel-default" heading="Aggregation Options">
-    <div class="form-group">
+      <div class="form-group">
       <label>
         Map Collar Scale <kbn-info info="Use this input to increase or decrease the size of the geo aggregation filter. A value of 1 will size the filter to the map bounds. A value of 2 will size the filter to 2X the map bounds. A value too small could result in excessive fetches. A value too large could result in trimmed results and slow performance."></kbn-info>
       </label>
@@ -20,6 +22,14 @@
       </select>
     </div>
     <tooltip-formatter tooltip="vis.params.tooltip"></tooltip-formatter>
+    <div class="form-group">
+      <label>
+        Min Threshold <kbn-info info="Geogrid cells with a value less than or equal to this setting will not be displayed on the map."></kbn-info>
+      </label>
+      <input type="number" class="form-control"
+        name="minThreshold"
+        ng-model="vis.params.minThreshold">
+    </div>
     <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
       <div class="form-group">
         <label>
@@ -133,8 +143,7 @@
     </div>
   </div>
 
-
-  <div uib-accordion-group class="panel-default" heading="Geo shape filtering" ng-if="$root.etm.shapeFields.length > 0" >
+  <div uib-accordion-group class="panel-default" heading="Geo shape filtering"  >
     <div class="vis-option-item form-group">
       <label>
         <input type="checkbox"
@@ -153,6 +162,38 @@
     </div>
   </div>
 
+  <div uib-accordion-group class="panel-default" heading="Internal geo shape filtering"  >
+    <div class="vis-option-item form-group">
+      <label>
+        <input type="checkbox"
+        name="filterByInternalShape"
+        ng-model="vis.params.filterByInternalShape"
+        checked="true">
+        Filter with internal shapes selected from dropdown
+        <kbn-info info="Filter by shapes selected using the internal tool drop down selection."></kbn-info>
+      </label>
+    </div>
+
+    <div class="vis-option-item form-group">
+      <div class="suggestion box">
+        <input type="text" id="ajax" list="json-datalist" placeholder="use lucene query">
+        <datalist id="json-datalist"></datalist>
+        <button id="go-btn">GO</button>
+      </div>
+    </div>
+
+    <div class="vis-option-item form-group">
+      <p>
+        Enter a comma seperated list of indices to search over
+      </p>
+      <label>
+        Search Indices
+      </label>
+      <input type="text" class="form-control"
+        name="internalShapeSearchIndices"
+        ng-model="vis.params.internalShapeSearchIndices">
+    </div>
+  </div>
 
   <div uib-accordion-group class="panel-default" heading="Map Options">
     <div class="vis-option-item form-group">
@@ -190,9 +231,9 @@
       </label>
     </div>
     <div ng-show="vis.params.wms.enabled" class="well">
-      <div class="vis-option-item form-group">     
+      <div class="vis-option-item form-group">
         <p>
-          WMS maps are 3rd party mapping services that have not been verified to work with Kibana. 
+          WMS maps are 3rd party mapping services that have not been verified to work with Kibana.
           These should be considered expert settings.
         </p>
         <label>
@@ -200,7 +241,7 @@
         </label>
         <input type="text" class="form-control"
           name="wms.url"
-          ng-model="vis.params.wms.url">    
+          ng-model="vis.params.wms.url">
       </div>
       <div class="vis-option-item form-group">
         <label>
@@ -208,7 +249,7 @@
         </label>
         <input type="text" class="form-control"
           ng-require="vis.params.wms.enabled"
-          ng-model="vis.params.wms.options.layers"   
+          ng-model="vis.params.wms.options.layers"
           name="wms.options.layers">
       </div>
       <div class="vis-option-item form-group">
@@ -217,7 +258,7 @@
         </label>
         <input type="text" class="form-control"
           name="wms.options.version"
-          ng-model="vis.params.wms.options.version">    
+          ng-model="vis.params.wms.options.version">
       </div>
       <div class="vis-option-item form-group">
         <label>
@@ -225,15 +266,15 @@
         </label>
         <input type="text" class="form-control"
           name="wms.options.format"
-          ng-model="vis.params.wms.options.format">    
-      </div>  
+          ng-model="vis.params.wms.options.format">
+      </div>
       <div class="vis-option-item form-group">
         <label>
           WMS attribution <kbn-info info="Attribution string for the lower right corner<"></kbn-info>
         </label>
         <input type="text" class="form-control"
           name="wms.options.attribution"
-          ng-model="vis.params.wms.options.attribution">    
+          ng-model="vis.params.wms.options.attribution">
       </div>
       <div class="vis-option-item form-group">
         <label>
@@ -241,18 +282,23 @@
         </label>
         <input type="text" class="form-control"
           name="wms.options.styles"
-          ng-model="vis.params.wms.options.styles">    
+          ng-model="vis.params.wms.options.styles">
       </div>
       <p>* if this parameter is incorrect, maps will fail to load.</p>
     </div>
+    <div class="vis-option-item form-group">
+      <label>
+        <input type="text" class="form-control"
+          name="tileUrl"
+          ng-model="vis.params.tileUrl">
+        Tile Server Url
+        <kbn-info info="Override the default open street maps tile server url."></kbn-info>
+      </label>
+    </div>
   </div>
 
-
   <div uib-accordion-group class="panel-default" heading="Map Overlays">
-    
     <saved-searches layers="vis.params.overlays.savedSearches"></saved-searches>
-
     <wms-overlays layers="vis.params.overlays.wmsOverlays"></wms-overlays>
-
   </div>
 </uib-accordion>
