@@ -35,10 +35,10 @@ define(function (require) {
           type = 'geo_shape';
         }
         queryFilter.updateFilter({
-          model: { 
-            bool : { 
+          model: {
+            bool : {
               should : geoFilters
-            } 
+            }
           },
           source: existingFilter,
           type: type,
@@ -48,17 +48,17 @@ define(function (require) {
         let numFilters = 1;
         if (_.isArray(newFilter)) {
           numFilters = newFilter.length;
-          newFilter = { 
+          newFilter = {
             bool: {
               should: newFilter
             }
           };
         }
         newFilter.meta = {
-          alias: filterAlias(field, numFilters), 
-          negate: false, 
-          index: indexPatternName, 
-          key: field 
+          alias: filterAlias(field, numFilters),
+          negate: false,
+          index: indexPatternName,
+          key: field
         };
         queryFilter.addFilters(newFilter);
       }
@@ -83,7 +83,7 @@ define(function (require) {
         const bottomRight = _.get(filter, 'geo_bounding_box.' + field + '.bottom_right');
         if(topLeft && bottomRight) {
           const bounds = L.latLngBounds(
-            [topLeft.lat, topLeft.lon], 
+            [topLeft.lat, topLeft.lon],
             [bottomRight.lat, bottomRight.lon]);
           features.push(L.rectangle(bounds));
         }
@@ -105,7 +105,7 @@ define(function (require) {
           const lon = point[LON_INDEX];
           latLngs.push(L.latLng(lat, lon));
         });
-        if(latLngs.length > 0) 
+        if(latLngs.length > 0)
           features.push(L.polygon(latLngs));
       } else if (_.has(filter, 'geo_shape.' + field)) {
         const type = _.get(filter, 'geo_shape.' + field + '.shape.type');
@@ -114,7 +114,7 @@ define(function (require) {
           const tl = envelope[0]; //topleft
           const br = envelope[1]; //bottomright
           const bounds = L.latLngBounds(
-            [tl[LAT_INDEX], tl[LON_INDEX]], 
+            [tl[LAT_INDEX], tl[LON_INDEX]],
             [br[LAT_INDEX], br[LON_INDEX]]);
           features.push(L.rectangle(bounds));
         } else if (type.toLowerCase() === 'polygon') {
@@ -144,6 +144,16 @@ define(function (require) {
       return filters;
     }
 
+    function getFilterBarGeoFilters(field){
+      let filters = [];
+      queryFilter.getAppFilters().forEach(function (it) {
+        if (isGeoFilter(it, field) && !_.get(it, 'meta.disabled', false)) {
+          filters = filters.concat(it);
+        }
+      });
+      return filters;
+    }
+
     function isGeoFilter(filter, field) {
       if (filter.meta.key === field
         || _.has(filter, 'geo_bounding_box.' + field)
@@ -160,46 +170,11 @@ define(function (require) {
       }
     }
 
-    /**
-     * Create elasticsearch geospatial rectangle filter
-     *
-     * @method rectFilter
-     * @param fieldname {String} name of geospatial field in IndexPattern
-     * @param geotype {String} geospatial datatype of field, geo_point or geo_shape
-     * @param top_left {Object} top left lat and lon (decimal degrees)
-     * @param bottom_right {Object} bottom right at and lon (decimal degrees)
-     * @return {Object} elasticsearch geospatial rectangle filter
-     */
-    function rectFilter(fieldname, geotype, top_left, bottom_right) {
-      let geofilter = null;
-      if ('geo_point' === geotype) {
-        geofilter = {geo_bounding_box: {}};
-        geofilter.geo_bounding_box[fieldname] = {
-          top_left: top_left,
-          bottom_right: bottom_right
-        };
-      } else if ('geo_shape' === geotype) {
-        geofilter = {geo_shape: {}};
-        geofilter.geo_shape[fieldname] = {
-          shape: {
-            type: 'envelope',
-            coordinates: [
-              [top_left.lon, top_left.lat],
-              [bottom_right.lon, bottom_right.lat]
-            ]
-          }
-        };
-      } else {
-        console.warn('unexpected geotype: ' + geotype);
-      }
-      return geofilter;
-    }
-
     return {
       add: addGeoFilter,
       isGeoFilter: isGeoFilter,
       getGeoFilters: getGeoFilters,
-      rectFilter: rectFilter
+      getFilterBarGeoFilters: getFilterBarGeoFilters
     }
   }
 });
