@@ -67,7 +67,7 @@ define(function (require) {
         layer = new L.FeatureGroup(markers);
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
-          const geometry = hit._source[this.geoField];
+          const geometry = _.get(hit, `_source[${this.geoField}]`);
           geometry.type = capitalizeFirstLetter(geometry.type);
           return {
             type: 'Feature',
@@ -120,7 +120,7 @@ define(function (require) {
 
     POIs.prototype._createMarker = function (hit, options) {
       const feature = L.marker(
-        toLatLng(hit._source[this.geoField]),
+        toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
           icon: markerIcon(options.color, options.size)
         });
