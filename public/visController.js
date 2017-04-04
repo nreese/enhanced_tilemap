@@ -251,7 +251,6 @@ define(function (require) {
               });
             }
             esQuery.bool.must_not = cleanedMustNot;
-            const escapedQuery = JSON.stringify(esQuery).replace(new RegExp('[,]', 'g'), '\\,');
 
             const name = _.get(layerParams, 'displayName', layerParams.layers);
             const options = {
@@ -262,12 +261,30 @@ define(function (require) {
               transparent: true,
               version: '1.1.1'
             };
+            const viewparams = [];
             if (_.get(layerParams, 'viewparams')) {
-              options.viewparams = 'q:' + escapedQuery;
+              viewparams.push('q:' + JSON.stringify(esQuery));
+            }
+            const aggs = _.get(layerParams, 'agg', '');
+            if (aggs.length !== 0) {
+              viewparams.push('a:' + aggs);
+            }
+            if (viewparams.length >= 1) {
+              //http://docs.geoserver.org/stable/en/user/data/database/sqlview.html#using-a-parametric-sql-view
+              options.viewparams = _.map(viewparams, param => {
+                let escaped = param;
+                escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
+                escaped = escaped.replace(/\s/g, ''); //remove whitespace
+                return escaped;
+              }).join(';');
             }
             const cqlFilter = _.get(layerParams, 'cqlFilter', '');
             if (cqlFilter.length !== 0) {
               options.CQL_FILTER = cqlFilter;
+            }
+            const styles = _.get(layerParams, 'styles', '');
+            if (styles.length !== 0) {
+              options.styles = styles;
             }
             map.addWmsOverlay(layerParams.url, name, options);
           });

@@ -49,6 +49,27 @@
   </div>
   <div class="vis-option-item form-group">
     <label>
+      Styles
+    </label>
+    <input type="text" class="form-control"
+      ng-model="layer.styles"
+      name="layer.styles">
+  </div>
+  <div>
+    <label class="etm-well-section">
+      Elasticsearch WMS Options <kbn-info info="WMS layers served from elasticsearch via elasticgeo/geoserver allow for greater integration with elasticsearch queries and aggregations."></kbn-info>
+    </label>
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Aggregation <kbn-info info="Generate WMS layer from geohash_grid aggregation results. To use, properly configure geoserver by creating a SLD style containing a vec:GeoHashGrid rendering transformation. See elasticgeo documenation for details."></kbn-info>
+    </label>
+    <textarea class="form-control"
+      ng-model="layer.agg"
+      name="layer.agg"></textarea>
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
       <input type="checkbox"
       name="viewparams"
       ng-model="layer.viewparams">
