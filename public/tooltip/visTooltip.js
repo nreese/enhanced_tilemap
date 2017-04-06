@@ -2,11 +2,14 @@ import _ from 'lodash';
 import $ from 'jquery';
 
 define(function (require) {
-  return function VisTooltipFactory($compile, $rootScope, $timeout, getAppState, Private, savedVisualizations) {
+  return function VisTooltipFactory(
+    $compile, $rootScope, $timeout, 
+    getAppState, Private, savedVisualizations) {
 
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
-    const PersistedState = Private(require('ui/persisted_state/persisted_state'));
     const SearchSource = Private(require('ui/courier/data_source/search_source'));
+    const $state = getAppState();
+    const UI_STATE_ID = 'popupVis';
 
     class VisTooltip {
       constructor(visId, fieldname, geotype, options) {
@@ -16,9 +19,11 @@ define(function (require) {
         this.options = options;
         this.$tooltipScope = $rootScope.$new();
         this.$visEl = null;
+        this.parentUiState = $state.makeStateful('uiState');
       }
 
       destroy() {
+        this.parentUiState.removeChild(UI_STATE_ID);
         this.$tooltipScope.$destroy();
         if (this.$visEl) {
           this.$visEl.remove();
@@ -33,7 +38,8 @@ define(function (require) {
         const self = this;
         savedVisualizations.get(this.visId).then(function (savedVis) {
           self.$tooltipScope.savedObj = savedVis;
-          self.$tooltipScope.uiState = new PersistedState();
+          const uiState = savedVis.uiStateJSON ? JSON.parse(savedVis.uiStateJSON) : {};
+          self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
           self.$visEl = linkFn(self.$tooltipScope);
           $timeout(function() {
             renderbot = self.$visEl[0].getScope().renderbot;
