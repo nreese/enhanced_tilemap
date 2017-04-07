@@ -72,6 +72,35 @@ define(function (require) {
       }
       return aggConfig;
     },
+    /* 
+     * @param rect {Array of Array(lat, lon)} grid rectangle 
+     * created from KIBANA_HOME/src/ui/public/agg_response/geo_json/rows_to_features.js
+     * @return {object}
+     */
+    getRectBounds: function(rect) {
+      const RECT_LAT_INDEX = 0;
+      const RECT_LON_INDEX = 1;
+      let latMin = 90;
+      let latMax = -90;
+      let lonMin = 180;
+      let lonMax = -180;
+      rect.forEach(function(vertex) {
+        if (vertex[RECT_LAT_INDEX] < latMin) latMin = vertex[RECT_LAT_INDEX];
+        if (vertex[RECT_LAT_INDEX] > latMax) latMax = vertex[RECT_LAT_INDEX];
+        if (vertex[RECT_LON_INDEX] < lonMin) lonMin = vertex[RECT_LON_INDEX];
+        if (vertex[RECT_LON_INDEX] > lonMax) lonMax = vertex[RECT_LON_INDEX];
+      });
+      return {
+        top_left: {
+          lat: latMax,
+          lon: lonMin
+        }, 
+        bottom_right: {
+          lat: latMin,
+          lon: lonMax
+        }
+      };
+    },
     getMapStateFromVis: function(vis) {
       const mapState = {
         center: [15, 5],

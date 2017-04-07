@@ -3,28 +3,24 @@ import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
 
 define(function (require) {
-  return function VisTooltipFactory(
+  return function SearchTooltipFactory(
     $compile, $rootScope, $timeout, 
-    getAppState, Private, savedVisualizations) {
+    Private, savedSearches) {
 
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const SearchSource = Private(require('ui/courier/data_source/search_source'));
-    const $state = getAppState();
-    const UI_STATE_ID = 'popupVis';
 
-    class VisTooltip {
-      constructor(visId, fieldname, geotype, options) {
-        this.visId = visId;
+    class SearchTooltip {
+      constructor(searchId, fieldname, geotype, options) {
+        this.searchId = searchId;
         this.fieldname = fieldname;
         this.geotype = geotype;
         this.options = options;
         this.$tooltipScope = $rootScope.$new();
         this.$visEl = null;
-        this.parentUiState = $state.makeStateful('uiState');
       }
 
       destroy() {
-        this.parentUiState.removeChild(UI_STATE_ID);
         this.$tooltipScope.$destroy();
         if (this.$visEl) {
           this.$visEl.remove();
@@ -32,19 +28,18 @@ define(function (require) {
       }
 
       getFormatter() {
-        const linkFn = $compile(require('./visTooltip.html'));
-        let renderbot = null;
+        const linkFn = $compile(require('./searchTooltip.html'));
+        let origSearchSource = null;
         let fetchTimestamp;
 
         const self = this;
-        savedVisualizations.get(this.visId).then(function (savedVis) {
-          self.$tooltipScope.savedObj = savedVis;
-          const uiState = savedVis.uiStateJSON ? JSON.parse(savedVis.uiStateJSON) : {};
-          self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
+        savedSearches.get(this.searchId).then(function (savedSearch) {
+          origSearchSource = savedSearch.searchSource;
+          self.$tooltipScope.hits = [];
+          self.$tooltipScope.indexPattern = savedSearch.searchSource._state.index;
+          self.$tooltipScope.columns = savedSearch.columns;
+          self.$tooltipScope.sort = savedSearch.sort;
           self.$visEl = linkFn(self.$tooltipScope);
-          $timeout(function() {
-            renderbot = self.$visEl[0].getScope().renderbot;
-          });
         });
 
         function createFilter(rect) {
@@ -59,12 +54,12 @@ define(function (require) {
           const width = Math.round(map.getSize().x * _.get(self.options, 'xRatio', 0.6));
           const height = Math.round(map.getSize().y * _.get(self.options, 'yRatio', 0.6));
           const style = 'style="height: ' + height + 'px; width: ' + width + 'px;"';
-          const loadHtml = '<div ' + style + '>Loading Visualization Data</div>';
+          const loadHtml = '<div ' + style + '>Loading Data</div>';
 
           const localFetchTimestamp = Date.now();
           fetchTimestamp = localFetchTimestamp;
           const searchSource = new SearchSource();
-          searchSource.inherits(self.$tooltipScope.savedObj.searchSource);
+          searchSource.inherits(origSearchSource);
           searchSource.filter([createFilter(feature.properties.rectangle)]);
           searchSource.fetch().then(esResp => {
             self.$visEl.css({
@@ -79,9 +74,11 @@ define(function (require) {
             if ($popup
               && $popup.html() === loadHtml
               && localFetchTimestamp === fetchTimestamp) {
-              $popup.empty();
-              $popup.append(self.$visEl);
-              renderbot.render(esResp);
+              self.$tooltipScope.hits = esResp.hits.hits;
+              $timeout(function() {
+                $popup.empty();
+                $popup.append(self.$visEl);
+              });
             }
           });
 
@@ -90,6 +87,6 @@ define(function (require) {
       }
     }
 
-    return VisTooltip;
+    return SearchTooltip;
   }; 
 });

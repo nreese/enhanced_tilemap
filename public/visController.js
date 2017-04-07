@@ -23,6 +23,7 @@ define(function (require) {
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
+    const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
     let map = null;
     let collar = null;
@@ -175,12 +176,19 @@ define(function (require) {
         tooltip.destroy();
       }
 
-      if (_.get(tooltipParams, 'type') === 'visualization') {
-        const options = {
-          xRatio: _.get(tooltipParams, 'options.xRatio', 0.6),
-          yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
-        }
-        const geoField = getGeoField();
+      const options = {
+        xRatio: _.get(tooltipParams, 'options.xRatio', 0.6),
+        yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
+      };
+      const geoField = getGeoField();
+      if (_.get(tooltipParams, 'type') === 'search') {
+        tooltip = new SearchTooltip(
+            _.get(tooltipParams, 'options.searchId'),
+            geoField.fieldname,
+            geoField.geotype,
+            options);
+        tooltipFormatter = tooltip.getFormatter();
+      } else if (_.get(tooltipParams, 'type') === 'visualization') {
         tooltip = new VisTooltip(
             _.get(tooltipParams, 'options.visId'),
             geoField.fieldname,
