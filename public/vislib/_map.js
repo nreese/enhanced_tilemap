@@ -45,7 +45,7 @@ define(function (require) {
     function TileMapMap(container, params) {
       this._container = container;
       this._poiLayers = {};
-      this._wmsOverlays = [];
+      this._wmsOverlays = {};
 
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
@@ -217,15 +217,17 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addPOILayer = function (layerName, layer) {
+      let isVisible = true;
       //remove layer if it already exists
       if (_.has(this._poiLayers, layerName)) {
         const layer = this._poiLayers[layerName];
+        isVisible = this.map.hasLayer(layer);
         this._layerControl.removeLayer(layer);
         this.map.removeLayer(layer);
         delete this._poiLayers[layerName];
       }
       
-      this.map.addLayer(layer);
+      if (isVisible) this.map.addLayer(layer);
       this._layerControl.addOverlay(layer, layerName);
       this._poiLayers[layerName] = layer;
 
@@ -291,19 +293,22 @@ define(function (require) {
     };
 
     TileMapMap.prototype.clearWMSOverlays = function () {
-      const self = this;
-      this._wmsOverlays.forEach(function(layer) {
-        self._layerControl.removeLayer(layer);
-        self.map.removeLayer(layer);
+      const prevState = {};
+      Object.keys(this._wmsOverlays).forEach(key => {
+        const layer = this._wmsOverlays[key];
+        prevState[key] = this.map.hasLayer(layer);
+        this._layerControl.removeLayer(layer);
+        this.map.removeLayer(layer);
       });
-      this._wmsOverlays = [];
+      this._wmsOverlays = {};
+      return prevState;
     };
 
-    TileMapMap.prototype.addWmsOverlay = function (url, name, options) {
+    TileMapMap.prototype.addWmsOverlay = function (url, name, options, isVisible) {
       const overlay = L.tileLayer.wms(url, options);
-      this.map.addLayer(overlay);
+      if (isVisible) this.map.addLayer(overlay);
       this._layerControl.addOverlay(overlay, name);
-      this._wmsOverlays.push(overlay);
+      this._wmsOverlays[name] = overlay;
       $(overlay.getContainer()).addClass('no-filter');
     };
 

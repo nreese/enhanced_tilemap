@@ -21,6 +21,7 @@ define(function (require) {
         min: _.get(geoJson, 'properties.allmin', 0),
         max: _.get(geoJson, 'properties.allmax', 1)
       };
+      this.isVisible = _.get(params, 'prevState.isVisible', true);
       
       if (params.prevState) {
         //Scale threshold to have same shape as previous zoom level
@@ -104,7 +105,7 @@ define(function (require) {
         return $div.get(0);
       };
 
-      self._legend.addTo(self.map);
+      if (self.isVisible) self._legend.addTo(self.map);
     };
 
     BaseMarker.prototype.removeLegend = function () {
@@ -195,7 +196,7 @@ define(function (require) {
      */
     BaseMarker.prototype.destroy = function () {
       const state = {
-        isVisible: this.isVisible(),
+        isVisible: this._markerGroup && this.map.hasLayer(this._markerGroup),
         threshold: {
           floor: _.get(this.geoJson, 'properties.allmin', 0),
           ceil: _.get(this.geoJson, 'properties.allmax', 1),
@@ -239,17 +240,9 @@ define(function (require) {
       }
     }
 
-    BaseMarker.prototype.isVisible = function () {
-      let visible = false;
-      if (this._markerGroup && this.map.hasLayer(this._markerGroup)) {
-        visible = true;
-      }
-      return visible;
-    }
-
     BaseMarker.prototype._addToMap = function () {
       this.layerControl.addOverlay(this._markerGroup, "Aggregation");
-      this.map.addLayer(this._markerGroup);
+      if (this.isVisible) this.map.addLayer(this._markerGroup);
 
       if (this.geoJson.features.length > 1) {
         this.addLegend();

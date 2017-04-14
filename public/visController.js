@@ -235,7 +235,7 @@ define(function (require) {
     }
 
     function drawWmsOverlays() {
-      map.clearWMSOverlays();
+      const prevState = map.clearWMSOverlays();
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
@@ -290,7 +290,7 @@ define(function (require) {
               options.viewparams = _.map(viewparams, param => {
                 let escaped = param;
                 escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
-                escaped = escaped.replace(/\s/g, ''); //remove whitespace
+                //escaped = escaped.replace(/\s/g, ''); //remove whitespace
                 return escaped;
               }).join(';');
             }
@@ -302,7 +302,8 @@ define(function (require) {
             if (styles.length !== 0) {
               options.styles = styles;
             }
-            map.addWmsOverlay(layerParams.url, name, options);
+            const isVisible = _.get(prevState, name, true);
+            map.addWmsOverlay(layerParams.url, name, options, isVisible);
           });
         });
       });
