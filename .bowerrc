@@ -1,3 +1,9 @@
 {
-  "directory": "public/bower_components"
+  "directory": "public/bower_components",
+  "cwd": "./",
+  "scripts": {
+    "preinstall": "",
+    "postinstall": "./postinstall.sh",
+    "preuninstall": ""
+  }
 }

@@ -1,20 +1,22 @@
-/*
- * Had to rework original tilemap functionallity to migrate 
- * to TemplateVisType. Combined pieces from 
- *   plugins/kbn_vislib_vis_types/public/tileMap.js
- *   ui/public/vislib/visualizations/tile_map.js
- */
 import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
 import Binder from 'ui/binder';
 import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 import VislibVisTypeBuildChartDataProvider from 'ui/vislib_vis_type/build_chart_data';
+import { backwardsCompatible } from './backwardsCompatible';
 
 define(function (require) {
-  var module = require('ui/modules').get('kibana/enhanced_tilemap', ['kibana', 'etm-ui.bootstrap.accordion', 'rzModule']);
+  var module = require('ui/modules').get('kibana/enhanced_tilemap', [
+    'kibana', 
+    'etm-ui.bootstrap.accordion', 
+    'rzModule', 
+    'angularjs-dropdown-multiselect'
+  ]);
   
-  module.controller('KbnEnhancedTilemapVisController', function ($scope, $rootScope, $element, Private, courier, config, getAppState, indexPatterns) {
+  module.controller('KbnEnhancedTilemapVisController', function (
+    $scope, $rootScope, $element, $timeout,
+    Private, courier, config, getAppState, indexPatterns) {
     let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(require('ui/filter_bar/query_filter'));
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -31,6 +33,7 @@ define(function (require) {
     let tooltip = null;
     let tooltipFormatter = null;
 
+    backwardsCompatible.updateParams($scope.vis.params);
     appendMap();
     modifyToDsl();
     setTooltipFormatter($scope.vis.params.tooltip);
@@ -120,16 +123,21 @@ define(function (require) {
       });
     }
 
-    $scope.$watch('vis.params', function (visParams) {
-      setTooltipFormatter(visParams.tooltip);
+    $scope.$watch('vis.params', function (visParams, oldParams) {
+      if (visParams !== oldParams) {
+        //When vis is first opened, vis.params gets updated with old context
+        backwardsCompatible.updateParams($scope.vis.params);
 
-      draw();
+        setTooltipFormatter(visParams.tooltip);
 
-      map.saturateTiles(visParams.isDesaturated);
-      map.clearPOILayers();
-      $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
-        initPOILayer(layerParams);
-      });
+        draw();
+
+        map.saturateTiles(visParams.isDesaturated);
+        map.clearPOILayers();
+        $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
+          initPOILayer(layerParams);
+        });
+      }
     });
 
     $scope.$watch('esResponse', function (resp) {

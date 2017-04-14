@@ -1,5 +1,6 @@
 const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
+import { backwardsCompatible } from 'plugins/enhanced_tilemap/backwardsCompatible';
 
 define(function (require) {
   module.directive('savedSearch', function (Private, indexPatterns) {
@@ -13,13 +14,23 @@ define(function (require) {
       },
       template: require('./savedSearch.html'),
       link: function (scope, element, attrs) {
+        backwardsCompatible.updateSavedSearch(scope.layer);
+        scope.multiSelectSettings = {
+          buttonClasses: 'btn-input',
+          displayProp: 'name',
+          externalIdProp: 'name',
+          idProp: 'name',
+          showCheckAll: false,
+          scrollable: true
+        };
+
         fetchSavedSearches();
         
         scope.updateIndex = function() {
           scope.warn = "";
           scope.layer.savedSearchId = scope.savedSearch.value;
           scope.layer.geoField = null;
-          scope.layer.labelField = null;
+          scope.layer.popupFields = [];
 
           refreshIndexFields(scope.savedSearch.indexId, function(geoFields, labelFields) {
             scope.geoFields = geoFields;
@@ -83,8 +94,15 @@ define(function (require) {
             keep = false;
           }
           return keep;
+        }).sort(function (a, b) {
+          if(a.name < b.name) return -1;
+          if(a.name > b.name) return 1;
+          return 0;
         }).map(function (field) {
-          return field.name;
+          return {
+            type: field.type,
+            name: field.name
+          };
         });
 
         callback(geoFields, labelFields);

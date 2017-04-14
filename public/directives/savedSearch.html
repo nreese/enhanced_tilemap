@@ -16,6 +16,8 @@
       ng-options="item.label for item in items">
     </select>
   </div>
+
+<div class="form-group" ng-if="savedSearch">
   <div class="form-group">
     <label>
       Geospatial Field
@@ -46,12 +48,15 @@
   </div>
   <div class="form-group">
     <label>
-      Label Field
+      Popup Content
     </label>
-    <select class="form-control"
-      ng-model="layer.labelField"
-      ng-options="item for item in labelFields">
-    </select>
+    <ng-dropdown-multiselect
+      options="labelFields"
+      selected-model="layer.popupFields"
+      group-by="type"
+      extra-settings="multiSelectSettings"
+    >
+    </ng-dropdown-multiselect>
   </div>
   <div class="form-group">
     <label>
@@ -73,4 +78,5 @@
       <kbn-info info="Filter Saved Search results with kibana filters and time range. Additionally, the layer will be updated whenever new aggregation results are fetched."></kbn-info>
     </label>
   </div>
+</div>
 </div>

@@ -21,7 +21,9 @@ define(function (require) {
       if (!params.geoField && params.geoPointField) {
         this.geoField = params.geoPointField
       }
-      this.labelField = _.get(params, 'labelField', null);
+      this.popupFields = _.get(params, 'popupFields', []).map(function(obj) {
+        return obj.name;
+      });
       this.limit = _.get(params, 'limit', 100);
       this.syncFilters = _.get(params, 'syncFilters', false);
     }
@@ -48,7 +50,7 @@ define(function (require) {
         }
         searchSource.size(this.limit);
         searchSource.source({
-          includes: _.compact([ this.geoField, this.labelField ]),
+          includes: _.compact(_.flatten([this.geoField, this.popupFields])),
           excludes: []
         });
         searchSource.fetch()
@@ -69,10 +71,14 @@ define(function (require) {
         const shapes = _.map(hits, hit => {
           const geometry = _.get(hit, `_source[${this.geoField}]`);
           geometry.type = capitalizeFirstLetter(geometry.type);
+          let popupContent = false;
+          if (this.popupFields.length > 0) {
+            popupContent = this._popupContent(hit);
+          }
           return {
             type: 'Feature',
             properties: {
-              label: _.get(hit._source, this.labelField)
+              label: popupContent
             },
             geometry: geometry
           }
@@ -82,7 +88,7 @@ define(function (require) {
           {
             onEachFeature: function (feature, thisLayer) {
               if (feature.properties.label) {
-                thisLayer.bindPopup('<div>' + feature.properties.label + '</div>');
+                thisLayer.bindPopup(feature.properties.label);
                 thisLayer.on('mouseover', function(e) {
                   this.openPopup();
                 });
@@ -124,8 +130,8 @@ define(function (require) {
         {
           icon: markerIcon(options.color, options.size)
         });
-      if (this.labelField) {
-        feature.bindPopup('<div>' + hit._source[this.labelField] + '</div>');
+      if (this.popupFields.length > 0) {
+        feature.bindPopup(this._popupContent(hit));
         feature.on('mouseover', function(e) {
           this.openPopup();
         });
@@ -135,6 +141,14 @@ define(function (require) {
       }
       return feature;
     };
+
+    POIs.prototype._popupContent = function (hit) {
+      let dlContent = '';
+      this.popupFields.forEach(function(field) {
+        dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`
+      });
+      return `<dl>${dlContent}</dl>`;
+    }
 
     function capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);

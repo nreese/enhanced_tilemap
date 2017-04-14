@@ -17,6 +17,7 @@ define(function (require) {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({
             color: '#008000',
+            popupFields: [],
             markerSize: 'm',
             syncFilters: true
           });
