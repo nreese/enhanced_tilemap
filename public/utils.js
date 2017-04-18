@@ -1,6 +1,7 @@
-define(function (require) {
-  const _ = require('lodash');
+import _ from 'lodash';
 
+define(function (require) {
+  
   return {
     getGeoExtents: function(visData) {
       return {
@@ -113,6 +114,53 @@ define(function (require) {
         if(uiStateZoom) mapState.zoom = uiStateZoom;
       }
       return mapState;
+    },
+    /**
+     * Avoid map auto panning. Use the offset option to 
+     * anchor popups so content fits inside map bounds.
+     *
+     * @method popupOffset
+     * @param map {L.Map} Leaflet map
+     * @param content {String} String containing html popup content
+     * @param latLng {L.LatLng} popup location
+     * @return {L.Point} offset
+     */
+    popupOffset: function(map, content, latLng) {
+      const mapWidth = map.getSize().x;
+      const mapHeight = map.getSize().y;
+      const popupPoint = map.latLngToContainerPoint(latLng);
+      //Create popup that is out of view to determine dimensions
+      const popup = L.popup({
+        autoPan: false,
+        maxHeight: 'auto',
+        maxWidth: 'auto',
+        offset: new L.Point(mapWidth * -2, mapHeight * -2)
+      })
+      .setLatLng(latLng)
+      .setContent(content)
+      .openOn(map);
+      const popupHeight = popup._contentNode.clientHeight;
+      const popupWidth = popup._contentNode.clientWidth / 2;
+
+      let widthOffset = 0;
+      const distToLeftEdge = popupPoint.x;
+      const distToRightEdge = mapWidth - popupPoint.x;
+      if (distToLeftEdge < popupWidth) {
+        //Move popup right as little as possible
+        widthOffset = popupWidth - distToLeftEdge;
+      } else if (distToRightEdge < popupWidth) {
+        //Move popup left as little as possible
+        widthOffset = -1 * (popupWidth - distToRightEdge);
+      }
+
+      let heightOffset = 6; //leaflet default
+      const distToTopEdge = popupPoint.y;
+      if (distToTopEdge < popupHeight) {
+        //Move popup down as little as possible
+        heightOffset = popupHeight - distToTopEdge + 16;
+      }
+
+      return new L.Point(widthOffset, heightOffset);
     }
   }
 });

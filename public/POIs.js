@@ -2,6 +2,7 @@ const _ = require('lodash');
 const L = require('leaflet');
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
+import utils from 'plugins/enhanced_tilemap/utils';
 
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {
@@ -131,12 +132,20 @@ define(function (require) {
           icon: markerIcon(options.color, options.size)
         });
       if (this.popupFields.length > 0) {
-        feature.bindPopup(this._popupContent(hit));
+        const content = this._popupContent(hit);
         feature.on('mouseover', function(e) {
-          this.openPopup();
+          const popup = L.popup({
+            autoPan: false,
+            maxHeight: 'auto',
+            maxWidth: 'auto',
+            offset: utils.popupOffset(this._map, content, e.latlng)
+          })
+          .setLatLng(e.latlng)
+          .setContent(content)
+          .openOn(this._map);
         });
         feature.on('mouseout', function(e) {
-          this.closePopup();
+          this._map.closePopup();
         });
       }
       return feature;
