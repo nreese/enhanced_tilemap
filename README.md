@@ -64,15 +64,19 @@ Sync map movements when dashboard contains multiple map visualizations. Map sync
 # Install
 ## Kibana 5.x
 ```bash
-./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-03-17/enhanced-tilemap-v2017-03-17-5.0.2.zip
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-04-19/enhanced-tilemap-v2017-04-19-5.0.2.zip
 ```
 
 ```bash
-./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-03-17/enhanced-tilemap-v2017-03-17-5.1.2.zip
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-04-19/enhanced-tilemap-v2017-04-19-5.1.2.zip
 ```
 
 ```bash
-./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-03-17/enhanced-tilemap-v2017-03-17-5.2.2.zip
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-04-19/enhanced-tilemap-v2017-04-19-5.2.2.zip
+```
+
+```bash
+./bin/kibana-plugin install https://github.com/nreese/enhanced_tilemap/releases/download/v2017-04-19/enhanced-tilemap-v2017-04-19-5.3.0.zip
 ```
 
 ## Kibana 4.x
