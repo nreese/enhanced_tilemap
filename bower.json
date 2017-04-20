@@ -5,7 +5,7 @@
   "dependencies": {
     "formatcoords": "https://github.com/nerik/formatcoords.git#1.1.2",
     "mgrs": "https://github.com/proj4js/mgrs.git#1.0.0",
-    "Leaflet.MousePosition": "git@github.com:nreese/Leaflet.MousePosition.git",
+    "Leaflet.MousePosition": "https://github.com/nreese/Leaflet.MousePosition.git",
     "angularjs-slider": "https://github.com/angular-slider/angularjs-slider.git#6.1.0",
     "angularjs-dropdown-multiselect": "https://github.com/dotansimha/angularjs-dropdown-multiselect.git#1.11.8"
   }
