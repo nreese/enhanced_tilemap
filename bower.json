@@ -7,6 +7,7 @@
     "mgrs": "https://github.com/proj4js/mgrs.git#1.0.0",
     "Leaflet.MousePosition": "https://github.com/nreese/Leaflet.MousePosition.git",
     "angularjs-slider": "https://github.com/angular-slider/angularjs-slider.git#6.1.0",
-    "angularjs-dropdown-multiselect": "https://github.com/dotansimha/angularjs-dropdown-multiselect.git#1.11.8"
+    "angularjs-dropdown-multiselect": "https://github.com/dotansimha/angularjs-dropdown-multiselect.git#1.11.8",
+    "Leaflet.NonTiledLayer": "https://github.com/ptv-logistics/Leaflet.NonTiledLayer.git#f9775506389e461e59d2f15ad2b4786e67eb4ed5"
   }
 }

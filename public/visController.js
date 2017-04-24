@@ -269,7 +269,7 @@ define(function (require) {
             esQuery.bool.must_not = cleanedMustNot;
 
             const name = _.get(layerParams, 'displayName', layerParams.layers);
-            const options = {
+            const wmsOptions = {
               format: 'image/png',
               layers: layerParams.layers,
               maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
@@ -287,7 +287,7 @@ define(function (require) {
             }
             if (viewparams.length >= 1) {
               //http://docs.geoserver.org/stable/en/user/data/database/sqlview.html#using-a-parametric-sql-view
-              options.viewparams = _.map(viewparams, param => {
+              wmsOptions.viewparams = _.map(viewparams, param => {
                 let escaped = param;
                 escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
                 //escaped = escaped.replace(/\s/g, ''); //remove whitespace
@@ -296,14 +296,21 @@ define(function (require) {
             }
             const cqlFilter = _.get(layerParams, 'cqlFilter', '');
             if (cqlFilter.length !== 0) {
-              options.CQL_FILTER = cqlFilter;
+              wmsOptions.CQL_FILTER = cqlFilter;
             }
             const styles = _.get(layerParams, 'styles', '');
             if (styles.length !== 0) {
-              options.styles = styles;
+              wmsOptions.styles = styles;
             }
-            const isVisible = _.get(prevState, name, true);
-            map.addWmsOverlay(layerParams.url, name, options, isVisible);
+            const formatOptions = _.get(layerParams, 'formatOptions', '');
+            if (formatOptions.length !== 0) {
+              wmsOptions.format_options = formatOptions;
+            }
+            const layerOptions = {
+              isVisible: _.get(prevState, name, true),
+              nonTiled: _.get(layerParams, 'nonTiled', false)
+            }
+            map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
           });
         });
       });

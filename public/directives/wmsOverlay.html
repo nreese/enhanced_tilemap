@@ -55,6 +55,25 @@
       ng-model="layer.styles"
       name="layer.styles">
   </div>
+  <div class="vis-option-item form-group">
+    <label>
+      Format Options
+    </label>
+    <input type="text" class="form-control"
+      ng-model="layer.formatOptions"
+      name="layer.formatOptions">
+  </div>
+  <div class="vis-option-item form-group">
+    <label>
+      <input type="checkbox"
+      name="viewparams"
+      ng-model="layer.nonTiled">
+
+      Non Tiled
+
+      <kbn-info info="When true, map will fetch a single tile for the complete map viewport. Useful when the layer contains rendered labels such as legends."></kbn-info>
+    </label>
+  </div>
   <div>
     <label class="etm-well-section">
       Elasticsearch WMS Options <kbn-info info="WMS layers served from elasticsearch via elasticgeo/geoserver allow for greater integration with elasticsearch queries and aggregations."></kbn-info>
