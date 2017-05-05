@@ -144,17 +144,41 @@ define(function (require) {
       return filters;
     }
 
+    function getGeoSpatialModel(filter) {
+      let geoSpatialModel = null;
+      if (_.has(filter, 'bool.should')) {
+        geoSpatialModel = { bool: filter.bool };
+      } else if (_.has(filter, 'geo_bounding_box')) {
+        geoSpatialModel = { geo_bounding_box: filter.geo_bounding_box };
+      } else if (_.has(filter, 'geo_polygon')) {
+        geoSpatialModel = { geo_polygon: filter.geo_polygon };
+      } else if (_.has(filter, 'geo_shape')) {
+        geoSpatialModel = { geo_shape: filter.geo_shape };
+      }
+
+      return geoSpatialModel;
+    }
+
     function isGeoFilter(filter, field) {
       if (filter.meta.key === field
         || _.has(filter, ['geo_bounding_box', field])
         || _.has(filter, ['geo_distance', field])
         || _.has(filter, ['geo_polygon', field])
-        || _.has(filter, ['geo_shape', field])
-        || _.has(filter, ['bool', 'should', 0, 'geo_bounding_box', field])
-        || _.has(filter, ['bool', 'should', 0, 'geo_distance', field])
-        || _.has(filter, ['bool', 'should', 0, 'geo_polygon', field])
-        || _.has(filter, ['bool', 'should', 0, 'geo_shape', field])) {
+        || _.has(filter, ['geo_shape', field])) {
         return true;
+      } else if (_.has(filter, ['bool', 'should'])) {
+        let model = getGeoSpatialModel(filter);
+        let found = false;
+        for (let i = 0; i < model.bool.should.length; i++) {
+          if (_.has(model.bool.should[i], ['geo_bounding_box', field])
+            || _.has(model.bool.should[i], ['geo_distance', field])
+            || _.has(model.bool.should[i], ['geo_polygon', field])
+            || _.has(model.bool.should[i], ['geo_shape', field])) {
+            found = true;
+            break;
+          }
+        }
+        return found;
       } else {
         return false;
       }
