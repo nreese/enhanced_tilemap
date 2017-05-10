@@ -9,192 +9,190 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-}
 
-.etm-options-section {
-  display: block;
-  border-bottom: 2px solid #eee;
-  margin-bottom: 3px !important;
-}
-
-.etm-well-section {
-  display: block;
-  border-bottom: 2px solid #ccc;
-  margin-bottom: 3px !important;
-}
-
-.btn-input {
-  padding: 5px 15px;
-  font-size: 14px;
-  color: #2D2D2D;
-  height: 32px;
-  width: 100%;
-  background-color: #ffffff;
-  border: 1px solid #ecf0f1;
-  border-radius: 4px;
-}
-
-.btn-input:hover {
-  color: #2D2D2D;
-}
-
-.side-by-side {
-  float: left;
-  width: 50%;
-}
-
-.form-control-inline {
-  display: inline;
-  width: auto !important;
-}
-
-ul.etm-options-list {
-  list-style:none;
-  padding-left:0;
-}
-
-li.etm-option-item {
-  background-color: #ecf0f1;
-  margin: 0px 5px 2px 5px;
-  padding: 2px;
-  position: relative;
-}
-
-div.rightCorner {
-  position: absolute;
-  right: 0px;
-  top: 0px;
-}
-
-.etm-vis .leaflet-popup-content-wrapper {
-  box-shadow: none;
-}
-
-.interactive-popup {
-  .leaflet-popup {
-    pointer-events: auto;
+  .leaflet-popup-content-wrapper {
+    box-shadow: none;
   }
 
-  .leaflet-popup-content {
-    pointer-events: auto;
+  .interactive-popup {
+    .leaflet-popup {
+      pointer-events: auto;
+    }
+
+    .leaflet-popup-content {
+      pointer-events: auto;
+    }
   }
-}
 
-.leaflet-spin-control {
-  margin-right: 14px !important;
-}
+  .leaflet-spin-control {
+    margin-right: 14px !important;
+  }
 
-.leaflet-spin-control a {
-  color: #000;
-}
+  .leaflet-spin-control a {
+    color: #000;
+  }
 
-.leaflet-draw-tooltip {
-  display: inline !important;
-}
+  .leaflet-draw-tooltip {
+    display: inline !important;
+  }
 
-.leaflet-draw-toolbar .leaflet-toolbench-tool {
-    background-position: -100px -100px;
-}
+  .leaflet-draw-toolbar .leaflet-toolbench-tool {
+      background-position: -100px -100px;
+  }
 
-.leaflet-popup-content-wrapper .panel-content {
-  height:100%;
-  color: rgb(68, 68, 68);
-}
+  .leaflet-popup-content-wrapper .panel-content {
+    height:100%;
+    color: rgb(68, 68, 68);
+  }
 
-.leaflet-popup-content-wrapper doc-table.panel-content {
-  display: block;
-  color: rgb(206, 206, 206);
+  .leaflet-popup-content-wrapper doc-table.panel-content {
+    display: block;
+    color: rgb(206, 206, 206);
+  }
+
+  div.leaflet-layer.no-filter > div.leaflet-tile-container > img.leaflet-tile {
+    filter: none !important;
+  }
+
+  .vector-marker {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: block;
+    text-align: center;
+  }
+
+  .tilemap-legend {
+    .rzslider {
+      margin: 15px 0 5px 0;
+    }
+
+    .rzslider .rz-bubble {
+      bottom: 5px;
+    }
+
+    .rzslider .rz-pointer {
+      top: -3px;
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+      background-color: #fed976;
+    }
+
+    .rz-selection {
+      background: #fed976;
+    }
+
+    .rzslider .rz-pointer:after {
+      display: none;
+    }
+  }
 }
 
 .tab-dashboard.theme-dark {
-  .leaflet-popup-content-wrapper .panel-content {
-    color: rgb(206, 206, 206);
+  .etm-vis {
+    .leaflet-popup-content-wrapper .panel-content {
+      color: rgb(206, 206, 206);
+    }
   }
 }
 
-div.leaflet-layer.no-filter > div.leaflet-tile-container > img.leaflet-tile {
-  filter: none !important;
-}
-
-.vector-marker {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: block;
-  text-align: center;
-}
-
-.bands .minicolors-theme-bootstrap .minicolors-swatch {
-  left: inherit;
-  right: 8px;
-}
-
-.bands .minicolors-theme-bootstrap .minicolors-input {
-  padding-left: 4px;
-  padding-right: 44px;
-}
-
-.bands .band-add {
-  margin-top: 5px;
-}
-
-.band {
-  position: relative;
-}
-
-.band .minicolors {
-  float: left;
-  padding-right: 5px;
-}
-
-div.minicolors .minicolors-swatch {
-  width: 24px;
-  height: 24px;
-}
-
-.band .band-remove {
-  position: absolute;
-  top: 6px;
-  left: -24px;
-}
-
-.saved-search label {
-  display: block;
-}
-
-.saved-search .minicolors {
-  width: 74%;
-  display: inline-block;
-}
-
-.saved-search .marker-size {
-  width: 26%;
-  display: inline;
-  float: right;
-}
-
-.tilemap-legend {
-  .rzslider {
-    margin: 15px 0 5px 0;
+.etm-vis-options {
+  .etm-well-section {
+    display: block;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 3px !important;
   }
 
-  .rzslider .rz-bubble {
-    bottom: 5px;
+  .side-by-side {
+    float: left;
+    width: 50%;
   }
 
-  .rzslider .rz-pointer {
-    top: -3px;
-    width: 10px;
-    height: 10px;
-    border-radius: 5px;
-    background-color: #fed976;
+  .form-control-inline {
+    display: inline;
+    width: auto !important;
   }
 
-  .rz-selection {
-    background: #fed976;
+  ul.etm-options-list {
+    list-style:none;
+    padding-left:0;
   }
 
-  .rzslider .rz-pointer:after {
-    display: none;
+  li.etm-option-item {
+    background-color: #ecf0f1;
+    margin: 0px 5px 2px 5px;
+    padding: 2px;
+    position: relative;
+  }
+
+  div.rightCorner {
+    position: absolute;
+    right: 0px;
+    top: 0px;
+  }
+
+  .btn-input {
+    padding: 5px 15px;
+    font-size: 14px;
+    color: #2D2D2D;
+    height: 32px;
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid #ecf0f1;
+    border-radius: 4px;
+  }
+
+  .btn-input:hover {
+    color: #2D2D2D;
+  }
+
+  .bands .minicolors-theme-bootstrap .minicolors-swatch {
+    left: inherit;
+    right: 8px;
+  }
+
+  .bands .minicolors-theme-bootstrap .minicolors-input {
+    padding-left: 4px;
+    padding-right: 44px;
+  }
+
+  .bands .band-add {
+    margin-top: 5px;
+  }
+
+  .band {
+    position: relative;
+  }
+
+  .band .minicolors {
+    float: left;
+    padding-right: 5px;
+  }
+
+  .band .band-remove {
+    position: absolute;
+    top: 6px;
+    left: -24px;
+  }
+
+  div.minicolors .minicolors-swatch {
+    width: 24px;
+    height: 24px;
+  }
+
+  .saved-search label {
+    display: block;
+  }
+
+  .saved-search .minicolors {
+    width: 74%;
+    display: inline-block;
+  }
+
+  .saved-search .marker-size {
+    width: 26%;
+    display: inline;
+    float: right;
   }
 }
