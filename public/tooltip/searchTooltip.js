@@ -1,14 +1,15 @@
 import _ from 'lodash';
 import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
+import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 
 define(function (require) {
   return function SearchTooltipFactory(
-    $compile, $rootScope, $timeout, 
+    $compile, $rootScope, $timeout,
     Private, savedSearches) {
 
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
-    const SearchSource = Private(require('ui/courier/data_source/search_source'));
+    const SearchSource = Private(SearchSourceProvider);
 
     class SearchTooltip {
       constructor(searchId, fieldname, geotype, options) {
@@ -35,10 +36,23 @@ define(function (require) {
         const self = this;
         savedSearches.get(this.searchId).then(function (savedSearch) {
           origSearchSource = savedSearch.searchSource;
-          self.$tooltipScope.hits = [];
-          self.$tooltipScope.indexPattern = savedSearch.searchSource._state.index;
+          self.$tooltipScope.searchSource = savedSearch.searchSource;
           self.$tooltipScope.columns = savedSearch.columns;
           self.$tooltipScope.sort = savedSearch.sort;
+          self.$tooltipScope.title = savedSearch.title;
+          self.$tooltipScope.description = savedSearch.description;
+          self.$tooltipScope.setSortOrder = () => {
+            console.log('setSortOrder no supported');
+          };
+          self.$tooltipScope.addColumn = () => {
+            console.log('addColumn no supported');
+          };
+          self.$tooltipScope.removeColumn = () => {
+            console.log('removeColumn no supported');
+          };
+          self.$tooltipScope.moveColumn = () => {
+            console.log('moveColumn no supported');
+          };
           self.$visEl = linkFn(self.$tooltipScope);
         });
 
@@ -68,7 +82,7 @@ define(function (require) {
             });
 
             const $popup = $(map.getContainer()).find('.leaflet-popup-content');
-            
+
             //A lot can happed between calling fetch and getting a response
             //Only update popup content if the popup context is still for this fetch
             if ($popup
@@ -83,10 +97,10 @@ define(function (require) {
           });
 
           return loadHtml;
-        }        
+        }
       }
     }
 
     return SearchTooltip;
-  }; 
+  };
 });

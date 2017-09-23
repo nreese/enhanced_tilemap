@@ -1,14 +1,15 @@
 import _ from 'lodash';
 import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
+import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 
 define(function (require) {
   return function VisTooltipFactory(
-    $compile, $rootScope, $timeout, 
+    $compile, $rootScope, $timeout,
     getAppState, Private, savedVisualizations) {
 
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
-    const SearchSource = Private(require('ui/courier/data_source/search_source'));
+    const SearchSource = Private(SearchSourceProvider);
     const $state = getAppState();
     const UI_STATE_ID = 'popupVis';
 
@@ -73,7 +74,7 @@ define(function (require) {
             });
 
             const $popup = $(map.getContainer()).find('.leaflet-popup-content');
-            
+
             //A lot can happed between calling fetch and getting a response
             //Only update popup content if the popup context is still for this fetch
             if ($popup
@@ -86,10 +87,10 @@ define(function (require) {
           });
 
           return loadHtml;
-        }        
+        }
       }
     }
 
     return VisTooltip;
-  }; 
+  };
 });

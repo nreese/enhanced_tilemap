@@ -1,10 +1,13 @@
 const _ = require('lodash');
-const module = require('ui/modules').get('kibana');
+import { SavedObjectRegistryProvider } from 'ui/saved_objects/saved_object_registry';
+import { uiModules } from 'ui/modules';
+
+const module = uiModules.get('kibana');
 
 define(function (require) {
   module.directive('tooltipFormatter', function (Private, indexPatterns) {
-    const visService = Private(require('ui/saved_objects/saved_object_registry')).byLoaderPropertiesName.visualizations;
-    const searchService = Private(require('ui/saved_objects/saved_object_registry')).byLoaderPropertiesName.searches;
+    const visService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.visualizations;
+    const searchService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.searches;
 
     return {
       restrict: 'E',

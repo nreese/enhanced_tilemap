@@ -3,15 +3,15 @@ import 'plugins/enhanced_tilemap/bower_components/angularjs-slider/dist/rzslider
 import 'plugins/enhanced_tilemap/bower_components/angularjs-slider/dist/rzslider.js';
 import 'plugins/enhanced_tilemap/bower_components/angularjs-dropdown-multiselect/dist/angularjs-dropdown-multiselect.min';
 import _ from 'lodash';
-import supports from 'ui/utils/supports';
-import AggResponseGeoJsonGeoJsonProvider from 'ui/agg_response/geo_json/geo_json';
-import FilterBarPushFilterProvider from 'ui/filter_bar/push_filter';
-import VisVisTypeProvider from 'ui/vis/vis_type';
-import TemplateVisTypeTemplateVisTypeProvider from 'ui/template_vis_type/template_vis_type';
-import VisSchemasProvider from 'ui/vis/schemas';
+import { supports } from 'ui/utils/supports';
+import { AggResponseGeoJsonProvider } from 'ui/agg_response/geo_json/geo_json';
+import { VisVisTypeProvider } from 'ui/vis/vis_type';
+import { TemplateVisTypeProvider } from 'ui/template_vis_type/template_vis_type';
+import { VisTypesRegistryProvider } from 'ui/registry/vis_types';
+import { VisSchemasProvider } from 'ui/vis/schemas';
 
 define(function (require) {
-  require('ui/registry/vis_types').register(EnhancedTileMapVisProvider);
+  VisTypesRegistryProvider.register(EnhancedTileMapVisProvider);
   require('plugins/enhanced_tilemap/vis.less');
   require('plugins/enhanced_tilemap/lib/jquery.minicolors/minicolors');
   require('plugins/enhanced_tilemap/directives/bands');
@@ -24,15 +24,15 @@ define(function (require) {
 
   function EnhancedTileMapVisProvider(Private, getAppState, courier, config) {
     const VisType = Private(VisVisTypeProvider);
-    const TemplateVisType = Private(TemplateVisTypeTemplateVisTypeProvider);
+    const TemplateVisType = Private(TemplateVisTypeProvider);
     const Schemas = Private(VisSchemasProvider);
-    const geoJsonConverter = Private(AggResponseGeoJsonGeoJsonProvider);
+    const geoJsonConverter = Private(AggResponseGeoJsonProvider);
 
     return new TemplateVisType({
       name: 'enhanced_tilemap',
-      title: 'Enhanced Tile map',
+      title: 'Enhanced Coordinate Map',
       icon: 'fa-map-marker',
-      description: 'Tile map plugin that provides better performance, complete geospatial query support, and more features than the built in Tile map.',
+      description: 'Coordinate map plugin that provides better performance, complete geospatial query support, and more features than the built in Coordinate map.',
       category: VisType.CATEGORY.MAP,
       template: require('plugins/enhanced_tilemap/vis.html'),
       params: {

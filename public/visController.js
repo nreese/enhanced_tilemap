@@ -1,30 +1,34 @@
 import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
-import Binder from 'ui/binder';
+import { Binder } from 'ui/binder';
 import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
-import VislibVisTypeBuildChartDataProvider from 'ui/vislib_vis_type/build_chart_data';
+import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
 import { backwardsCompatible } from './backwardsCompatible';
+import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+import { ResizeCheckerProvider } from 'ui/vislib/lib/resize_checker';
+import { uiModules } from 'ui/modules';
+import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
 define(function (require) {
-  var module = require('ui/modules').get('kibana/enhanced_tilemap', [
-    'kibana', 
-    'etm-ui.bootstrap.accordion', 
-    'rzModule', 
+  var module = uiModules.get('kibana/enhanced_tilemap', [
+    'kibana',
+    'etm-ui.bootstrap.accordion',
+    'rzModule',
     'angularjs-dropdown-multiselect'
   ]);
-  
+
   module.controller('KbnEnhancedTilemapVisController', function (
     $scope, $rootScope, $element, $timeout,
     Private, courier, config, getAppState, indexPatterns) {
     let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
-    const queryFilter = Private(require('ui/filter_bar/query_filter'));
+    const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     let TileMapMap = Private(MapProvider);
-    const ResizeChecker = Private(require('ui/vislib/lib/resize_checker'));
+    const ResizeChecker = Private(ResizeCheckerProvider);
     const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
     let map = null;
@@ -79,7 +83,7 @@ define(function (require) {
       $scope.vis.aggs.toDsl = function() {
         resizeArea();
         const dsl = $scope.vis.aggs.origToDsl();
-        
+
         //append map collar filter to geohash_grid aggregation
         _.keys(dsl).forEach(function(key) {
           if(_.has(dsl[key], "geohash_grid")) {
@@ -98,7 +102,7 @@ define(function (require) {
 
     function aggFilter(field) {
       collar = utils.scaleBounds(
-        map.mapBounds(), 
+        map.mapBounds(),
         $scope.vis.params.collarScale);
       var filter = {geo_bounding_box: {}};
       filter.geo_bounding_box[field] = collar;
@@ -172,7 +176,7 @@ define(function (require) {
       drawWmsOverlays();
 
       map.addMarkers(
-        chartData, 
+        chartData,
         $scope.vis.params,
         tooltipFormatter,
         _.get(chartData, 'valueFormatter', _.identity),
@@ -189,14 +193,16 @@ define(function (require) {
         yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
       };
       const geoField = getGeoField();
-      if (_.get(tooltipParams, 'type') === 'search') {
+      // search directive changed a lot in 5.5 - no longer supported at this time
+      /*if (_.get(tooltipParams, 'type') === 'search') {
         tooltip = new SearchTooltip(
             _.get(tooltipParams, 'options.searchId'),
             geoField.fieldname,
             geoField.geotype,
             options);
         tooltipFormatter = tooltip.getFormatter();
-      } else if (_.get(tooltipParams, 'type') === 'visualization') {
+      }*/
+      if (_.get(tooltipParams, 'type') === 'visualization') {
         tooltip = new VisTooltip(
             _.get(tooltipParams, 'options.visId'),
             geoField.fieldname,
@@ -204,7 +210,7 @@ define(function (require) {
             options);
         tooltipFormatter = tooltip.getFormatter();
       } else {
-        tooltipFormatter = Private(require('ui/agg_response/geo_json/_tooltip_formatter'));
+        tooltipFormatter = Private(TileMapTooltipFormatterProvider);
       }
 
     }

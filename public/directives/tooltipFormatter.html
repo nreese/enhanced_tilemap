@@ -10,7 +10,8 @@
     </select>
   </div>
   <div class="form-group" ng-if="tooltip.type === 'search'">
-    <input class="form-control"
+    <p>Saved search tooltip no longer supported. Kibana 5.5 changes broke this feature</p>
+    <!--<input class="form-control"
       placeholder="Filter searches list"
       ng-model="tooltip.options.searchFilter"
       ng-change="filterSearchList()"
@@ -18,7 +19,7 @@
     <select required class="form-control"
       ng-model="tooltip.options.searchId"
       ng-options="search.id as search.label for search in searchList">
-    </select>
+    </select>-->
   </div>
   <div class="form-group" ng-if="tooltip.type === 'visualization'">
     <input class="form-control"

@@ -1,10 +1,13 @@
 const _ = require('lodash');
-const module = require('ui/modules').get('kibana');
 import { backwardsCompatible } from 'plugins/enhanced_tilemap/backwardsCompatible';
+import { SavedObjectRegistryProvider } from 'ui/saved_objects/saved_object_registry';
+import { uiModules } from 'ui/modules';
+
+const module = uiModules.get('kibana');
 
 define(function (require) {
   module.directive('savedSearch', function (Private, indexPatterns) {
-    const service = Private(require('ui/saved_objects/saved_object_registry')).byLoaderPropertiesName.searches;
+    const service = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.searches;
 
     return {
       restrict: 'E',
@@ -25,7 +28,7 @@ define(function (require) {
         };
 
         fetchSavedSearches();
-        
+
         scope.updateIndex = function() {
           scope.warn = "";
           scope.layer.savedSearchId = scope.savedSearch.value;
@@ -85,7 +88,7 @@ define(function (require) {
         }).map(function (field) {
           return field.name;
         });
-        
+
         const labelFields = index.fields.filter(function (field) {
           let keep = true;
           if (field.type === 'boolean' || field.type === 'geo_point' || field.type === 'geo_shape') {

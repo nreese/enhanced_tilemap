@@ -6,8 +6,7 @@ import 'ui/visualize/visualize.less';
 import 'ui/visualize/visualize_legend';
 import $ from 'jquery';
 import _ from 'lodash';
-import RegistryVisTypesProvider from 'ui/registry/vis_types';
-import uiModules from 'ui/modules';
+import { uiModules } from 'ui/modules';
 import visualizeTemplate from 'ui/visualize/visualize.html';
 import 'angular-sanitize';
 
@@ -18,14 +17,6 @@ import {
 uiModules
 .get('kibana/directive', ['ngSanitize'])
 .directive('popupVisualize', function (Notifier, SavedVis, indexPatterns, Private, config, $timeout) {
-
-
-  let visTypes = Private(RegistryVisTypesProvider);
-
-  let notify = new Notifier({
-    location: 'Visualize'
-  });
-
   return {
     restrict: 'E',
     require: '?renderCounter',

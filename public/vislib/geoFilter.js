@@ -1,10 +1,12 @@
+import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+
 define(function (require) {
   const LAT_INDEX = 1;
   const LON_INDEX = 0;
 
   return function GeoFilterFactory(Private) {
     const _ = require('lodash');
-    const queryFilter = Private(require('ui/filter_bar/query_filter'));
+    const queryFilter = Private(FilterBarQueryFilterProvider);
 
     function filterAlias(field, numBoxes) {
       return field + ": " + numBoxes + " geo filters"
@@ -35,10 +37,10 @@ define(function (require) {
           type = 'geo_shape';
         }
         queryFilter.updateFilter({
-          model: { 
-            bool : { 
+          model: {
+            bool : {
               should : geoFilters
-            } 
+            }
           },
           source: existingFilter,
           type: type,
@@ -48,17 +50,17 @@ define(function (require) {
         let numFilters = 1;
         if (_.isArray(newFilter)) {
           numFilters = newFilter.length;
-          newFilter = { 
+          newFilter = {
             bool: {
               should: newFilter
             }
           };
         }
         newFilter.meta = {
-          alias: filterAlias(field, numFilters), 
-          negate: false, 
-          index: indexPatternName, 
-          key: field 
+          alias: filterAlias(field, numFilters),
+          negate: false,
+          index: indexPatternName,
+          key: field
         };
         queryFilter.addFilters(newFilter);
       }
@@ -83,7 +85,7 @@ define(function (require) {
         const bottomRight = _.get(filter, ['geo_bounding_box', field, 'bottom_right']);
         if(topLeft && bottomRight) {
           const bounds = L.latLngBounds(
-            [topLeft.lat, topLeft.lon], 
+            [topLeft.lat, topLeft.lon],
             [bottomRight.lat, bottomRight.lon]);
           features.push(L.rectangle(bounds));
         }
@@ -105,7 +107,7 @@ define(function (require) {
           const lon = point[LON_INDEX];
           latLngs.push(L.latLng(lat, lon));
         });
-        if(latLngs.length > 0) 
+        if(latLngs.length > 0)
           features.push(L.polygon(latLngs));
       } else if (_.has(filter, ['geo_shape', field])) {
         const type = _.get(filter, ['geo_shape', field, 'shape', 'type']);
@@ -114,7 +116,7 @@ define(function (require) {
           const tl = envelope[0]; //topleft
           const br = envelope[1]; //bottomright
           const bounds = L.latLngBounds(
-            [tl[LAT_INDEX], tl[LON_INDEX]], 
+            [tl[LAT_INDEX], tl[LON_INDEX]],
             [br[LAT_INDEX], br[LON_INDEX]]);
           features.push(L.rectangle(bounds));
         } else if (type.toLowerCase() === 'polygon') {

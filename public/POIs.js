@@ -2,13 +2,15 @@ const _ = require('lodash');
 const L = require('leaflet');
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
+import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
+import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
 
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {
 
-    const SearchSource = Private(require('ui/courier/data_source/search_source'));
-    const queryFilter = Private(require('ui/filter_bar/query_filter'));
+    const SearchSource = Private(SearchSourceProvider);
+    const queryFilter = Private(FilterBarQueryFilterProvider);
 
     /**
      * Points of Interest
@@ -108,7 +110,7 @@ define(function (require) {
             },
             pointToLayer: function (feature, latlng) {
               return L.circleMarker(
-                latlng, 
+                latlng,
                 {
                   radius: 6
                 });
