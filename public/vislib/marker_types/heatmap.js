@@ -190,8 +190,8 @@ define(function (require) {
       let mapData = this.geoJson;
 
       return this.geoJson.features.map(function (feature) {
-        let lat = feature.properties.center[0];
-        let lng = feature.properties.center[1];
+        let lat = feature.geometry.coordinates[1];
+        let lng = feature.geometry.coordinates[0];
         let heatIntensity;
 
         if (!self._attr.heatNormalizeData) {
