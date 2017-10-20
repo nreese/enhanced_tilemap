@@ -36,16 +36,17 @@ define(function (require) {
           geoFilters.push({geo_shape: existingFilter.geo_shape});
           type = 'geo_shape';
         }
-        queryFilter.updateFilter({
-          model: {
-            bool : {
-              should : geoFilters
-            }
+
+        // Update method removed - so just remove old filter and add updated filter
+        const updatedFilter = {
+          bool: {
+            should: geoFilters
           },
-          source: existingFilter,
-          type: type,
-          alias: filterAlias(field, geoFilters.length)
-        });
+          meta: existingFilter.meta
+        };
+        updatedFilter.meta.alias = filterAlias(field, geoFilters.length);
+        queryFilter.removeFilter(existingFilter);
+        queryFilter.addFilters([updatedFilter]);
       } else {
         let numFilters = 1;
         if (_.isArray(newFilter)) {
