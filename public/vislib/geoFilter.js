@@ -22,19 +22,14 @@ define(function (require) {
 
       if (existingFilter) {
         let geoFilters = _.flatten([newFilter]);
-        let type = '';
         if (_.has(existingFilter, 'bool.should')) {
           geoFilters = geoFilters.concat(existingFilter.bool.should);
-          type = 'bool';
         } else if (_.has(existingFilter, 'geo_bounding_box')) {
           geoFilters.push({geo_bounding_box: existingFilter.geo_bounding_box});
-          type = 'geo_bounding_box';
         } else if (_.has(existingFilter, 'geo_polygon')) {
           geoFilters.push({geo_polygon: existingFilter.geo_polygon});
-          type = 'geo_polygon';
         } else if (_.has(existingFilter, 'geo_shape')) {
           geoFilters.push({geo_shape: existingFilter.geo_shape});
-          type = 'geo_shape';
         }
 
         // Update method removed - so just remove old filter and add updated filter
