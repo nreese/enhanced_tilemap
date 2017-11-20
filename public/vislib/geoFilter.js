@@ -4,12 +4,68 @@ define(function (require) {
   const LAT_INDEX = 1;
   const LON_INDEX = 0;
 
-  return function GeoFilterFactory(Private) {
+  return function GeoFilterFactory(Private, confirmModal) {
     const _ = require('lodash');
     const queryFilter = Private(FilterBarQueryFilterProvider);
 
     function filterAlias(field, numBoxes) {
       return field + ": " + numBoxes + " geo filters"
+    }
+
+    function _applyFilter(newFilter, field, indexPatternName) {
+      let numFilters = 1;
+      if (_.isArray(newFilter)) {
+        numFilters = newFilter.length;
+        newFilter = {
+          bool: {
+            should: newFilter
+          }
+        };
+      }
+      newFilter.meta = {
+        alias: filterAlias(field, numFilters),
+        negate: false,
+        index: indexPatternName,
+        key: field
+      };
+      queryFilter.addFilters(newFilter);
+    }
+
+    function _combineFilters(newFilter, existingFilter, field) {
+      let geoFilters = _.flatten([newFilter]);
+      let type = '';
+      if (_.has(existingFilter, 'bool.should')) {
+        geoFilters = geoFilters.concat(existingFilter.bool.should);
+        type = 'bool';
+      } else if (_.has(existingFilter, 'geo_bounding_box')) {
+        geoFilters.push({ geo_bounding_box: existingFilter.geo_bounding_box });
+        type = 'geo_bounding_box';
+      } else if (_.has(existingFilter, 'geo_polygon')) {
+        geoFilters.push({ geo_polygon: existingFilter.geo_polygon });
+        type = 'geo_polygon';
+      } else if (_.has(existingFilter, 'geo_shape')) {
+        geoFilters.push({ geo_shape: existingFilter.geo_shape });
+        type = 'geo_shape';
+      }
+
+      // Update method removed - so just remove old filter and add updated filter
+      const updatedFilter = {
+        bool: {
+          should: geoFilters
+        },
+        meta: existingFilter.meta
+      };
+      updatedFilter.meta.alias = filterAlias(field, geoFilters.length);
+      queryFilter.removeFilter(existingFilter);
+      queryFilter.addFilters([updatedFilter]);
+    }
+
+    function _overwriteFilters(newFilter, existingFilter, field, indexPatternName) {
+      if (existingFilter) {
+        queryFilter.removeFilter(existingFilter);
+      }
+
+      _applyFilter(newFilter, field, indexPatternName);
     }
 
     function addGeoFilter(newFilter, field, indexPatternName) {
@@ -21,44 +77,20 @@ define(function (require) {
       });
 
       if (existingFilter) {
-        let geoFilters = _.flatten([newFilter]);
-        if (_.has(existingFilter, 'bool.should')) {
-          geoFilters = geoFilters.concat(existingFilter.bool.should);
-        } else if (_.has(existingFilter, 'geo_bounding_box')) {
-          geoFilters.push({geo_bounding_box: existingFilter.geo_bounding_box});
-        } else if (_.has(existingFilter, 'geo_polygon')) {
-          geoFilters.push({geo_polygon: existingFilter.geo_polygon});
-        } else if (_.has(existingFilter, 'geo_shape')) {
-          geoFilters.push({geo_shape: existingFilter.geo_shape});
-        }
-
-        // Update method removed - so just remove old filter and add updated filter
-        const updatedFilter = {
-          bool: {
-            should: geoFilters
+        const confirmModalOptions = {
+          confirmButtonText: "Combine with existing filters",
+          cancelButtonText: "Overwrite existing filter",
+          onCancel: () => {
+            _overwriteFilters(newFilter, existingFilter, field, indexPatternName);
           },
-          meta: existingFilter.meta
+          onConfirm: () => {
+            _combineFilters(newFilter, existingFilter, field);
+          }
         };
-        updatedFilter.meta.alias = filterAlias(field, geoFilters.length);
-        queryFilter.removeFilter(existingFilter);
-        queryFilter.addFilters([updatedFilter]);
+
+        confirmModal("How would you like this filter applied?", confirmModalOptions);
       } else {
-        let numFilters = 1;
-        if (_.isArray(newFilter)) {
-          numFilters = newFilter.length;
-          newFilter = {
-            bool: {
-              should: newFilter
-            }
-          };
-        }
-        newFilter.meta = {
-          alias: filterAlias(field, numFilters),
-          negate: false,
-          index: indexPatternName,
-          key: field
-        };
-        queryFilter.addFilters(newFilter);
+        _applyFilter(newFilter, field, indexPatternName);
       }
     }
 
