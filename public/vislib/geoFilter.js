@@ -12,6 +12,25 @@ define(function (require) {
       return field + ": " + numBoxes + " geo filters"
     }
 
+    function _applyFilter(newFilter, field, indexPatternName) {
+      let numFilters = 1;
+      if (_.isArray(newFilter)) {
+        numFilters = newFilter.length;
+        newFilter = {
+          bool: {
+            should: newFilter
+          }
+        };
+      }
+      newFilter.meta = {
+        alias: filterAlias(field, numFilters),
+        negate: false,
+        index: indexPatternName,
+        key: field
+      };
+      queryFilter.addFilters(newFilter);
+    }
+
     function _combineFilters(newFilter, existingFilter, field) {
       let geoFilters = _.flatten([newFilter]);
       let type = '';
@@ -46,22 +65,7 @@ define(function (require) {
         queryFilter.removeFilter(existingFilter);
       }
 
-      let numFilters = 1;
-      if (_.isArray(newFilter)) {
-        numFilters = newFilter.length;
-        newFilter = {
-          bool: {
-            should: newFilter
-          }
-        };
-      }
-      newFilter.meta = {
-        alias: filterAlias(field, numFilters),
-        negate: false,
-        index: indexPatternName,
-        key: field
-      };
-      queryFilter.addFilters(newFilter);
+      _applyFilter(newFilter, field, indexPatternName);
     }
 
     function addGeoFilter(newFilter, field, indexPatternName) {
@@ -86,22 +90,7 @@ define(function (require) {
 
         confirmModal("How would you like this filter applied?", confirmModalOptions);
       } else {
-        let numFilters = 1;
-        if (_.isArray(newFilter)) {
-          numFilters = newFilter.length;
-          newFilter = {
-            bool: {
-              should: newFilter
-            }
-          };
-        }
-        newFilter.meta = {
-          alias: filterAlias(field, numFilters),
-          negate: false,
-          index: indexPatternName,
-          key: field
-        };
-        queryFilter.addFilters(newFilter);
+        _applyFilter(newFilter, field, indexPatternName);
       }
     }
 
