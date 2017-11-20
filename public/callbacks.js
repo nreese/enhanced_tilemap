@@ -120,6 +120,22 @@ define(function (require) {
           field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
         geoFilter.add(newFilter, field, indexPatternName);
+      },
+      circle: function (event) {
+        const agg = _.get(event, 'chart.geohashGridAgg');
+        if (!agg) return;
+        const indexPatternName = agg.vis.indexPattern.id;
+        const center = [event.e.layer._latlng.lat, event.e.layer._latlng.lng];
+        const radius = event.e.layer._mRadius;
+        let field = agg.fieldName();
+        if (event.params.filterByShape && event.params.shapeField) {
+          field = event.params.shapeField;
+        }
+
+        const newFilter = geoFilter.circleFilter(
+          field, center[0], center[1], radius);
+
+        geoFilter.add(newFilter, field, indexPatternName);
       }
     }
   }

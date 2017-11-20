@@ -46,6 +46,9 @@ define(function (require) {
       } else if (_.has(existingFilter, 'geo_shape')) {
         geoFilters.push({ geo_shape: existingFilter.geo_shape });
         type = 'geo_shape';
+      } else if (_.has(existingFilter, 'geo_distance')) {
+        geoFilters.push({ geo_distance: existingFilter.geo_distance });
+        type = 'geo_distance';
       }
 
       // Update method removed - so just remove old filter and add updated filter
@@ -249,11 +252,34 @@ define(function (require) {
       return geofilter;
     }
 
+    /**
+     * Create elasticsearch geospatial geo_distance filter
+     *
+     * @method circleFilter
+     * @param fieldname {String} name of geospatial field in IndexPattern
+     * @param lat {Object} latitude of center point for circle (decimal degrees)
+     * @param lon {Object} longitude of center point for circle (decimal degrees)
+     * @param radius {Object} radius
+     * @return {Object} elasticsearch geospatial geo_distance filter
+     */
+    function circleFilter(fieldname, lat, lon, radius) {
+      let geofilter = null;
+      geofilter = { geo_distance: {
+        distance: radius
+      }};
+      geofilter.geo_distance[fieldname] = {
+        lat: lat,
+        lon: lon
+      };
+      return geofilter;
+    }
+
     return {
       add: addGeoFilter,
       isGeoFilter: isGeoFilter,
       getGeoFilters: getGeoFilters,
-      rectFilter: rectFilter
+      rectFilter: rectFilter,
+      circleFilter: circleFilter
     }
   }
 });

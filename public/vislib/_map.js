@@ -92,7 +92,7 @@ define(function (require) {
       //https://github.com/Leaflet/Leaflet.draw
       const drawOptions = {
         draw: {
-          circle: false,
+          circle: true,
           marker: {
             icon: markerIcon('green')
           },
@@ -447,6 +447,13 @@ define(function (require) {
               chart: self._chartData,
               params: self._attr,
               bounds: utils.scaleBounds(e.layer.getBounds(), 1)
+            });
+            break;
+          case "circle":
+            self._callbacks.circle({
+              e: e,
+              chart: self._chartData,
+              params: self._attr,
             });
             break;
           default:
