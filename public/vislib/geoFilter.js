@@ -46,6 +46,9 @@ define(function (require) {
       } else if (_.has(existingFilter, 'geo_shape')) {
         geoFilters.push({ geo_shape: existingFilter.geo_shape });
         type = 'geo_shape';
+      } else if (_.has(existingFilter, 'geo_distance')) {
+        geoFilters.push({ geo_distance: existingFilter.geo_distance });
+        type = 'geo_distance';
       }
 
       // Update method removed - so just remove old filter and add updated filter
