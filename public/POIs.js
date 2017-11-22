@@ -155,8 +155,17 @@ define(function (require) {
 
     POIs.prototype._popupContent = function (hit) {
       let dlContent = '';
+      const nestedField = function (object, field) {
+        const isNested = field.split('.').length > 1;
+        if (isNested === false){
+          return object[field]
+        }
+        const nestedFieldsArray = field.split('.');
+        const firstField = nestedFieldsArray.splice(0, 1);
+        return nestedField(object[firstField], nestedFieldsArray.join('.'));
+      }
       this.popupFields.forEach(function(field) {
-        dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`
+        dlContent += `<dt>${field}</dt><dd>${nestedField(hit._source,field)}</dd>`
       });
       return `<dl>${dlContent}</dl>`;
     }
