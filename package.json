@@ -1,6 +1,9 @@
 {
   "name": "enhanced_tilemap",
   "version": "kibana",
+  "kibana": {
+    "version": "5.6.8"
+  },
   "scripts": {
     "test": "gulp test"
   },
