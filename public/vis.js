@@ -1,7 +1,5 @@
 import 'plugins/enhanced_tilemap/lib/angular-bootstrap/js/accordion-tpls.js';
-import 'plugins/enhanced_tilemap/bower_components/angularjs-slider/dist/rzslider.css';
-import 'plugins/enhanced_tilemap/bower_components/angularjs-slider/dist/rzslider.js';
-import 'plugins/enhanced_tilemap/bower_components/angularjs-dropdown-multiselect/dist/angularjs-dropdown-multiselect.min';
+
 import _ from 'lodash';
 import { supports } from 'ui/utils/supports';
 import { AggResponseGeoJsonProvider } from 'ui/agg_response/geo_json/geo_json';
@@ -10,8 +8,11 @@ import { TemplateVisTypeProvider } from 'ui/template_vis_type/template_vis_type'
 import { VisTypesRegistryProvider } from 'ui/registry/vis_types';
 import { VisSchemasProvider } from 'ui/vis/schemas';
 
+import 'angularjs-slider';
+
 define(function (require) {
   VisTypesRegistryProvider.register(EnhancedTileMapVisProvider);
+  require('angularjs-dropdown-multiselect');
   require('plugins/enhanced_tilemap/vis.less');
   require('plugins/enhanced_tilemap/lib/jquery.minicolors/minicolors');
   require('plugins/enhanced_tilemap/directives/bands');

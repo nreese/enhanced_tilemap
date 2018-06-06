@@ -1,3 +1,4 @@
 .DS_store
-public/bower_components
 node_modules
+build
+target

@@ -1,18 +1,17 @@
-import formatcoords from 'plugins/enhanced_tilemap/bower_components/formatcoords/index';
 import {markerIcon} from 'plugins/enhanced_tilemap/vislib/markerIcon';
-import mgrs from 'plugins/enhanced_tilemap/bower_components/mgrs/dist/mgrs.js';
 
 define(function (require) {
   return function MapFactory(Private) {
+    var formatcoords = require('formatcoords');
+    var mgrs = require('mgrs/dist/mgrs.js');
     var _ = require('lodash');
     var $ = require('jquery');
     var L = require('leaflet');
     var LDrawToolbench = require('./LDrawToolbench');
     const utils = require('plugins/enhanced_tilemap/utils');
-    require('plugins/enhanced_tilemap/bower_components/Leaflet.MousePosition/src/L.Control.MousePosition.css');
-    require('plugins/enhanced_tilemap/bower_components/Leaflet.MousePosition/src/L.Control.MousePosition');
-    require('plugins/enhanced_tilemap/bower_components/Leaflet.NonTiledLayer/src/NonTiledLayer');
-    require('plugins/enhanced_tilemap/bower_components/Leaflet.NonTiledLayer/src/NonTiledLayer.WMS');
+
+    require('leaflet-mouse-position');
+    require('leaflet.nontiledlayer');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
