@@ -8,7 +8,6 @@ import $ from 'jquery';
 import _ from 'lodash';
 import { uiModules } from 'ui/modules';
 import visualizeTemplate from 'ui/visualize/visualize.html';
-import 'angularjs-slider';
 
 import {
   isTermSizeZeroError,
