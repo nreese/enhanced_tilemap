@@ -61,7 +61,7 @@ define(function (require) {
           return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right);
         }
 
-        return function(feature, map) {
+        return function (feature, map) {
           if (!feature) return '';
           if (!self.$visEl) return 'initializing';
 
@@ -89,7 +89,7 @@ define(function (require) {
               && $popup.html() === loadHtml
               && localFetchTimestamp === fetchTimestamp) {
               self.$tooltipScope.hits = esResp.hits.hits;
-              $timeout(function() {
+              $timeout(function () {
                 $popup.empty();
                 $popup.append(self.$visEl);
               });
@@ -97,7 +97,7 @@ define(function (require) {
           });
 
           return loadHtml;
-        }
+        };
       }
     }
 

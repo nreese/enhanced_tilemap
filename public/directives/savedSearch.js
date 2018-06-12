@@ -29,34 +29,34 @@ define(function (require) {
 
         fetchSavedSearches();
 
-        scope.updateIndex = function() {
-          scope.warn = "";
+        scope.updateIndex = function () {
+          scope.warn = '';
           scope.layer.savedSearchId = scope.savedSearch.value;
           scope.layer.geoField = null;
           scope.layer.popupFields = [];
 
-          refreshIndexFields(scope.savedSearch.indexId, function(geoFields, labelFields) {
+          refreshIndexFields(scope.savedSearch.indexId, function (geoFields, labelFields) {
             scope.geoFields = geoFields;
             scope.labelFields = labelFields;
 
             if (scope.geoFields.length === 0) {
-              scope.warn = "Unable to use selected saved search, index does not contain any geospatial fields."
+              scope.warn = 'Unable to use selected saved search, index does not contain any geospatial fields.';
             } else if (scope.geoFields.length === 1) {
               scope.layer.geoField = scope.geoFields[0];
             }
-          })
-        }
+          });
+        };
 
-        scope.filterSavedSearches = function() {
+        scope.filterSavedSearches = function () {
           scope.layer.filter = this.layer.filter;
           fetchSavedSearches();
-        }
+        };
 
         function fetchSavedSearches() {
           //TODO add filter to find to reduce results
           service.find(scope.layer.filter)
           .then(function (hits) {
-            scope.items = _.map(hits.hits, function(hit) {
+            scope.items = _.map(hits.hits, function (hit) {
               return {
                 indexId: getIndexId(hit),
                 label: hit.title,
@@ -64,14 +64,14 @@ define(function (require) {
               };
             });
 
-            const selected = _.filter(scope.items, function(item) {
+            const selected = _.filter(scope.items, function (item) {
               if (item.value === scope.layer.savedSearchId) {
                 return true;
               }
             });
             if (selected.length > 0) {
               scope.savedSearch = selected[0];
-              refreshIndexFields(selected[0].indexId, function(geoFields, labelFields) {
+              refreshIndexFields(selected[0].indexId, function (geoFields, labelFields) {
                 scope.geoFields = geoFields;
                 scope.labelFields = labelFields;
               });
@@ -98,8 +98,8 @@ define(function (require) {
           }
           return keep;
         }).sort(function (a, b) {
-          if(a.name < b.name) return -1;
-          if(a.name > b.name) return 1;
+          if (a.name < b.name) return -1;
+          if (a.name > b.name) return 1;
           return 0;
         }).map(function (field) {
           return {

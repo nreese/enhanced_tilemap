@@ -33,7 +33,8 @@ define(function (require) {
       name: 'enhanced_tilemap',
       title: 'Enhanced Coordinate Map',
       icon: 'fa-map-marker',
-      description: 'Coordinate map plugin that provides better performance, complete geospatial query support, and more features than the built in Coordinate map.',
+      description: 'Coordinate map plugin that provides better performance,' +
+        ' complete geospatial query support, and more features than the built in Coordinate map.',
       category: VisType.CATEGORY.MAP,
       template: require('plugins/enhanced_tilemap/vis.html'),
       params: {
@@ -44,7 +45,7 @@ define(function (require) {
           scaleBands: [{
             low: 0,
             high: 10,
-            color: "#ffffcc"
+            color: '#ffffcc'
           }],
           scrollWheelZoom: true,
           isDesaturated: true,

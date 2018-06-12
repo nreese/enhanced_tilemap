@@ -13,7 +13,7 @@ define(function (require) {
       },
       template: require('./savedSearches.html'),
       link: function (scope, element, attrs) {
-        scope.addLayer = function() {
+        scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({
             color: '#008000',
@@ -21,10 +21,10 @@ define(function (require) {
             markerSize: 'm',
             syncFilters: true
           });
-        }
-        scope.removeLayer = function(layerIndex) {
+        };
+        scope.removeLayer = function (layerIndex) {
           scope.layers.splice(layerIndex, 1);
-        }
+        };
       }
     };
   });

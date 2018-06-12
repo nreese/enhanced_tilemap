@@ -11,7 +11,7 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
 define(function (require) {
-  var module = uiModules.get('kibana/enhanced_tilemap', [
+  const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
     'etm-ui.bootstrap.accordion',
     'rzModule',
@@ -21,13 +21,13 @@ define(function (require) {
   module.controller('KbnEnhancedTilemapVisController', function (
     $scope, $rootScope, $element, $timeout,
     Private, courier, config, getAppState, indexPatterns) {
-    let buildChartData = Private(VislibVisTypeBuildChartDataProvider);
+    const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
-    let TileMapMap = Private(MapProvider);
+    const TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(ResizeCheckerProvider);
     const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
@@ -54,16 +54,16 @@ define(function (require) {
 
     const binder = new Binder();
     const resizeChecker = new ResizeChecker($element);
-    binder.on(resizeChecker, 'resize', function() {
+    binder.on(resizeChecker, 'resize', function () {
       resizeArea();
     });
 
     const respProcessor = {
       buildChartData: buildChartData,
-      process: function(resp) {
+      process: function (resp) {
         const aggs = resp.aggregations;
-        _.keys(aggs).forEach(function(key) {
-          if(_.has(aggs[key], "filtered_geohash")) {
+        _.keys(aggs).forEach(function (key) {
+          if (_.has(aggs[key], 'filtered_geohash')) {
             aggs[key].buckets = aggs[key].filtered_geohash.buckets;
             delete aggs[key].filtered_geohash;
           }
@@ -76,42 +76,42 @@ define(function (require) {
         return chartData;
       },
       vis: $scope.vis
-    }
+    };
 
     function modifyToDsl() {
       $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
-      $scope.vis.aggs.toDsl = function() {
+      $scope.vis.aggs.toDsl = function () {
         resizeArea();
         const dsl = $scope.vis.aggs.origToDsl();
 
         //append map collar filter to geohash_grid aggregation
-        _.keys(dsl).forEach(function(key) {
-          if(_.has(dsl[key], "geohash_grid")) {
+        _.keys(dsl).forEach(function (key) {
+          if (_.has(dsl[key], 'geohash_grid')) {
             const origAgg = dsl[key];
             dsl[key] = {
               filter: aggFilter(origAgg.geohash_grid.field),
               aggs: {
                 filtered_geohash: origAgg
               }
-            }
+            };
           }
         });
         return dsl;
-      }
+      };
     }
 
     function aggFilter(field) {
       collar = utils.scaleBounds(
         map.mapBounds(),
         $scope.vis.params.collarScale);
-      var filter = {geo_bounding_box: {}};
+      const filter = {geo_bounding_box: {}};
       filter.geo_bounding_box[field] = collar;
       return filter;
     }
 
     $scope.$watch('vis.aggs', function (resp) {
       //'apply changes' creates new vis.aggs object - ensure toDsl is overwritten again
-      if(!_.has($scope.vis.aggs, "origToDsl")) {
+      if (!_.has($scope.vis.aggs, 'origToDsl')) {
         modifyToDsl();
       }
     });
@@ -122,7 +122,7 @@ define(function (require) {
         color: _.get(layerParams, 'color', '#008800'),
         size: _.get(layerParams, 'markerSize', 'm')
       };
-      poi.getLayer(options, function(layer) {
+      poi.getLayer(options, function (layer) {
         map.addPOILayer(layerParams.savedSearchId, layer);
       });
     }
@@ -145,30 +145,30 @@ define(function (require) {
     });
 
     $scope.$watch('esResponse', function (resp) {
-      if(_.has(resp, 'aggregations')) {
+      if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         draw();
 
-        _.filter($scope.vis.params.overlays.savedSearches, function(layerParams) {
-          return layerParams.syncFilters
+        _.filter($scope.vis.params.overlays.savedSearches, function (layerParams) {
+          return layerParams.syncFilters;
         }).forEach(function (layerParams) {
           initPOILayer(layerParams);
         });
       }
     });
 
-    $scope.$on("$destroy", function() {
+    $scope.$on('$destroy', function () {
       binder.destroy();
       resizeChecker.destroy();
       if (map) map.destroy();
-      if (tooltip) tooltip.destroy()
+      if (tooltip) tooltip.destroy();
     });
 
     function draw() {
-      if(!chartData) return;
+      if (!chartData) return;
 
       //add overlay layer to provide visibility of filtered area
-      let fieldName = getGeoField().fieldname;
+      const fieldName = getGeoField().fieldname;
       if (fieldName) {
         map.addFilters(geoFilter.getGeoFilters(fieldName));
       }
@@ -246,9 +246,9 @@ define(function (require) {
         return;
       }
 
-      $scope.vis.params.overlays.wmsOverlays.forEach(function(layerParams) {
+      $scope.vis.params.overlays.wmsOverlays.forEach(function (layerParams) {
         const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
-        indexPatterns.get(wmsIndexId).then(function(indexPattern) {
+        indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
           const appState = getAppState();
           source.set('filter', queryFilter.getFilters());
@@ -261,14 +261,14 @@ define(function (require) {
             //remove kibana parts of query
             const cleanedMust = [];
             if (_.has(esQuery, 'bool.must')) {
-              esQuery.bool.must.forEach(function(must) {
+              esQuery.bool.must.forEach(function (must) {
                 cleanedMust.push(_.omit(must, ['$state', '$$hashKey']));
               });
             }
             esQuery.bool.must = cleanedMust;
             const cleanedMustNot = [];
             if (_.has(esQuery, 'bool.must_not')) {
-              esQuery.bool.must_not.forEach(function(mustNot) {
+              esQuery.bool.must_not.forEach(function (mustNot) {
                 cleanedMustNot.push(_.omit(mustNot, ['$state', '$$hashKey']));
               });
             }
@@ -315,7 +315,7 @@ define(function (require) {
             const layerOptions = {
               isVisible: _.get(prevState, name, true),
               nonTiled: _.get(layerParams, 'nonTiled', false)
-            }
+            };
             map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
           });
         });
@@ -324,8 +324,8 @@ define(function (require) {
 
     function appendMap() {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
-      var params = $scope.vis.params;
-      var container = $element[0].querySelector('.tilemap');
+      const params = $scope.vis.params;
+      const container = $element[0].querySelector('.tilemap');
       map = new TileMapMap(container, {
         center: initialMapState.center,
         zoom: initialMapState.zoom,

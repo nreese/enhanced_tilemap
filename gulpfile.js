@@ -1,4 +1,5 @@
 var gulp = require('gulp');
+var gulpIf = require('gulp-if');
 var _ = require('lodash');
 var path = require('path');
 var mkdirp = require('mkdirp');
@@ -17,6 +18,7 @@ var packageName = pkg.name;
 
 // in their own sub-directory to not interfere with Gradle
 var buildDir = path.resolve(__dirname, 'build/gulp');
+var fixtureDir = path.resolve(buildDir, 'fixtures');
 var targetDir = path.resolve(__dirname, 'target/gulp');
 var buildTarget = path.resolve(buildDir, packageName);
 
@@ -97,12 +99,20 @@ gulp.task('sync', function (done) {
   syncPluginTo(kibanaPluginDir, done);
 });
 
+function isFixed(file) {
+  // Has ESLint fixed the file contents?
+  return file.eslint != null && file.eslint.fixed;
+}
+
 gulp.task('lint', function (done) {
   return gulp.src([
     'public/**/*.js',
+    '!public/lib/**',
+    '!public/vislib/**',
     '!**/webpackShims/**'
-  ]).pipe(eslint())
+  ]).pipe(eslint({fix: true}))
   .pipe(eslint.formatEach())
+  .pipe(gulpIf(isFixed, gulp.dest(fixtureDir)))
   .pipe(eslint.failOnError());
 });
 

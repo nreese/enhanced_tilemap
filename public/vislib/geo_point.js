@@ -4,7 +4,7 @@ const L = require('leaflet');
 export const toLatLng = function (geo) {
   let lat = 0;
   let lon = 0;
-  if(_.isArray(geo)) {
+  if (_.isArray(geo)) {
     lat = geo[1];
     lon = geo[0];
   } else if (isString(geo)) {
@@ -18,7 +18,7 @@ export const toLatLng = function (geo) {
     lon = geo.lon;
   }
   return L.latLng(lat, lon);
-}
+};
 
 function isString(myVar) {
   let isString = false;

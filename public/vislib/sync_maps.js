@@ -1,10 +1,10 @@
 require('leaflet');
 require('./../lib/leaflet.sync/L.Map.Sync');
 
-var singleton = (function() {
-  var maps = [];
-  var sync = true;
-  var syncOptions = {
+const singleton = function () {
+  const maps = [];
+  let sync = true;
+  const syncOptions = {
     syncCursor: false
   };
 
@@ -19,44 +19,44 @@ var singleton = (function() {
   }
 
   return {
-    add: function(newmap) {
-      if(sync) {
-        maps.forEach(function(map) {
+    add: function (newmap) {
+      if (sync) {
+        maps.forEach(function (map) {
           syncMaps(newmap, map);
         });
       }
       maps.push(newmap);
     },
-    remove: function(oldmap) {
-      maps.forEach(function(map) {
-        if(oldmap != map) unsyncMaps(oldmap, map);
+    remove: function (oldmap) {
+      maps.forEach(function (map) {
+        if (oldmap !== map) unsyncMaps(oldmap, map);
       });
-      for(var i=0; i<maps.length; i++) {
-        if(maps[i] == oldmap) {
+      for (let i = 0; i < maps.length; i++) {
+        if (maps[i] === oldmap) {
           maps.splice(i, 1);
           break;
         }
       }
     },
-    sync: function() {
-      if(sync) return;
+    sync: function () {
+      if (sync) return;
       sync = true;
-      for(var i=0; i<maps.length; i++) {
-        for(var j=i; j<maps.length; j++) {
+      for (let i = 0; i < maps.length; i++) {
+        for (let j = i; j < maps.length; j++) {
           syncMaps(maps[i], maps[j]);
         }
       }
     },
-    unsync: function() {
-      if(!sync) return;
+    unsync: function () {
+      if (!sync) return;
       sync = false;
-      for(var i=0; i<maps.length; i++) {
-        for(var j=i; j<maps.length; j++) {
+      for (let i = 0; i < maps.length; i++) {
+        for (let j = i; j < maps.length; j++) {
           unsyncMaps(maps[i], maps[j]);
         }
       }
     }
-  }
-})();
+  };
+};
 
-module.exports = singleton;
+module.exports = singleton();

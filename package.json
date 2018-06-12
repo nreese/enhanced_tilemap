@@ -26,16 +26,17 @@
     "babel-eslint": "^4.1.7",
     "bluebird": "^3.0.6",
     "eslint": "^1.10.3",
+    "eslint-plugin-mocha": "1.0.0",
     "gulp": "^3.9.0",
     "gulp-eslint": "^1.1.1",
-    "gulp-zip": "3.1.0",
+    "gulp-if": "^2.0.2",
     "gulp-util": "^3.0.7",
+    "gulp-zip": "3.1.0",
     "husky": "^0.10.2",
     "lodash": "^3.10.1",
+    "minimist": "1.2.0",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.4.4",
-    "rsync": "^0.4.0",
-    "minimist": "1.2.0",
-    "eslint-plugin-mocha": "1.0.0"
+    "rsync": "^0.4.0"
   }
 }

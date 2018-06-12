@@ -13,15 +13,15 @@ define(function (require) {
       },
       template: require('./wmsOverlays.html'),
       link: function (scope, element, attrs) {
-        scope.addLayer = function() {
+        scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({
             minZoom: 13
           });
-        }
-        scope.removeLayer = function(layerIndex) {
+        };
+        scope.removeLayer = function (layerIndex) {
           scope.layers.splice(layerIndex, 1);
-        }
+        };
       }
     };
   });

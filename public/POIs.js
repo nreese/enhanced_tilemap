@@ -22,9 +22,9 @@ define(function (require) {
       this.geoField = params.geoField;
       //remain backwards compatible
       if (!params.geoField && params.geoPointField) {
-        this.geoField = params.geoPointField
+        this.geoField = params.geoPointField;
       }
-      this.popupFields = _.get(params, 'popupFields', []).map(function(obj) {
+      this.popupFields = _.get(params, 'popupFields', []).map(function (obj) {
         return obj.name;
       });
       this.limit = _.get(params, 'limit', 100);
@@ -84,7 +84,7 @@ define(function (require) {
               label: popupContent
             },
             geometry: geometry
-          }
+          };
         });
         layer = L.geoJson(
           shapes,
@@ -92,16 +92,16 @@ define(function (require) {
             onEachFeature: function (feature, thisLayer) {
               if (feature.properties.label) {
                 thisLayer.bindPopup(feature.properties.label);
-                thisLayer.on('mouseover', function(e) {
+                thisLayer.on('mouseover', function (e) {
                   this.openPopup();
                 });
-                thisLayer.on('mouseout', function(e) {
+                thisLayer.on('mouseout', function (e) {
                   this.closePopup();
                 });
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon') {
-                thisLayer.on('click', function(e) {
+                thisLayer.on('click', function (e) {
                   thisLayer._map.fire('etm:select-feature', {
                     geojson: thisLayer.toGeoJSON()
                   });
@@ -135,7 +135,7 @@ define(function (require) {
         });
       if (this.popupFields.length > 0) {
         const content = this._popupContent(hit);
-        feature.on('mouseover', function(e) {
+        feature.on('mouseover', function (e) {
           const popup = L.popup({
             autoPan: false,
             maxHeight: 'auto',
@@ -146,7 +146,7 @@ define(function (require) {
           .setContent(content)
           .openOn(this._map);
         });
-        feature.on('mouseout', function(e) {
+        feature.on('mouseout', function (e) {
           this._map.closePopup();
         });
       }
@@ -155,16 +155,16 @@ define(function (require) {
 
     POIs.prototype._popupContent = function (hit) {
       let dlContent = '';
-      this.popupFields.forEach(function(field) {
-        dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`
+      this.popupFields.forEach(function (field) {
+        dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
       });
       return `<dl>${dlContent}</dl>`;
-    }
+    };
 
     function capitalizeFirstLetter(string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     return POIs;
-  }
+  };
 });

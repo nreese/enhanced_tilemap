@@ -1,6 +1,7 @@
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 
 define(function (require) {
+  const L = require('leaflet');
   const LAT_INDEX = 1;
   const LON_INDEX = 0;
 
@@ -9,7 +10,7 @@ define(function (require) {
     const queryFilter = Private(FilterBarQueryFilterProvider);
 
     function filterAlias(field, numBoxes) {
-      return field + ": " + numBoxes + " geo filters"
+      return field + ': ' + numBoxes + ' geo filters';
     }
 
     function _applyFilter(newFilter, field, indexPatternName) {
@@ -81,8 +82,8 @@ define(function (require) {
 
       if (existingFilter) {
         const confirmModalOptions = {
-          confirmButtonText: "Combine with existing filters",
-          cancelButtonText: "Overwrite existing filter",
+          confirmButtonText: 'Combine with existing filters',
+          cancelButtonText: 'Overwrite existing filter',
           onCancel: () => {
             _overwriteFilters(newFilter, existingFilter, field, indexPatternName);
           },
@@ -91,7 +92,7 @@ define(function (require) {
           }
         };
 
-        confirmModal("How would you like this filter applied?", confirmModalOptions);
+        confirmModal('How would you like this filter applied?', confirmModalOptions);
       } else {
         _applyFilter(newFilter, field, indexPatternName);
       }
@@ -108,38 +109,39 @@ define(function (require) {
     function toVector(filter, field) {
       let features = [];
       if (_.has(filter, ['bool', 'should'])) {
-        _.get(filter, ['bool', 'should'], []).forEach(function(it) {
+        _.get(filter, ['bool', 'should'], []).forEach(function (it) {
           features = features.concat(toVector(it, field));
         });
       } else if (_.has(filter, ['geo_bounding_box',  field])) {
         const topLeft = _.get(filter, ['geo_bounding_box', field, 'top_left']);
         const bottomRight = _.get(filter, ['geo_bounding_box', field, 'bottom_right']);
-        if(topLeft && bottomRight) {
+        if (topLeft && bottomRight) {
           const bounds = L.latLngBounds(
             [topLeft.lat, topLeft.lon],
             [bottomRight.lat, bottomRight.lon]);
           features.push(L.rectangle(bounds));
         }
       } else if (_.has(filter, ['geo_distance', field])) {
-        let distance_str = _.get(filter, ['geo_distance', 'distance']);
+        const distanceStr = _.get(filter, ['geo_distance', 'distance']);
         let distance = 1000;
-        if (_.includes(distance_str, 'km')) {
-          distance = parseFloat(distance_str.replace('km', '')) * 1000;
+        if (_.includes(distanceStr, 'km')) {
+          distance = parseFloat(distanceStr.replace('km', '')) * 1000;
         }
         const center = _.get(filter, ['geo_distance', field]);
-        if(center) {
+        if (center) {
           features.push(L.circle([center.lat, center.lon], distance));
         }
       } else if (_.has(filter, ['geo_polygon', field])) {
         const points = _.get(filter, ['geo_polygon', field, 'points'], []);
         const latLngs = [];
-        points.forEach(function(point) {
+        points.forEach(function (point) {
           const lat = point[LAT_INDEX];
           const lon = point[LON_INDEX];
           latLngs.push(L.latLng(lat, lon));
         });
-        if(latLngs.length > 0)
+        if (latLngs.length > 0) {
           features.push(L.polygon(latLngs));
+        }
       } else if (_.has(filter, ['geo_shape', field])) {
         const type = _.get(filter, ['geo_shape', field, 'shape', 'type']);
         if (type.toLowerCase() === 'envelope') {
@@ -151,16 +153,16 @@ define(function (require) {
             [br[LAT_INDEX], br[LON_INDEX]]);
           features.push(L.rectangle(bounds));
         } else if (type.toLowerCase() === 'polygon') {
-          coords = _.get(filter, ['geo_shape', field, 'shape', 'coordinates'])[0];
+          const coords = _.get(filter, ['geo_shape', field, 'shape', 'coordinates'])[0];
           const latLngs = [];
-          coords.forEach(function(point) {
+          coords.forEach(function (point) {
             const lat = point[LAT_INDEX];
             const lon = point[LON_INDEX];
             latLngs.push(L.latLng(lat, lon));
           });
           features.push(L.polygon(latLngs));
         } else {
-          console.log("Unexpected geo_shape type: " + type);
+          console.log('Unexpected geo_shape type: ' + type);
         }
       }
       return features;
@@ -200,7 +202,7 @@ define(function (require) {
         || _.has(filter, ['geo_shape', field])) {
         return true;
       } else if (_.has(filter, ['bool', 'should'])) {
-        let model = getGeoSpatialModel(filter);
+        const model = getGeoSpatialModel(filter);
         let found = false;
         for (let i = 0; i < model.bool.should.length; i++) {
           if (_.has(model.bool.should[i], ['geo_bounding_box', field])
@@ -227,13 +229,13 @@ define(function (require) {
      * @param bottom_right {Object} bottom right at and lon (decimal degrees)
      * @return {Object} elasticsearch geospatial rectangle filter
      */
-    function rectFilter(fieldname, geotype, top_left, bottom_right) {
+    function rectFilter(fieldname, geotype, topLeft, bottomRight) {
       let geofilter = null;
       if ('geo_point' === geotype) {
         geofilter = {geo_bounding_box: {}};
         geofilter.geo_bounding_box[fieldname] = {
-          top_left: top_left,
-          bottom_right: bottom_right
+          top_left: topLeft,
+          bottom_right: bottomRight
         };
       } else if ('geo_shape' === geotype) {
         geofilter = {geo_shape: {}};
@@ -241,8 +243,8 @@ define(function (require) {
           shape: {
             type: 'envelope',
             coordinates: [
-              [top_left.lon, top_left.lat],
-              [bottom_right.lon, bottom_right.lat]
+              [topLeft.lon, topLeft.lat],
+              [bottomRight.lon, bottomRight.lat]
             ]
           }
         };
@@ -280,6 +282,6 @@ define(function (require) {
       getGeoFilters: getGeoFilters,
       rectFilter: rectFilter,
       circleFilter: circleFilter
-    }
-  }
+    };
+  };
 });
