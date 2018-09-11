@@ -148,14 +148,14 @@ gulp.task('dev', ['sync'], function (done) {
 });
 
 gulp.task('test', ['sync'], function (done) {
-  spawn('grunt', ['test:server', 'test:browser', '--grep=Kibi Enhanced Tilemap'], {
+  spawn('grunt', [ 'test:browser', '--grep=Kibi Enhanced Tilemap'], {
     cwd: options.kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
 });
 
 gulp.task('testdev', ['sync'], function (done) {
-  spawn('grunt', ['test:dev', '--browser=Chrome'], {
+  spawn('grunt', ['test:dev', '--browser=Chrome', '--kbnServer.ignoreDevYml'], {
     cwd: options.kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
