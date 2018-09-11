@@ -16,7 +16,7 @@ define(function (require) {
         tooltip: '='
       },
       template: require('./tooltipFormatter.html'),
-      link: function(scope, element, attrs) {
+      link: function (scope, element, attrs) {
         if (!scope.tooltip) {
           scope.tooltip = {
             closeOnMouseout: true,
@@ -24,10 +24,10 @@ define(function (require) {
             options: {
 
             }
-          }
+          };
         }
         scope.popupDimensionOptions = [];
-        for (let i=10; i<100; i+=10) {
+        for (let i = 10; i < 100; i += 10) {
           scope.popupDimensionOptions.push({
             text: i + '%',
             value: i / 100
@@ -36,15 +36,15 @@ define(function (require) {
         fetchVisList();
         fetchSearchList();
 
-        scope.filterVisList = function() {
+        scope.filterVisList = function () {
           scope.tooltip.options.visFilter = this.tooltip.options.visFilter;
           fetchVisList();
-        }
+        };
 
-        scope.filterSearchList = function() {
+        scope.filterSearchList = function () {
           scope.tooltip.options.searchFilter = this.tooltip.options.searchFilter;
           fetchSearchList();
-        }
+        };
 
         function fetchSearchList() {
           searchService.find(scope.tooltip.options.searchFilter)
@@ -70,12 +70,12 @@ define(function (require) {
               return {
                 label: hit.title,
                 id: hit.id
-              }
+              };
             })
             .value();
           });
         }
       }
-    }
+    };
   });
 });

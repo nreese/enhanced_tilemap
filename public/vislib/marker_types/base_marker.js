@@ -6,7 +6,7 @@ import utils from 'plugins/enhanced_tilemap/utils';
 
 define(function (require) {
   return function MarkerFactory($compile, $rootScope) {
-    
+
     /**
      * Base map marker overlay, all other markers inherit from this class
      *
@@ -24,7 +24,7 @@ define(function (require) {
         max: _.get(geoJson, 'properties.allmax', 1)
       };
       this.isVisible = _.get(params, 'prevState.isVisible', true);
-      
+
       if (params.prevState) {
         //Scale threshold to have same shape as previous zoom level
         const prevRange = params.prevState.threshold.ceil - params.prevState.threshold.floor;
@@ -75,7 +75,7 @@ define(function (require) {
           options: {
             floor: _.get(self.geoJson, 'properties.allmin', 0),
             ceil: _.get(self.geoJson, 'properties.allmax', 1),
-            onEnd: function(sliderId, modelValue, highValue, pointerType) {
+            onEnd: function (sliderId, modelValue, highValue, pointerType) {
               self.threshold.min = modelValue;
               self.threshold.max = highValue;
               self.destroy();
@@ -121,7 +121,7 @@ define(function (require) {
         }
         this._legend = undefined;
       }
-    }
+    };
 
     /**
      * Apply style with shading to feature
@@ -132,7 +132,7 @@ define(function (require) {
      */
     BaseMarker.prototype.applyShadingStyle = function (value) {
       let color = this._legendQuantizer(value);
-      if(color == undefined && 'Dynamic - Uneven' === this._attr.scaleType) {
+      if (color === undefined && 'Dynamic - Uneven' === this._attr.scaleType) {
         // Because this scale is threshold based and we added just as many ranges
         // as we did for the domain the max value is counted as being outside the
         // range so we get undefined.  We want to count this as part of the last domain.
@@ -194,7 +194,7 @@ define(function (require) {
 
     /**
      * Remove marker layer, popup, and legend from map
-     * @return {Object} marker layer display state 
+     * @return {Object} marker layer display state
      */
     BaseMarker.prototype.destroy = function () {
       const state = {
@@ -234,16 +234,16 @@ define(function (require) {
       if (this._legend) {
         this.map.removeControl(this._legend);
       }
-    }
+    };
 
     BaseMarker.prototype.show = function () {
       if (this._legend) {
         this._legend.addTo(this.map);
       }
-    }
+    };
 
     BaseMarker.prototype._addToMap = function () {
-      this.layerControl.addOverlay(this._markerGroup, "Aggregation");
+      this.layerControl.addOverlay(this._markerGroup, 'Aggregation');
       if (this.isVisible) this.map.addLayer(this._markerGroup);
 
       if (this.geoJson.features.length > 1) {
@@ -261,7 +261,7 @@ define(function (require) {
       let self = this;
       self.markerOptions = options;
       let defaultOptions = {
-        filter: function(feature) {
+        filter: function (feature) {
           const value = _.get(feature, 'properties.value', 0);
           return value >= self.threshold.min && value <= self.threshold.max;
         },
@@ -273,8 +273,8 @@ define(function (require) {
           return self.applyShadingStyle(value);
         }
       };
-      
-      if(self.geoJson.features.length <= 250) {
+
+      if (self.geoJson.features.length <= 250) {
         this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
       } else {
         //don't block UI when processing lots of features
@@ -284,18 +284,18 @@ define(function (require) {
         this._createSpinControl();
         var place = 100;
         this._intervalId = setInterval(
-          function() {
+          function () {
             var stopIndex = place + 100;
             var halt = false;
-            if(stopIndex > self.geoJson.features.length) {
+            if (stopIndex > self.geoJson.features.length) {
               stopIndex = self.geoJson.features.length;
               halt = true;
             }
-            for(var i=place; i<stopIndex; i++) {
+            for (var i = place; i < stopIndex; i++) {
               place++;
               self._markerGroup.addData(self.geoJson.features[i]);
             }
-            if(halt) self._stopLoadingGeohash();
+            if (halt) self._stopLoadingGeohash();
           },
           200);
       }
@@ -354,7 +354,7 @@ define(function (require) {
     };
 
     BaseMarker.prototype._createSpinControl = function () {
-      if(this._spinControl) return;
+      if (this._spinControl) return;
 
       var SpinControl = L.Control.extend({
         options: {
@@ -371,23 +371,23 @@ define(function (require) {
 
       this._spinControl = new SpinControl();
       this.map.addControl(this._spinControl);
-    }
+    };
 
     BaseMarker.prototype._removeSpinControl = function () {
-      if(!this._spinControl) return;
+      if (!this._spinControl) return;
 
       this.map.removeControl(this._spinControl);
       this._spinControl = null;
-    }
+    };
 
     BaseMarker.prototype._stopLoadingGeohash = function () {
-      if(this._intervalId) {
+      if (this._intervalId) {
         window.clearInterval(this._intervalId);
       }
       this._intervalId = null;
 
       this._removeSpinControl();
-    }
+    };
 
     /**
      * d3 quantize scale returns a hex color, used for marker fill color
@@ -399,7 +399,7 @@ define(function (require) {
       if ('Static' === this._attr.scaleType) {
         const domain = [];
         const colors = [];
-        this._attr.scaleBands.forEach(function(band) {
+        this._attr.scaleBands.forEach(function (band) {
           domain.push(band.high);
           colors.push(band.color);
         });
@@ -425,26 +425,26 @@ define(function (require) {
         } else {
           this._legendColors = reds5;
         }
-        if('Dynamic - Linear' == this._attr.scaleType) {
+        if ('Dynamic - Linear' === this._attr.scaleType) {
           this._legendQuantizer = d3.scale.quantize().domain(quantizeDomain).range(this._legendColors);
         }
         else { // Dynamic - Uneven
           // A legend scale that will create uneven ranges for the legend in an attempt
           // to split the map features uniformly across the ranges.  Useful when data is unevenly
           // distributed across the minimum - maximum range.
-          features.sort(function(x, y) {
+          features.sort(function (x, y) {
             return d3.ascending(x.properties.value, y.properties.value);
           });
 
           const ranges = [];
           const bands = this._legendColors.length;
-          for(let i=1; i<bands; i++) {
-            let index = Math.round(i*featureLength/bands);
-            if(index <= featureLength - 1) {
+          for (let i = 1; i < bands; i++) {
+            let index = Math.round(i * featureLength / bands);
+            if (index <= featureLength - 1) {
               ranges.push(features[index].properties.value);
             }
           };
-          if(ranges.length < bands) {
+          if (ranges.length < bands) {
             ranges.push(max);
           }
           this._legendQuantizer = d3.scale.threshold().domain(ranges).range(this._legendColors);

@@ -20,7 +20,7 @@ define(function (require) {
       // Earth circumference in meters
       const earthCircumference = 40075017;
       const mapZoom = map.getZoom();
-      const latitudeRadians = map.getCenter().lat * (Math.PI/180);
+      const latitudeRadians = map.getCenter().lat * (Math.PI / 180);
       this._metersPerPixel = earthCircumference * Math.cos(latitudeRadians) / Math.pow(2, mapZoom + 8);
 
       this._createMarkerGroup({
@@ -71,7 +71,7 @@ define(function (require) {
      * @param feature {Object} - The feature
      * @return {Number}
      */
-    ScaledCircleMarker.prototype._radiusScale = function(feature) {
+    ScaledCircleMarker.prototype._radiusScale = function (feature) {
       let radius = this._geohashMinDistance(feature);
       let orgMin = this.geoJson.properties.allmin;
       let orgMax = this.geoJson.properties.allmax;
@@ -80,7 +80,7 @@ define(function (require) {
       let max = orgMax;
       let value = this._scaleValueBetween(feature.properties.value, min, max, orgMin, orgMax);
       return radius * (value / max) / this._metersPerPixel;
-    }
+    };
 
     /**
      * _scaleValueBetween returns the given value between the new min and max based
@@ -94,9 +94,9 @@ define(function (require) {
      * @param orgMax {Number} - The original maximum
      * @return {Number}
      */
-    ScaledCircleMarker.prototype._scaleValueBetween = function(value, min, max, orgMin, orgMax) {
-      return (orgMin != orgMax) ? ((max-min)*(value-orgMin))/(orgMax-orgMin) + min : value;
-    }
+    ScaledCircleMarker.prototype._scaleValueBetween = function (value, min, max, orgMin, orgMax) {
+      return (orgMin !== orgMax) ? ((max - min) * (value - orgMin)) / (orgMax - orgMin) + min : value;
+    };
 
     return ScaledCircleMarker;
   };

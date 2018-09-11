@@ -43,7 +43,7 @@ define(function (require) {
           const uiState = savedVis.uiStateJSON ? JSON.parse(savedVis.uiStateJSON) : {};
           self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
           self.$visEl = linkFn(self.$tooltipScope);
-          $timeout(function() {
+          $timeout(function () {
             renderbot = self.$visEl[0].getScope().renderbot;
           });
         });
@@ -53,7 +53,7 @@ define(function (require) {
           return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right);
         }
 
-        return function(feature, map) {
+        return function (feature, map) {
           if (!feature) return '';
           if (!self.$visEl) return 'initializing';
 
@@ -87,7 +87,7 @@ define(function (require) {
           });
 
           return loadHtml;
-        }
+        };
       }
     }
 
