@@ -2,7 +2,7 @@
   "name": "enhanced_tilemap",
   "version": "1.0.0",
   "kibana": {
-    "version": "5.6.9"
+    "version": "5.6.10"
   },
   "scripts": {
     "test": "gulp test",
