@@ -66,6 +66,7 @@ task downloadKibi(type: Copy) {
     from configurations.kibi
     into new File(buildDir, 'dependencies')
     rename { name ->
+    println "THE NAME ${name}"
         def artifact = configurations.kibi.resolvedConfiguration.resolvedArtifacts.find { it.file.name == name }
         "${artifact.name}.${artifact.extension}"
     }
