@@ -20,7 +20,7 @@ var packageName = pkg.name;
 var buildDir = path.resolve(__dirname, 'build/gulp');
 var fixtureDir = path.resolve(buildDir, 'fixtures');
 var targetDir = path.resolve(__dirname, 'target/gulp');
-var buildTarget = path.resolve(buildDir, packageName);
+var buildTarget = path.resolve(buildDir, 'kibana', packageName);
 
 var include = [
   'package.json',
