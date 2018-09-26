@@ -33,8 +33,9 @@ define(function (require) {
       name: 'enhanced_tilemap',
       title: 'Enhanced Coordinate Map',
       icon: 'fa-map-marker',
-      description: '[BETA] Coordinate map plugin that provides better performance,' +
+      description: 'Coordinate map plugin that provides better performance,' +
         ' complete geospatial query support, and more features than the built in Coordinate map.',
+      isBeta: true,
       category: VisType.CATEGORY.MAP,
       template: require('plugins/enhanced_tilemap/vis.html'),
       params: {
