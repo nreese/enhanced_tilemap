@@ -7,7 +7,7 @@ define(function (require) {
     const _ = require('lodash');
     const $ = require('jquery');
     const L = require('leaflet');
-    require('@elastic/leaflet-draw');
+    require('leaflet-draw');
     const LDrawToolbench = require('./LDrawToolbench');
     const utils = require('plugins/enhanced_tilemap/utils');
 
@@ -200,7 +200,7 @@ define(function (require) {
     TileMapMap.prototype.destroy = function () {
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
-      if (this._drawControl) this._drawControl.removeFrom(this.map);
+      if (this._drawControl) this._drawControl.remove(this.map);
       if (this._markers) this._markers.destroy();
       syncMaps.remove(this.map);
       this.map.remove();
@@ -429,7 +429,7 @@ define(function (require) {
             break;
           case 'polygon':
             const points = [];
-            e.layer._latlngs.forEach(function (latlng) {
+            e.layer._latlngs[0].forEach(function (latlng) {
               const lat = L.Util.formatNum(latlng.lat, 5);
               const lon = L.Util.formatNum(latlng.lng, 5);
               points.push([lon, lat]);
