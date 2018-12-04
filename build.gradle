@@ -40,7 +40,9 @@ def packageJson = loadPackageJson()
 ///////////////////////////////////////////////////
 
 group = 'solutions.siren'
-version packageJson.version
+version project.hasProperty('customVersion') ? customVersion : packageJson.version
+def investigateVersion = (project.hasProperty('customInvestigateVersion') && project.customInvestigateVersion?.trim()) ? customInvestigateVersion : version
+
 
 ///////////////////////////////////////////////////
 //                                               //
@@ -56,7 +58,7 @@ configurations {
 }
 
 dependencies {
-    kibi "solutions.siren:investigate-core:${project.version}:sources@zip"
+    kibi "solutions.siren:investigate-core:${investigateVersion}:sources@zip"
 }
 
 /**
@@ -84,7 +86,7 @@ task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
  * Task to execute the `npmInstall` gradle's task from the kibi distribution
  */
 task npmInstallKibi(type: GradleBuild, dependsOn: [extractKibi]) {
-    dir new File(extractKibi.destinationDir, "investigate-core-${project.version}-sources")
+    dir new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
     tasks = ['npmInstall']
 }
 
@@ -154,7 +156,7 @@ task gulpDev(type: GulpTask) {
     }
     else {
         dependsOn installKibi
-        args << "--kibanahomepath=${new File(extractKibi.destinationDir, "investigate-core-${project.version}-sources").getAbsolutePath()}"
+        args << "--kibanahomepath=${new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources").getAbsolutePath()}"
     }
 }
 
@@ -182,7 +184,7 @@ task gulpTest(type: GulpTask) {
     }
     else {
         dependsOn installKibi
-        args << "--kibanahomepath=${new File(extractKibi.destinationDir, "investigate-core-${project.version}-sources").getAbsolutePath()}"
+        args << "--kibanahomepath=${new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources").getAbsolutePath()}"
     }
 }
 
@@ -210,7 +212,7 @@ task gulpTestDev(type: GulpTask) {
     }
     else {
         dependsOn installKibi
-        args << "--kibanahomepath=${new File(extractKibi.destinationDir, "investigate-core-${project.version}-sources").getAbsolutePath()}"
+        args << "--kibanahomepath=${new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources").getAbsolutePath()}"
     }
 }
 
@@ -256,7 +258,7 @@ publishing {
       artifact(new File("${projectDir}/target/gulp", "${packageJson.name}.zip"))
       groupId project.group
       artifactId "kibi-enhanced-tilemap"
-      version packageJson.version
+      version project.version
     }
   }
 }
