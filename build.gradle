@@ -40,7 +40,7 @@ def packageJson = loadPackageJson()
 ///////////////////////////////////////////////////
 
 group = 'solutions.siren'
-version project.hasProperty('customVersion') ? customVersion : packageJson.version
+version project.hasProperty('customVersion') && customVersion ? customVersion : packageJson.version
 def investigateVersion = (project.hasProperty('customInvestigateVersion') && project.customInvestigateVersion?.trim()) ? customInvestigateVersion : version
 
 
