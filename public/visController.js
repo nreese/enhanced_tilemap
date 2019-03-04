@@ -70,9 +70,11 @@ define(function (require) {
         });
 
         const chartData = this.buildChartData(resp);
-        const geoMinMax = utils.getGeoExtents(chartData);
-        chartData.geoJson.properties.allmin = geoMinMax.min;
-        chartData.geoJson.properties.allmax = geoMinMax.max;
+        if (_.get(chartData, 'geoJson.properties')) {
+          const geoMinMax = utils.getGeoExtents(chartData);
+          chartData.geoJson.properties.allmin = geoMinMax.min;
+          chartData.geoJson.properties.allmax = geoMinMax.max;
+        }
         return chartData;
       },
       vis: $scope.vis
@@ -147,8 +149,10 @@ define(function (require) {
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
-        draw();
-
+        if (chartData.hits !== 0) {
+          draw();
+        }    
+        
         _.filter($scope.vis.params.overlays.savedSearches, function (layerParams) {
           return layerParams.syncFilters;
         }).forEach(function (layerParams) {
