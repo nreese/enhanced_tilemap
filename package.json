@@ -36,6 +36,7 @@
     "lodash": "^3.10.1",
     "minimist": "1.2.0",
     "mkdirp": "^0.5.1",
+    "natives": "^1.1.6",
     "rimraf": "^2.4.4",
     "rsync": "^0.4.0"
   }

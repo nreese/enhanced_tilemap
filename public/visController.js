@@ -27,6 +27,7 @@ define(function (require) {
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
+    const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(ResizeCheckerProvider);
     const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
@@ -58,25 +59,9 @@ define(function (require) {
       resizeArea();
     });
 
-    const respProcessor = {
-      buildChartData: buildChartData,
-      process: function (resp) {
-        const aggs = resp.aggregations;
-        _.keys(aggs).forEach(function (key) {
-          if (_.has(aggs[key], 'filtered_geohash')) {
-            aggs[key].buckets = aggs[key].filtered_geohash.buckets;
-            delete aggs[key].filtered_geohash;
-          }
-        });
-
-        const chartData = this.buildChartData(resp);
-        const geoMinMax = utils.getGeoExtents(chartData);
-        chartData.geoJson.properties.allmin = geoMinMax.min;
-        chartData.geoJson.properties.allmax = geoMinMax.max;
-        return chartData;
-      },
-      vis: $scope.vis
-    };
+    // kibi: moved processor to separate file
+    const respProcessor = new RespProcessor($scope.vis, buildChartData, utils);
+    // kibi: end
 
     function modifyToDsl() {
       $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
@@ -147,6 +132,7 @@ define(function (require) {
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
+
         draw();
 
         _.filter($scope.vis.params.overlays.savedSearches, function (layerParams) {
@@ -165,8 +151,9 @@ define(function (require) {
     });
 
     function draw() {
-      if (!chartData) return;
-
+      if (!chartData || chartData.hits === 0) {
+        return;
+      }
       //add overlay layer to provide visibility of filtered area
       const fieldName = getGeoField().fieldname;
       if (fieldName) {
