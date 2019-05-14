@@ -8,7 +8,8 @@ export default class RespProcessor {
 	}
 
   process(resp) {
-    const aggs = resp.aggregations;
+    const respClone = _.cloneDeep(resp);
+    const aggs = respClone.aggregations;
     _.keys(aggs).forEach(function (key) {
       if (_.has(aggs[key], 'filtered_geohash')) {
         aggs[key].buckets = aggs[key].filtered_geohash.buckets;
@@ -16,7 +17,7 @@ export default class RespProcessor {
       }
     });
 
-    const chartData = this.buildChartData(resp);
+    const chartData = this.buildChartData(respClone);
     if (_.get(chartData, 'geoJson.properties')) {
       const geoMinMax = this.utils.getGeoExtents(chartData);
       chartData.geoJson.properties.allmin = geoMinMax.min;
