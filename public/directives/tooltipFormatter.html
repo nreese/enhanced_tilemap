@@ -5,21 +5,8 @@
       class="form-control"
       ng-model="tooltip.type">
       <option value="metric">Metric Value</option>
-      <option value="search">Search</option>
       <option value="visualization">Visualization</option>
     </select>
-  </div>
-  <div class="form-group" ng-if="tooltip.type === 'search'">
-    <p>Saved search tooltip no longer supported. Kibana 5.5 changes broke this feature</p>
-    <!--<input class="form-control"
-      placeholder="Filter searches list"
-      ng-model="tooltip.options.searchFilter"
-      ng-change="filterSearchList()"
-      ng-model-options="{debounce:750}">
-    <select required class="form-control"
-      ng-model="tooltip.options.searchId"
-      ng-options="search.id as search.label for search in searchList">
-    </select>-->
   </div>
   <div class="form-group" ng-if="tooltip.type === 'visualization'">
     <input class="form-control"
@@ -51,8 +38,9 @@
   <div class="form-group">
     <label>
       <input type="checkbox"
-        ng-model="tooltip.closeOnMouseout">
+        ng-model="tooltip.closeOnMouseout"> 
       Close tooltip on mouseout
     </label>
+    
   </div>
 </div>
