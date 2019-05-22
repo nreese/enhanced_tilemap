@@ -129,6 +129,10 @@ define(function (require) {
       }
     });
 
+    $scope.$listen(queryFilter, 'update', function () {
+      setTooltipFormatter($scope.vis.params.tooltip);
+    });
+
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
