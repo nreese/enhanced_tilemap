@@ -11,6 +11,7 @@ define(function (require) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
+    const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
 
     /**
      * Points of Interest
@@ -40,16 +41,27 @@ define(function (require) {
       const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+
+        function createMapExtentFilter(rect) {
+          const bounds = rect.geo_bounding_box.geoBoundingBox;
+          return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
+        }
+
         const searchSource = new SearchSource();
+
         if (this.syncFilters) {
           searchSource.inherits(savedSearch.searchSource);
-          searchSource.filter(queryFilter.getFilters());
+          const allFilters = queryFilter.getFilters();
+          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+          searchSource.filter(allFilters);
         } else {
           //Do not filter POIs by time so can not inherit from rootSearchSource
           searchSource.inherits(false);
           searchSource.index(savedSearch.searchSource._state.index);
           searchSource.query(savedSearch.searchSource.get('query'));
-          searchSource.filter(savedSearch.searchSource.get('filter'));
+          const allFilters = savedSearch.searchSource.get('filter');
+          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+          searchSource.filter(allFilters);
         }
         searchSource.size(this.limit);
         searchSource.source({
@@ -57,9 +69,9 @@ define(function (require) {
           excludes: []
         });
         searchSource.fetch()
-        .then(searchResp => {
-          callback(self._createLayer(searchResp.hits.hits, geoType, options));
-        });
+          .then(searchResp => {
+            callback(self._createLayer(searchResp.hits.hits, geoType, options));
+          });
       });
     };
 
@@ -142,9 +154,9 @@ define(function (require) {
             maxWidth: 'auto',
             offset: utils.popupOffset(this._map, content, e.latlng)
           })
-          .setLatLng(e.latlng)
-          .setContent(content)
-          .openOn(this._map);
+            .setLatLng(e.latlng)
+            .setContent(content)
+            .openOn(this._map);
         });
         feature.on('mouseout', function (e) {
           this._map.closePopup();
