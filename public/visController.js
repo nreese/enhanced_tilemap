@@ -140,16 +140,23 @@ define(function (require) {
       }
     });
 
+    $scope.$listen(queryFilter, 'update', function () {
+      setTooltipFormatter($scope.vis.params.tooltip);
+    });
+
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
 
         draw();
 
-        const layers = $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
-          initPOILayer(layerParams);
-        });
-      }
+      };
+
+      //Initialize POI layer regardless of aggregations being present
+      //the logic of whether to draw POI is handled in POI.js
+      $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
+        initPOILayer(layerParams);
+      });
     });
 
     $scope.$on('$destroy', function () {

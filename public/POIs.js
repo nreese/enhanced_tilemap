@@ -5,6 +5,7 @@ import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
+import { PassThrough } from 'stream';
 
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {
@@ -70,7 +71,17 @@ define(function (require) {
         });
         searchSource.fetch()
           .then(searchResp => {
-            callback(self._createLayer(searchResp.hits.hits, geoType, options));
+            const respDocumentNumber = searchResp.hits.total;
+            if (respDocumentNumber === 0) {
+              PassThrough;
+            // this is functionality for issue #9359
+            // } else if (respDocumentNumber >= this.limit) {
+            //
+            //   console.log('This layer has undisplayed documents within the map extent');
+            //   callback(self._createLayer(searchResp.hits.hits, geoType, options));
+            } else {
+              callback(self._createLayer(searchResp.hits.hits, geoType, options));
+            }
           });
       });
     };
