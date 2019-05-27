@@ -4,6 +4,7 @@ import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+import { GeoFilterFactory } from 'plugins/enhanced_tilemap/vislib/geoFilter';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { PassThrough } from 'stream';
 
@@ -72,14 +73,7 @@ define(function (require) {
         searchSource.fetch()
           .then(searchResp => {
             const respDocumentNumber = searchResp.hits.total;
-            if (respDocumentNumber === 0) {
-              PassThrough;
-            // this is functionality for issue #9359
-            // } else if (respDocumentNumber >= this.limit) {
-            //
-            //   console.log('This layer has undisplayed documents within the map extent');
-            //   callback(self._createLayer(searchResp.hits.hits, geoType, options));
-            } else {
+            if (respDocumentNumber > 0) {
               callback(self._createLayer(searchResp.hits.hits, geoType, options));
             }
           });

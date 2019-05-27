@@ -102,9 +102,8 @@ define(function (require) {
     });
 
     function getGeoBoundingBox() {
-      const geoBoundingBox = utils.scaleBounds(
-        map.mapBounds(),
-        1); //collarscale is hardcoded to exactly the size of the map canvas
+       //collarscale is hardcoded to exactly the size of the map canvas
+      const geoBoundingBox = utils.scaleBounds(map.mapBounds(), 1);
       return { geoBoundingBox };
     };
 
@@ -154,9 +153,7 @@ define(function (require) {
 
       //Initialize POI layer regardless of aggregations being present
       //the logic of whether to draw POI is handled in POI.js
-      $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
-        initPOILayer(layerParams);
-      });
+      $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
     });
 
     $scope.$on('$destroy', function () {
