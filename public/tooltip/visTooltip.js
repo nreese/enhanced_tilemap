@@ -2,6 +2,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
+import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 
 define(function (require) {
   return function VisTooltipFactory(
@@ -9,6 +10,7 @@ define(function (require) {
     getAppState, Private, savedVisualizations) {
 
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
+    const queryFilter = Private(FilterBarQueryFilterProvider);
     const SearchSource = Private(SearchSourceProvider);
     const $state = getAppState();
     const UI_STATE_ID = 'popupVis';
@@ -42,6 +44,8 @@ define(function (require) {
           self.$tooltipScope.savedObj = savedVis;
           const uiState = savedVis.uiStateJSON ? JSON.parse(savedVis.uiStateJSON) : {};
           self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
+          const filters = queryFilter.getFilters();
+          self.$tooltipScope.savedObj.searchSource.filter(filters);
           self.$visEl = linkFn(self.$tooltipScope);
           $timeout(function () {
             renderbot = self.$visEl[0].getScope().renderbot;

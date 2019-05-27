@@ -149,7 +149,12 @@ uiModules
 
         if (oldVis) $scope.renderbot = null;
         if (vis) {
-          $scope.renderbot = vis.type.createRenderbot(vis, $visEl, $scope.uiState);
+          $scope.renderbot = vis.type.createRenderbot(vis, $visEl, $scope.uiState, $scope.multiSearchData, $scope.searchSource);
+        }
+
+        // kibi: associate the vis with the searchSource
+        if ($scope.searchSource) {
+          $scope.searchSource.vis = $scope.vis;
         }
       }));
 
