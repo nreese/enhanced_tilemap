@@ -117,6 +117,10 @@ define(function (require) {
           geoField: getGeoField()
         }
       };
+
+      //Element rendered in Leaflet Library
+      options.$legend = $element.find('a.leaflet-control-layers-toggle');
+
       poi.getLayer(options, function (layer) {
         map.addPOILayer(layerParams.savedSearchId, layer);
       });

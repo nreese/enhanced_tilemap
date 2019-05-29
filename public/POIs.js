@@ -70,12 +70,29 @@ define(function (require) {
           includes: _.compact(_.flatten([this.geoField, this.popupFields])),
           excludes: []
         });
+
+        const tooManyDocsInfo = [
+          '<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>',
+          '<b><p class="text-color-warning">Caution: Undisplayed POIs present on map canvas,<br>' +
+                                            'you can increase to a maximum of 1000 POIs per layer<br>' +
+                                            'by adjusting the Limit field in POI setup options</b>'
+        ];
+
+        //Removal of previous too many documents warning when map is changed to a new extent
+        options.$legend[0].innerHTML = '';
+
         searchSource.fetch()
           .then(searchResp => {
-            const respDocumentNumber = searchResp.hits.total;
-            if (respDocumentNumber > 0) {
-              callback(self._createLayer(searchResp.hits.hits, geoType, options));
-            }
+
+            //Too many documents warning for each specific layer
+            options.$legend[0].tooManyDocsInfo = '';
+
+            console.log(searchResp.hits.total + '    ' + this.limit);
+            if (searchResp.hits.total > this.limit) {
+              options.$legend[0].tooManyDocsInfo = tooManyDocsInfo;
+              options.$legend[0].innerHTML = tooManyDocsInfo[0];
+            };
+            callback(self._createLayer(searchResp.hits.hits, geoType, options));
           });
       });
     };
@@ -141,6 +158,7 @@ define(function (require) {
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
+      layer.$legend = options.$legend;
       return layer;
     };
 

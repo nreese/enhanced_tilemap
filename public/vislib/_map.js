@@ -1,4 +1,4 @@
-import {markerIcon} from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -84,7 +84,7 @@ define(function (require) {
         self._drawnItems.addLayer(
           L.marker(
             point,
-            {icon: markerIcon(color)}));
+            { icon: markerIcon(color) }));
       });
       this.map.addLayer(this._drawnItems);
       this._layerControl.addOverlay(this._drawnItems, 'Markers');
@@ -229,8 +229,19 @@ define(function (require) {
         delete this._poiLayers[layerName];
       }
 
-      if (isVisible) this.map.addLayer(layer);
-      this._layerControl.addOverlay(layer, layerName);
+      if (isVisible) {
+        this.map.addLayer(layer);
+      }
+
+      const tooManyDocs = layer.$legend[0].tooManyDocsInfo;
+
+      if (tooManyDocs) {
+        //icon       +   message
+        this._layerControl.addOverlay(layer, layerName + '  ' + tooManyDocs[0] + tooManyDocs[1]);
+      } else {
+        this._layerControl.addOverlay(layer, layerName);
+      }
+
       this._poiLayers[layerName] = layer;
 
       //Add tool to l.draw.toolbar so users can filter by POIs
@@ -555,7 +566,6 @@ define(function (require) {
       if (!this._geoJson) return [];
       return _.pluck(this._geoJson.features, 'properties.rectangle');
     };
-
     return TileMapMap;
   };
 });
