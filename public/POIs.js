@@ -87,7 +87,6 @@ define(function (require) {
             //Too many documents warning for each specific layer
             options.$legend[0].tooManyDocsInfo = '';
 
-            console.log(searchResp.hits.total + '    ' + this.limit);
             if (searchResp.hits.total > this.limit) {
               options.$legend[0].tooManyDocsInfo = tooManyDocsInfo;
               options.$legend[0].innerHTML = tooManyDocsInfo[0];
