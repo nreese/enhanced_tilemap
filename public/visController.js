@@ -89,7 +89,7 @@ define(function (require) {
       collar = utils.scaleBounds(
         map.mapBounds(),
         $scope.vis.params.collarScale);
-      const filter = {geo_bounding_box: {}};
+      const filter = { geo_bounding_box: {} };
       filter.geo_bounding_box[field] = collar;
       return filter;
     }
@@ -101,11 +101,21 @@ define(function (require) {
       }
     });
 
+    function getGeoBoundingBox() {
+       //collarscale is hardcoded to exactly the size of the map canvas
+      const geoBoundingBox = utils.scaleBounds(map.mapBounds(), 1);
+      return { geoBoundingBox };
+    };
+
     function initPOILayer(layerParams) {
       const poi = new POIsProvider(layerParams);
       const options = {
         color: _.get(layerParams, 'color', '#008800'),
-        size: _.get(layerParams, 'markerSize', 'm')
+        size: _.get(layerParams, 'markerSize', 'm'),
+        mapExtentFilter: {
+          geo_bounding_box: getGeoBoundingBox(),
+          geoField: getGeoField()
+        }
       };
       poi.getLayer(options, function (layer) {
         map.addPOILayer(layerParams.savedSearchId, layer);
@@ -139,12 +149,11 @@ define(function (require) {
 
         draw();
 
-        _.filter($scope.vis.params.overlays.savedSearches, function (layerParams) {
-          return layerParams.syncFilters;
-        }).forEach(function (layerParams) {
-          initPOILayer(layerParams);
-        });
-      }
+      };
+
+      //Initialize POI layer regardless of aggregations being present
+      //the logic of whether to draw POI is handled in POI.js
+      $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
     });
 
     $scope.$on('$destroy', function () {
@@ -195,10 +204,10 @@ define(function (require) {
       }*/
       if (_.get(tooltipParams, 'type') === 'visualization') {
         tooltip = new VisTooltip(
-            _.get(tooltipParams, 'options.visId'),
-            geoField.fieldname,
-            geoField.geotype,
-            options);
+          _.get(tooltipParams, 'options.visId'),
+          geoField.fieldname,
+          geoField.geotype,
+          options);
         tooltipFormatter = tooltip.getFormatter();
       } else {
         tooltipFormatter = Private(TileMapTooltipFormatterProvider);
