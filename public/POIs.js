@@ -4,9 +4,7 @@ import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
-import { GeoFilterFactory } from 'plugins/enhanced_tilemap/vislib/geoFilter';
 import utils from 'plugins/enhanced_tilemap/utils';
-import { PassThrough } from 'stream';
 
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {
@@ -72,24 +70,24 @@ define(function (require) {
         });
 
         const tooManyDocsInfo = [
-          '<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>',
-          '<b><p class="text-color-warning">Caution: Undisplayed POIs present on map canvas,<br>' +
-                                            'you can increase to a maximum of 1000 POIs per layer<br>' +
-                                            'by adjusting the Limit field in POI setup options</b>'
+          `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
+          `<b><p class="text-color-warning">Caution: Undisplayed POIs present on map canvas,<br>
+                                            you can increase to a maximum of 1000 POIs per layer<br>
+                                            by adjusting the Limit field in POI setup options</b>`
         ];
 
         //Removal of previous too many documents warning when map is changed to a new extent
-        options.$legend[0].innerHTML = '';
+        options.$legend.innerHTML = '';
 
         searchSource.fetch()
           .then(searchResp => {
 
             //Too many documents warning for each specific layer
-            options.$legend[0].tooManyDocsInfo = '';
+            options.$legend.tooManyDocsInfo = '';
 
             if (searchResp.hits.total > this.limit) {
-              options.$legend[0].tooManyDocsInfo = tooManyDocsInfo;
-              options.$legend[0].innerHTML = tooManyDocsInfo[0];
+              options.$legend.innerHTML = tooManyDocsInfo[0];
+              options.$legend.tooManyDocsInfo = tooManyDocsInfo;
             };
             callback(self._createLayer(searchResp.hits.hits, geoType, options));
           });

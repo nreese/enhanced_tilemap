@@ -119,7 +119,11 @@ define(function (require) {
       };
 
       //Element rendered in Leaflet Library
-      options.$legend = $element.find('a.leaflet-control-layers-toggle');
+      const $legend = $element.find('a.leaflet-control-layers-toggle').get(0);
+
+      if ($legend) {
+        options.$legend = $legend;
+      }
 
       poi.getLayer(options, function (layer) {
         map.addPOILayer(layerParams.savedSearchId, layer);
