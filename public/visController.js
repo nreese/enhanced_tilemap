@@ -1,6 +1,7 @@
 import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
+import chrome from 'ui/chrome';
 import { Binder } from 'ui/binder';
 import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
@@ -20,7 +21,7 @@ define(function (require) {
 
   module.controller('KbnEnhancedTilemapVisController', function (
     $scope, $rootScope, $element, $timeout,
-    Private, courier, config, getAppState, indexPatterns) {
+    Private, courier, config, getAppState, indexPatterns, $http) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -282,6 +283,16 @@ define(function (require) {
             }
             esQuery.bool.must_not = cleanedMustNot;
 
+            if (JSON.stringify(esQuery).includes('join_sequence')) {
+              return $http.post(chrome.getBasePath() + '/translateToES', { query: esQuery})
+              .then(resp => {
+                return resp.data.translatedQuery;
+              });
+            } else {
+              return Promise.resolve(esQuery);
+            }
+          })
+          .then(esQuery => {
             const name = _.get(layerParams, 'displayName', layerParams.layers);
             const wmsOptions = {
               format: 'image/png',
