@@ -23,6 +23,26 @@
       ng-model="layer.layers"   
       name="layer.layers">
   </div>
+
+  <!--
+  <div class="vis-option-item form-group">
+    <label> 
+      Testing Layers
+    </label>
+    <ui-select multiple ng-model="ctrl.multipleDemo.selectedPeople" theme="bootstrap" ng-disabled="ctrl.disabled"
+      sortable="true" close-on-select="false">
+      <ui-select-match placeholder="Select layer(s)...">{{$item.name}} &lt;{{$item.email}}&gt;</ui-select-match>
+      <ui-select-choices repeat="person in ctrl.people | propsFilter: {name: $select.search, age: $select.search}">
+        <div ng-bind-html="person.name | highlight: $select.search"></div>
+        <small>
+          email: {{person.email}}
+          age: <span ng-bind-html="''+person.age | highlight: $select.search"></span>
+        </small>
+      </ui-select-choices>
+    </ui-select>
+  </div>
+  -->
+
   <div class="vis-option-item form-group">
     <label>
       CQL Filter

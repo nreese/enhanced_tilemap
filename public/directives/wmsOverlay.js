@@ -12,6 +12,12 @@ define(function (require) {
       },
       template: require('./wmsOverlay.html'),
       link: function (scope, element, attrs) {
+
+        scope.$watch('layer', function (layer) {
+          console.log('here wms overlay');
+          console.log(layer);
+        });
+        //console.log(scope);
         scope.zoomLevels = [];
         for (let i = 0; i <= 18; i++) {
           scope.zoomLevels.push(i);

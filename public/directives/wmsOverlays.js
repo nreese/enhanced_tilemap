@@ -13,6 +13,18 @@ define(function (require) {
       },
       template: require('./wmsOverlays.html'),
       link: function (scope, element, attrs) {
+
+        //watchers that should pick up change in wmsOverlays
+        //from the visController.js 
+        scope.$watch('layers', function (layers) {
+          console.log('TRUE here wms overlays');
+          console.log(layers);
+        }, true);
+
+        scope.$watchCollection('layers', function (layers) {
+          console.log('here wms overlays');
+          console.log(layers);
+        });
         scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({

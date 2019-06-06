@@ -2,6 +2,7 @@ import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
 import chrome from 'ui/chrome';
+import { parseString } from 'xml2js';
 import { Binder } from 'ui/binder';
 import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
@@ -103,7 +104,7 @@ define(function (require) {
     });
 
     function getGeoBoundingBox() {
-       //collarscale is hardcoded to exactly the size of the map canvas
+      //collarscale is hardcoded to exactly the size of the map canvas
       const geoBoundingBox = utils.scaleBounds(map.mapBounds(), 1);
       return { geoBoundingBox };
     };
@@ -132,6 +133,12 @@ define(function (require) {
     }
 
     $scope.$watch('vis.params', function (visParams, oldParams) {
+
+      console.log('visParams');
+      console.log(visParams);
+      console.log('oldParams');
+      console.log(oldParams);
+
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
@@ -141,12 +148,39 @@ define(function (require) {
         draw();
 
         map.saturateTiles(visParams.isDesaturated);
+
+        //POI overlays
         map.clearPOILayers();
         $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
           initPOILayer(layerParams);
         });
       }
+
+
+      //What I'm trying to do is bind the array of layer names from Geoserver to the scope.
+      //When apply changes is clicked, the WMS overlay form details successfully reach this watcher
+
+      //This is proven by the console.log below 'here4'. It prints both wmsOverlays with
+      //the correct layer list added.
+
+      //The problem is that the, 'here4' printed object, does not make it's way back
+      //to wmsOverlays.html 
+      //I understand this to be the case as the watcher I've added in wmsOverlays.js
+      //should pick up this change (commented in that file). I also understand that it should
+      //make it's way there through the last line of the options.html file (also commented)
+
+      $scope.vis.params.overlays.wmsOverlays.forEach(wmsOverlay => {
+        getWMSLayerList(wmsOverlay.url)
+          .then(array => {
+            wmsOverlay.test = 'singleattributetest';
+            wmsOverlay.wmsLayers = array;
+          });
+
+      });
+      console.log('here4');
+      console.log($scope.vis.params.overlays.wmsOverlays);
     });
+
 
     $scope.$listen(queryFilter, 'update', function () {
       setTooltipFormatter($scope.vis.params.tooltip);
@@ -284,62 +318,83 @@ define(function (require) {
             esQuery.bool.must_not = cleanedMustNot;
 
             if (JSON.stringify(esQuery).includes('join_sequence')) {
-              return $http.post(chrome.getBasePath() + '/translateToES', { query: esQuery})
-              .then(resp => {
-                return resp.data.translatedQuery;
-              });
+              return $http.post(chrome.getBasePath() + '/translateToES', { query: esQuery })
+                .then(resp => {
+                  return resp.data.translatedQuery;
+                });
             } else {
               return Promise.resolve(esQuery);
             }
           })
-          .then(esQuery => {
-            const name = _.get(layerParams, 'displayName', layerParams.layers);
-            const wmsOptions = {
-              format: 'image/png',
-              layers: layerParams.layers,
-              maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
-              minZoom: _.get(layerParams, 'minZoom', 13),
-              transparent: true,
-              version: '1.1.1'
-            };
-            const viewparams = [];
-            if (_.get(layerParams, 'viewparams')) {
-              viewparams.push('q:' + JSON.stringify(esQuery));
-            }
-            const aggs = _.get(layerParams, 'agg', '');
-            if (aggs.length !== 0) {
-              viewparams.push('a:' + aggs);
-            }
-            if (viewparams.length >= 1) {
-              //http://docs.geoserver.org/stable/en/user/data/database/sqlview.html#using-a-parametric-sql-view
-              wmsOptions.viewparams = _.map(viewparams, param => {
-                let escaped = param;
-                escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
-                //escaped = escaped.replace(/\s/g, ''); //remove whitespace
-                return escaped;
-              }).join(';');
-            }
-            const cqlFilter = _.get(layerParams, 'cqlFilter', '');
-            if (cqlFilter.length !== 0) {
-              wmsOptions.CQL_FILTER = cqlFilter;
-            }
-            const styles = _.get(layerParams, 'styles', '');
-            if (styles.length !== 0) {
-              wmsOptions.styles = styles;
-            }
-            const formatOptions = _.get(layerParams, 'formatOptions', '');
-            if (formatOptions.length !== 0) {
-              wmsOptions.format_options = formatOptions;
-            }
-            const layerOptions = {
-              isVisible: _.get(prevState, name, true),
-              nonTiled: _.get(layerParams, 'nonTiled', false)
-            };
-            map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
-          });
+            .then(esQuery => {
+              const name = _.get(layerParams, 'displayName', layerParams.layers);
+              const wmsOptions = {
+                format: 'image/png',
+                layers: layerParams.layers,
+                maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
+                minZoom: _.get(layerParams, 'minZoom', 13),
+                transparent: true,
+                version: '1.1.1'
+              };
+              const viewparams = [];
+              if (_.get(layerParams, 'viewparams')) {
+                viewparams.push('q:' + JSON.stringify(esQuery));
+              }
+              const aggs = _.get(layerParams, 'agg', '');
+              if (aggs.length !== 0) {
+                viewparams.push('a:' + aggs);
+              }
+              if (viewparams.length >= 1) {
+                //http://docs.geoserver.org/stable/en/user/data/database/sqlview.html#using-a-parametric-sql-view
+                wmsOptions.viewparams = _.map(viewparams, param => {
+                  let escaped = param;
+                  escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
+                  //escaped = escaped.replace(/\s/g, ''); //remove whitespace
+                  return escaped;
+                }).join(';');
+              }
+              const cqlFilter = _.get(layerParams, 'cqlFilter', '');
+              if (cqlFilter.length !== 0) {
+                wmsOptions.CQL_FILTER = cqlFilter;
+              }
+              const styles = _.get(layerParams, 'styles', '');
+              if (styles.length !== 0) {
+                wmsOptions.styles = styles;
+              }
+              const formatOptions = _.get(layerParams, 'formatOptions', '');
+              if (formatOptions.length !== 0) {
+                wmsOptions.format_options = formatOptions;
+              }
+              const layerOptions = {
+                isVisible: _.get(prevState, name, true),
+                nonTiled: _.get(layerParams, 'nonTiled', false)
+              };
+              map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
+            });
         });
       });
-    }
+    };
+
+    function getWMSLayerList(url) {
+      const wmsLayerNames = [];
+      const getCapabilitiesRequest = url + 'service=wms&request=GetCapabilities';
+
+      return $http.get(getCapabilitiesRequest)
+        .then(resp => {
+          if (resp.data) {
+            const wmsCapabilities = resp.data;
+            parseString(wmsCapabilities, function (err, result) {
+              result.WMS_Capabilities.Capability[0].Layer[0].Layer.forEach(layer => {
+                wmsLayerNames.push(layer.Name[0]);
+              });
+            });
+
+            if (wmsLayerNames.length > 0) {
+              return wmsLayerNames;
+            }
+          }
+        });
+    };
 
     function appendMap() {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
