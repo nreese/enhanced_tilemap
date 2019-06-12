@@ -3,119 +3,107 @@
     <label>
       Layer Name <kbn-info info="Layer name displayed in map layer control."></kbn-info>
     </label>
-    <input type="text" class="form-control"
-      ng-model="layer.displayName"   
-      name="displayName">
+    <input type="text" class="form-control" ng-model="layer.displayName" name="displayName">
   </div>
   <div class="vis-option-item form-group">
     <label>
       Url
     </label>
-    <input required type="text" class="form-control"
-      name="url"
-      ng-model="layer.url">    
-  </div>
-  <div class="vis-option-item form-group">
-    <label>
-      Layers <kbn-info info="A comma seperated list of layers to use."></kbn-info>
-    </label>
-    <input required type="text" class="form-control"
-      ng-model="layer.layers"   
-      name="layer.layers">
+    <input required type="text" class="form-control" name="url" ng-model="layer.url">
   </div>
 
-  <!--
-  <div class="vis-option-item form-group">
-    <label> 
+  <div class="vis-option-item form-group" ng-if="layer.wmsLayers.length > 0">
+    <label>
       Testing Layers
     </label>
-    <ui-select multiple ng-model="ctrl.multipleDemo.selectedPeople" theme="bootstrap" ng-disabled="ctrl.disabled"
-      sortable="true" close-on-select="false">
-      <ui-select-match placeholder="Select layer(s)...">{{$item.name}} &lt;{{$item.email}}&gt;</ui-select-match>
-      <ui-select-choices repeat="person in ctrl.people | propsFilter: {name: $select.search, age: $select.search}">
-        <div ng-bind-html="person.name | highlight: $select.search"></div>
-        <small>
-          email: {{person.email}}
-          age: <span ng-bind-html="''+person.age | highlight: $select.search"></span>
-        </small>
+
+    <ui-select multiple ng-model="layer.wmsLayers.selected" ng-disabled="ctrl.disabled" sortable="true"
+      close-on-select="false">
+      <ui-select-match placeholder="Click to select WMS layer(s)...">{{$item.name}}</ui-select-match>
+      <ui-select-choices repeat="wmsLayer in layer.wmsLayers | filter: {name: $select.search}">
+        <div ng-bind-html="wmsLayer.name | highlight: $select.search"></div>
       </ui-select-choices>
     </ui-select>
   </div>
-  -->
+
+  <div ng-if="!layer.wmsLayers || layer.wmsLayers.length === 0">
+    <label>
+      WMS Layers <kbn-info
+        info="A comma seperated list of layers to use. If you have entered a valid (CORs enabled) WMS Url, you can select WMS layers here">
+      </kbn-info>
+    </label>
+
+    <input required type="text" class="form-control" ng-model="layer.layers" name="layer.layers">
+  </div>
+
 
   <div class="vis-option-item form-group">
     <label>
       CQL Filter
     </label>
-    <input type="text" class="form-control"
-      ng-model="layer.cqlFilter"   
-      name="layer.cqlFilter">
+    <input type="text" class="form-control" ng-model="layer.cqlFilter" name="layer.cqlFilter">
   </div>
   <div class="vis-option-item form-group side-by-side">
     <label>
-      Min Zoom Level <kbn-info info="WMS layer will only be active when the map zoom level is at or below this value."></kbn-info>
+      Min Zoom Level <kbn-info info="WMS layer will only be active when the map zoom level is at or below this value.">
+      </kbn-info>
     </label>
-    <select class="form-control" ng-model="layer.minZoom"
-      ng-options="zoomLevel for zoomLevel in zoomLevels"></select>
+    <select class="form-control" ng-model="layer.minZoom" ng-options="zoomLevel for zoomLevel in zoomLevels"></select>
   </div>
   <div class="vis-option-item form-group side-by-side">
     <label>
       Max Features <kbn-info info="Sets a limit on the amount of features rendered per tile."></kbn-info>
     </label>
-    <input type="number" min="1" class="form-control"
-      placeholder="1000" 
-      ng-model="layer.maxFeatures"   
+    <input type="number" min="1" class="form-control" placeholder="1000" ng-model="layer.maxFeatures"
       name="layer.maxFeatures">
   </div>
   <div class="vis-option-item form-group">
     <label>
       Styles
     </label>
-    <input type="text" class="form-control"
-      ng-model="layer.styles"
-      name="layer.styles">
+    <input type="text" class="form-control" ng-model="layer.styles" name="layer.styles">
   </div>
   <div class="vis-option-item form-group">
     <label>
       Format Options
     </label>
-    <input type="text" class="form-control"
-      ng-model="layer.formatOptions"
-      name="layer.formatOptions">
+    <input type="text" class="form-control" ng-model="layer.formatOptions" name="layer.formatOptions">
   </div>
   <div class="vis-option-item form-group">
     <label>
-      <input type="checkbox"
-      name="viewparams"
-      ng-model="layer.nonTiled">
+      <input type="checkbox" name="viewparams" ng-model="layer.nonTiled">
 
       Non Tiled
 
-      <kbn-info info="When true, map will fetch a single tile for the complete map viewport. Useful when the layer contains rendered labels such as legends."></kbn-info>
+      <kbn-info
+        info="When true, map will fetch a single tile for the complete map viewport. Useful when the layer contains rendered labels such as legends.">
+      </kbn-info>
     </label>
   </div>
   <div>
     <label class="etm-well-section">
-      Elasticsearch WMS Options <kbn-info info="WMS layers served from elasticsearch via elasticgeo/geoserver allow for greater integration with elasticsearch queries and aggregations."></kbn-info>
+      Elasticsearch WMS Options <kbn-info
+        info="WMS layers served from elasticsearch via elasticgeo/geoserver allow for greater integration with elasticsearch queries and aggregations.">
+      </kbn-info>
     </label>
   </div>
   <div class="vis-option-item form-group">
     <label>
-      Aggregation <kbn-info info="Generate WMS layer from geohash_grid aggregation results. To use, properly configure geoserver by creating a SLD style containing a vec:GeoHashGrid rendering transformation. See elasticgeo documenation for details."></kbn-info>
+      Aggregation <kbn-info
+        info="Generate WMS layer from geohash_grid aggregation results. To use, properly configure geoserver by creating a SLD style containing a vec:GeoHashGrid rendering transformation. See elasticgeo documenation for details.">
+      </kbn-info>
     </label>
-    <textarea class="form-control"
-      ng-model="layer.agg"
-      name="layer.agg"></textarea>
+    <textarea class="form-control" ng-model="layer.agg" name="layer.agg"></textarea>
   </div>
   <div class="vis-option-item form-group">
     <label>
-      <input type="checkbox"
-      name="viewparams"
-      ng-model="layer.viewparams">
+      <input type="checkbox" name="viewparams" ng-model="layer.viewparams">
 
       Sync Filters
 
-      <kbn-info info="When true, filters are included in the WMS server request resulting in tiles that reflect the time range, search query, and filters of your application. Requires WMS to be served from an elasticsearch Store, e.g. elasticgeo plugin for Geoserver."></kbn-info>
+      <kbn-info
+        info="When true, filters are included in the WMS server request resulting in tiles that reflect the time range, search query, and filters of your application. Requires WMS to be served from an elasticsearch Store, e.g. elasticgeo plugin for Geoserver.">
+      </kbn-info>
     </label>
   </div>
   <div class="form-group" ng-show="layer.viewparams">

@@ -197,6 +197,25 @@ div.minicolors .minicolors-swatch {
   background-color: white;
   }  
 
+.ui-select-match-item {
+    width: 100%;
+    text-align: left;
+    height: 22px;
+  
+  .ui-select-match-close {
+    margin-top: 1px;
+  }
+  span[uis-transclude-append] {    
+    span {
+      width: calc(100% - 5px);
+      text-overflow: ellipsis;
+      display: inline-block;
+      overflow: hidden;
+    }
+  }
+}
+
+
 .tilemap-legend {
   .rzslider {
     margin: 15px 0 5px 0;
