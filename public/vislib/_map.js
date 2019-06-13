@@ -233,11 +233,13 @@ define(function (require) {
         this.map.addLayer(layer);
       }
 
-      const tooManyDocs = layer.$legend.tooManyDocsInfo;
+      const tooManyDocs = {
+        icon: layer.$legend.tooManyDocsInfo[0],
+        message: layer.$legend.tooManyDocsInfo[1]
+      };
 
-      if (tooManyDocs) {
-        //                                                          icon       +   message
-        this._layerControl.addOverlay(layer, layerName + '  ' + tooManyDocs[0] + tooManyDocs[1]);
+      if (tooManyDocs.icon) {
+        this._layerControl.addOverlay(layer, layerName + '  ' + tooManyDocs.icon + tooManyDocs.message);
       } else {
         this._layerControl.addOverlay(layer, layerName);
       }

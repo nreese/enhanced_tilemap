@@ -101,40 +101,40 @@ define(function (require) {
     }
 
     function doWmsToUiSelectFormat(unformattedWmsList) {
-      const formattedWmsList = [];
-      unformattedWmsList.map(unformattedWmslayer => {
-        formattedWmsList.push({ 'name': unformattedWmslayer });
+      return unformattedWmsList.map(name => {
+        return { name };
       });
-      return formattedWmsList;
     }
 
 
     function getWMSLayerList(url) {
-      const wmsLayerNames = [];
       const getCapabilitiesRequest = url + 'service=wms&request=GetCapabilities';
 
       return $http.get(getCapabilitiesRequest)
         .then(resp => {
           if (resp.data) {
             const wmsCapabilities = resp.data;
-            parseString(wmsCapabilities, function (err, result) {
-              result.WMS_Capabilities.Capability[0].Layer[0].Layer.forEach(layer => {
-                wmsLayerNames.push(layer.Name[0]);
+            return new Promise((resolve, reject) => {
+              parseString(wmsCapabilities, function (err, result) {
+
+                if (err) {
+                  reject(err);
+                }
+
+                //handles case(s) where there are no layer names returned from the WMS
+                if (result.WMS_Capabilities.Capability[0].Layer[0].Layer) {
+                  const wmsLayerNames = result.WMS_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
+                  resolve(wmsLayerNames);
+                };
+
               });
             });
-
-            if (wmsLayerNames && wmsLayerNames.length > 0) {
-              return wmsLayerNames;
-            } else {
-              return [];
-            }
           }
         })
         .catch(err => {
-          console.warn('An issue was encountered returning a layers list from WMS. Please verify your ' +
-          'url (' + err.config.url + ') is correct and WMS is CORs enabled for this domain.');
+          console.warn('An issue was encountered returning a layers list from WMS. Verify your ' +
+            'WMS url (' + err.config.url + ') is correct, has layers present and WMS is CORs enabled for this domain.');
         });
     };
-
   });
 });
