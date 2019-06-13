@@ -14,40 +14,57 @@ define(function (require) {
       template: require('./wmsOverlay.html'),
       link: function (scope, element, attrs) {
 
-        scope.$watchCollection('layer', function (newLayer, oldLayer) {
+        scope.layer.wmsCapabilitiesSwitch = 0;
 
-          const newUrl = newLayer.url;
-          const oldUrl = oldLayer.url;
+        function wmsRequest(url) {
+          getWMSLayerList(url).then(wmsLayers => {
 
-          if (newUrl !== oldUrl && newUrl.substr(-1) === '?') {
-
-            getWMSLayerList(newUrl).then(wmsLayers => {
-              if (wmsLayers) {
-                scope.layer.wmsLayers = doWmsToUiSelectFormat(wmsLayers);
+            //if there is a valid response from WMS server
+            if (wmsLayers) {
+              scope.layer.wmsLayers = doWmsToUiSelectFormat(wmsLayers);
+              if (scope.layer.layers) {
+                scope.layer.wmsLayers.selected = doLayerToUiSelectFormat(scope.layer.layers);
               } else {
-                scope.layer.wmsLayers = [];
+                scope.layer.wmsLayers.selected = [];
               }
-            });
 
-            //newUrl not existing means on page load
-          } else if (!newUrl && oldUrl.substr(-1) === '?') {
-            getWMSLayerList(oldUrl).then(wmsLayers => {
-              if (wmsLayers) {
-                scope.layer.wmsLayers = doWmsToUiSelectFormat(wmsLayers);
-              } else {
-                scope.layer.wmsLayers = [];
-              }
-            });
+              scope.layer.wmsCapabilitiesSwitch = 1;
+
+              //if there is not a valid response form WMS server
+            } else {
+              scope.layer.wmsCapabilitiesSwitch = 0;
+              //if there are selected layers present, but
+              //url is not valid on this digest
+              if (scope.layer.wmsLayers.selected) {
+                scope.layer.layers = doUiSelectFormatToLayer(scope.layer.wmsLayers.selected);
+              };
+            }
+          });
+        };
+
+        //this is for the initial rendering of the map
+        if (scope.layer.url) {
+          wmsRequest(scope.layer.url);
+        };
+
+        //Watchers for url and getCapabilitiesSwitch equals to 0 or 1
+        //this is for subsequent rendering based on changes to the wms url
+        scope.$watch('layer.url', function (newUrl, oldUrl) {
+          if (newUrl !== oldUrl) {
+            wmsRequest(newUrl);
           };
-
-          //change from ui-select object to WMS layer request format
-          //depending on the validity of the inputted Url
-          if (scope.layer.wmsLayers.selected) {
-            scope.layer.layers = doUiSelectFormatToLayer(scope.layer.wmsLayers.selected);
-          } else {
-            scope.layer.wmsLayers.selected = doLayerToUiSelectFormat(scope.layer.layers);
-          };
-
+        });
+        //this is for subsequent rendering based on changes to the UiSelect
+        scope.$watch('layer.wmsLayers.selected', function (newWmsLayers, oldWmsLayers) {
+          if (newWmsLayers !== oldWmsLayers) {
+            scope.layer.layers = doUiSelectFormatToLayer(newWmsLayers);
+          }
+        });
+        //this is for subsequent rendering based on changes to the comma separated layer list option
+        scope.$watch('layer.layers', function (newLayers, oldLayers) {
+          if (newLayers !== oldLayers) {
+            scope.layer.layers = newLayers;
+          }
         });
 
         scope.zoomLevels = [];
@@ -80,7 +97,6 @@ define(function (require) {
       layerArray.map(layerName => {
         formattedWmsList.push({ 'name': layerName });
       });
-      console.log(formattedWmsList);
       return formattedWmsList;
     }
 
@@ -99,7 +115,6 @@ define(function (require) {
 
       return $http.get(getCapabilitiesRequest)
         .then(resp => {
-          //console.log(resp.data);
           if (resp.data) {
             const wmsCapabilities = resp.data;
             parseString(wmsCapabilities, function (err, result) {
@@ -114,9 +129,10 @@ define(function (require) {
               return [];
             }
           }
-        }).catch(err => {
-          console.error('Error with request to WMS server, please verify url is correct and ' +
-            'WMS is CORs enabled for this domain: ' + err.config.url);
+        })
+        .catch(err => {
+          console.warn('An issue was encountered returning a layers list from WMS. Please verify your ' +
+          'url (' + err.config.url + ') is correct and WMS is CORs enabled for this domain.');
         });
     };
 

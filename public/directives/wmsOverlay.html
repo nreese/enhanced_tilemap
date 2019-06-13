@@ -12,11 +12,21 @@
     <input required type="text" class="form-control" name="url" ng-model="layer.url">
   </div>
 
-  <div class="vis-option-item form-group" ng-if="layer.wmsLayers.length > 0">
-    <label>
-      Testing Layers
-    </label>
 
+  <div ng-if="layer.wmsCapabilitiesSwitch === 0">
+    <label>
+      WMS Layers <kbn-info
+        info="A comma seperated list of layers to use. If you have entered a valid (CORs enabled) WMS Url, a UI-based menu will appear for WMS layer(s) selection and ordering">
+      </kbn-info>
+    </label>
+    <input required type="text" class="form-control" ng-model="layer.layers">
+  </div>
+  <!-- OR-->
+  <div class="vis-option-item form-group" ng-if="layer.wmsCapabilitiesSwitch === 1">
+    <label>
+      WMS Layers <kbn-info
+        info="UI-based menu for selecting and ordering WMS layers. Note - Layers at the bottom will be rendered in the foreground">
+    </label>
     <ui-select multiple ng-model="layer.wmsLayers.selected" ng-disabled="ctrl.disabled" sortable="true"
       close-on-select="false">
       <ui-select-match placeholder="Click to select WMS layer(s)...">{{$item.name}}</ui-select-match>
@@ -24,16 +34,6 @@
         <div ng-bind-html="wmsLayer.name | highlight: $select.search"></div>
       </ui-select-choices>
     </ui-select>
-  </div>
-
-  <div ng-if="!layer.wmsLayers || layer.wmsLayers.length === 0">
-    <label>
-      WMS Layers <kbn-info
-        info="A comma seperated list of layers to use. If you have entered a valid (CORs enabled) WMS Url, you can select WMS layers here">
-      </kbn-info>
-    </label>
-
-    <input required type="text" class="form-control" ng-model="layer.layers" name="layer.layers">
   </div>
 
 
