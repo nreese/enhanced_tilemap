@@ -1,6 +1,7 @@
 import d3 from 'd3';
 import _ from 'lodash';
 import $ from 'jquery';
+import chrome from 'ui/chrome';
 import { Binder } from 'ui/binder';
 import MapProvider from 'plugins/enhanced_tilemap/vislib/_map';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
@@ -20,7 +21,7 @@ define(function (require) {
 
   module.controller('KbnEnhancedTilemapVisController', function (
     $scope, $rootScope, $element, $timeout,
-    Private, courier, config, getAppState, indexPatterns) {
+    Private, courier, config, getAppState, indexPatterns, $http) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -102,7 +103,7 @@ define(function (require) {
     });
 
     function getGeoBoundingBox() {
-       //collarscale is hardcoded to exactly the size of the map canvas
+      //collarscale is hardcoded to exactly the size of the map canvas
       const geoBoundingBox = utils.scaleBounds(map.mapBounds(), 1);
       return { geoBoundingBox };
     };
@@ -117,12 +118,21 @@ define(function (require) {
           geoField: getGeoField()
         }
       };
+
+      //Element rendered in Leaflet Library
+      const $legend = $element.find('a.leaflet-control-layers-toggle').get(0);
+
+      if ($legend) {
+        options.$legend = $legend;
+      }
+
       poi.getLayer(options, function (layer) {
         map.addPOILayer(layerParams.savedSearchId, layer);
       });
     }
 
     $scope.$watch('vis.params', function (visParams, oldParams) {
+
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
@@ -132,6 +142,8 @@ define(function (require) {
         draw();
 
         map.saturateTiles(visParams.isDesaturated);
+
+        //POI overlays
         map.clearPOILayers();
         $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
           initPOILayer(layerParams);
@@ -144,7 +156,7 @@ define(function (require) {
     });
 
     $scope.$watch('esResponse', function (resp) {
-      if (_.has(resp, 'aggregations')) {
+      if (_.has(resp, 'aggregations') && (resp.aggregations[2].doc_count > 0)) {
         chartData = respProcessor.process(resp);
 
         draw();
@@ -274,53 +286,63 @@ define(function (require) {
             }
             esQuery.bool.must_not = cleanedMustNot;
 
-            const name = _.get(layerParams, 'displayName', layerParams.layers);
-            const wmsOptions = {
-              format: 'image/png',
-              layers: layerParams.layers,
-              maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
-              minZoom: _.get(layerParams, 'minZoom', 13),
-              transparent: true,
-              version: '1.1.1'
-            };
-            const viewparams = [];
-            if (_.get(layerParams, 'viewparams')) {
-              viewparams.push('q:' + JSON.stringify(esQuery));
+            if (JSON.stringify(esQuery).includes('join_sequence')) {
+              return $http.post(chrome.getBasePath() + '/translateToES', { query: esQuery })
+                .then(resp => {
+                  return resp.data.translatedQuery;
+                });
+            } else {
+              return Promise.resolve(esQuery);
             }
-            const aggs = _.get(layerParams, 'agg', '');
-            if (aggs.length !== 0) {
-              viewparams.push('a:' + aggs);
-            }
-            if (viewparams.length >= 1) {
-              //http://docs.geoserver.org/stable/en/user/data/database/sqlview.html#using-a-parametric-sql-view
-              wmsOptions.viewparams = _.map(viewparams, param => {
-                let escaped = param;
-                escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
-                //escaped = escaped.replace(/\s/g, ''); //remove whitespace
-                return escaped;
-              }).join(';');
-            }
-            const cqlFilter = _.get(layerParams, 'cqlFilter', '');
-            if (cqlFilter.length !== 0) {
-              wmsOptions.CQL_FILTER = cqlFilter;
-            }
-            const styles = _.get(layerParams, 'styles', '');
-            if (styles.length !== 0) {
-              wmsOptions.styles = styles;
-            }
-            const formatOptions = _.get(layerParams, 'formatOptions', '');
-            if (formatOptions.length !== 0) {
-              wmsOptions.format_options = formatOptions;
-            }
-            const layerOptions = {
-              isVisible: _.get(prevState, name, true),
-              nonTiled: _.get(layerParams, 'nonTiled', false)
-            };
-            map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
-          });
+          })
+            .then(esQuery => {
+              const name = _.get(layerParams, 'displayName', layerParams.layers);
+              const wmsOptions = {
+                format: 'image/png',
+                layers: layerParams.layers,
+                maxFeatures: _.get(layerParams, 'maxFeatures', 1000),
+                minZoom: _.get(layerParams, 'minZoom', 13),
+                transparent: true,
+                version: '1.1.1'
+              };
+              const viewparams = [];
+              if (_.get(layerParams, 'viewparams')) {
+                viewparams.push('q:' + JSON.stringify(esQuery));
+              }
+              const aggs = _.get(layerParams, 'agg', '');
+              if (aggs.length !== 0) {
+                viewparams.push('a:' + aggs);
+              }
+              if (viewparams.length >= 1) {
+                //http://docs.geoserver.org/stable/en/user/data/database/sqlview.html#using-a-parametric-sql-view
+                wmsOptions.viewparams = _.map(viewparams, param => {
+                  let escaped = param;
+                  escaped = escaped.replace(new RegExp('[,]', 'g'), '\\,'); //escape comma
+                  //escaped = escaped.replace(/\s/g, ''); //remove whitespace
+                  return escaped;
+                }).join(';');
+              }
+              const cqlFilter = _.get(layerParams, 'cqlFilter', '');
+              if (cqlFilter.length !== 0) {
+                wmsOptions.CQL_FILTER = cqlFilter;
+              }
+              const styles = _.get(layerParams, 'styles', '');
+              if (styles.length !== 0) {
+                wmsOptions.styles = styles;
+              }
+              const formatOptions = _.get(layerParams, 'formatOptions', '');
+              if (formatOptions.length !== 0) {
+                wmsOptions.format_options = formatOptions;
+              }
+              const layerOptions = {
+                isVisible: _.get(prevState, name, true),
+                nonTiled: _.get(layerParams, 'nonTiled', false)
+              };
+              map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
+            });
         });
       });
-    }
+    };
 
     function appendMap() {
       const initialMapState = utils.getMapStateFromVis($scope.vis);

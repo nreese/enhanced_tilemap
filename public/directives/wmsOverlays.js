@@ -13,6 +13,7 @@ define(function (require) {
       },
       template: require('./wmsOverlays.html'),
       link: function (scope, element, attrs) {
+
         scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({
