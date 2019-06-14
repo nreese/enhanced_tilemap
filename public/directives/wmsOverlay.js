@@ -125,8 +125,9 @@ define(function (require) {
                 if (result.WMS_Capabilities.Capability[0].Layer[0].Layer) {
                   const wmsLayerNames = result.WMS_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
                   resolve(wmsLayerNames);
-                };
-
+                } else {
+                  resolve([]);
+                }
               });
             });
           }
