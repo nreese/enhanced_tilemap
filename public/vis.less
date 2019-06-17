@@ -10,18 +10,6 @@
   min-width            : 0;
   overflow             : hidden;
 
-  .etm-options-section {
-    display      : block;
-    border-bottom: 2px solid #eee;
-    margin-bottom: 3px !important;
-  }
-
-  .etm-well-section {
-    display      : block;
-    border-bottom: 2px solid #ccc;
-    margin-bottom: 3px !important;
-  }
-
   .btn-input {
     padding         : 5px 15px;
     font-size       : 14px;
@@ -35,34 +23,6 @@
 
   .btn-input:hover {
     color: #2D2D2D;
-  }
-
-  .side-by-side {
-    float: left;
-    width: 50%;
-  }
-
-  .form-control-inline {
-    display: inline;
-    width  : auto !important;
-  }
-
-  ul.etm-options-list {
-    list-style  : none;
-    padding-left: 0;
-  }
-
-  li.etm-option-item {
-    background-color: #ecf0f1;
-    margin          : 0px 5px 2px 5px;
-    padding         : 2px;
-    position        : relative;
-  }
-
-  div.rightCorner {
-    position: absolute;
-    right   : 0px;
-    top     : 0px;
   }
 
   .etm-vis .leaflet-popup-content-wrapper {
@@ -143,16 +103,6 @@
     text-align: center;
   }
 
-  .bands .minicolors-theme-bootstrap .minicolors-swatch {
-    left : inherit;
-    right: 8px;
-  }
-
-  .bands .minicolors-theme-bootstrap .minicolors-input {
-    padding-left : 4px;
-    padding-right: 44px;
-  }
-
   .bands .band-add {
     margin-top: 5px;
   }
@@ -175,25 +125,6 @@
     position: absolute;
     top     : 6px;
     left    : -24px;
-  }
-
-  .ui-select-match-item {
-    width     : 100%;
-    text-align: left;
-    height    : 22px;
-
-    .ui-select-match-close {
-      margin-top: 1px;
-    }
-
-    span[uis-transclude-append] {
-      span {
-        width        : calc(100% - 5px);
-        text-overflow: ellipsis;
-        display      : inline-block;
-        overflow     : hidden;
-      }
-    }
   }
 
   .saved-search label {
@@ -238,6 +169,80 @@
 
     .rzslider .rz-pointer:after {
       display: none;
+    }
+  }
+}
+
+.collapsible-sidebar {
+  .etm-options-section {
+    display      : block;
+    border-bottom: 2px solid #eee;
+    margin-bottom: 3px !important;
+  }
+
+  .etm-well-section {
+    display      : block;
+    border-bottom: 2px solid #ccc;
+    margin-bottom: 3px !important;
+  }
+
+  .form-control-inline {
+    display: inline;
+    width  : auto !important;
+  }
+
+  div.rightCorner {
+    position: absolute;
+    right   : 0px;
+    top     : 0px;
+  }
+
+  ul.etm-options-list {
+    list-style  : none;
+    padding-left: 0;
+  }
+
+  li.etm-option-item {
+    background-color: #ecf0f1;
+    margin          : 0px 5px 2px 5px;
+    padding         : 2px;
+    position        : relative;
+  }
+
+  .side-by-side {
+    float: left;
+    width: 50%;
+  }
+
+  .ng-isolate-scope {
+    .dropdown-menu {
+      position: unset;
+      color   : #2D2D2D;
+    }
+
+    .dropdown-menu-form {
+      width: 100%;
+    }
+  }
+
+  .ui-select-container {
+    .ui-select-match-item {
+      width     : 100%;
+      text-align: left;
+      height    : 22px;
+
+      .ui-select-match-close {
+        margin-top: 1px;
+      }
+
+      span[uis-transclude-append] {
+        span {
+          width        : calc(100% - 5px);
+          text-overflow: ellipsis;
+          display      : inline-block;
+          overflow     : hidden;
+        }
+      }
     }
   }
 

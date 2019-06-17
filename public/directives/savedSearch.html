@@ -6,77 +6,64 @@
     <p>
       {{warn}}
     </p>
-    <input placeholder="Filter Saved Searches" class="form-control"
-      ng-model="layer.filter" 
-      ng-change="filterSavedSearches()" 
-      ng-model-options="{debounce:750}" />
-    <select required class="form-control"
-      ng-change="updateIndex()"
-      ng-model="savedSearch"
+    <input placeholder="Filter Saved Searches" class="form-control" ng-model="layer.filter"
+      ng-change="filterSavedSearches()" ng-model-options="{debounce:750}" />
+    <select required class="form-control" ng-change="updateIndex()" ng-model="savedSearch"
       ng-options="item.label for item in items">
     </select>
   </div>
 
-<div class="form-group" ng-if="savedSearch">
-  <div class="form-group">
-    <label>
-      Geospatial Field
-    </label>
-    <select required class="form-control"
-      ng-model="layer.geoField"
-      ng-options="item for item in geoFields">
-    </select>
-  </div>
-  <div class="form-group">
-    <label>
-      Styling
-    </label>
-    <input
-      minicolors
-      ng-model="layer.color"
-      type="text"
-      class="form-control"
-      name="color"/>
-    <select ng-model="layer.markerSize" class="form-control marker-size">
-      <option value="xs">xs</option>
-      <option value="s">s</option>
-      <option value="m">m</option>
-      <option value="l">l</option>
-      <option value="xl">xl</option>
-    </select>
+  <div class="form-group" ng-if="savedSearch">
+    <div class="form-group">
+      <label>
+        Geospatial Field
+      </label>
+      <select required class="form-control" ng-model="layer.geoField" ng-options="item for item in geoFields">
+      </select>
+    </div>
+    <div class="form-group">
+      <label>
+        Styling
+      </label>
+      <input minicolors ng-model="layer.color" type="text" class="form-control" name="color" />
+      <select ng-model="layer.markerSize" class="form-control marker-size">
+        <option value="xs">xs</option>
+        <option value="s">s</option>
+        <option value="m">m</option>
+        <option value="l">l</option>
+        <option value="xl">xl</option>
+      </select>
 
-  </div>
-  <div class="form-group">
-    <label>
-      Popup Content
-    </label>
-    <ng-dropdown-multiselect
-      options="labelFields"
-      selected-model="layer.popupFields"
-      group-by="type"
-      extra-settings="multiSelectSettings"
-    >
-    </ng-dropdown-multiselect>
-  </div>
-  <div class="form-group">
-    <label>
-      Limit (max. 1000)
-    </label>
-    <input class="form-control"
-      type="number" min="1" max="1000"
-      placeholder="100" 
-      ng-model="layer.limit" />
-  </div>
-  <div class="form-group">
-    <label>
-      <input type="checkbox"
-        name="syncFilters"
-        ng-model="layer.syncFilters">
+    </div>
+    <div class="form-group">
+      <label>
+        Popup Content
+      </label>
+      <ng-dropdown-multiselect options="labelFields" selected-model="layer.popupFields" group-by="type"
+        extra-settings="multiSelectSettings">
 
-      Apply Filters
-      
-      <kbn-info info="Filter Saved Search results with time range, search query, and filters of your application. The layer will be updated each time a new aggregation is made."></kbn-info>
-    </label>
+        <div class="form-control">
+            Click to select pop-up fields...
+        </div>
+
+      </ng-dropdown-multiselect>
+    </div>
+    <div class="form-group">
+      <label>
+        Limit (max. 1000)
+      </label>
+      <input class="form-control" type="number" min="1" max="1000" placeholder="100" ng-model="layer.limit" />
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" name="syncFilters" ng-model="layer.syncFilters">
+
+        Apply Filters
+
+        <kbn-info
+          info="Filter Saved Search results with time range, search query, and filters of your application. The layer will be updated each time a new aggregation is made.">
+        </kbn-info>
+      </label>
+    </div>
   </div>
-</div>
 </div>
