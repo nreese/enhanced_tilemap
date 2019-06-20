@@ -19,7 +19,9 @@
         >
       </select>
     </div>
-    <tooltip-formatter tooltip="vis.params.tooltip"></tooltip-formatter>
+    <tooltip-formatter tooltip-format="vis.params.tooltip">
+    </tooltip-formatter>
+
     <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
       <div class="form-group">
         <label>
