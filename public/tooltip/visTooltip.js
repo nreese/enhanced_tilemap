@@ -68,12 +68,13 @@ define(function (require) {
           fetchTimestamp = localFetchTimestamp;
 
           //Flag identifies that this is a record table vis, required for doc_table.js
-          self.$tooltipScope.savedObj.searchSource.isPopup = true;
+          self.$tooltipScope.savedObj.searchSource.replaceHits = true;
 
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
           self.$tooltipScope.savedObj.searchSource._state.filter = [];
           const filters = queryFilter.getFilters();
-          self.$tooltipScope.savedObj.searchSource.filter(filters.concat([createFilter(feature.properties.rectangle)]));
+          filters.push(createFilter(feature.properties.rectangle))
+          self.$tooltipScope.savedObj.searchSource.filter(filters);
 
           self.$tooltipScope.savedObj.searchSource.fetch().then(esResp => {
             self.$visEl.css({
