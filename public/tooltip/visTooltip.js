@@ -44,8 +44,6 @@ define(function (require) {
           self.$tooltipScope.savedObj = savedVis;
           const uiState = savedVis.uiStateJSON ? JSON.parse(savedVis.uiStateJSON) : {};
           self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
-          const filters = queryFilter.getFilters();
-          self.$tooltipScope.savedObj.searchSource.filter(filters);
           self.$visEl = linkFn(self.$tooltipScope);
           $timeout(function () {
             renderbot = self.$visEl[0].getScope().renderbot;
@@ -68,10 +66,17 @@ define(function (require) {
 
           const localFetchTimestamp = Date.now();
           fetchTimestamp = localFetchTimestamp;
-          const searchSource = new SearchSource();
-          searchSource.inherits(self.$tooltipScope.savedObj.searchSource);
-          searchSource.filter([createFilter(feature.properties.rectangle)]);
-          searchSource.fetch().then(esResp => {
+
+          //Flag identifies that this is a record table vis, required for doc_table.js
+          self.$tooltipScope.savedObj.searchSource.replaceHits = true;
+
+          //adding pre-existing filter(s) and geohash specific filter to popup visualization
+          self.$tooltipScope.savedObj.searchSource._state.filter = [];
+          const filters = queryFilter.getFilters();
+          filters.push(createFilter(feature.properties.rectangle))
+          self.$tooltipScope.savedObj.searchSource.filter(filters);
+
+          self.$tooltipScope.savedObj.searchSource.fetch().then(esResp => {
             self.$visEl.css({
               width: width,
               height: height
@@ -86,7 +91,11 @@ define(function (require) {
               && localFetchTimestamp === fetchTimestamp) {
               $popup.empty();
               $popup.append(self.$visEl);
-              renderbot.render(esResp);
+
+              //query for record table is fired from doc_table.js, fired from here for all other vis
+              if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table') {
+                renderbot.render(esResp);
+              };
             }
           });
 
