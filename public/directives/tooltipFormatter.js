@@ -5,9 +5,10 @@ import { uiModules } from 'ui/modules';
 const module = uiModules.get('kibana');
 
 define(function (require) {
-  module.directive('tooltipFormatter', function (Private, indexPatterns) {
+  module.directive('tooltipFormatter', function (Private, indexPatterns, savedVisualizations) {
     const visService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.visualizations;
     const searchService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.searches;
+
 
     return {
       restrict: 'E',
@@ -16,7 +17,7 @@ define(function (require) {
         tooltipFormat: '='
       },
       template: require('./tooltipFormatter.html'),
-      link: function (scope, element, attrs) {
+      link: async (scope, element, attrs) => {
         if (!scope.tooltipFormat) {
           scope.tooltipFormat = {
             closeOnMouseout: true,
@@ -33,8 +34,12 @@ define(function (require) {
             value: i / 100
           });
         }
-        fetchVisList();
-        fetchSearchList();
+        await fetchSearchList();
+        await fetchVisList();
+
+        //The name of the geo_point must be the same,
+        //hence it is possible to use searches from the same index
+        const visLinkedIndex = scope.$parent.$parent.$parent.$parent.savedVis.vis.indexPattern.id;
 
         scope.filterVisList = function () {
           scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;
@@ -48,32 +53,47 @@ define(function (require) {
 
         function fetchSearchList() {
           searchService.find(scope.tooltipFormat.options.searchFilter)
-          .then(hits => {
-            scope.searchList = _.map(hits.hits, hit => {
-              return {
-                label: hit.title,
-                id: hit.id
-              };
+            .then(hits => {
+
+              scope.searchList = _.filter(hits.hits, hit => {
+                const linkedSearchIndex = JSON.parse(hit.kibanaSavedObjectMeta.searchSourceJSON).index;
+
+                if (hit.id && linkedSearchIndex === visLinkedIndex) {
+                  return {};
+                };
+              })
+                .map(search => {
+                  return {
+                    label: search.title,
+                    id: search.id
+                  };
+                });
+
             });
-          });
+        };
+
+        function matchIndex(hitSavedSearchId) {
+          return _.find(scope.searchList, compare => compare.id === hitSavedSearchId);
         }
 
         function fetchVisList() {
+          //console.log(visService);
           visService.find(scope.tooltipFormat.options.visFilter)
-          .then(hits => {
-            scope.visList = _.chain(hits.hits)
-            .filter(hit => {
-              const visState = JSON.parse(hit.visState);
-              return !_.includes(['enhanced_tilemap', 'tilemap', 'timelion'], visState.type);
-            })
-            .map(hit => {
-              return {
-                label: hit.title,
-                id: hit.id
-              };
-            })
-            .value();
-          });
+            .then(hits => {
+              scope.visList = _.chain(hits.hits)
+                .filter(hit => {
+                  const visState = JSON.parse(hit.visState);
+                  return !_.includes(['enhanced_tilemap', 'tilemap', 'timelion', 'graph_browser_vis'], visState.type)
+                    && matchIndex(hit.savedSearchId);
+                })
+                .map(hit => {
+                  return {
+                    label: hit.title,
+                    id: hit.id
+                  };
+                })
+                .value();
+            });
         }
       }
     };
