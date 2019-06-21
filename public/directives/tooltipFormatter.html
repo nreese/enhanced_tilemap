@@ -1,36 +1,39 @@
 <div class="form-group">
   <div class="form-group">
-    <label>Tooltip Formatter</label>
+    <label>
+      Tooltip Formatter
+      <kbn-info info="Select either metric (as specified on the Data tab) or a visualization to display when hovering mouse on an aggregation"></kbn-info>
+    </label>
     <select
       class="form-control"
-      ng-model="tooltip.type">
+      ng-model="tooltipFormat.type">
       <option value="metric">Metric Value</option>
       <option value="visualization">Visualization</option>
     </select>
   </div>
-  <div class="form-group" ng-if="tooltip.type === 'visualization'">
+  <div class="form-group" ng-if="tooltipFormat.type === 'visualization'">
     <input class="form-control"
       placeholder="Filter visualization list"
-      ng-model="tooltip.options.visFilter"
+      ng-model="tooltipFormat.options.visFilter"
       ng-change="filterVisList()"
       ng-model-options="{debounce:750}">
     <select required class="form-control"
-      ng-model="tooltip.options.visId"
+      ng-model="tooltipFormat.options.visId"
       ng-options="vis.id as vis.label for vis in visList">
     </select>
   </div>
-  <div class="form-group" ng-if="tooltip.type !== 'metric'">
+  <div class="form-group" ng-if="tooltipFormat.type !== 'metric'">
     <label class="side-by-side">
       Width <kbn-info info="Specify the popup width as a percentage of the map width."></kbn-info>
       <select class="form-control form-control-inline"
-        ng-model="tooltip.options.xRatio"
+        ng-model="tooltipFormat.options.xRatio"
         ng-options="option.value as option.text for option in popupDimensionOptions">
       </select>
     </label>
     <label class="side-by-side">
       Height <kbn-info info="Specify the popup height as a percentage of the map height."></kbn-info>
       <select class="form-control form-control-inline"
-        ng-model="tooltip.options.yRatio"
+        ng-model="tooltipFormat.options.yRatio"
         ng-options="option.value as option.text for option in popupDimensionOptions">
       </select>
     </label>
@@ -38,8 +41,9 @@
   <div class="form-group">
     <label>
       <input type="checkbox"
-        ng-model="tooltip.closeOnMouseout"> 
+        ng-model="tooltipFormat.closeOnMouseout"> 
       Close tooltip on mouseout
+      <kbn-info info="When mouse is hovered over an aggregation, the configured tooltip will appear. If this box is ticked, the tooltip will close when mouse is removed from aggregation"></kbn-info>
     </label>
     
   </div>

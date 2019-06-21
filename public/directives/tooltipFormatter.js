@@ -13,12 +13,12 @@ define(function (require) {
       restrict: 'E',
       replace: true,
       scope: {
-        tooltip: '='
+        tooltipFormat: '='
       },
       template: require('./tooltipFormatter.html'),
       link: function (scope, element, attrs) {
-        if (!scope.tooltip) {
-          scope.tooltip = {
+        if (!scope.tooltipFormat) {
+          scope.tooltipFormat = {
             closeOnMouseout: true,
             type: 'metric',
             options: {
@@ -37,17 +37,17 @@ define(function (require) {
         fetchSearchList();
 
         scope.filterVisList = function () {
-          scope.tooltip.options.visFilter = this.tooltip.options.visFilter;
+          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;
           fetchVisList();
         };
 
         scope.filterSearchList = function () {
-          scope.tooltip.options.searchFilter = this.tooltip.options.searchFilter;
+          scope.tooltipFormat.options.searchFilter = this.tooltipFormat.options.searchFilter;
           fetchSearchList();
         };
 
         function fetchSearchList() {
-          searchService.find(scope.tooltip.options.searchFilter)
+          searchService.find(scope.tooltipFormat.options.searchFilter)
           .then(hits => {
             scope.searchList = _.map(hits.hits, hit => {
               return {
@@ -59,7 +59,7 @@ define(function (require) {
         }
 
         function fetchVisList() {
-          visService.find(scope.tooltip.options.visFilter)
+          visService.find(scope.tooltipFormat.options.visFilter)
           .then(hits => {
             scope.visList = _.chain(hits.hits)
             .filter(hit => {

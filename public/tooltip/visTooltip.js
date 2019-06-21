@@ -73,7 +73,7 @@ define(function (require) {
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
           self.$tooltipScope.savedObj.searchSource._state.filter = [];
           const filters = queryFilter.getFilters();
-          filters.push(createFilter(feature.properties.rectangle))
+          filters.push(createFilter(feature.properties.rectangle));
           self.$tooltipScope.savedObj.searchSource.filter(filters);
 
           self.$tooltipScope.savedObj.searchSource.fetch().then(esResp => {
