@@ -59,9 +59,7 @@ define(function (require) {
           searchSource.inherits(false);
           searchSource.index(savedSearch.searchSource._state.index);
           searchSource.query(savedSearch.searchSource.get('query'));
-          const allFilters = savedSearch.searchSource.get('filter');
-          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-          searchSource.filter(allFilters);
+          searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
         }
         searchSource.size(this.limit);
         searchSource.source({
