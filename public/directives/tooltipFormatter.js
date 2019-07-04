@@ -9,15 +9,15 @@ define(function (require) {
     const visService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.visualizations;
     const searchService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.searches;
 
-
     return {
       restrict: 'E',
       replace: true,
       scope: {
-        tooltipFormat: '='
+        tooltipFormat: '=',
+        indexPatternId: '@'
       },
       template: require('./tooltipFormatter.html'),
-      link: async (scope, element, attrs) => {
+      link: (scope, element, attrs) => {
         if (!scope.tooltipFormat) {
           scope.tooltipFormat = {
             closeOnMouseout: true,
@@ -34,21 +34,18 @@ define(function (require) {
             value: i / 100
           });
         }
-        await fetchSearchList();
-        await fetchVisList();
-
-        //The name of the geo_point must be the same,
-        //hence it is possible to use searches from the same index
-        const visLinkedIndex = scope.$parent.$parent.$parent.$parent.savedVis.vis.indexPattern.id;
-
-        scope.filterVisList = function () {
-          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;
-          fetchVisList();
-        };
+        fetchSearchList();
+        fetchVisList();
 
         scope.filterSearchList = function () {
           scope.tooltipFormat.options.searchFilter = this.tooltipFormat.options.searchFilter;
           fetchSearchList();
+        };
+
+        scope.filterVisList = function () {
+          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;
+          console.log(searchService.get(this.tooltipFormat.options.visFilter));
+          fetchVisList();
         };
 
         function fetchSearchList() {
@@ -58,7 +55,9 @@ define(function (require) {
               scope.searchList = _.filter(hits.hits, hit => {
                 const linkedSearchIndex = JSON.parse(hit.kibanaSavedObjectMeta.searchSourceJSON).index;
 
-                if (hit.id && linkedSearchIndex === visLinkedIndex) {
+                //The name of the geo_point field type must be the same,
+                //hence it is possible to use vis's from the same index
+                if (hit.id && linkedSearchIndex === scope.indexPatternId) {
                   return {};
                 };
               })
