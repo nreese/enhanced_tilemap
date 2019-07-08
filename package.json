@@ -24,12 +24,13 @@
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
-    "babel-eslint": "^4.1.7",
+    "eslint-config-siren": "sirensolutions/eslint-config",
+    "babel-eslint": "^7.2.3",
     "bluebird": "^3.0.6",
-    "eslint": "^1.10.3",
-    "eslint-plugin-mocha": "1.0.0",
+    "eslint": "4.16.0",
+    "eslint-plugin-mocha": "4.11.0",
     "gulp": "^3.9.1",
-    "gulp-eslint": "^1.1.1",
+    "gulp-eslint": "^5.0.0",
     "gulp-if": "^2.0.2",
     "gulp-util": "^3.0.7",
     "gulp-zip": "3.1.0",

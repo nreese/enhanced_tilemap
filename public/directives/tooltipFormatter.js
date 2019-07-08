@@ -9,6 +9,8 @@ define(function (require) {
     const visService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.visualizations;
     const searchService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.searches;
 
+    const UNSUPPORTED_VIS_TYPES = ['enhanced_tilemap', 'tilemap', 'timelion', 'graph_browser_vis'];
+
     return {
       restrict: 'E',
       replace: true,
@@ -43,8 +45,7 @@ define(function (require) {
         };
 
         scope.filterVisList = function () {
-          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;
-          console.log(searchService.get(this.tooltipFormat.options.visFilter));
+          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;   
           fetchVisList();
         };
 
@@ -76,13 +77,12 @@ define(function (require) {
         }
 
         function fetchVisList() {
-          //console.log(visService);
           visService.find(scope.tooltipFormat.options.visFilter)
             .then(hits => {
               scope.visList = _.chain(hits.hits)
                 .filter(hit => {
                   const visState = JSON.parse(hit.visState);
-                  return !_.includes(['enhanced_tilemap', 'tilemap', 'timelion', 'graph_browser_vis'], visState.type)
+                  return !_.includes(UNSUPPORTED_VIS_TYPES, visState.type)
                     && matchIndex(hit.savedSearchId);
                 })
                 .map(hit => {
