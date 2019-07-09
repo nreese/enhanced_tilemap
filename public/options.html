@@ -19,7 +19,7 @@
         >
       </select>
     </div>
-    <tooltip-formatter tooltip-format="vis.params.tooltip">
+    <tooltip-formatter tooltip-format="vis.params.tooltip" index-pattern-id="{{ vis.indexPattern.id }}">
     </tooltip-formatter>
 
     <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
