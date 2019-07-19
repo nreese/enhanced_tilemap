@@ -3,7 +3,7 @@
   <div uib-accordion-group class="panel-default" heading="Aggregation Options">
     <div class="form-group">
       <label>
-        Map Collar Scale <kbn-info info="Use this input to increase or decrease the size of the geo aggregation filter. A value of 1 will size the filter to the map bounds. A value of 2 will size the filter to 2X the map bounds. A value too small could result in excessive fetches. A value too large could result in trimmed results and slow performance."></kbn-info>
+        Map Collar Scale <kbn-info placement="right" info="Use this input to increase or decrease the relative size of the map bounds used for the aggregation. A value of 1 will size the filter to the map bounds. A value of 2 will size the filter to 2X the map bounds. A value too large could result in excessive fetches. A value too small could result in trimmed results."></kbn-info>
       </label>
       <input type="number" class="form-control"
         name="collarScale"
