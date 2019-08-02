@@ -132,7 +132,6 @@ define(function (require) {
     }
 
     $scope.$watch('vis.params', function (visParams, oldParams) {
-
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);

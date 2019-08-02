@@ -137,6 +137,10 @@ define(function (require) {
           field, center[0], center[1], radius);
 
         geoFilter.add(newFilter, field, indexPatternName);
+      // },
+      // reDraw: function (event) {
+      //   const agg = _.get(event, 'chart.geohashGridAgg');
+      //   console.log(agg);
       }
     };
   };
