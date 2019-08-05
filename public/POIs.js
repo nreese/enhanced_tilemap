@@ -67,11 +67,19 @@ define(function (require) {
           excludes: []
         });
 
+        // assigning the placeholder value of 1000 POIs in the 
+        // case where number in the limit field has been replaced with null
+        let poiLimitToDisplay;
+        if (this.limit) {
+          poiLimitToDisplay = this.limit;
+        } else {
+          poiLimitToDisplay = 1000;
+        }
+
         const tooManyDocsInfo = [
           `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
-          `<b><p class="text-color-warning">Caution: Undisplayed POIs present on map canvas,<br>
-                                            you can increase to a maximum of 1000 POIs per layer<br>
-                                            by adjusting the Limit field in POI setup options</b>`
+          `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
+                                            to having reached the limit currently set to: ${poiLimitToDisplay}</b>`
         ];
 
         //Removal of previous too many documents warning when map is changed to a new extent
