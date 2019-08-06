@@ -13,6 +13,7 @@ define(function (require) {
 
     require('leaflet-mouse-position');
     require('leaflet.nontiledlayer');
+    require('./../lib/leaflet.groupedlayercontrol/groupedlayerscontrol.js');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
@@ -238,10 +239,11 @@ define(function (require) {
         message: layer.$legend.tooManyDocsInfo[1]
       };
 
+      const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
       if (tooManyDocs.icon) {
-        this._layerControl.addOverlay(layer, layerName + '  ' + tooManyDocs.icon + tooManyDocs.message);
+        this._layerControl.addOverlay(layer, toomanydocslayername, '<b> POI Overlays</b>');
       } else {
-        this._layerControl.addOverlay(layer, layerName);
+        this._layerControl.addOverlay(layer, layerName, '<b> POI Overlays</b>');
       }
 
       this._poiLayers[layerName] = layer;
@@ -327,7 +329,9 @@ define(function (require) {
         overlay = L.tileLayer.wms(url, wmsOptions);
       }
       if (layerOptions.isVisible) this.map.addLayer(overlay);
-      this._layerControl.addOverlay(overlay, name);
+
+
+      this._layerControl.addOverlay(overlay, name, '<b> WMS Overlays</b>');
       this._wmsOverlays[name] = overlay;
       $(overlay.getContainer()).addClass('no-filter');
     };
@@ -534,7 +538,8 @@ define(function (require) {
       mapOptions.zoom = this._mapZoom;
 
       this.map = L.map(this._container, mapOptions);
-      this._layerControl = L.control.layers();
+      const options = { groupCheckboxes: true };
+      this._layerControl = L.control.groupedLayers(null, null, options);
       this._layerControl.addTo(this.map);
 
       this._addSetViewControl();
