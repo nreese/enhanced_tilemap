@@ -35,7 +35,7 @@ define(function (require) {
               scope.layer.wmsCapabilitiesSwitch = 0;
               //if there are selected layers present, but
               //url is not valid on this digest
-              if (scope.layer.wmsLayers.selected) {
+              if (scope.layer && scope.layer.wmsLayers && scope.layer.wmsLayers.selected) {
                 scope.layer.layers = doUiSelectFormatToLayer(scope.layer.wmsLayers.selected);
               };
             }
