@@ -179,6 +179,7 @@ define(function (require) {
 
         if (newChecked !== oldChecked && $scope.check === true) {
           drawWmsOverlays();
+          $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
         }
       }
     );
