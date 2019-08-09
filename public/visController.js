@@ -20,7 +20,7 @@ define(function (require) {
   ]);
 
   module.controller('KbnEnhancedTilemapVisController', function (
-    $scope, $rootScope, $element, $timeout,
+    $scope, $rootScope, $element, $timeout, $q,
     Private, courier, config, getAppState, indexPatterns, $http) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -167,6 +167,22 @@ define(function (require) {
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
     });
 
+
+    $scope.$watch(
+      function () {
+        return _.filter($('div.leaflet-control-layers-overlays').find('input.leaflet-control-layers-selector'), item => {
+          return item.checked;
+        }).length;
+      },
+      function (newChecked, oldChecked) {
+        if (!$scope.check) return;
+
+        if (newChecked !== oldChecked && $scope.check === true) {
+          drawWmsOverlays();
+        }
+      }
+    );
+
     $scope.$on('$destroy', function () {
       binder.destroy();
       resizeChecker.destroy();
@@ -252,14 +268,15 @@ define(function (require) {
     }
 
     function drawWmsOverlays() {
+      $scope.check = false;
       const prevState = map.clearWMSOverlays();
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
 
-      $scope.vis.params.overlays.wmsOverlays.forEach(function (layerParams) {
+      const wmsDrawAsync = $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
         const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
-        indexPatterns.get(wmsIndexId).then(function (indexPattern) {
+        return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
           const appState = getAppState();
           source.set('filter', queryFilter.getFilters());
@@ -267,7 +284,7 @@ define(function (require) {
             source.set('query', appState.query);
           }
           source.index(indexPattern);
-          source._flatten().then(function (fetchParams) {
+          return source._flatten().then(function (fetchParams) {
             const esQuery = fetchParams.body.query;
             //remove kibana parts of query
             const cleanedMust = [];
@@ -337,9 +354,13 @@ define(function (require) {
                 isVisible: _.get(prevState, name, true),
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
-              map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
+              return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
             });
         });
+      });
+
+      Promise.all(wmsDrawAsync).then(function () {
+        $scope.check = true;
       });
     };
 

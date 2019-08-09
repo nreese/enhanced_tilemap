@@ -322,11 +322,6 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, layerOptions) {
-      console.log("newOverlay");
-      console.log(url);
-      console.log(name);
-      console.log(wmsOptions);
-      console.log(layerOptions);
 
       let overlay = null;
       if (layerOptions.nonTiled) {
@@ -508,32 +503,12 @@ define(function (require) {
         if (self._markers && e.name === 'Aggregation') {
           self._markers.show();
         }
-        if (e.layer && e.layer.wmsParams) {
-
-          console.log(self);
-
-          //  self.__proto__.clearWMSOverlays();
-
-          console.log(this.map);
-          const layer = self._wmsOverlays[e.name];
-          self.__proto__.addWmsOverlay(layer._url, e.name, layer.options, layer.layerOptions);
-        };
-        // self._callbacks.reDraw({
-        //   chart: self._chartData,
-        //   map: self.map,
-        //   zoom: self.map.getZoom(),
-        // });
-
-
       });
 
       this.map.on('overlayremove', function (e) {
         if (self._markers && e.name === 'Aggregation') {
           self._markers.hide();
         }
-        // i f (e.layer && e.layer.wmsParams) {
-        //   self._callbacks.createMarker();
-        // }
       });
     };
 
@@ -568,7 +543,7 @@ define(function (require) {
 
       this.map = L.map(this._container, mapOptions);
       const options = { groupCheckboxes: true };
-      this._layerControl = L.control.groupedLayers(null, null, options);
+      this._layerControl = L.control.groupedLayers();
       this._layerControl.addTo(this.map);
 
       this._addSetViewControl();
