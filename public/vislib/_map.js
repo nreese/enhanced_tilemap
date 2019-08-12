@@ -322,12 +322,16 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, layerOptions) {
+
       let overlay = null;
       if (layerOptions.nonTiled) {
         overlay = new L.NonTiledLayer.WMS(url, wmsOptions);
       } else {
         overlay = L.tileLayer.wms(url, wmsOptions);
       }
+
+      overlay.layerOptions = layerOptions;
+
       if (layerOptions.isVisible) this.map.addLayer(overlay);
 
 
@@ -539,7 +543,7 @@ define(function (require) {
 
       this.map = L.map(this._container, mapOptions);
       const options = { groupCheckboxes: true };
-      this._layerControl = L.control.groupedLayers(null, null, options);
+      this._layerControl = L.control.groupedLayers();
       this._layerControl.addTo(this.map);
 
       this._addSetViewControl();

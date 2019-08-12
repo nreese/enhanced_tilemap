@@ -132,7 +132,6 @@ define(function (require) {
     }
 
     $scope.$watch('vis.params', function (visParams, oldParams) {
-
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
@@ -167,6 +166,25 @@ define(function (require) {
       //the logic of whether to draw POI is handled in POI.js
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
     });
+
+
+    $scope.$watch(
+      function () {
+        const checked = $element
+          .find('div.leaflet-control-layers-overlays input.leaflet-control-layers-selector:checked');
+        if (checked) {
+          return checked.length;
+        }
+      },
+      function (newChecked, oldChecked) {
+        if (!$scope.check) return;
+
+        if (newChecked !== oldChecked && $scope.check === true) {
+          drawWmsOverlays();
+          $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+        }
+      }
+    );
 
     $scope.$on('$destroy', function () {
       binder.destroy();
@@ -253,14 +271,15 @@ define(function (require) {
     }
 
     function drawWmsOverlays() {
+      $scope.check = false;
       const prevState = map.clearWMSOverlays();
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
 
-      $scope.vis.params.overlays.wmsOverlays.forEach(function (layerParams) {
+      const wmsDrawAsync = $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
         const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
-        indexPatterns.get(wmsIndexId).then(function (indexPattern) {
+        return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
           const appState = getAppState();
           source.set('filter', queryFilter.getFilters());
@@ -268,7 +287,7 @@ define(function (require) {
             source.set('query', appState.query);
           }
           source.index(indexPattern);
-          source._flatten().then(function (fetchParams) {
+          return source._flatten().then(function (fetchParams) {
             const esQuery = fetchParams.body.query;
             //remove kibana parts of query
             const cleanedMust = [];
@@ -338,9 +357,13 @@ define(function (require) {
                 isVisible: _.get(prevState, name, true),
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
-              map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
+              return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
             });
         });
+      });
+
+      Promise.all(wmsDrawAsync).then(function () {
+        $scope.check = true;
       });
     };
 
