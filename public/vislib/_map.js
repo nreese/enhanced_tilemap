@@ -526,22 +526,37 @@ define(function (require) {
       return isSame;
     };
 
+    TileMapMap.prototype._redrawBaseLayer = function (url, options, enabled) {
+      // Use WMS compliant server, if not enabled, use OSM mapTiles as default
+      if (enabled) {
+        this._tileLayer.remove();
+        this._tileLayer = L.tileLayer.wms(url, options);
+      } else {
+        this._tileLayer.remove();
+        this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
+      }
+      this._tileLayer.addTo(this.map);
+    };
+
     TileMapMap.prototype._createMap = function (mapOptions) {
       if (this.map) this.destroy();
 
-      // add map tiles layer, using the mapTiles object settings
+      // Use WMS compliant server, if not enabled, use OSM mapTiles as default
       if (this._attr.wms && this._attr.wms.enabled) {
         this._tileLayer = L.tileLayer.wms(this._attr.wms.url, this._attr.wms.options);
       } else {
         this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
       }
 
-      // append tile layers, center and zoom to the map options
-      mapOptions.layers = this._tileLayer;
       mapOptions.center = this._mapCenter;
       mapOptions.zoom = this._mapZoom;
 
       this.map = L.map(this._container, mapOptions);
+
+      // add base layer based on above logic and decide saturation based on saved settings
+      this._tileLayer.addTo(this.map);
+      this.saturateTiles(this._attr.isDesaturated);
+
       const options = { groupCheckboxes: true };
       this._layerControl = L.control.groupedLayers();
       this._layerControl.addTo(this.map);
