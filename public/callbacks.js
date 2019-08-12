@@ -68,10 +68,10 @@ define(function (require) {
         event.poiLayers.forEach(function (poiLayer) {
           poiLayer.getLayers().forEach(function (feature) {
             if (feature instanceof L.Marker) {
-              const filter = {geo_distance: {distance: event.radius + 'km'}};
+              const filter = { geo_distance: { distance: event.radius + 'km' } };
               filter.geo_distance[field] = {
-                'lat' : feature.getLatLng().lat,
-                'lon' : feature.getLatLng().lng
+                'lat': feature.getLatLng().lat,
+                'lon': feature.getLatLng().lng
               };
               filters.push(filter);
             }
@@ -91,17 +91,17 @@ define(function (require) {
           const closed = event.points;
           closed.push(firstPoint);
           field = event.params.shapeField;
-          newFilter = {geo_shape: {}};
+          newFilter = { geo_shape: {} };
           newFilter.geo_shape[field] = {
             shape: {
               type: 'Polygon',
-              coordinates: [ closed ]
+              coordinates: [closed]
             }
           };
         } else {
           field = agg.fieldName();
-          newFilter = {geo_polygon: {}};
-          newFilter.geo_polygon[field] = { points: event.points};
+          newFilter = { geo_polygon: {} };
+          newFilter.geo_polygon[field] = { points: event.points };
         }
 
         geoFilter.add(newFilter, field, indexPatternName);
@@ -137,10 +137,6 @@ define(function (require) {
           field, center[0], center[1], radius);
 
         geoFilter.add(newFilter, field, indexPatternName);
-      // },
-      // reDraw: function (event) {
-      //   const agg = _.get(event, 'chart.geohashGridAgg');
-      //   console.log(agg);
       }
     };
   };

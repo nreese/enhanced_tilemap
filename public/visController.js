@@ -20,7 +20,7 @@ define(function (require) {
   ]);
 
   module.controller('KbnEnhancedTilemapVisController', function (
-    $scope, $rootScope, $element, $timeout, $q,
+    $scope, $rootScope, $element, $timeout,
     Private, courier, config, getAppState, indexPatterns, $http) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -170,9 +170,11 @@ define(function (require) {
 
     $scope.$watch(
       function () {
-        return _.filter($('div.leaflet-control-layers-overlays').find('input.leaflet-control-layers-selector'), item => {
-          return item.checked;
-        }).length;
+        const checked = $element
+          .find('div.leaflet-control-layers-overlays input.leaflet-control-layers-selector:checked');
+        if (checked) {
+          return checked.length;
+        }
       },
       function (newChecked, oldChecked) {
         if (!$scope.check) return;
