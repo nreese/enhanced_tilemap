@@ -136,6 +136,7 @@ define(function (require) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
 
+        map._redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
         setTooltipFormatter(visParams.tooltip);
 
         draw();
