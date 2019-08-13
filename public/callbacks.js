@@ -104,7 +104,9 @@ define(function (require) {
           newFilter.geo_polygon[field] = { points: event.points };
         }
 
-        geoFilter.add(newFilter, field, indexPatternName);
+        const _sirenMeta = { vis: agg.vis._siren.vis };
+
+        geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       },
       rectangle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
@@ -120,7 +122,9 @@ define(function (require) {
         const newFilter = geoFilter.rectFilter(
           field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
-        geoFilter.add(newFilter, field, indexPatternName);
+        const _sirenMeta = { vis: agg.vis._siren.vis };
+
+        geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       },
       circle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
@@ -136,7 +140,9 @@ define(function (require) {
         const newFilter = geoFilter.circleFilter(
           field, center[0], center[1], radius);
 
-        geoFilter.add(newFilter, field, indexPatternName);
+        const _sirenMeta = { vis: agg.vis._siren.vis };
+
+        geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       }
     };
   };

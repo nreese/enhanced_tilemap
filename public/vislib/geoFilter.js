@@ -13,7 +13,7 @@ define(function (require) {
       return field + ': ' + numBoxes + ' geo filters';
     }
 
-    function _applyFilter(newFilter, field, indexPatternName) {
+    function _applyFilter(newFilter, field, indexPatternName, _sirenMeta) {
       let numFilters = 1;
       if (_.isArray(newFilter)) {
         numFilters = newFilter.length;
@@ -27,6 +27,7 @@ define(function (require) {
         alias: filterAlias(field, numFilters),
         negate: false,
         index: indexPatternName,
+        _siren: _sirenMeta,
         key: field
       };
       queryFilter.addFilters(newFilter);
@@ -72,7 +73,7 @@ define(function (require) {
       _applyFilter(newFilter, field, indexPatternName);
     }
 
-    function addGeoFilter(newFilter, field, indexPatternName) {
+    function addGeoFilter(newFilter, field, indexPatternName, sirenMeta) {
       let existingFilter = null;
       _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
         if (isGeoFilter(it, field)) {
@@ -94,7 +95,7 @@ define(function (require) {
 
         confirmModal('How would you like this filter applied?', confirmModalOptions);
       } else {
-        _applyFilter(newFilter, field, indexPatternName);
+        _applyFilter(newFilter, field, indexPatternName, sirenMeta);
       }
     }
 
@@ -112,7 +113,7 @@ define(function (require) {
         _.get(filter, ['bool', 'should'], []).forEach(function (it) {
           features = features.concat(toVector(it, field));
         });
-      } else if (_.has(filter, ['geo_bounding_box',  field])) {
+      } else if (_.has(filter, ['geo_bounding_box', field])) {
         const topLeft = _.get(filter, ['geo_bounding_box', field, 'top_left']);
         const bottomRight = _.get(filter, ['geo_bounding_box', field, 'bottom_right']);
         if (topLeft && bottomRight) {
@@ -232,13 +233,13 @@ define(function (require) {
     function rectFilter(fieldname, geotype, topLeft, bottomRight) {
       let geofilter = null;
       if ('geo_point' === geotype) {
-        geofilter = {geo_bounding_box: {}};
+        geofilter = { geo_bounding_box: {} };
         geofilter.geo_bounding_box[fieldname] = {
           top_left: topLeft,
           bottom_right: bottomRight
         };
       } else if ('geo_shape' === geotype) {
-        geofilter = {geo_shape: {}};
+        geofilter = { geo_shape: {} };
         geofilter.geo_shape[fieldname] = {
           shape: {
             type: 'envelope',
@@ -266,9 +267,11 @@ define(function (require) {
      */
     function circleFilter(fieldname, lat, lon, radius) {
       let geofilter = null;
-      geofilter = { geo_distance: {
-        distance: radius
-      }};
+      geofilter = {
+        geo_distance: {
+          distance: radius
+        }
+      };
       geofilter.geo_distance[fieldname] = {
         lat: lat,
         lon: lon

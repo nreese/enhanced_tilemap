@@ -37,6 +37,7 @@ define(function (require) {
         ' complete geospatial query support, and more features than the built in Coordinate map.',
       isBeta: true,
       category: VisType.CATEGORY.MAP,
+      dashboard360Compatible: true,
       template: require('plugins/enhanced_tilemap/vis.html'),
       params: {
         defaults: {
