@@ -61,7 +61,7 @@ define(function (require) {
       let self = this;
 
       // create the legend control, keep a reference
-      self._legend = L.control({position: 'bottomright'});
+      self._legend = L.control({ position: 'bottomright' });
 
       self._legend.onAdd = function () {
         // creates all the neccessary DOM elements for the control, adds listeners
@@ -89,9 +89,9 @@ define(function (require) {
 
         _.each(self._legendColors, function (color, i) {
           let labelText = self._legendQuantizer
-          .invertExtent(color)
-          .map(self._valueFormatter)
-          .join(' – ');
+            .invertExtent(color)
+            .map(self._valueFormatter)
+            .join(' – ');
 
           let label = $('<div>').text(labelText);
 
@@ -157,7 +157,41 @@ define(function (require) {
      * return {undefined}
      */
     BaseMarker.prototype.bindPopup = function (feature, layer) {
-      let self = this;
+      const self = this;
+
+      self._popupMouseOut = function (e) {
+        // detach the event
+        L.DomEvent.off(self.map._popup, "mouseout", self._popupMouseOut, self);
+
+        // get the element that the mouse hovered onto
+        const target = e.toElement || e.relatedTarget;
+
+        // check to see if the element is a popup
+        if (this._getParent(target, "leaflet-popup")) {
+          return true;
+        }
+        // check to see if the marker was hovered back onto
+        if (target === self._icon) {
+          return true;
+        }
+
+        if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
+          self._hidePopup();
+        }
+
+      };
+
+      self._getParent = function (element, className) {
+
+        let parent = element;
+        while (parent != null) {
+          if (parent.className && L.DomUtil.hasClass(parent, className)) {
+            return parent;
+          };
+          parent = parent.parentNode;
+        };
+        return false;
+      };
 
       let popup = layer.on({
         mouseover: function (e) {
@@ -169,6 +203,15 @@ define(function (require) {
           self._showTooltip(feature);
         },
         mouseout: function (e) {
+
+          const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+
+          // check to see if the element is a popup
+          if (self._getParent(target, "leaflet-popup")) {
+            L.DomEvent.on(self.map._popup._container, "mouseout", self._popupMouseOut, self);
+            return true;
+          }
+
           if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
             self._hidePopup();
           }
@@ -278,7 +321,7 @@ define(function (require) {
         this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
       } else {
         //don't block UI when processing lots of features
-        this._markerGroup = L.geoJson(self.geoJson.features.slice(0,100), _.defaults(defaultOptions, options));
+        this._markerGroup = L.geoJson(self.geoJson.features.slice(0, 100), _.defaults(defaultOptions, options));
         this._stopLoadingGeohash();
 
         this._createSpinControl();
@@ -336,9 +379,9 @@ define(function (require) {
         maxWidth: 'auto',
         offset: utils.popupOffset(this.map, content, latLng)
       })
-      .setLatLng(latLng)
-      .setContent(content)
-      .openOn(this.map);
+        .setLatLng(latLng)
+        .setContent(content)
+        .openOn(this.map);
     };
 
     /**
@@ -420,7 +463,7 @@ define(function (require) {
 
         if (featureLength <= 1 || range <= 1) {
           this._legendColors = reds1;
-        } else if (featureLength <= 9  || range <= 3) {
+        } else if (featureLength <= 9 || range <= 3) {
           this._legendColors = reds3;
         } else {
           this._legendColors = reds5;

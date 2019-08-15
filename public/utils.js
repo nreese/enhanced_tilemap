@@ -168,7 +168,7 @@ define(function (require) {
         widthOffset = -1 * (popupWidth - distToRightEdge);
       }
 
-      let heightOffset = 6; //leaflet default
+      let heightOffset = 16;
       const distToTopEdge = popupPoint.y;
       if (distToTopEdge < popupHeight) {
         //Move popup down as little as possible
