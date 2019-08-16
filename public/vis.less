@@ -1,5 +1,8 @@
 .etm-vis {
-  padding              : 1em;
+  //padding can't be 0 as causes
+  // x_content_parse_exception
+  padding              : 0.1px;
+  margin-top           : -2px;
   display              : flex;
   -webkit-box-flex     : 1;
   flex                 : 1 1 100%;
@@ -163,11 +166,15 @@
     background-color: white;
   }
 
+  .tilemap {
+    margin-bottom: 0px;
+  }
+
   .tilemap-legend {
     .rzslider {
       margin: 15px 0 5px 0;
     }
-
+ 
     .rzslider .rz-bubble {
       bottom: 5px;
     }
