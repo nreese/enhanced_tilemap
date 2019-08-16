@@ -25,7 +25,7 @@ define(function (require) {
     const defaultMarkerType = 'Scaled Circle Markers';
 
     const mapTiles = {
-      url: 'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      url: '//a.tile.openstreetmap.org/{z}/{x}/{y}.png',
       options: {
         attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
       }
