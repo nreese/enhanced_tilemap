@@ -170,10 +170,6 @@ define(function (require) {
         if (this._getParent(target, "leaflet-popup")) {
           return true;
         }
-        // check to see if the marker was hovered back onto
-        if (target === self._icon) {
-          return true;
-        }
 
         if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
           self._hidePopup();
@@ -203,7 +199,6 @@ define(function (require) {
           self._showTooltip(feature);
         },
         mouseout: function (e) {
-
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
           // check to see if the element is a popup
@@ -369,9 +364,10 @@ define(function (require) {
 
     BaseMarker.prototype._createTooltip = function (content, latLng) {
       let className = '';
-      if (!_.get(this._attr, 'tooltip.closeOnMouseout', true)) {
+      if (_.get(this._attr, 'tooltip.type') === 'visualization') {
         className = 'interactive-popup';
       }
+
       L.popup({
         autoPan: false,
         className: className,
