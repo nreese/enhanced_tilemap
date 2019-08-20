@@ -1,6 +1,6 @@
 {
   "name": "enhanced_tilemap",
-  "version": "10.3.0",
+  "version": "10.3.1-SNAPSHOT",
   "kibana": {
     "version": "5.6.10"
   },
