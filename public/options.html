@@ -19,18 +19,6 @@
         >
       </select>
     </div>
-    <div ng-if="vis.params.mapType !== 'Heatmap'" class="form-group">
-        <label>Resolution type
-            <kbn-info info="Default is the original option and sets a precision if the number of geohash columns is above a certain threshold. The performance option will return fewer, less detailed, aggregations and may benefit visibility. Detailed will return more aggregations, but may affect performance."></kbn-info>
-        </label>
-        <select name="aggResolution"
-        class="form-control"
-        ng-model="vis.params.aggResolutionType"
-        ng-init="vis.params.aggResolutionType || vis.type.params.aggResolutionTypes[0]"
-        ng-options="aggResolutionType as aggResolutionType for aggResolutionType in vis.type.params.aggResolutionTypes"
-        >
-      </select>
-    </div>
     <tooltip-formatter tooltip-format="vis.params.tooltip" index-pattern-id="{{ vis.indexPattern.id }}">
     </tooltip-formatter>
 
