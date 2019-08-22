@@ -104,10 +104,7 @@ define(function (require) {
           newFilter.geo_polygon[field] = { points: event.points };
         }
 
-        let _sirenMeta = null;
-        if (agg.vis._siren && agg.vis._siren.vis) {
-          _sirenMeta = { vis: agg.vis._siren.vis };
-        };
+        const _sirenMeta = getSirenMetaFromAgg(agg);
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       },
@@ -125,10 +122,7 @@ define(function (require) {
         const newFilter = geoFilter.rectFilter(
           field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
-        let _sirenMeta = null;
-        if (agg.vis._siren && agg.vis._siren.vis) {
-          _sirenMeta = { vis: agg.vis._siren.vis };
-        };
+        const _sirenMeta = getSirenMetaFromAgg(agg);
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       },
@@ -146,13 +140,18 @@ define(function (require) {
         const newFilter = geoFilter.circleFilter(
           field, center[0], center[1], radius);
 
-        let _sirenMeta = null;
-        if (agg.vis._siren && agg.vis._siren.vis) {
-          _sirenMeta = { vis: agg.vis._siren.vis };
-        };
+        const _sirenMeta = getSirenMetaFromAgg(agg);
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       }
+
+
+    };
+    function getSirenMetaFromAgg(agg) {
+      if (agg.vis._siren && agg.vis._siren.vis) {
+        return { vis: agg.vis._siren.vis };
+      };
+      return null;
     };
   };
 });
