@@ -5,6 +5,13 @@ define(function (require) {
     const utils = require('plugins/enhanced_tilemap/utils');
     const L = require('leaflet');
 
+    function getSirenMetaFromAgg(agg) {
+      if (agg.vis._siren && agg.vis._siren.vis) {
+        return { vis: agg.vis._siren.vis };
+      };
+      return null;
+    };
+
     return {
       createMarker: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
@@ -144,14 +151,6 @@ define(function (require) {
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       }
-
-
-    };
-    function getSirenMetaFromAgg(agg) {
-      if (agg.vis._siren && agg.vis._siren.vis) {
-        return { vis: agg.vis._siren.vis };
-      };
-      return null;
     };
   };
 });
