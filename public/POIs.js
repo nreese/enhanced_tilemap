@@ -107,6 +107,12 @@ define(function (require) {
           return this._createMarker(hit, options);
         });
         layer = new L.FeatureGroup(markers);
+        layer.destroy = () => {
+          for (const marker of markers) {
+            this._removeMouseEvents(marker);
+          }
+          //note ... should layer also be deleted?
+        };
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
           const geometry = _.get(hit, `_source[${this.geoField}]`);
@@ -165,28 +171,45 @@ define(function (require) {
       return layer;
     };
 
+    POIs.prototype._addMouseEvents = function (feature, content) {
+      feature.on('mouseover', this._getMouseOver(content));
+      feature.on('mouseout', this._addMouseOut);
+    };
+
+    POIs.prototype._getMouseOver = function (content) {
+      const popup = function (e) {
+        L.popup({
+          autoPan: false,
+          maxHeight: 'auto',
+          maxWidth: 'auto',
+          offset: utils.popupOffset(this._map, content, e.latlng)
+        })
+          .setLatLng(e.latlng)
+          .setContent(content)
+          .openOn(this._map);
+      };
+      return popup;
+    };
+
+    POIs.prototype._addMouseOut = function (e) {
+      this._map.closePopup();
+    };
+
+    POIs.prototype._removeMouseEvents = function (feature) {
+      feature.off('mouseover');
+      feature.off('mouseout', this._addMouseOut);
+    };
+
     POIs.prototype._createMarker = function (hit, options) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
           icon: markerIcon(options.color, options.size)
         });
+
       if (this.popupFields.length > 0) {
         const content = this._popupContent(hit);
-        feature.on('mouseover', function (e) {
-          const popup = L.popup({
-            autoPan: false,
-            maxHeight: 'auto',
-            maxWidth: 'auto',
-            offset: utils.popupOffset(this._map, content, e.latlng)
-          })
-            .setLatLng(e.latlng)
-            .setContent(content)
-            .openOn(this._map);
-        });
-        feature.on('mouseout', function (e) {
-          this._map.closePopup();
-        });
+        this._addMouseEvents(feature, content);
       }
       return feature;
     };
