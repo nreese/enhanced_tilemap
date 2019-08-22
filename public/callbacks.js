@@ -104,7 +104,10 @@ define(function (require) {
           newFilter.geo_polygon[field] = { points: event.points };
         }
 
-        const _sirenMeta = { vis: agg.vis._siren.vis };
+        let _sirenMeta = null;
+        if (agg.vis._siren && agg.vis._siren.vis) {
+          _sirenMeta = { vis: agg.vis._siren.vis };
+        };
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       },
@@ -122,7 +125,10 @@ define(function (require) {
         const newFilter = geoFilter.rectFilter(
           field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
-        const _sirenMeta = { vis: agg.vis._siren.vis };
+        let _sirenMeta = null;
+        if (agg.vis._siren && agg.vis._siren.vis) {
+          _sirenMeta = { vis: agg.vis._siren.vis };
+        };
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       },
@@ -140,7 +146,10 @@ define(function (require) {
         const newFilter = geoFilter.circleFilter(
           field, center[0], center[1], radius);
 
-        const _sirenMeta = { vis: agg.vis._siren.vis };
+        let _sirenMeta = null;
+        if (agg.vis._siren && agg.vis._siren.vis) {
+          _sirenMeta = { vis: agg.vis._siren.vis };
+        };
 
         geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
       }
