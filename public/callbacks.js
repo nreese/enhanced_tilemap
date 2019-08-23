@@ -95,8 +95,10 @@ define(function (require) {
         let field;
         if (event.params.filterByShape && event.params.shapeField) {
           const firstPoint = event.points[0];
-          const closed = event.points;
-          closed.push(firstPoint);
+          const lastPoint = event.points[event.points.length - 1];
+          if (firstPoint !== lastPoint) {
+            event.points.push(firstPoint);
+          }
           field = event.params.shapeField;
           newFilter = { geo_shape: {} };
           newFilter.geo_shape[field] = {
