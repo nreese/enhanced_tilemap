@@ -104,7 +104,7 @@ define(function (require) {
           newFilter.geo_shape[field] = {
             shape: {
               type: 'Polygon',
-              coordinates: [closed]
+              coordinates: [event.points]
             }
           };
         } else {
