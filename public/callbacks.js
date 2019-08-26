@@ -96,7 +96,7 @@ define(function (require) {
         if (event.params.filterByShape && event.params.shapeField) {
           const firstPoint = event.points[0];
           const lastPoint = event.points[event.points.length - 1];
-          if (firstPoint !== lastPoint) {
+          if (!_.isEqual(firstPoint, lastPoint)) {
             event.points.push(firstPoint);
           }
           field = event.params.shapeField;
