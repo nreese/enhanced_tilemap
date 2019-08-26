@@ -116,7 +116,10 @@ define(function (require) {
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
           const geometry = _.get(hit, `_source[${this.geoField}]`);
-          geometry.type = capitalizeFirstLetter(geometry.type);
+          if (geometry) {
+            geometry.type = capitalizeFirstLetter(geometry.type);
+          };
+
           let popupContent = false;
           if (this.popupFields.length > 0) {
             popupContent = this._popupContent(hit);
@@ -135,20 +138,17 @@ define(function (require) {
             onEachFeature: function (feature, thisLayer) {
               if (feature.properties.label) {
                 thisLayer.bindPopup(feature.properties.label);
-                thisLayer.on('mouseover', function (e) {
-                  this.openPopup();
-                });
-                thisLayer.on('mouseout', function (e) {
-                  this.closePopup();
-                });
+                thisLayer.on('mouseover', this.addMouseOver);
+                thisLayer.on('mouseout', this.addMouseOut);
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon') {
-                thisLayer.on('click', function (e) {
+                thisLayer._click = function fireEtmSelectFeature(e) {
                   thisLayer._map.fire('etm:select-feature', {
                     geojson: thisLayer.toGeoJSON()
                   });
-                });
+                };
+                thisLayer.on('click', thisLayer._click);
               }
             },
             pointToLayer: function (feature, latlng) {
@@ -163,12 +163,31 @@ define(function (require) {
               weight: 1.5,
               opacity: 0.65
             }
+          }
+        );
+        layer.destroy = () => {
+          _.each(layer._layers, polygon => {
+            polygon.off('mouseover', this.addMouseOver);
+            polygon.off('mouseout', this.addMouseOut);
+            if (polygon._click) {
+              polygon.off('click', polygon._click);
+              polygon._click = null;
+            }
           });
+        };
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
       layer.$legend = options.$legend;
       return layer;
+    };
+
+    POIs.prototype.addMouseOver = function (e) {
+      this.openPopup();
+    };
+
+    POIs.prototype.addMouseOut = function (e) {
+      this.closePopup();
     };
 
     POIs.prototype._addMouseEvents = function (feature, content) {
