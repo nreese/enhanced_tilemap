@@ -159,7 +159,7 @@ define(function (require) {
                     geojson: polygon.toGeoJSON()
                   });
                 };
-                self.addClickToGeoShape(polygon);
+                polygon.on('click', polygon._click);
               }
             },
             pointToLayer: function pointToLayer(feature, latlng) {
