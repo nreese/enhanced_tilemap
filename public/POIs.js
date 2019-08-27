@@ -197,8 +197,29 @@ define(function (require) {
     POIs.prototype.addMouseOverGeoShape = function addMouseOverGeoShape(e) {
       this.openPopup();
     };
-    POIs.prototype.addMouseOutToGeoShape = function addMouseOutToGeoShape(e) {
-      this.closePopup();
+    POIs.prototype.addMouseOutToGeoShape = function addMouseOutToGeoShape(e) {  
+      const self = this;
+
+      self._popupMouseOut = function (e) {
+        // detach the event
+        L.DomEvent.off(self._map._popup._container, "mouseout", self._popupMouseOut, self);
+        // get the element that the mouse hovered onto
+        const target = e.toElement || e.relatedTarget;
+        // check to see if the element is a popup
+        if (getPopupParent(target, "leaflet-popup")) {
+          return true;
+        }
+        self.closePopup();
+      };
+
+      const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+
+      // check to see if the element is a popup
+      if (getPopupParent(target, "leaflet-popup")) {
+        L.DomEvent.on(self._map._popup._container, "mouseout", self._popupMouseOut, self);
+        return true;
+      }
+      self.closePopup();
     };
     POIs.prototype.addClickToGeoShape = function addClickToGeoShape(polygon) {
       polygon.on('click', polygon._click);
@@ -221,16 +242,13 @@ define(function (require) {
     };
 
     POIs.prototype._addMouseOutGeoPoint = function (e) {
-
       const self = this;
 
       self._popupMouseOut = function (e) {
         // detach the event
-        L.DomEvent.off(self._map._popup, "mouseout", self._popupMouseOut, self);
-
+        L.DomEvent.off(self._map._popup._container, "mouseout", self._popupMouseOut, self);
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
-
         // check to see if the element is a popup
         if (getPopupParent(target, "leaflet-popup")) {
           return true;
@@ -245,7 +263,6 @@ define(function (require) {
         L.DomEvent.on(self._map._popup._container, "mouseout", self._popupMouseOut, self);
         return true;
       }
-
       self._map.closePopup();
     };
     POIs.prototype._addMouseEventsGeoPoint = function _addMouseEventsGeoPoint(feature, content) {

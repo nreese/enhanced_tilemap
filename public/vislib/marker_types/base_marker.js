@@ -161,7 +161,7 @@ define(function (require) {
 
       self._popupMouseOut = function (e) {
         // detach the event
-        L.DomEvent.off(self.map._popup, "mouseout", self._popupMouseOut, self);
+        L.DomEvent.off(self.map._popup._container, "mouseout", self._popupMouseOut, self);
 
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
