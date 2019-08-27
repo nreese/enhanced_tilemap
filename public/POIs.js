@@ -111,7 +111,7 @@ define(function (require) {
       });
     };
 
-    POIs.prototype._createLayer = function _createLayer(hits, geoType, options) {
+    POIs.prototype._createLayer = function (hits, geoType, options) {
       let layer = null;
       const self = this;
       if ('geo_point' === geoType) {
@@ -146,20 +146,20 @@ define(function (require) {
         layer = L.geoJson(
           shapes,
           {
-            onEachFeature: function onEachFeature(feature, thisLayer) {
+            onEachFeature: function onEachFeature(feature, polygon) {
               if (feature.properties.label) {
-                thisLayer.bindPopup(feature.properties.label);
-                thisLayer.on('mouseover', self.addMouseOverGeoShape);
-                thisLayer.on('mouseout', self.addMouseOutToGeoShape);
+                polygon.bindPopup(feature.properties.label);
+                polygon.on('mouseover', self.addMouseOverGeoShape);
+                polygon.on('mouseout', self.addMouseOutToGeoShape);
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon') {
-                thisLayer._click = function fireEtmSelectFeature(e) {
-                  thisLayer._map.fire('etm:select-feature', {
-                    geojson: thisLayer.toGeoJSON()
+                polygon._click = function fireEtmSelectFeature(e) {
+                  polygon._map.fire('etm:select-feature', {
+                    geojson: polygon.toGeoJSON()
                   });
                 };
-                self.addClickToGeoShape(thisLayer);
+                self.addClickToGeoShape(polygon);
               }
             },
             pointToLayer: function pointToLayer(feature, latlng) {
@@ -194,19 +194,19 @@ define(function (require) {
     };
 
     //Mouse event creation for GeoShape
-    POIs.prototype.addMouseOverGeoShape = function addMouseOverGeoShape(e) {
+    POIs.prototype.addMouseOverGeoShape = function (e) {
       this.openPopup();
     };
-    POIs.prototype.addMouseOutToGeoShape = function addMouseOutToGeoShape(e) {  
+    POIs.prototype.addMouseOutToGeoShape = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
         // detach the event
-        L.DomEvent.off(self._map._popup._container, "mouseout", self._popupMouseOut, self);
+        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
         // check to see if the element is a popup
-        if (getPopupParent(target, "leaflet-popup")) {
+        if (getPopupParent(target, 'leaflet-popup')) {
           return true;
         }
         self.closePopup();
@@ -215,18 +215,18 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getPopupParent(target, "leaflet-popup")) {
-        L.DomEvent.on(self._map._popup._container, "mouseout", self._popupMouseOut, self);
+      if (getPopupParent(target, 'leaflet-popup')) {
+        L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }
       self.closePopup();
     };
-    POIs.prototype.addClickToGeoShape = function addClickToGeoShape(polygon) {
+    POIs.prototype.addClickToGeoShape = function (polygon) {
       polygon.on('click', polygon._click);
     };
 
     //Mouse event creation and closing for GeoPoints
-    POIs.prototype._getMouseOverGeoPoint = function _getMouseOverGeoPoint(content) {
+    POIs.prototype._getMouseOverGeoPoint = function (content) {
       const popup = function (e) {
         L.popup({
           autoPan: false,
@@ -246,11 +246,11 @@ define(function (require) {
 
       self._popupMouseOut = function (e) {
         // detach the event
-        L.DomEvent.off(self._map._popup._container, "mouseout", self._popupMouseOut, self);
+        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
         // check to see if the element is a popup
-        if (getPopupParent(target, "leaflet-popup")) {
+        if (getPopupParent(target, 'leaflet-popup')) {
           return true;
         }
         self._map.closePopup();
@@ -259,17 +259,17 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getPopupParent(target, "leaflet-popup")) {
-        L.DomEvent.on(self._map._popup._container, "mouseout", self._popupMouseOut, self);
+      if (getPopupParent(target, 'leaflet-popup')) {
+        L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }
       self._map.closePopup();
     };
-    POIs.prototype._addMouseEventsGeoPoint = function _addMouseEventsGeoPoint(feature, content) {
+    POIs.prototype._addMouseEventsGeoPoint = function (feature, content) {
       feature.on('mouseover', this._getMouseOverGeoPoint(content));
       feature.on('mouseout', this._addMouseOutGeoPoint);
     };
-    POIs.prototype._removeMouseEventsGeoPoint = function _removeMouseEventsGeoPoint(feature, content) {
+    POIs.prototype._removeMouseEventsGeoPoint = function (feature, content) {
       feature.off('mouseover', this._getMouseOverGeoPoint(content));
       feature.off('mouseout', this._addMouseOutGeoPoint);
     };
@@ -288,7 +288,7 @@ define(function (require) {
       return feature;
     };
 
-    POIs.prototype._popupContent = function _popupContent(hit) {
+    POIs.prototype._popupContent = function (hit) {
       let dlContent = '';
       this.popupFields.forEach(function (field) {
         dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
