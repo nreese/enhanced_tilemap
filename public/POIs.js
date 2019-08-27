@@ -100,8 +100,9 @@ define(function (require) {
       });
     };
 
-    POIs.prototype._createLayer = function (hits, geoType, options) {
+    POIs.prototype._createLayer = function _createLayer(hits, geoType, options) {
       let layer = null;
+      const self = this;
       if ('geo_point' === geoType) {
         const markers = _.map(hits, hit => {
           return this._createMarker(hit, options);
@@ -109,9 +110,8 @@ define(function (require) {
         layer = new L.FeatureGroup(markers);
         layer.destroy = () => {
           for (const marker of markers) {
-            this._removeMouseEvents(marker);
+            this._removeMouseEventsGeoPoint(marker);
           }
-          //note ... should layer also be deleted?
         };
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
@@ -135,11 +135,11 @@ define(function (require) {
         layer = L.geoJson(
           shapes,
           {
-            onEachFeature: function (feature, thisLayer) {
+            onEachFeature: function onEachFeature(feature, thisLayer) {
               if (feature.properties.label) {
                 thisLayer.bindPopup(feature.properties.label);
-                thisLayer.on('mouseover', this.addMouseOver);
-                thisLayer.on('mouseout', this.addMouseOut);
+                thisLayer.on('mouseover', self.addMouseOverGeoShape);
+                thisLayer.on('mouseout', self.addMouseOutToGeoShape);
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon') {
@@ -148,10 +148,10 @@ define(function (require) {
                     geojson: thisLayer.toGeoJSON()
                   });
                 };
-                thisLayer.on('click', thisLayer._click);
+                self.addClickToGeoShape(thisLayer);
               }
             },
-            pointToLayer: function (feature, latlng) {
+            pointToLayer: function pointToLayer(feature, latlng) {
               return L.circleMarker(
                 latlng,
                 {
@@ -167,8 +167,8 @@ define(function (require) {
         );
         layer.destroy = () => {
           _.each(layer._layers, polygon => {
-            polygon.off('mouseover', this.addMouseOver);
-            polygon.off('mouseout', this.addMouseOut);
+            polygon.off('mouseover', self.addMouseOverGeoShape);
+            polygon.off('mouseout', self.addMouseOutToGeoShape);
             if (polygon._click) {
               polygon.off('click', polygon._click);
               polygon._click = null;
@@ -182,20 +182,19 @@ define(function (require) {
       return layer;
     };
 
-    POIs.prototype.addMouseOver = function (e) {
+    //Mouse event creation for GeoShape
+    POIs.prototype.addMouseOverGeoShape = function addMouseOverGeoShape(e) {
       this.openPopup();
     };
-
-    POIs.prototype.addMouseOut = function (e) {
+    POIs.prototype.addMouseOutToGeoShape = function addMouseOutToGeoShape(e) {
       this.closePopup();
     };
-
-    POIs.prototype._addMouseEvents = function (feature, content) {
-      feature.on('mouseover', this._getMouseOver(content));
-      feature.on('mouseout', this._addMouseOut);
+    POIs.prototype.addClickToGeoShape = function addClickToGeoShape(polygon) {
+      polygon.on('click', polygon._click);
     };
 
-    POIs.prototype._getMouseOver = function (content) {
+    //Mouse event creation and closing for GeoPoints
+    POIs.prototype._getMouseOverGeoPoint = function _getMouseOverGeoPoint(content) {
       const popup = function (e) {
         L.popup({
           autoPan: false,
@@ -209,14 +208,16 @@ define(function (require) {
       };
       return popup;
     };
-
-    POIs.prototype._addMouseOut = function (e) {
+    POIs.prototype._addMouseOutGeoPoint = function _addMouseOutGeoPoint(e) {
       this._map.closePopup();
     };
-
-    POIs.prototype._removeMouseEvents = function (feature) {
-      feature.off('mouseover');
-      feature.off('mouseout', this._addMouseOut);
+    POIs.prototype._addMouseEventsGeoPoint = function _addMouseEventsGeoPoint(feature, content) {
+      feature.on('mouseover', this._getMouseOverGeoPoint(content));
+      feature.on('mouseout', this._addMouseOutGeoPoint);
+    };
+    POIs.prototype._removeMouseEventsGeoPoint = function _removeMouseEventsGeoPoint(feature, content) {
+      feature.off('mouseover', this._getMouseOverGeoPoint(content));
+      feature.off('mouseout', this._addMouseOutGeoPoint);
     };
 
     POIs.prototype._createMarker = function (hit, options) {
@@ -228,12 +229,12 @@ define(function (require) {
 
       if (this.popupFields.length > 0) {
         const content = this._popupContent(hit);
-        this._addMouseEvents(feature, content);
+        this._addMouseEventsGeoPoint(feature, content);
       }
       return feature;
     };
 
-    POIs.prototype._popupContent = function (hit) {
+    POIs.prototype._popupContent = function _popupContent(hit) {
       let dlContent = '';
       this.popupFields.forEach(function (field) {
         dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
