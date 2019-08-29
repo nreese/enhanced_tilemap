@@ -199,14 +199,11 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
+      this.clearPOILayers();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
       if (this._markers) this._markers.destroy();
-      if (this._poiLayers) {
-        _.each(this._poiLayers, poiLayer => poiLayer.destroy());
-        this._poiLayers = {};
-      }
       syncMaps.remove(this.map);
       this.map.remove();
       this.map = undefined;

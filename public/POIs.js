@@ -32,7 +32,7 @@ define(function (require) {
       this.syncFilters = _.get(params, 'syncFilters', false);
     }
 
-    const getPopupParent = function (element, className) {
+    const getParentWithClass = function (element, className) {
       let parent = element;
       while (parent != null) {
         if (parent.className && L.DomUtil.hasClass(parent, className)) {
@@ -78,7 +78,7 @@ define(function (require) {
           excludes: []
         });
 
-        // assigning the placeholder value of 1000 POIs in the 
+        // assigning the placeholder value of 1000 POIs in the
         // case where number in the limit field has been replaced with null
         let poiLimitToDisplay;
         if (this.limit) {
@@ -116,24 +116,20 @@ define(function (require) {
       const self = this;
       if ('geo_point' === geoType) {
         const markers = _.map(hits, hit => {
-          return this._createMarker(hit, options);
+          return self._createMarker(hit, options);
         });
         layer = new L.FeatureGroup(markers);
-        layer.destroy = () => {
-          for (const marker of markers) {
-            this._removeMouseEventsGeoPoint(marker);
-          }
-        };
+        layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
-          const geometry = _.get(hit, `_source[${this.geoField}]`);
+          const geometry = _.get(hit, `_source[${self.geoField}]`);
           if (geometry) {
             geometry.type = capitalizeFirstLetter(geometry.type);
           };
 
           let popupContent = false;
-          if (this.popupFields.length > 0) {
-            popupContent = this._popupContent(hit);
+          if (self.popupFields.length > 0) {
+            popupContent = self._popupContent(hit);
           }
           return {
             type: 'Feature',
@@ -197,6 +193,7 @@ define(function (require) {
     POIs.prototype.addMouseOverGeoShape = function (e) {
       this.openPopup();
     };
+
     POIs.prototype.addMouseOutToGeoShape = function (e) {
       const self = this;
 
@@ -206,7 +203,7 @@ define(function (require) {
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
         // check to see if the element is a popup
-        if (getPopupParent(target, 'leaflet-popup')) {
+        if (getParentWithClass(target, 'leaflet-popup')) {
           return true;
         }
         self.closePopup();
@@ -215,7 +212,7 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getPopupParent(target, 'leaflet-popup')) {
+      if (getParentWithClass(target, 'leaflet-popup')) {
         L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }
@@ -250,7 +247,7 @@ define(function (require) {
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
         // check to see if the element is a popup
-        if (getPopupParent(target, 'leaflet-popup')) {
+        if (getParentWithClass(target, 'leaflet-popup')) {
           return true;
         }
         self._map.closePopup();
@@ -259,19 +256,21 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getPopupParent(target, 'leaflet-popup')) {
+      if (getParentWithClass(target, 'leaflet-popup')) {
         L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }
       self._map.closePopup();
     };
+
     POIs.prototype._addMouseEventsGeoPoint = function (feature, content) {
       feature.on('mouseover', this._getMouseOverGeoPoint(content));
       feature.on('mouseout', this._addMouseOutGeoPoint);
     };
-    POIs.prototype._removeMouseEventsGeoPoint = function (feature, content) {
-      feature.off('mouseover', this._getMouseOverGeoPoint(content));
-      feature.off('mouseout', this._addMouseOutGeoPoint);
+
+    POIs.prototype._removeMouseEventsGeoPoint = function (feature) {
+      feature.off('mouseover');
+      feature.off('mouseout');
     };
 
     POIs.prototype._createMarker = function (hit, options) {
