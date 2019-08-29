@@ -33,21 +33,19 @@
         <option value="l">l</option>
         <option value="xl">xl</option>
       </select>
-
     </div>
-    <div class="form-group">
-      <label>
-        Popup Content
-      </label>
-      <ng-dropdown-multiselect options="labelFields" selected-model="layer.popupFields" group-by="type"
-        extra-settings="multiSelectSettings">
 
-        <div class="form-control">
-            Click to select pop-up fields...
-        </div>
-
-      </ng-dropdown-multiselect>
+    <div class="form-group" >
+      <label>Popup Content</label>
+        <ui-select multiple ng-model="layer.popupFields" ng-disabled="ctrl.disabled" sortable="true"
+          close-on-select="false">
+          <ui-select-match placeholder="Click to select POI popup field(s)...">{{$item.name}}</ui-select-match>
+          <ui-select-choices repeat="fieldLabel in labelFields | filter: {name: $select.search}">
+            <div ng-bind-html="fieldLabel.name | highlight: $select.search"></div>
+          </ui-select-choices>
+        </ui-select>
     </div>
+
     <div class="form-group">
       <label>
         Limit (max. 1000)
