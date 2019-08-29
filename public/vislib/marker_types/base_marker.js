@@ -161,13 +161,13 @@ define(function (require) {
 
       self._popupMouseOut = function (e) {
         // detach the event
-        L.DomEvent.off(self.map._popup, "mouseout", self._popupMouseOut, self);
+        L.DomEvent.off(self.map._popup._container, 'mouseout', self._popupMouseOut, self);
 
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
 
         // check to see if the element is a popup
-        if (this._getParent(target, "leaflet-popup")) {
+        if (this._getParent(target, 'leaflet-popup')) {
           return true;
         }
 
@@ -202,8 +202,8 @@ define(function (require) {
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
           // check to see if the element is a popup
-          if (self._getParent(target, "leaflet-popup")) {
-            L.DomEvent.on(self.map._popup._container, "mouseout", self._popupMouseOut, self);
+          if (self._getParent(target, 'leaflet-popup')) {
+            L.DomEvent.on(self.map._popup._container, 'mouseout', self._popupMouseOut, self);
             return true;
           }
 

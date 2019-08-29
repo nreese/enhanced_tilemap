@@ -32,6 +32,17 @@ define(function (require) {
       this.syncFilters = _.get(params, 'syncFilters', false);
     }
 
+    const getParentWithClass = function (element, className) {
+      let parent = element;
+      while (parent != null) {
+        if (parent.className && L.DomUtil.hasClass(parent, className)) {
+          return parent;
+        };
+        parent = parent.parentNode;
+      };
+      return false;
+    };
+
     /**
      * @param {options} options: styling options
      * @param {Function} callback(layer)
@@ -67,7 +78,7 @@ define(function (require) {
           excludes: []
         });
 
-        // assigning the placeholder value of 1000 POIs in the 
+        // assigning the placeholder value of 1000 POIs in the
         // case where number in the limit field has been replaced with null
         let poiLimitToDisplay;
         if (this.limit) {
@@ -102,18 +113,23 @@ define(function (require) {
 
     POIs.prototype._createLayer = function (hits, geoType, options) {
       let layer = null;
+      const self = this;
       if ('geo_point' === geoType) {
         const markers = _.map(hits, hit => {
-          return this._createMarker(hit, options);
+          return self._createMarker(hit, options);
         });
         layer = new L.FeatureGroup(markers);
+        layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
-          const geometry = _.get(hit, `_source[${this.geoField}]`);
-          geometry.type = capitalizeFirstLetter(geometry.type);
+          const geometry = _.get(hit, `_source[${self.geoField}]`);
+          if (geometry) {
+            geometry.type = capitalizeFirstLetter(geometry.type);
+          };
+
           let popupContent = false;
-          if (this.popupFields.length > 0) {
-            popupContent = this._popupContent(hit);
+          if (self.popupFields.length > 0) {
+            popupContent = self._popupContent(hit);
           }
           return {
             type: 'Feature',
@@ -126,26 +142,23 @@ define(function (require) {
         layer = L.geoJson(
           shapes,
           {
-            onEachFeature: function (feature, thisLayer) {
+            onEachFeature: function onEachFeature(feature, polygon) {
               if (feature.properties.label) {
-                thisLayer.bindPopup(feature.properties.label);
-                thisLayer.on('mouseover', function (e) {
-                  this.openPopup();
-                });
-                thisLayer.on('mouseout', function (e) {
-                  this.closePopup();
-                });
+                polygon.bindPopup(feature.properties.label);
+                polygon.on('mouseover', self.addMouseOverGeoShape);
+                polygon.on('mouseout', self.addMouseOutToGeoShape);
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon') {
-                thisLayer.on('click', function (e) {
-                  thisLayer._map.fire('etm:select-feature', {
-                    geojson: thisLayer.toGeoJSON()
+                polygon._click = function fireEtmSelectFeature(e) {
+                  polygon._map.fire('etm:select-feature', {
+                    geojson: polygon.toGeoJSON()
                   });
-                });
+                };
+                polygon.on('click', polygon._click);
               }
             },
-            pointToLayer: function (feature, latlng) {
+            pointToLayer: function pointToLayer(feature, latlng) {
               return L.circleMarker(
                 latlng,
                 {
@@ -157,12 +170,107 @@ define(function (require) {
               weight: 1.5,
               opacity: 0.65
             }
+          }
+        );
+        layer.destroy = () => {
+          _.each(layer._layers, polygon => {
+            polygon.off('mouseover', self.addMouseOverGeoShape);
+            polygon.off('mouseout', self.addMouseOutToGeoShape);
+            if (polygon._click) {
+              polygon.off('click', polygon._click);
+              polygon._click = null;
+            }
           });
+        };
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
       layer.$legend = options.$legend;
       return layer;
+    };
+
+    //Mouse event creation for GeoShape
+    POIs.prototype.addMouseOverGeoShape = function (e) {
+      this.openPopup();
+    };
+
+    POIs.prototype.addMouseOutToGeoShape = function (e) {
+      const self = this;
+
+      self._popupMouseOut = function (e) {
+        // detach the event
+        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
+        // get the element that the mouse hovered onto
+        const target = e.toElement || e.relatedTarget;
+        // check to see if the element is a popup
+        if (getParentWithClass(target, 'leaflet-popup')) {
+          return true;
+        }
+        self.closePopup();
+      };
+
+      const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+
+      // check to see if the element is a popup
+      if (getParentWithClass(target, 'leaflet-popup')) {
+        L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
+        return true;
+      }
+      self.closePopup();
+    };
+    POIs.prototype.addClickToGeoShape = function (polygon) {
+      polygon.on('click', polygon._click);
+    };
+
+    //Mouse event creation and closing for GeoPoints
+    POIs.prototype._getMouseOverGeoPoint = function (content) {
+      const popup = function (e) {
+        L.popup({
+          autoPan: false,
+          maxHeight: 'auto',
+          maxWidth: 'auto',
+          offset: utils.popupOffset(this._map, content, e.latlng)
+        })
+          .setLatLng(e.latlng)
+          .setContent(content)
+          .openOn(this._map);
+      };
+      return popup;
+    };
+
+    POIs.prototype._addMouseOutGeoPoint = function (e) {
+      const self = this;
+
+      self._popupMouseOut = function (e) {
+        // detach the event
+        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
+        // get the element that the mouse hovered onto
+        const target = e.toElement || e.relatedTarget;
+        // check to see if the element is a popup
+        if (getParentWithClass(target, 'leaflet-popup')) {
+          return true;
+        }
+        self._map.closePopup();
+      };
+
+      const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+
+      // check to see if the element is a popup
+      if (getParentWithClass(target, 'leaflet-popup')) {
+        L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
+        return true;
+      }
+      self._map.closePopup();
+    };
+
+    POIs.prototype._addMouseEventsGeoPoint = function (feature, content) {
+      feature.on('mouseover', this._getMouseOverGeoPoint(content));
+      feature.on('mouseout', this._addMouseOutGeoPoint);
+    };
+
+    POIs.prototype._removeMouseEventsGeoPoint = function (feature) {
+      feature.off('mouseover');
+      feature.off('mouseout');
     };
 
     POIs.prototype._createMarker = function (hit, options) {
@@ -171,22 +279,10 @@ define(function (require) {
         {
           icon: markerIcon(options.color, options.size)
         });
+
       if (this.popupFields.length > 0) {
         const content = this._popupContent(hit);
-        feature.on('mouseover', function (e) {
-          const popup = L.popup({
-            autoPan: false,
-            maxHeight: 'auto',
-            maxWidth: 'auto',
-            offset: utils.popupOffset(this._map, content, e.latlng)
-          })
-            .setLatLng(e.latlng)
-            .setContent(content)
-            .openOn(this._map);
-        });
-        feature.on('mouseout', function (e) {
-          this._map.closePopup();
-        });
+        this._addMouseEventsGeoPoint(feature, content);
       }
       return feature;
     };

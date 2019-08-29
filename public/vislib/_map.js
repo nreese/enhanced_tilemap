@@ -199,6 +199,7 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
+      this.clearPOILayers();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
@@ -212,6 +213,7 @@ define(function (require) {
       const self = this;
       Object.keys(this._poiLayers).forEach(function (key) {
         const layer = self._poiLayers[key];
+        layer.destroy();
         self._layerControl.removeLayer(layer);
         self.map.removeLayer(layer);
       });
@@ -224,6 +226,7 @@ define(function (require) {
       //remove layer if it already exists
       if (_.has(this._poiLayers, layerName)) {
         const layer = this._poiLayers[layerName];
+        this._poiLayers[layerName].destroy();
         isVisible = this.map.hasLayer(layer);
         this._layerControl.removeLayer(layer);
         this.map.removeLayer(layer);
