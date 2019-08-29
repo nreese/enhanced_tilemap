@@ -18,14 +18,6 @@ define(function (require) {
       template: require('./savedSearch.html'),
       link: function (scope, element, attrs) {
         backwardsCompatible.updateSavedSearch(scope.layer);
-        scope.multiSelectSettings = {
-          buttonClasses: 'btn-input',
-          displayProp: 'name',
-          externalIdProp: 'name',
-          idProp: 'name',
-          showCheckAll: false,
-          scrollable: true
-        };
 
         fetchSavedSearches();
 
@@ -55,28 +47,41 @@ define(function (require) {
         function fetchSavedSearches() {
           //TODO add filter to find to reduce results
           service.find(scope.layer.filter)
-          .then(function (hits) {
-            scope.items = _.map(hits.hits, function (hit) {
-              return {
-                indexId: getIndexId(hit),
-                label: hit.title,
-                value: hit.id
-              };
-            });
+            .then(function (hits) {
+              scope.items = _.map(hits.hits, function (hit) {
+                return {
+                  indexId: getIndexId(hit),
+                  label: hit.title,
+                  value: hit.id
+                };
+              });
 
-            const selected = _.filter(scope.items, function (item) {
-              if (item.value === scope.layer.savedSearchId) {
-                return true;
+              const selected = _.filter(scope.items, function (item) {
+                if (item.value === scope.layer.savedSearchId) {
+                  return true;
+                }
+              });
+              if (selected.length > 0) {
+                scope.savedSearch = selected[0];
+                refreshIndexFields(selected[0].indexId, function (geoFields, labelFields) {
+
+                  const popupFields = scope.layer.popupFields;
+                  const labelFieldsNew = [];
+                  _.each(labelFields, labelField => {
+                    if (_.findIndex(popupFields, function (popupField) { return popupField.name === labelField.name; }) === -1) {
+                      labelFieldsNew.push(labelField);
+                    }
+                  });
+
+                  if (!_.isEqual(labelFieldsNew.length, labelFields.length)) {
+                    labelFields = labelFieldsNew;
+                  }
+
+                  scope.geoFields = geoFields;
+                  scope.labelFields = labelFields;
+                });
               }
             });
-            if (selected.length > 0) {
-              scope.savedSearch = selected[0];
-              refreshIndexFields(selected[0].indexId, function (geoFields, labelFields) {
-                scope.geoFields = geoFields;
-                scope.labelFields = labelFields;
-              });
-            }
-          });
         }
       }
     };
@@ -93,7 +98,7 @@ define(function (require) {
           let keep = true;
           if (field.type === 'boolean' || field.type === 'geo_point' || field.type === 'geo_shape') {
             keep = false;
-          } else if (!field.name || field.name.substring(0,1) === '_') {
+          } else if (!field.name || field.name.substring(0, 1) === '_') {
             keep = false;
           }
           return keep;
