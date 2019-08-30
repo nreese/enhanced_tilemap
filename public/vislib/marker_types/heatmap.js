@@ -44,6 +44,13 @@ define(function (require) {
       this._addToMap();
     };
 
+    HeatmapMarker.prototype._unfixTooltips = function () {
+      this.map.off('mousemove');
+      this.map.off('mouseout');
+      this.map.off('mousedown');
+      this.map.off('mouseup');
+    };
+
     HeatmapMarker.prototype._fixTooltips = function () {
       let self = this;
       let debouncedMouseMoveLocation = _.debounce(mouseMoveLocation.bind(this), 15, {
@@ -153,8 +160,8 @@ define(function (require) {
       // range (output values) is distance in meters
       // used to compare proximity of event latlng to feature latlng
       let zoomScale = d3.scale.linear()
-      .domain([1, 4, 7, 10, 13, 16, 18])
-      .range([1000000, 300000, 100000, 15000, 2000, 150, 50]);
+        .domain([1, 4, 7, 10, 13, 16, 18])
+        .range([1000000, 300000, 100000, 15000, 2000, 150, 50]);
 
       let proximity = zoomScale(this.map.getZoom());
       let distance = latlng.distanceTo(featureLatLng);
@@ -170,8 +177,8 @@ define(function (require) {
       }
 
       let testScale = d3.scale.pow().exponent(0.2)
-      .domain([1, 18])
-      .range([1500000, 50]);
+        .domain([1, 18])
+        .range([1500000, 50]);
       return showTip;
     };
 
