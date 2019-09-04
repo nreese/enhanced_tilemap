@@ -28,7 +28,7 @@
     "babel-eslint": "^7.2.3",
     "bluebird": "^3.0.6",
     "eslint": "4.16.0",
-    "eslint-plugin-mocha": "4.11.0",
+    "eslint-plugin-mocha": "6.1.0",
     "gulp": "^3.9.1",
     "gulp-eslint": "^5.0.0",
     "gulp-if": "^2.0.2",
