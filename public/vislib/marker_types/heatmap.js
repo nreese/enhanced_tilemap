@@ -44,7 +44,7 @@ define(function (require) {
       this._addToMap();
     };
 
-    HeatmapMarker.prototype._unfixTooltips = function () {
+    HeatmapMarker.prototype.unfixTooltips = function () {
       this.map.off('mousemove');
       this.map.off('mouseout');
       this.map.off('mousedown');

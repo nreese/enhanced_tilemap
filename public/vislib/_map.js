@@ -373,7 +373,7 @@ define(function (require) {
       return new MarkerType(this.map, this._geoJson, this._layerControl, options);
     };
 
-    TileMapMap.prototype._unfixMapTypeTooltips = function () {
+    TileMapMap.prototype.unfixMapTypeTooltips = function () {
       this._markers._unfixTooltips();
     };
 
