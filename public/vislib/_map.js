@@ -374,7 +374,7 @@ define(function (require) {
     };
 
     TileMapMap.prototype.unfixMapTypeTooltips = function () {
-      this._markers._unfixTooltips();
+      this._markers.unfixTooltips();
     };
 
     TileMapMap.prototype._setMarkerType = function (markerType) {

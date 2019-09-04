@@ -138,7 +138,7 @@ define(function (require) {
 
         //remove mouse related heatmap events when moving to a different geohash type
         if (oldParams && oldParams.mapType === 'Heatmap') {
-          map._unfixMapTypeTooltips();
+          map.unfixMapTypeTooltips();
         }
 
         map._redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
