@@ -104,7 +104,8 @@ define(function (require) {
               stroke: false,
               color: '#000'
             }
-          }
+          },
+          circlemarker: false
         },
         edit: {
           featureGroup: this._drawnItems,
