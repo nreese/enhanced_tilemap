@@ -93,12 +93,14 @@ define(function (require) {
 
         let newFilter;
         let field;
+
+        const firstPoint = event.points[0];
+        const lastPoint = event.points[event.points.length - 1];
+        if (!_.isEqual(firstPoint, lastPoint)) {
+          event.points.push(firstPoint);
+        }
+
         if (event.params.filterByShape && event.params.shapeField) {
-          const firstPoint = event.points[0];
-          const lastPoint = event.points[event.points.length - 1];
-          if (!_.isEqual(firstPoint, lastPoint)) {
-            event.points.push(firstPoint);
-          }
           field = event.params.shapeField;
           newFilter = { geo_shape: {} };
           newFilter.geo_shape[field] = {

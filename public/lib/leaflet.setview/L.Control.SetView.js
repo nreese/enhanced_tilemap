@@ -54,7 +54,7 @@ L.SetViewToolbar = L.Class.extend({
 
   },
   removeToolbar: function () {
-    this._tools.forEach(function (tool) {
+    this._tools.forEach((tool) => {
       this._dispose(tool);
     });
   },
@@ -68,12 +68,17 @@ L.SetViewToolbar = L.Class.extend({
       link.title = options.title;
     }
 
+    this.clickEvent = {
+      callback: options.callback,
+      context: options.context
+    };
+
     L.DomEvent
       .on(link, 'click', L.DomEvent.stopPropagation)
       .on(link, 'mousedown', L.DomEvent.stopPropagation)
       .on(link, 'dblclick', L.DomEvent.stopPropagation)
       .on(link, 'click', L.DomEvent.preventDefault)
-      .on(link, 'click', options.callback, options.context);
+      .on(link, 'click', this.clickEvent.callback, this.clickEvent.context);
 
     return link;
   },
@@ -92,7 +97,7 @@ L.SetViewToolbar = L.Class.extend({
       .on(input, 'dblclick', L.DomEvent.stopPropagation)
     if (options.callback) {
       L.DomEvent
-        .on(input, 'change', options.callback);
+        .on(input, 'change');
     }
     return input;
   },
@@ -121,7 +126,7 @@ L.SetViewToolbar = L.Class.extend({
       .off(button, 'mousedown', L.DomEvent.stopPropagation)
       .off(button, 'dblclick', L.DomEvent.stopPropagation)
       .off(button, 'click', L.DomEvent.preventDefault)
-      .off(button, 'click', callback);
+      .off(button, 'click', this.clickEvent.callback, this.clickEvent.context);
   },
   _hideActionsToolbar: function () {
     this._actionsContainer.style.display = 'none';

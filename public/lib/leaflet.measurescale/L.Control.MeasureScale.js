@@ -1,18 +1,20 @@
 L.Control.MeasureScale = L.Control.Scale.extend({
-  _addScales: function(options, className, container) {
+  _addScales: function (options, className, container) {
     L.Control.Scale.prototype._addScales.call(this, options, className, container);
 
     this._container = container;
-    const self = this;
-    L.DomEvent.on(this._container, 'click', function(e) {
-      self.startMeasure();
-    });
+
+    this.context = (e) => {
+      this.startMeasure();
+    };
+
+    L.DomEvent.on(this._container, 'click', this.context);
   },
   onRemove: function (map) {
     L.Control.Scale.prototype.onRemove.call(this, map);
-    L.DomEvent.off(this._container, 'click');
+    L.DomEvent.off(this._container, 'click', this.context);
   },
-  initMeasure: function() {
+  initMeasure: function () {
     const options = {
       error: '<strong>Error:</strong> shape edges cannot cross!',
       tooltip: {
@@ -23,12 +25,12 @@ L.Control.MeasureScale = L.Control.Scale.extend({
     }
     this.polyline = new L.Draw.Polyline(this._map, options);
   },
-  startMeasure: function() {
-    if(!this.polyline) this.initMeasure();
+  startMeasure: function () {
+    if (!this.polyline) this.initMeasure();
     this.polyline.enable();
   }
 });
 
 L.control.measureScale = function (options) {
-    return new L.Control.MeasureScale(options);
+  return new L.Control.MeasureScale(options);
 };
