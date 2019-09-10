@@ -49,6 +49,7 @@ define(function (require) {
       this._container = container;
       this._poiLayers = {};
       this._wmsOverlays = {};
+      this._wfsOverlays = {};
 
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
