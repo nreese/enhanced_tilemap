@@ -7,7 +7,7 @@ import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches) {
+  return function GeoJsonFactory(Private, savedSearches) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -18,7 +18,7 @@ define(function (require) {
      *
      * Turns saved search results into easily consumible data for leaflet.
      */
-    function POIs(params) {
+    function GeoJson(params) {
       this.savedSearchId = params.savedSearchId;
       this.geoField = params.geoField;
       //remain backwards compatible
@@ -48,7 +48,12 @@ define(function (require) {
      * @param {Function} callback(layer)
           layer {ILayer}: Leaflet ILayer containing the results of the saved search
      */
-    POIs.prototype.getLayer = function (options, callback) {
+    GeoJson.prototype.getLayer = function (options, callback) {
+
+
+      //TODO CHANGE THIS FUNCTION TO formulate WFS request or WebService response
+
+
       const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
@@ -66,7 +71,7 @@ define(function (require) {
           allFilters.push(createMapExtentFilter(options.mapExtentFilter));
           searchSource.filter(allFilters);
         } else {
-          //Do not filter POIs by time so can not inherit from rootSearchSource
+          //Do not filter GeoJson by time so can not inherit from rootSearchSource
           searchSource.inherits(false);
           searchSource.index(savedSearch.searchSource._state.index);
           searchSource.query(savedSearch.searchSource.get('query'));
@@ -78,40 +83,17 @@ define(function (require) {
           excludes: []
         });
 
-        // assigning the placeholder value of 1000 POIs in the
-        // case where number in the limit field has been replaced with null
-        let poiLimitToDisplay;
-        if (this.limit) {
-          poiLimitToDisplay = this.limit;
-        } else {
-          poiLimitToDisplay = 1000;
-        }
-
-        const tooManyDocsInfo = [
-          `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
-          `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                            to having reached the limit currently set to: ${poiLimitToDisplay}</b>`
-        ];
-
-        //Removal of previous too many documents warning when map is changed to a new extent
-        options.$legend.innerHTML = '';
-
         searchSource.fetch()
           .then(searchResp => {
-
-            //Too many documents warning for each specific layer
-            options.$legend.tooManyDocsInfo = '';
-
-            if (searchResp.hits.total > this.limit) {
-              options.$legend.innerHTML = tooManyDocsInfo[0];
-              options.$legend.tooManyDocsInfo = tooManyDocsInfo;
-            };
             callback(self._createLayer(searchResp.hits.hits, geoType, options));
           });
       });
     };
 
-    POIs.prototype._createLayer = function (hits, geoType, options) {
+    GeoJson.prototype._createLayer = function (hits, geoType, options) {
+
+      //TODO CHANGE THIS FUNCTION TO ACCOMMODATE A REQUEST FROM WFS OR WEBSERVICES
+
       let layer = null;
       const self = this;
       if ('geo_point' === geoType) {
@@ -158,18 +140,6 @@ define(function (require) {
                 };
                 polygon.on('click', polygon._click);
               }
-            },
-            pointToLayer: function pointToLayer(feature, latlng) {
-              return L.circleMarker(
-                latlng,
-                {
-                  radius: 6
-                });
-            },
-            style: {
-              color: options.color,
-              weight: 1.5,
-              opacity: 0.65
             }
           }
         );
@@ -191,11 +161,11 @@ define(function (require) {
     };
 
     //Mouse event creation for GeoShape
-    POIs.prototype.addMouseOverGeoShape = function (e) {
+    GeoJson.prototype.addMouseOverGeoShape = function (e) {
       this.openPopup();
     };
 
-    POIs.prototype.addMouseOutToGeoShape = function (e) {
+    GeoJson.prototype.addMouseOutToGeoShape = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
@@ -219,12 +189,12 @@ define(function (require) {
       }
       self.closePopup();
     };
-    POIs.prototype.addClickToGeoShape = function (polygon) {
+    GeoJson.prototype.addClickToGeoShape = function (polygon) {
       polygon.on('click', polygon._click);
     };
 
     //Mouse event creation and closing for GeoPoints
-    POIs.prototype._getMouseOverGeoPoint = function (content) {
+    GeoJson.prototype._getMouseOverGeoPoint = function (content) {
       const popup = function (e) {
         L.popup({
           autoPan: false,
@@ -239,7 +209,7 @@ define(function (require) {
       return popup;
     };
 
-    POIs.prototype._addMouseOutGeoPoint = function (e) {
+    GeoJson.prototype._addMouseOutGeoPoint = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
@@ -264,17 +234,17 @@ define(function (require) {
       self._map.closePopup();
     };
 
-    POIs.prototype._addMouseEventsGeoPoint = function (feature, content) {
+    GeoJson.prototype._addMouseEventsGeoPoint = function (feature, content) {
       feature.on('mouseover', this._getMouseOverGeoPoint(content));
       feature.on('mouseout', this._addMouseOutGeoPoint);
     };
 
-    POIs.prototype._removeMouseEventsGeoPoint = function (feature) {
+    GeoJson.prototype._removeMouseEventsGeoPoint = function (feature) {
       feature.off('mouseover');
       feature.off('mouseout');
     };
 
-    POIs.prototype._createMarker = function (hit, options) {
+    GeoJson.prototype._createMarker = function (hit, options) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
@@ -288,7 +258,7 @@ define(function (require) {
       return feature;
     };
 
-    POIs.prototype._popupContent = function (hit) {
+    GeoJson.prototype._popupContent = function (hit) {
       let dlContent = '';
       this.popupFields.forEach(function (field) {
         dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
@@ -300,6 +270,6 @@ define(function (require) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-    return POIs;
+    return GeoJson;
   };
 });

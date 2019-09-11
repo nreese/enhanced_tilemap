@@ -27,6 +27,7 @@ define(function (require) {
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
+    const GeoJsonProvider = Private(require('plugins/enhanced_tilemap/geoJson'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
@@ -131,6 +132,24 @@ define(function (require) {
       });
     }
 
+
+    function initGeoJsonLayer(layerParams) {
+      const geoJson = new GeoJsonProvider(layerParams);
+      const options = {
+        color: _.get(layerParams, 'color', '#008800'),
+        size: _.get(layerParams, 'markerSize', 'm'),
+        mapExtentFilter: {
+          geo_bounding_box: getGeoBoundingBox(),
+          geoField: getGeoField()
+        }
+      };
+
+      geoJson.getLayer(options, function (layer) {
+        map.addPOILayer(layerParams.savedSearchId, layer);
+      });
+    };
+
+
     $scope.$watch('vis.params', function (visParams, oldParams) {
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
@@ -148,6 +167,9 @@ define(function (require) {
         $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
           initPOILayer(layerParams);
         });
+
+        //geoJSON rendering
+
       }
     });
 
