@@ -1,5 +1,7 @@
 const _ = require('lodash');
 const L = require('leaflet');
+const jsonTest = require('./VectorGeoJson');
+const jsonTest2 = require('./VectorGeoJson2');
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
@@ -85,29 +87,29 @@ define(function (require) {
 
         searchSource.fetch()
           .then(searchResp => {
-            callback(self._createLayer(searchResp.hits.hits, geoType, options));
+            callback(self._createLayer(jsonTest2, options));
           });
       });
     };
 
-    GeoJson.prototype._createLayer = function (hits, geoType, options) {
-
-      //TODO CHANGE THIS FUNCTION TO ACCOMMODATE A REQUEST FROM WFS OR WEBSERVICES
+    GeoJson.prototype._createLayer = function (geoJsonCollection, options) {
 
       let layer = null;
       const self = this;
-      if ('geo_point' === geoType) {
-        const markers = _.map(hits, hit => {
+      const geometry = geoJsonCollection.features[0].geometry;
+      geometry.type = capitalizeFirstLetter(geometry.type);
+      if ('Point' === geometry.type) {
+
+        const markers = _.map(geometry.coordinates, hit => {
           return self._createMarker(hit, options);
         });
         layer = new L.FeatureGroup(markers);
         layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
-      } else if ('geo_shape' === geoType) {
-        const shapes = _.map(hits, hit => {
-          const geometry = _.get(hit, `_source[${self.geoField}]`);
-          if (geometry) {
-            geometry.type = capitalizeFirstLetter(geometry.type);
-          };
+
+      } else if ('Polygon' === geometry.type ||
+       'MultiPolygon' === geometry.type) {
+
+        const shapes = _.map(geometry.coordinates, hit => {
 
           let popupContent = false;
           if (self.popupFields.length > 0) {
@@ -121,11 +123,14 @@ define(function (require) {
             geometry: geometry
           };
         });
-        console.log(shapes);
+        console.log("Shapes: ", shapes);
+        console.log("jsonTest: ", jsonTest);
+
         layer = L.geoJson(
           shapes,
           {
             onEachFeature: function onEachFeature(feature, polygon) {
+              console.log('Polygon: ', polygon);
               if (feature.properties.label) {
                 polygon.bindPopup(feature.properties.label);
                 polygon.on('mouseover', self.addMouseOverGeoShape);
@@ -154,7 +159,7 @@ define(function (require) {
           });
         };
       } else {
-        console.warn('Unexpected feature geo type: ' + geoType);
+        console.warn('Unexpected feature geo type: ' + geometry.type);
       }
       layer.$legend = options.$legend;
       return layer;

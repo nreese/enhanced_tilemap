@@ -19,7 +19,7 @@ define(function (require) {
   require('plugins/enhanced_tilemap/directives/savedSearches');
   require('plugins/enhanced_tilemap/directives/tooltipFormatter');
   require('plugins/enhanced_tilemap/directives/wmsOverlays');
-  require('plugins/enhanced_tilemap/directives/wfsOverlays');
+  require('plugins/enhanced_tilemap/directives/vectorOverlays');
   require('plugins/enhanced_tilemap/tooltip/popupVisualize');
   require('plugins/enhanced_tilemap/tooltip/popupVisualize.less');
   require('plugins/enhanced_tilemap/visController');
@@ -64,7 +64,7 @@ define(function (require) {
           overlays: {
             savedSearches: [],
             wmsOverlays: [],
-            wfsOverlays: []
+            vectorOverlays: []
           },
           wms: config.get('visualization:tileMap:WMSdefaults')
         },

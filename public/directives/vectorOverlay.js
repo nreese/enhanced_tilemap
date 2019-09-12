@@ -3,7 +3,7 @@ const module = require('ui/modules').get('kibana');
 import { parseString } from 'xml2js';
 
 define(function (require) {
-  module.directive('wfsOverlay', function (indexPatterns, Private, $http) {
+  module.directive('vectorOverlay', function (indexPatterns, Private, $http) {
 
     return {
       restrict: 'E',
@@ -11,32 +11,32 @@ define(function (require) {
       scope: {
         layer: '='
       },
-      template: require('./wfsOverlay.html'),
+      template: require('./vectorOverlay.html'),
       link: function (scope, element, attrs) {
 
-        scope.layer.wfsCapabilitiesSwitch = 0;
+        scope.layer.vectorCapabilitiesSwitch = 0;
 
-        function wfsRequest(url) {
-          getWFSLayerList(url).then(wfsLayers => {
+        function vectorRequest(url) {
+          getVectorLayerList(url).then(vectorLayers => {
 
-            //if there is a valid response from WFS server
-            if (wfsLayers) {
-              scope.layer.wfsLayers = doWmsToUiSelectFormat(wfsLayers);
+            //if there is a valid response from Vector server
+            if (vectorLayers) {
+              scope.layer.vectorLayers = doWmsToUiSelectFormat(vectorLayers);
               if (scope.layer.layers) {
-                scope.layer.wfsLayers.selected = doLayerToUiSelectFormat(scope.layer.layers);
+                scope.layer.vectorLayers.selected = doLayerToUiSelectFormat(scope.layer.layers);
               } else {
-                scope.layer.wfsLayers.selected = [];
+                scope.layer.vectorLayers.selected = [];
               }
 
-              scope.layer.wfsCapabilitiesSwitch = 1;
+              scope.layer.vectorCapabilitiesSwitch = 1;
 
-              //if there is not a valid response form WFS server
+              //if there is not a valid response form Vector server
             } else {
-              scope.layer.wfsCapabilitiesSwitch = 0;
+              scope.layer.vectorCapabilitiesSwitch = 0;
               //if there are selected layers present, but
               //url is not valid on this digest
-              if (scope.layer && scope.layer.wfsLayers && scope.layer.wfsLayers.selected) {
-                scope.layer.layers = doUiSelectFormatToLayer(scope.layer.wfsLayers.selected);
+              if (scope.layer && scope.layer.vectorLayers && scope.layer.vectorLayers.selected) {
+                scope.layer.layers = doUiSelectFormatToLayer(scope.layer.vectorLayers.selected);
               };
             }
           });
@@ -44,18 +44,18 @@ define(function (require) {
 
         //this is for the initial rendering of the map
         if (scope.layer.url) {
-          wfsRequest(scope.layer.url);
+          vectorRequest(scope.layer.url);
         };
 
         //Watchers for url and getCapabilitiesSwitch equals to 0 or 1
-        //this is for subsequent rendering based on changes to the wfs url
+        //this is for subsequent rendering based on changes to the vector url
         scope.$watch('layer.url', function (newUrl, oldUrl) {
           if (newUrl !== oldUrl) {
-            wfsRequest(newUrl);
+            vectorRequest(newUrl);
           };
         });
         //this is for subsequent rendering based on changes to the UiSelect
-        scope.$watch('layer.wfsLayers.selected', function (newWmsLayers, oldWmsLayers) {
+        scope.$watch('layer.vectorLayers.selected', function (newWmsLayers, oldWmsLayers) {
           if (newWmsLayers !== oldWmsLayers) {
             scope.layer.layers = doUiSelectFormatToLayer(newWmsLayers);
           }
@@ -78,9 +78,9 @@ define(function (require) {
       }
     };
 
-    function doUiSelectFormatToLayer(wfsSelectedLayers) {
+    function doUiSelectFormatToLayer(vectorSelectedLayers) {
       let commaSeparatedLayers = '';
-      wfsSelectedLayers.forEach(layer => {
+      vectorSelectedLayers.forEach(layer => {
         if (commaSeparatedLayers === '') {
           commaSeparatedLayers += layer.name;
         } else {
@@ -107,24 +107,24 @@ define(function (require) {
     }
 
 
-    function getWFSLayerList(url) {
-      const getCapabilitiesRequest = url + 'service=wfs&request=GetCapabilities';
+    function getVectorLayerList(url) {
+      const getCapabilitiesRequest = url + 'service=vector&request=GetCapabilities';
 
       return $http.get(getCapabilitiesRequest)
         .then(resp => {
           if (resp.data) {
-            const wfsCapabilities = resp.data;
+            const vectorCapabilities = resp.data;
             return new Promise((resolve, reject) => {
-              parseString(wfsCapabilities, function (err, result) {
+              parseString(vectorCapabilities, function (err, result) {
 
                 if (err) {
                   reject(err);
                 }
 
-                //handles case(s) where there are no layer names returned from the WFS
-                if (result.WFS_Capabilities.Capability[0].Layer[0].Layer) {
-                  const wfsLayerNames = result.WFS_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
-                  resolve(wfsLayerNames);
+                //handles case(s) where there are no layer names returned from the Vector
+                if (result.Vector_Capabilities.Capability[0].Layer[0].Layer) {
+                  const vectorLayerNames = result.Vector_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
+                  resolve(vectorLayerNames);
                 } else {
                   resolve([]);
                 }
@@ -133,8 +133,8 @@ define(function (require) {
           }
         })
         .catch(err => {
-          console.warn('An issue was encountered returning a layers list from WFS. Verify your ' +
-            'WFS url (' + err.config.url + ') is correct, has layers present and WFS is CORs enabled for this domain.');
+          console.warn('An issue was encountered returning a layers list from Vector. Verify your ' +
+            'Vector url (' + err.config.url + ') is correct, has layers present and Vector is CORs enabled for this domain.');
         });
     };
   });

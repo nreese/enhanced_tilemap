@@ -27,7 +27,7 @@ define(function (require) {
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
-    const GeoJsonProvider = Private(require('plugins/enhanced_tilemap/geoJson'));
+    const VectorProvider = Private(require('plugins/enhanced_tilemap/vector'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
@@ -134,7 +134,7 @@ define(function (require) {
 
 
     function initGeoJsonLayer(layerParams) {
-      const geoJson = new GeoJsonProvider(layerParams);
+      const geoJson = new VectorProvider(layerParams);
       const options = {
         color: _.get(layerParams, 'color', '#008800'),
         size: _.get(layerParams, 'markerSize', 'm'),

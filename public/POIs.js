@@ -139,7 +139,6 @@ define(function (require) {
             geometry: geometry
           };
         });
-        console.log(shapes);
         layer = L.geoJson(
           shapes,
           {

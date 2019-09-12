@@ -13,25 +13,25 @@
   </div>
 
 
-  <div ng-if="layer.wfsCapabilitiesSwitch === 0">
+  <div ng-if="layer.vectorCapabilitiesSwitch === 0">
     <label>
-      WFS Layers <kbn-info
-        info="A comma seperated list of layers to use. If you have entered a valid (CORs enabled) WFS Url, a UI-based menu will appear for WFS layer(s) selection and ordering">
+      Vector Layers <kbn-info
+        info="A comma seperated list of layers to use. If you have entered a valid (CORs enabled) Vector Url, a UI-based menu will appear for Vector layer(s) selection and ordering">
       </kbn-info>
     </label>
     <input required type="text" class="form-control" ng-model="layer.layers">
   </div>
   <!-- OR-->
-  <div class="vis-option-item form-group" ng-if="layer.wfsCapabilitiesSwitch === 1">
+  <div class="vis-option-item form-group" ng-if="layer.vectorCapabilitiesSwitch === 1">
     <label>
-      WFS Layers <kbn-info
-        info="UI-based menu for selecting and ordering WFS layers. Note - Layers at the bottom will be rendered in the foreground">
+      Vector Layers <kbn-info
+        info="UI-based menu for selecting and ordering Vector layers. Note - Layers at the bottom will be rendered in the foreground">
     </label>
-    <ui-select multiple ng-model="layer.wfsLayers.selected" ng-disabled="ctrl.disabled" sortable="true"
+    <ui-select multiple ng-model="layer.vectorLayers.selected" ng-disabled="ctrl.disabled" sortable="true"
       close-on-select="false">
-      <ui-select-match placeholder="Click to select WFS layer(s)...">{{$item.name}}</ui-select-match>
-      <ui-select-choices repeat="wfsLayer in layer.wfsLayers | filter: {name: $select.search}">
-        <div ng-bind-html="wfsLayer.name | highlight: $select.search"></div>
+      <ui-select-match placeholder="Click to select Vector layer(s)...">{{$item.name}}</ui-select-match>
+      <ui-select-choices repeat="vectorLayer in layer.vectorLayers | filter: {name: $select.search}">
+        <div ng-bind-html="vectorLayer.name | highlight: $select.search"></div>
       </ui-select-choices>
     </ui-select>
   </div>
@@ -45,7 +45,7 @@
   </div>
   <div class="vis-option-item form-group side-by-side">
     <label>
-      Min Zoom Level <kbn-info info="WFS layer will only be active when the map zoom level is at or below this value.">
+      Min Zoom Level <kbn-info info="Vector layer will only be active when the map zoom level is at or below this value.">
       </kbn-info>
     </label>
     <select class="form-control" ng-model="layer.minZoom" ng-options="zoomLevel for zoomLevel in zoomLevels"></select>
@@ -82,15 +82,15 @@
   </div>
   <div>
     <label class="etm-well-section">
-      Elasticsearch WFS Options <kbn-info
-        info="WFS layers served from elasticsearch via elasticgeo/geoserver allow for greater integration with elasticsearch queries and aggregations.">
+      Elasticsearch Vector Options <kbn-info
+        info="Vector layers served from elasticsearch via elasticgeo/geoserver allow for greater integration with elasticsearch queries and aggregations.">
       </kbn-info>
     </label>
   </div>
   <div class="vis-option-item form-group">
     <label>
       Aggregation <kbn-info
-        info="Generate WFS layer from geohash_grid aggregation results. To use, properly configure geoserver by creating a SLD style containing a vec:GeoHashGrid rendering transformation. See elasticgeo documenation for details.">
+        info="Generate Vector layer from geohash_grid aggregation results. To use, properly configure geoserver by creating a SLD style containing a vec:GeoHashGrid rendering transformation. See elasticgeo documenation for details.">
       </kbn-info>
     </label>
     <textarea class="form-control" ng-model="layer.agg" name="layer.agg"></textarea>
@@ -102,13 +102,13 @@
       Sync Filters
 
       <kbn-info
-        info="When true, filters are included in the WFS server request resulting in tiles that reflect the time range, search query, and filters of your application. Requires WFS to be served from an elasticsearch Store, e.g. elasticgeo plugin for Geoserver.">
+        info="When true, filters are included in the Vector server request resulting in tiles that reflect the time range, search query, and filters of your application. Requires Vector to be served from an elasticsearch Store, e.g. elasticgeo plugin for Geoserver.">
       </kbn-info>
     </label>
   </div>
   <div class="form-group" ng-show="layer.viewparams">
     <label>
-      WFS Index Pattern
+      Vector Index Pattern
       <kbn-info info="Select an Index Pattern to use for constructing Synced Filters.
       This mainly affects the time filter field name. The visualization Index
       Pattern is used when not set"></kbn-info>
