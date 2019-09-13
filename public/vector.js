@@ -1,7 +1,5 @@
 const _ = require('lodash');
 const L = require('leaflet');
-const jsonTest = require('./VectorGeoJson');
-const jsonTest2 = require('./VectorGeoJson2');
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
@@ -9,7 +7,7 @@ import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
 
 define(function (require) {
-  return function GeoJsonFactory(Private, savedSearches) {
+  return function VectorFactory(Private, savedSearches) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -20,18 +18,11 @@ define(function (require) {
      *
      * Turns saved search results into easily consumible data for leaflet.
      */
-    function GeoJson(params) {
-      this.savedSearchId = params.savedSearchId;
-      this.geoField = params.geoField;
+    function Vector(geoJsonCollection) {
       //remain backwards compatible
-      if (!params.geoField && params.geoPointField) {
-        this.geoField = params.geoPointField;
-      }
-      this.popupFields = _.get(params, 'popupFields', []).map(function (obj) {
-        return obj.name;
-      });
-      this.limit = _.get(params, 'limit', 100);
-      this.syncFilters = _.get(params, 'syncFilters', false);
+      if (!_.isEqual(this._geoJsonCollection, geoJsonCollection)) {
+        this._geoJsonCollection = geoJsonCollection;
+      };
     }
 
     const getParentWithClass = function (element, className) {
@@ -50,54 +41,36 @@ define(function (require) {
      * @param {Function} callback(layer)
           layer {ILayer}: Leaflet ILayer containing the results of the saved search
      */
-    GeoJson.prototype.getLayer = function (options, callback) {
-
-
-      //TODO CHANGE THIS FUNCTION TO formulate WFS request or WebService response
-
-
+    Vector.prototype.getLayer = function (options, callback) {
       const self = this;
-      savedSearches.get(this.savedSearchId).then(savedSearch => {
-        const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
 
-        function createMapExtentFilter(rect) {
-          const bounds = rect.geo_bounding_box.geoBoundingBox;
-          return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
-        }
+      //this is where a request for information could be made
 
-        const searchSource = new SearchSource();
-
-        if (this.syncFilters) {
-          searchSource.inherits(savedSearch.searchSource);
-          const allFilters = queryFilter.getFilters();
-          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-          searchSource.filter(allFilters);
-        } else {
-          //Do not filter GeoJson by time so can not inherit from rootSearchSource
-          searchSource.inherits(false);
-          searchSource.index(savedSearch.searchSource._state.index);
-          searchSource.query(savedSearch.searchSource.get('query'));
-          searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
-        }
-        searchSource.size(this.limit);
-        searchSource.source({
-          includes: _.compact(_.flatten([this.geoField, this.popupFields])),
-          excludes: []
-        });
-
-        searchSource.fetch()
-          .then(searchResp => {
-            callback(self._createLayer(jsonTest2, options));
-          });
-      });
+      callback(self._createLayer(self._geoJsonCollection, options));
     };
 
-    GeoJson.prototype._createLayer = function (geoJsonCollection, options) {
+    Vector.prototype._createLayer = function (geoJsonCollection, options) {
 
       let layer = null;
       const self = this;
+
       const geometry = geoJsonCollection.features[0].geometry;
       geometry.type = capitalizeFirstLetter(geometry.type);
+
+      options.$legend = {};
+      options.$legend.innerHTML = '';
+      options.$legend.tooManyDocsInfo = '';
+
+      if (geoJsonCollection.features.length > 1000) {
+        const tooManyDocsInfo = [
+          `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
+          `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
+                                              to having reached the limit currently set to: ${geoJsonCollection.features.length}</b>`
+        ];
+        options.$legend.innerHTML = tooManyDocsInfo[0];
+        options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+      }
+
       if ('Point' === geometry.type) {
 
         const markers = _.map(geometry.coordinates, hit => {
@@ -107,39 +80,39 @@ define(function (require) {
         layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
 
       } else if ('Polygon' === geometry.type ||
-       'MultiPolygon' === geometry.type) {
+        'MultiPolygon' === geometry.type) {
+        const shapes = _.map(geometry.coordinates, () => {
 
-        const shapes = _.map(geometry.coordinates, hit => {
-
-          let popupContent = false;
-          if (self.popupFields.length > 0) {
-            popupContent = self._popupContent(hit);
-          }
+          // let popupContent = false;
+          // if (self.popupFields.length > 0) {
+          //   popupContent = self._popupContent(hit);
+          // }
           return {
             type: 'Feature',
-            properties: {
-              label: popupContent
-            },
+            // properties: {
+            //   label: popupContent
+            // },
             geometry: geometry
           };
         });
-        console.log("Shapes: ", shapes);
-        console.log("jsonTest: ", jsonTest);
-
         layer = L.geoJson(
           shapes,
           {
             onEachFeature: function onEachFeature(feature, polygon) {
-              console.log('Polygon: ', polygon);
-              if (feature.properties.label) {
-                polygon.bindPopup(feature.properties.label);
-                polygon.on('mouseover', self.addMouseOverGeoShape);
-                polygon.on('mouseout', self.addMouseOutToGeoShape);
-              }
+              // if (feature.properties.label) {
+              //   polygon.bindPopup(feature.properties.label);
+              //   polygon.on('mouseover', self.addMouseOverGeoShape);
+              //   polygon.on('mouseout', self.addMouseOutToGeoShape);
+              // }
 
-              if (_.get(feature, 'geometry.type') === 'Polygon') {
+              if (_.get(feature, 'geometry.type') === 'Polygon' ||
+                _.get(feature, 'geometry.type') === 'MultiPolygon') {
                 polygon._click = function fireEtmSelectFeature(e) {
-                  polygon._map.fire('etm:select-feature', {
+                  polygon._map.fire('etm:select-feature-vector', {
+                    _siren: options._siren,
+                    geoFieldName: options.geoFieldName,
+                    indexPattern: options.indexPattern,
+                    vector: true,
                     geojson: polygon.toGeoJSON()
                   });
                 };
@@ -166,11 +139,11 @@ define(function (require) {
     };
 
     //Mouse event creation for GeoShape
-    GeoJson.prototype.addMouseOverGeoShape = function (e) {
+    Vector.prototype.addMouseOverGeoShape = function (e) {
       this.openPopup();
     };
 
-    GeoJson.prototype.addMouseOutToGeoShape = function (e) {
+    Vector.prototype.addMouseOutToGeoShape = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
@@ -194,12 +167,12 @@ define(function (require) {
       }
       self.closePopup();
     };
-    GeoJson.prototype.addClickToGeoShape = function (polygon) {
+    Vector.prototype.addClickToGeoShape = function (polygon) {
       polygon.on('click', polygon._click);
     };
 
     //Mouse event creation and closing for GeoPoints
-    GeoJson.prototype._getMouseOverGeoPoint = function (content) {
+    Vector.prototype._getMouseOverGeoPoint = function (content) {
       const popup = function (e) {
         L.popup({
           autoPan: false,
@@ -214,7 +187,7 @@ define(function (require) {
       return popup;
     };
 
-    GeoJson.prototype._addMouseOutGeoPoint = function (e) {
+    Vector.prototype._addMouseOutGeoPoint = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
@@ -239,31 +212,31 @@ define(function (require) {
       self._map.closePopup();
     };
 
-    GeoJson.prototype._addMouseEventsGeoPoint = function (feature, content) {
+    Vector.prototype._addMouseEventsGeoPoint = function (feature, content) {
       feature.on('mouseover', this._getMouseOverGeoPoint(content));
       feature.on('mouseout', this._addMouseOutGeoPoint);
     };
 
-    GeoJson.prototype._removeMouseEventsGeoPoint = function (feature) {
+    Vector.prototype._removeMouseEventsGeoPoint = function (feature) {
       feature.off('mouseover');
       feature.off('mouseout');
     };
 
-    GeoJson.prototype._createMarker = function (hit, options) {
+    Vector.prototype._createMarker = function (hit, options) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
           icon: markerIcon(options.color, options.size)
         });
 
-      if (this.popupFields.length > 0) {
-        const content = this._popupContent(hit);
-        this._addMouseEventsGeoPoint(feature, content);
-      }
+      // if (this.popupFields.length > 0) {
+      //   const content = this._popupContent(hit);
+      //   this._addMouseEventsGeoPoint(feature, content);
+      // }
       return feature;
     };
 
-    GeoJson.prototype._popupContent = function (hit) {
+    Vector.prototype._popupContent = function (hit) {
       let dlContent = '';
       this.popupFields.forEach(function (field) {
         dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
@@ -275,6 +248,6 @@ define(function (require) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-    return GeoJson;
+    return Vector;
   };
 });

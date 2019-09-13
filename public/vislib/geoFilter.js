@@ -13,7 +13,7 @@ define(function (require) {
       return field + ': ' + numBoxes + ' geo filters';
     }
 
-    function _applyFilter(newFilter, field, indexPatternName, _sirenMeta) {
+    function _applyFilter(newFilter, field, indexPatternName) {
       let numFilters = 1;
       if (_.isArray(newFilter)) {
         numFilters = newFilter.length;
@@ -27,7 +27,6 @@ define(function (require) {
         alias: filterAlias(field, numFilters),
         negate: false,
         index: indexPatternName,
-        _siren: _sirenMeta,
         key: field
       };
       queryFilter.addFilters(newFilter);

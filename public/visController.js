@@ -11,6 +11,10 @@ import { ResizeCheckerProvider } from 'ui/vislib/lib/resize_checker';
 import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
+
+const VectorGeoJson = require('./VectorGeoJson');
+const VectorGeoJson2 = require('./VectorGeoJson2');
+
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
@@ -132,20 +136,26 @@ define(function (require) {
       });
     }
 
+    //geoJSON rendering from scripts
+    function renderScriptingGeoJson(layerName, geoJsonCollection) {
+      initVectorLayer(layerName, geoJsonCollection);
+    };
 
-    function initGeoJsonLayer(layerParams) {
-      const geoJson = new VectorProvider(layerParams);
+    function initVectorLayer(layerName, geoJsonCollection) {
+      const vector = new VectorProvider(geoJsonCollection);
       const options = {
-        color: _.get(layerParams, 'color', '#008800'),
-        size: _.get(layerParams, 'markerSize', 'm'),
+        color: '#008800',
+        size: 'm',
+        indexPattern: $scope.vis.indexPattern.title,
+        geoFieldName: $scope.vis.aggs[1].params.field.name,
+        _siren: $scope.vis._siren,
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
-          geoField: getGeoField()
         }
       };
 
-      geoJson.getLayer(options, function (layer) {
-        map.addPOILayer(layerParams.savedSearchId, layer);
+      vector.getLayer(options, function (layer) {
+        map.addVectorLayer(layerName, layer);
       });
     };
 
@@ -168,8 +178,6 @@ define(function (require) {
           initPOILayer(layerParams);
         });
 
-        //geoJSON rendering
-
       }
     });
 
@@ -188,6 +196,10 @@ define(function (require) {
       //Initialize POI layer regardless of aggregations being present
       //the logic of whether to draw POI is handled in POI.js
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+
+      map.clearVectorLayers();
+      //execute for testing purposes
+      renderScriptingGeoJson('Poland', VectorGeoJson);
     });
 
 
@@ -246,15 +258,6 @@ define(function (require) {
         yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
       };
       const geoField = getGeoField();
-      // search directive changed a lot in 5.5 - no longer supported at this time
-      /*if (_.get(tooltipParams, 'type') === 'search') {
-        tooltip = new SearchTooltip(
-            _.get(tooltipParams, 'options.searchId'),
-            geoField.fieldname,
-            geoField.geotype,
-            options);
-        tooltipFormatter = tooltip.getFormatter();
-      }*/
       if (_.get(tooltipParams, 'type') === 'visualization') {
         tooltip = new VisTooltip(
           _.get(tooltipParams, 'options.visId'),

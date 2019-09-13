@@ -202,6 +202,7 @@ define(function (require) {
 
     TileMapMap.prototype.destroy = function () {
       this.clearPOILayers();
+      this.clearVectorLayers();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
@@ -220,6 +221,18 @@ define(function (require) {
         self.map.removeLayer(layer);
       });
       this._poiLayers = {};
+      if (this._toolbench) this._toolbench.removeTools();
+    };
+
+    TileMapMap.prototype.clearVectorLayers = function () {
+      const self = this;
+      Object.keys(this._vectorOverlays).forEach(function (key) {
+        const layer = self._vectorOverlays[key];
+        layer.destroy();
+        self._layerControl.removeLayer(layer);
+        self.map.removeLayer(layer);
+      });
+      this._vectorOverlays = {};
       if (this._toolbench) this._toolbench.removeTools();
     };
 
@@ -255,6 +268,44 @@ define(function (require) {
 
       //Add tool to l.draw.toolbar so users can filter by POIs
       if (Object.keys(this._poiLayers).length === 1) {
+        if (this._toolbench) this._toolbench.removeTools();
+        if (!this._toolbench) this._addDrawControl();
+        this._toolbench.addTool();
+      }
+    };
+
+    TileMapMap.prototype.addVectorLayer = function (layerName, layer) {
+      let isVisible = true;
+      //remove layer if it already exists
+      if (_.has(this._vectorOverlays, layerName)) {
+        const layer = this._vectorOverlays[layerName];
+        this._vectorOverlays[layerName].destroy();
+        isVisible = this.map.hasLayer(layer);
+        this._layerControl.removeLayer(layer);
+        this.map.removeLayer(layer);
+        delete this._vectorOverlays[layerName];
+      }
+
+      // if (isVisible) {
+      this.map.addLayer(layer);
+      //}
+
+      const tooManyDocs = {
+        icon: layer.$legend.tooManyDocsInfo[0],
+        message: layer.$legend.tooManyDocsInfo[1]
+      };
+
+      const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
+      if (tooManyDocs.icon) {
+        this._layerControl.addOverlay(layer, toomanydocslayername, '<b> Vector Overlays</b>');
+      } else {
+        this._layerControl.addOverlay(layer, layerName, '<b> Vector Overlays</b>');
+      }
+
+      this._vectorOverlays[layerName] = layer;
+
+      //Add tool to l.draw.toolbar so users can filter by POIs
+      if (Object.keys(this._vectorOverlays).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
@@ -426,6 +477,17 @@ define(function (require) {
       this.map.on('etm:select-feature', function (e) {
         self._callbacks.polygon({
           chart: self._chartData,
+          params: self._attr,
+          points: e.geojson.geometry.coordinates[0]
+        });
+      });
+
+      this.map.on('etm:select-feature-vector', function (e) {
+        self._callbacks.polygon({
+          _siren: e._siren,
+          indexPattern: e.indexPattern,
+          geoFieldName: e.geoFieldName,
+          vector: e.vector,
           params: self._attr,
           points: e.geojson.geometry.coordinates[0]
         });
