@@ -483,13 +483,10 @@ define(function (require) {
       });
 
       this.map.on('etm:select-feature-vector', function (e) {
-        self._callbacks.polygon({
-          _siren: e._siren,
-          indexPattern: e.indexPattern,
-          geoFieldName: e.geoFieldName,
-          vector: e.vector,
+        self._callbacks.polygonVector({
+          args: e.args,
           params: self._attr,
-          points: e.geojson.geometry.coordinates[0]
+          points: e.geojson.geometry.coordinates
         });
       });
 

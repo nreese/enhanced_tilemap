@@ -3,7 +3,6 @@ module.exports = {
   features: [
     {
       type: "Feature",
-      id: "ne_110m_admin_0_countries.114",
       geometry: {
         type: "MultiPolygon",
         coordinates: [
@@ -193,103 +192,150 @@ module.exports = {
           ]
         ]
       },
-      geometry_name: "the_geom",
+      geometry_name: "Poland",
       properties: {
-        label: "fdaskl;;jadfs,",
-        featurecla: "Admin-0 country",
-        scalerank: 1,
-        LABELRANK: 3,
-        SOVEREIGNT: "Poland",
-        SOV_A3: "POL",
-        ADM0_DIF: 0,
-        LEVEL: 2,
-        TYPE: "Sovereign country",
-        ADMIN: "Poland",
-        ADM0_A3: "POL",
-        GEOU_DIF: 0,
-        GEOUNIT: "Poland",
-        GU_A3: "POL",
-        SU_DIF: 0,
-        SUBUNIT: "Poland",
-        SU_A3: "POL",
-        BRK_DIFF: 0,
-        NAME: "Poland",
-        NAME_LONG: "Poland",
-        BRK_A3: "POL",
-        BRK_NAME: "Poland",
-        BRK_GROUP: "",
-        ABBREV: "Pol.",
-        POSTAL: "PL",
-        FORMAL_EN: "Republic of Poland",
-        FORMAL_FR: "",
-        NAME_CIAWF: "Poland",
-        NOTE_ADM0: "",
-        NOTE_BRK: "",
-        NAME_SORT: "Poland",
-        NAME_ALT: "",
-        MAPCOLOR7: 3,
-        MAPCOLOR8: 7,
-        MAPCOLOR9: 1,
-        MAPCOLOR13: 2,
-        POP_EST: 38476269,
-        POP_RANK: 15,
-        GDP_MD_EST: 1052000,
-        POP_YEAR: 2017,
-        LASTCENSUS: 2011,
-        GDP_YEAR: 2016,
-        ECONOMY: "2. Developed region: nonG7",
-        INCOME_GRP: "1. High income: OECD",
-        WIKIPEDIA: -99,
-        FIPS_10_: "PL",
-        ISO_A2: "PL",
-        ISO_A3: "POL",
-        ISO_A3_EH: "POL",
-        ISO_N3: "616",
-        UN_A3: "616",
-        WB_A2: "PL",
-        WB_A3: "POL",
-        WOE_ID: 23424923,
-        WOE_ID_EH: 23424923,
-        WOE_NOTE: "Exact WOE match as country",
-        ADM0_A3_IS: "POL",
-        ADM0_A3_US: "POL",
-        ADM0_A3_UN: -99,
-        ADM0_A3_WB: -99,
-        CONTINENT: "Europe",
-        REGION_UN: "Europe",
-        SUBREGION: "Eastern Europe",
-        REGION_WB: "Europe & Central Asia",
-        NAME_LEN: 6,
-        LONG_LEN: 6,
-        ABBREV_LEN: 4,
-        TINY: -99,
-        HOMEPART: 1,
-        MIN_ZOOM: 0,
-        MIN_LABEL: 3,
-        MAX_LABEL: 7,
-        NE_ID: 1159321179,
-        WIKIDATAID: "Q36",
-        NAME_AR: "Ø¨ÙÙÙØ¯Ø§",
-        NAME_BN: "à¦ªà§à¦²à§à¦¯à¦¾à¦¨à§à¦¡",
-        NAME_DE: "Polen",
-        NAME_EN: "Poland",
-        NAME_ES: "Polonia",
-        NAME_FR: "Pologne",
-        NAME_EL: "Î Î¿Î»ÏÎ½Î¯Î±",
-        NAME_HI: "à¤ªà¥à¤²à¥à¤à¤¡",
-        NAME_HU: "LengyelorszÃ¡g",
-        NAME_ID: "Polandia",
-        NAME_IT: "Polonia",
-        NAME_JA: "ãã¼ã©ã³ã",
-        NAME_KO: "í´ëë",
-        NAME_NL: "Polen",
-        NAME_PL: "Polska",
-        NAME_PT: "PolÃ³nia",
-        NAME_RU: "ÐÐ¾Ð»ÑÑÐ°",
-        NAME_SV: "Polen",
-        NAME_TR: "Polonya",
-        NAME_VI: "Ba Lan",
-        NAME_ZH: "æ³¢å°"
+        label: "fdaskl;;jadfs,"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              7.439293,
+              43.757523
+            ],
+            [
+              7.391609,
+              43.727547
+            ],
+            [
+              7.387777,
+              43.748604
+            ],
+            [
+              7.416111,
+              43.770554
+            ],
+            [
+              7.439293,
+              43.757523
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Monaco",
+        "iso2": "MC",
+        "iso3": "MCO"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              17.166386,
+              48.012497
+            ],
+            [
+              16.946182,
+              48.619064
+            ],
+            [
+              18.851246,
+              49.517357
+            ],
+            [
+              19.475555,
+              49.599998
+            ],
+            [
+              20.074444,
+              49.175278
+            ],
+            [
+              21.618889,
+              49.436386
+            ],
+            [
+              22.558052,
+              49.079437
+            ],
+            [
+              22.151442,
+              48.411919
+            ],
+            [
+              20.660553,
+              48.563332
+            ],
+            [
+              18.655277,
+              47.758606
+            ],
+            [
+              17.251656,
+              48.024994
+            ],
+            [
+              17.166386,
+              48.012497
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Slovakia",
+        "iso2": "SK",
+        "iso3": "SVK"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              51.51759,
+              25.383415
+            ],
+            [
+              51.611664,
+              25.010277
+            ],
+            [
+              51.215164,
+              24.620888
+            ],
+            [
+              50.830956,
+              24.749966
+            ],
+            [
+              51.042496,
+              26.049442
+            ],
+            [
+              51.568054,
+              25.908333
+            ],
+            [
+              51.51759,
+              25.383415
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Qatar",
+        "iso2": "QA",
+        "iso3": "QAT"
       }
     }
   ],
@@ -302,4 +348,5 @@ module.exports = {
       name: "urn:ogc:def:crs:EPSG::4326"
     }
   }
+
 };

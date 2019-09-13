@@ -12,8 +12,10 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
 
-const VectorGeoJson = require('./VectorGeoJson');
-const VectorGeoJson2 = require('./VectorGeoJson2');
+const VectorGeoJson = require('./testGeoJson/VectorGeoJson');
+const VectorGeoJson2 = require('./testGeoJson/VectorGeoJson2');
+const VectorGeoJsonWorld = require('./testGeoJson/VectorGeoJsonWorld');
+const VectorGeoJsonSomeEu = require('./testGeoJson/VectorGeoJsonSomeEU');
 
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
@@ -141,11 +143,11 @@ define(function (require) {
       initVectorLayer(layerName, geoJsonCollection);
     };
 
-    function initVectorLayer(layerName, geoJsonCollection) {
-      const vector = new VectorProvider(geoJsonCollection);
-      const options = {
-        color: '#008800',
-        size: 'm',
+    function initVectorLayer(layerName, geoJsonCollection, options) {
+
+      const optionsWithDefaults = {
+        color: _.get(options, 'color', '#008800'),
+        size: _.get(options, 'size', 'm'),
         indexPattern: $scope.vis.indexPattern.title,
         geoFieldName: $scope.vis.aggs[1].params.field.name,
         _siren: $scope.vis._siren,
@@ -154,9 +156,9 @@ define(function (require) {
         }
       };
 
-      vector.getLayer(options, function (layer) {
-        map.addVectorLayer(layerName, layer);
-      });
+      const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
+      map.addVectorLayer(layerName, vector);
+
     };
 
 
@@ -198,8 +200,9 @@ define(function (require) {
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
 
       map.clearVectorLayers();
-      //execute for testing purposes
-      renderScriptingGeoJson('Poland', VectorGeoJson);
+
+      //execute for testing purposes - this would ultimately be called from script
+      renderScriptingGeoJson('Some EU Countries', VectorGeoJsonSomeEu);
     });
 
 

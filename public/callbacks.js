@@ -83,24 +83,17 @@ define(function (require) {
       },
       polygon: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
-        if (!agg && !event.vector) return;
+        if (!agg) return;
+        const indexPatternName = agg.vis.indexPattern.id;
 
         let newFilter;
         let field;
-        let indexPatternName;
-        let _siren;
 
         const firstPoint = event.points[0];
         const lastPoint = event.points[event.points.length - 1];
         if (!_.isEqual(firstPoint, lastPoint)) {
           event.points.push(firstPoint);
         }
-
-        if (agg) {
-          indexPatternName = agg.vis.indexPattern.id;
-          _siren = agg.vis._siren;
-          field = agg.fieldName();
-        };
 
         if (event.params.filterByShape && event.params.shapeField) {
           field = event.params.shapeField;
@@ -112,18 +105,36 @@ define(function (require) {
             }
           };
         } else {
-          if (event.vector) {
-            _siren = event._siren;
-            indexPatternName = event.indexPattern;
-            field = event.geoFieldName;
-            event.points = event.points[0];
-          }
+          field = agg.fieldName();
           newFilter = { geo_polygon: {} };
           newFilter.geo_polygon[field] = { points: event.points };
-        };
+        }
 
-        filterHelper.addSirenPropertyToFilterMeta(newFilter, _siren);
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
         geoFilter.add(newFilter, field, indexPatternName);
+      },
+      polygonVector: function (event) {
+        if (!event.args.vector) return;
+
+        let newFilter;
+        const field = event.args.geoFieldName;
+
+        if (_.isEqual(event.args.type.toLowerCase(), 'multipolygon')) {
+          //Todo add some logic for handling geofilters for multipolygon geofilters.
+          //Todo this will likely be handled in geofilter.js
+          console.log('Multipolygon type (e.g. england or Italy in EU sample dataset), will need to edit geofilter.js to support');
+          return;
+
+        } else if (_.isEqual(event.args.type.toLowerCase(), 'polygon')) {
+          //Todo Add support for polygons with holes in them
+          console.log('Polygon type (e.g. Ireland in EU sample dataset), assuming no donuts in polygon (e.g. South Africa), the filters');
+          newFilter = { geo_polygon: {} };
+          newFilter.geo_polygon[field] = { points: event.points[0] };
+        }
+
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, event.args._siren);
+        geoFilter.add(newFilter, field, event.args.indexPattern);
+
       },
       rectangle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');

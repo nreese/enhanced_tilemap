@@ -36,36 +36,23 @@ define(function (require) {
       return false;
     };
 
-    /**
-     * @param {options} options: styling options
-     * @param {Function} callback(layer)
-          layer {ILayer}: Leaflet ILayer containing the results of the saved search
-     */
-    Vector.prototype.getLayer = function (options, callback) {
-      const self = this;
-
-      //this is where a request for information could be made
-
-      callback(self._createLayer(self._geoJsonCollection, options));
-    };
-
-    Vector.prototype._createLayer = function (geoJsonCollection, options) {
-
+    Vector.prototype.getLayer = function (options) {
       let layer = null;
       const self = this;
 
-      const geometry = geoJsonCollection.features[0].geometry;
+      //geometry type of the first feature used to determine the type of features present
+      const geometry = self._geoJsonCollection.features[0].geometry;
       geometry.type = capitalizeFirstLetter(geometry.type);
 
       options.$legend = {};
       options.$legend.innerHTML = '';
       options.$legend.tooManyDocsInfo = '';
 
-      if (geoJsonCollection.features.length > 1000) {
+      if (self._geoJsonCollection.features.length > 100) {
         const tooManyDocsInfo = [
           `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
           `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                              to having reached the limit currently set to: ${geoJsonCollection.features.length}</b>`
+                                              to having reached the limit currently set to: ${self._geoJsonCollection.features.length}</b>`
         ];
         options.$legend.innerHTML = tooManyDocsInfo[0];
         options.$legend.tooManyDocsInfo = tooManyDocsInfo;
@@ -81,38 +68,28 @@ define(function (require) {
 
       } else if ('Polygon' === geometry.type ||
         'MultiPolygon' === geometry.type) {
-        const shapes = _.map(geometry.coordinates, () => {
-
-          // let popupContent = false;
-          // if (self.popupFields.length > 0) {
-          //   popupContent = self._popupContent(hit);
-          // }
+        const shapes = _.map(self._geoJsonCollection.features, (feature) => {
           return {
             type: 'Feature',
-            // properties: {
-            //   label: popupContent
-            // },
-            geometry: geometry
+            geometry: feature.geometry
           };
+
         });
         layer = L.geoJson(
           shapes,
           {
             onEachFeature: function onEachFeature(feature, polygon) {
-              // if (feature.properties.label) {
-              //   polygon.bindPopup(feature.properties.label);
-              //   polygon.on('mouseover', self.addMouseOverGeoShape);
-              //   polygon.on('mouseout', self.addMouseOutToGeoShape);
-              // }
-
               if (_.get(feature, 'geometry.type') === 'Polygon' ||
                 _.get(feature, 'geometry.type') === 'MultiPolygon') {
                 polygon._click = function fireEtmSelectFeature(e) {
                   polygon._map.fire('etm:select-feature-vector', {
-                    _siren: options._siren,
-                    geoFieldName: options.geoFieldName,
-                    indexPattern: options.indexPattern,
-                    vector: true,
+                    args: {
+                      _siren: options._siren,
+                      geoFieldName: options.geoFieldName,
+                      indexPattern: options.indexPattern,
+                      vector: true,
+                      type: feature.geometry.type
+                    },
                     geojson: polygon.toGeoJSON()
                   });
                 };

@@ -72,7 +72,7 @@ define(function (require) {
       _applyFilter(newFilter, field, indexPatternName);
     }
 
-    function addGeoFilter(newFilter, field, indexPatternName, sirenMeta) {
+    function addGeoFilter(newFilter, field, indexPatternName) {
       let existingFilter = null;
       _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
         if (isGeoFilter(it, field)) {
@@ -94,7 +94,7 @@ define(function (require) {
 
         confirmModal('How would you like this filter applied?', confirmModalOptions);
       } else {
-        _applyFilter(newFilter, field, indexPatternName, sirenMeta);
+        _applyFilter(newFilter, field, indexPatternName);
       }
     }
 
