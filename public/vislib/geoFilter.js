@@ -119,10 +119,10 @@ define(function (require) {
         polygonFiltersAndDonuts = _analyseMultiPolygon(newFilter.geo_multi_polygon[field].polygons, field);
         geoFilters = polygonFiltersAndDonuts.polygonsToFilter;
         donutsToExclude = polygonFiltersAndDonuts.donutsToExclude;
-      } else if (_.has(newFilter, 'geo_polygon' &&
+      } else if (_.has(newFilter, 'geo_polygon') &&
         (newFilter.geo_polygon &&
           newFilter.geo_polygon[field] &&
-          newFilter.geo_polygon[field].polygons))) {
+          newFilter.geo_polygon[field].polygons)) {
         polygonFiltersAndDonuts = _analyseSimplePolygon(newFilter, field);
         geoFilters = polygonFiltersAndDonuts.polygonsToFilter;
         donutsToExclude = polygonFiltersAndDonuts.donutsToExclude;
