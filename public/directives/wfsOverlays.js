@@ -2,16 +2,16 @@ const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 
 define(function (require) {
-  require('plugins/enhanced_tilemap/directives/vectorOverlay');
+  require('plugins/enhanced_tilemap/directives/wfsOverlay');
 
-  module.directive('vectorOverlays', function (Private) {
+  module.directive('wfsOverlays', function (Private) {
     return {
       restrict: 'E',
       replace: true,
       scope: {
         layers: '='
       },
-      template: require('./vectorOverlays.html'),
+      template: require('./wfsOverlays.html'),
       link: function (scope, element, attrs) {
 
         scope.addLayer = function () {

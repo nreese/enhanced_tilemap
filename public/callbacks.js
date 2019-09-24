@@ -120,16 +120,11 @@ define(function (require) {
         const field = event.args.geoFieldName;
 
         if (_.isEqual(event.args.type.toLowerCase(), 'multipolygon')) {
-          //Todo add some logic for handling geofilters for multipolygon geofilters.
-          //Todo this will likely be handled in geofilter.js
-          console.log('Multipolygon type (e.g. england or Italy in EU sample dataset), will need to edit geofilter.js to support');
-          return;
-
+          newFilter = { geo_multi_polygon: {} };
+          newFilter.geo_multi_polygon[field] = { polygons: event.points };
         } else if (_.isEqual(event.args.type.toLowerCase(), 'polygon')) {
-          //Todo Add support for polygons with holes in them
-          console.log('Polygon type (e.g. Ireland in EU sample dataset), assuming no donuts in polygon (e.g. South Africa), the filters');
           newFilter = { geo_polygon: {} };
-          newFilter.geo_polygon[field] = { points: event.points[0] };
+          newFilter.geo_polygon[field] = { polygons: event.points };
         }
 
         filterHelper.addSirenPropertyToFilterMeta(newFilter, event.args._siren);

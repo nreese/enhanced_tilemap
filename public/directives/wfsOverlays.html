@@ -1,11 +1,11 @@
 <div class="form-group">
   <label class="etm-options-section">
-    Vector Layers <kbn-info info="Overlay vector layers (served as geoJSON) from an external web or Vector server (like geoserver)."></kbn-info>
+    WFS Layers <kbn-info info="Overlay wfs layers (served as geoJSON) from an external web or WFS server (like geoserver)."></kbn-info>
   </label>
   <ul class="etm-options-list">
     <li ng-repeat="layer in layers" class="etm-option-item">
-      <label>Vector Layer {{$index + 1}}</label>
-      <vector-overlay layer="layer"></vector-overlay>
+      <label>WFS Layer {{$index + 1}}</label>
+      <wfs-overlay layer="layer"></wfs-overlay>
       <div class="btn-group rightCorner">
         <button class="btn btn-xs btn-danger" ng-click="removeLayer($index)" > 
           <i class="fa fa-times"></i>
@@ -14,6 +14,6 @@
     </li>
   </ul>
   <button class="btn btn-xs btn-success" ng-click="addLayer()">
-    <i class="fa fa-plus"></i> <span>Vector Layer</span>
+    <i class="fa fa-plus"></i> <span>WFS Layer</span>
   </button>
 </div>

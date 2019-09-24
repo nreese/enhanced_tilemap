@@ -13,16 +13,93 @@ define(function (require) {
       return field + ': ' + numBoxes + ' geo filters';
     }
 
+    function _analyseMultiPolygon(polygons, field) {
+      const polygonFilters = [];
+      const donutExclusions = [];
+      _.each(polygons, polygon => {
+
+        //creation of donuts to exclude and polygons to include documents from
+        //geoJson spec states that index 0 is exterior polygon and
+        //any additional arrays are donuts in the exterior polygon
+        for (let i = 0; i < polygon.length; i++) {
+          const geoPolygon = {};
+          const polygonLocation = {};
+          const geoDonut = {};
+          const donutLocation = {};
+          if (i === 0) {
+            polygonLocation[field] = { points: polygon[i] };
+            geoPolygon.geo_polygon = polygonLocation;
+            polygonFilters.push(geoPolygon);
+          } else {
+            donutLocation[field] = { points: polygon[i] };
+            geoDonut.geo_polygon = donutLocation;
+            donutExclusions.push(geoDonut);
+          }
+        }
+      });
+      return {
+        polygonsToFilter: polygonFilters,
+        donutsToExclude: donutExclusions
+      };
+    };
+
+    function _analyseSimplePolygon(newFilter, field) {
+      const polygonFilters = [];
+      const donutExclusions = [];
+      const geoPolygon = {};
+      const polygonLocation = {};
+      const geoDonut = {};
+      const donutLocation = {};
+
+      const polygons = newFilter.geo_polygon[field].polygons;
+
+      for (let i = 0; i < polygons.length; i++) {
+        if (i === 0) {
+          polygonLocation[field] = { points: polygons[i] };
+          geoPolygon.geo_polygon = polygonLocation;
+          polygonFilters.push(geoPolygon);
+        } else if (polygons.length > 1) {
+          donutLocation[field] = { points: polygons[i] };
+          geoDonut.geo_polygon = donutLocation;
+          donutExclusions.push(geoDonut);
+        };
+      };
+      return {
+        polygonsToFilter: polygonFilters,
+        donutsToExclude: donutExclusions
+      };
+    };
+
+    function _createPolygonFilter(polygonsToFilter) {
+      return {
+        bool: {
+          should: polygonsToFilter
+        }
+      };
+    };
+
+
     function _applyFilter(newFilter, field, indexPatternName) {
       let numFilters = 1;
-      if (_.isArray(newFilter)) {
-        numFilters = newFilter.length;
-        newFilter = {
-          bool: {
-            should: newFilter
-          }
+      let polygonFiltersAndDonuts = {};
+      if (newFilter.geo_multi_polygon) {
+        const polygons = newFilter.geo_multi_polygon[field].polygons;
+        polygonFiltersAndDonuts = _analyseMultiPolygon(polygons, field);
+        numFilters = polygons.length;
+        newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
+      } else if (newFilter.geo_polygon) {
+        //Only analyse vector geo polygons, i.e. not drawn ones
+        if (newFilter.geo_polygon[field].polygons) {
+          polygonFiltersAndDonuts = _analyseSimplePolygon(newFilter, field);
+          newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
         };
-      }
+      };
+
+      //add all donuts
+      if (polygonFiltersAndDonuts.donutsToExclude) {
+        newFilter.bool.must_not = polygonFiltersAndDonuts.donutsToExclude;
+      };
+
       newFilter.meta = {
         alias: filterAlias(field, numFilters),
         negate: false,
@@ -30,26 +107,46 @@ define(function (require) {
         key: field
       };
       queryFilter.addFilters(newFilter);
-    }
+    };
 
     function _combineFilters(newFilter, existingFilter, field) {
-      let geoFilters = _.flatten([newFilter]);
-      let type = '';
-      if (_.has(existingFilter, 'bool.should')) {
-        geoFilters = geoFilters.concat(existingFilter.bool.should);
-        type = 'bool';
+      let geoFilters = [];
+      let donutsToExclude = [];
+      let polygonFiltersAndDonuts = {};
+
+      //handling new filter, also adding new donuts
+      if (_.has(newFilter, 'geo_multi_polygon')) {
+        polygonFiltersAndDonuts = _analyseMultiPolygon(newFilter.geo_multi_polygon[field].polygons, field);
+        geoFilters = polygonFiltersAndDonuts.polygonsToFilter;
+        donutsToExclude = polygonFiltersAndDonuts.donutsToExclude;
+      } else if (_.has(newFilter, 'geo_polygon' &&
+        (newFilter.geo_polygon &&
+          newFilter.geo_polygon[field] &&
+          newFilter.geo_polygon[field].polygons))) {
+        polygonFiltersAndDonuts = _analyseSimplePolygon(newFilter, field);
+        geoFilters = polygonFiltersAndDonuts.polygonsToFilter;
+        donutsToExclude = polygonFiltersAndDonuts.donutsToExclude;
+      } else {
+        geoFilters = _.flatten([newFilter]);
+      };
+
+      //handling existing filters
+      if (_.has(existingFilter, 'bool')) {
+        if (_.has(existingFilter, 'bool.should')) {
+          geoFilters = geoFilters.concat(existingFilter.bool.should);
+        };
+        //including pre-existing donuts
+        if (_.has(existingFilter, 'bool.must_not')) {
+          donutsToExclude = donutsToExclude.concat(existingFilter.bool.must_not);
+        };
       } else if (_.has(existingFilter, 'geo_bounding_box')) {
         geoFilters.push({ geo_bounding_box: existingFilter.geo_bounding_box });
-        type = 'geo_bounding_box';
       } else if (_.has(existingFilter, 'geo_polygon')) {
         geoFilters.push({ geo_polygon: existingFilter.geo_polygon });
-        type = 'geo_polygon';
       } else if (_.has(existingFilter, 'geo_shape')) {
         geoFilters.push({ geo_shape: existingFilter.geo_shape });
-        type = 'geo_shape';
       } else if (_.has(existingFilter, 'geo_distance')) {
         geoFilters.push({ geo_distance: existingFilter.geo_distance });
-        type = 'geo_distance';
       }
 
       // Update method removed - so just remove old filter and add updated filter
@@ -59,6 +156,12 @@ define(function (require) {
         },
         meta: existingFilter.meta
       };
+
+      // adding all donuts
+      if (donutsToExclude) {
+        updatedFilter.bool.must_not = donutsToExclude;
+      };
+
       updatedFilter.meta.alias = filterAlias(field, geoFilters.length);
       queryFilter.removeFilter(existingFilter);
       queryFilter.addFilters([updatedFilter]);

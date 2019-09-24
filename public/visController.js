@@ -12,11 +12,6 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
 
-const VectorGeoJson = require('./testGeoJson/VectorGeoJson');
-const VectorGeoJson2 = require('./testGeoJson/VectorGeoJson2');
-const VectorGeoJsonWorld = require('./testGeoJson/VectorGeoJsonWorld');
-const VectorGeoJsonSomeEu = require('./testGeoJson/VectorGeoJsonSomeEU');
-
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
@@ -139,8 +134,8 @@ define(function (require) {
     }
 
     //geoJSON rendering from scripts
-    function renderScriptingGeoJson(layerName, geoJsonCollection) {
-      initVectorLayer(layerName, geoJsonCollection);
+    function renderScriptingGeoJson(layerName, geoJsonCollection, options) {
+      initVectorLayer(layerName, geoJsonCollection, options);
     };
 
     function initVectorLayer(layerName, geoJsonCollection, options) {
@@ -198,11 +193,6 @@ define(function (require) {
       //Initialize POI layer regardless of aggregations being present
       //the logic of whether to draw POI is handled in POI.js
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-
-      map.clearVectorLayers();
-
-      //execute for testing purposes - this would ultimately be called from script
-      renderScriptingGeoJson('Some EU Countries', VectorGeoJsonSomeEu);
     });
 
 
