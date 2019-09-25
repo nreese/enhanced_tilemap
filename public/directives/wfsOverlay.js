@@ -15,6 +15,7 @@ define(function (require) {
       link: function (scope, element, attrs) {
 
         scope.layer.wfsCapabilitiesSwitch = 0;
+        scope.layer.popupFields = [];
 
         function wfsRequest(url) {
           getWFSLayerList(url).then(wfsLayers => {
@@ -23,9 +24,9 @@ define(function (require) {
             if (wfsLayers) {
               scope.layer.wfsLayers = doWmsToUiSelectFormat(wfsLayers);
               if (scope.layer.layers) {
-                scope.layer.wfsLayers.selected = doLayerToUiSelectFormat(scope.layer.layers);
+                scope.layer.selected = findSelectedLayer(scope.layer.wfsLayers, scope.layer.layers);
               } else {
-                scope.layer.wfsLayers.selected = [];
+                scope.layer.selected = [];
               }
 
               scope.layer.wfsCapabilitiesSwitch = 1;
@@ -35,8 +36,8 @@ define(function (require) {
               scope.layer.wfsCapabilitiesSwitch = 0;
               //if there are selected layers present, but
               //url is not valid on this digest
-              if (scope.layer && scope.layer.wfsLayers && scope.layer.wfsLayers.selected) {
-                scope.layer.layers = doUiSelectFormatToLayer(scope.layer.wfsLayers.selected);
+              if (scope.layer && scope.layer.selected) {
+                scope.layer.layers = scope.layer.selected.name;
               };
             }
           });
@@ -55,15 +56,15 @@ define(function (require) {
           };
         });
         //this is for subsequent rendering based on changes to the UiSelect
-        scope.$watch('layer.wfsLayers.selected', function (newWmsLayers, oldWmsLayers) {
-          if (newWmsLayers !== oldWmsLayers) {
-            scope.layer.layers = doUiSelectFormatToLayer(newWmsLayers);
+        scope.$watch('layer.selected', function (newWmsLayer, oldWmsLayer) {
+          if (newWmsLayer !== oldWmsLayer) {
+            scope.layer.layers = newWmsLayer.name;
           }
         });
         //this is for subsequent rendering based on changes to the comma separated layer list option
-        scope.$watch('layer.layers', function (newLayers, oldLayers) {
-          if (newLayers !== oldLayers) {
-            scope.layer.layers = newLayers;
+        scope.$watch('layer.layers', function (newLayer, oldLayer) {
+          if (newLayer !== oldLayer) {
+            scope.layer.layers = newLayer;
           }
         });
 
@@ -78,27 +79,11 @@ define(function (require) {
       }
     };
 
-    function doUiSelectFormatToLayer(wfsSelectedLayers) {
-      let commaSeparatedLayers = '';
-      wfsSelectedLayers.forEach(layer => {
-        if (commaSeparatedLayers === '') {
-          commaSeparatedLayers += layer.name;
-        } else {
-          commaSeparatedLayers += ',' + layer.name;
-        };
+    function findSelectedLayer(wfsLayers, selectedName) {
+      return _.find(wfsLayers, wfsLayer => {
+        return _.isEqual(wfsLayer.name, selectedName);
       });
-      return commaSeparatedLayers;
-    }
-
-    function doLayerToUiSelectFormat(commaSeparatedLayers) {
-      const formattedWmsList = [];
-      const layerArray = commaSeparatedLayers.split(',');
-
-      layerArray.map(layerName => {
-        formattedWmsList.push({ 'name': layerName });
-      });
-      return formattedWmsList;
-    }
+    };
 
     function doWmsToUiSelectFormat(unformattedWmsList) {
       return unformattedWmsList.map(name => {
@@ -108,7 +93,7 @@ define(function (require) {
 
 
     function getWFSLayerList(url) {
-      const getCapabilitiesRequest = url + 'service=wfs&request=GetCapabilities';
+      const getCapabilitiesRequest = url + 'request=GetCapabilities';
 
       return $http.get(getCapabilitiesRequest)
         .then(resp => {
@@ -122,9 +107,11 @@ define(function (require) {
                 }
 
                 //handles case(s) where there are no layer names returned from the WFS
-                if (result.WFS_Capabilities.Capability[0].Layer[0].Layer) {
-                  const wfsLayerNames = result.WFS_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
+                if (result['wfs:WFS_Capabilities'].FeatureTypeList[0].FeatureType) {
+
+                  const wfsLayerNames = result['wfs:WFS_Capabilities'].FeatureTypeList[0].FeatureType.map(layer => layer.Name[0]);
                   resolve(wfsLayerNames);
+
                 } else {
                   resolve([]);
                 }

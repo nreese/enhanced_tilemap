@@ -41,6 +41,12 @@ define(function (require) {
     let tooltip = null;
     let tooltipFormatter = null;
 
+    // const VectorGeoJsonWorld = require('./testGeoJson/VectorGeoJsonWorld');
+    // const VectorGeoJsonSouthAfrica = require('./testGeoJson/VectorGeoJsonSouthAfrica');
+    // const VectorGeoJsonSaudiArabia = require('./testGeoJson/VectorGeoJsonSaudiArabia');
+    // const VectorGeoJsonItaly = require('./testGeoJson/VectorGeoJsonItaly');
+
+
     backwardsCompatible.updateParams($scope.vis.params);
     appendMap();
     modifyToDsl();
@@ -143,6 +149,8 @@ define(function (require) {
       const optionsWithDefaults = {
         color: _.get(options, 'color', '#008800'),
         size: _.get(options, 'size', 'm'),
+        popupFields: _.get(options, 'popupFields', []),
+        layerGroup: _.get(options, 'layerGroup', '<b> Vector Overlays</b>'),
         indexPattern: $scope.vis.indexPattern.title,
         geoFieldName: $scope.vis.aggs[1].params.field.name,
         _siren: $scope.vis._siren,
@@ -152,7 +160,7 @@ define(function (require) {
       };
 
       const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      map.addVectorLayer(layerName, vector);
+      map.addVectorLayer(layerName, vector, optionsWithDefaults);
 
     };
 
@@ -175,6 +183,12 @@ define(function (require) {
           initPOILayer(layerParams);
         });
 
+        drawWfsOverlays();
+
+        // map.clearVectorLayers();
+        // //renderScriptingGeoJson('World Countries', VectorGeoJsonWorld);
+        // renderScriptingGeoJson('Italy', VectorGeoJsonItaly);
+        // renderScriptingGeoJson('Saudi Arabia', VectorGeoJsonSaudiArabia);
       }
     });
 
@@ -187,6 +201,7 @@ define(function (require) {
         chartData = respProcessor.process(resp);
 
         draw();
+        drawWfsOverlays();
 
       };
 
@@ -209,6 +224,7 @@ define(function (require) {
 
         if (newChecked !== oldChecked && $scope.check === true) {
           drawWmsOverlays();
+          // drawWfsOverlays();
           $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
         }
       }
@@ -288,6 +304,33 @@ define(function (require) {
         geotype: geotype
       };
     }
+
+
+    function drawWfsOverlays() {
+      if ($scope.vis.params.overlays.wfsOverlays.length === 0) {
+        return;
+      };
+      _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
+        _.get(wfsOverlay, 'displayName', wfsOverlay.layers);
+
+        let popupFields = [];
+        if (_.get(wfsOverlay, 'popupFields').indexOf(',') > -1) { 
+          popupFields = _.get(wfsOverlay, 'popupFields').split(',');
+        };
+
+        const options = {
+          color: _.get(wfsOverlay, 'color', '#10aded'),
+          popupFields: popupFields,
+          layerGroup: '<b> WFS Overlays </b>'
+        };
+        const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=json`;
+
+        return $http.get(getFeatureRequest)
+          .then(resp => {
+            initVectorLayer(wfsOverlay.displayName, resp.data, options);
+          });
+      });
+    };
 
     function drawWmsOverlays() {
       $scope.check = false;

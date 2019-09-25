@@ -274,7 +274,7 @@ define(function (require) {
       }
     };
 
-    TileMapMap.prototype.addVectorLayer = function (layerName, layer) {
+    TileMapMap.prototype.addVectorLayer = function (layerName, layer, options) {
       let isVisible = true;
       //remove layer if it already exists
       if (_.has(this._vectorOverlays, layerName)) {
@@ -297,9 +297,9 @@ define(function (require) {
 
       const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
       if (tooManyDocs.icon) {
-        this._layerControl.addOverlay(layer, toomanydocslayername, '<b> Vector Overlays</b>');
+        this._layerControl.addOverlay(layer, toomanydocslayername, options.layerGroup);
       } else {
-        this._layerControl.addOverlay(layer, layerName, '<b> Vector Overlays</b>');
+        this._layerControl.addOverlay(layer, layerName, options.layerGroup);
       }
 
       this._vectorOverlays[layerName] = layer;

@@ -48,15 +48,16 @@ define(function (require) {
       options.$legend.innerHTML = '';
       options.$legend.tooManyDocsInfo = '';
 
-      if (self._geoJsonCollection.features.length > 100) {
-        const tooManyDocsInfo = [
-          `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
-          `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                              to having reached the limit currently set to: ${self._geoJsonCollection.features.length}</b>`
-        ];
-        options.$legend.innerHTML = tooManyDocsInfo[0];
-        options.$legend.tooManyDocsInfo = tooManyDocsInfo;
-      }
+      //this is an option to have a too many features in map extent button
+      // if (self._geoJsonCollection.features.length > 100) {
+      //   const tooManyDocsInfo = [
+      //     `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
+      //     `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
+      //                                         to having reached the limit currently set to: ${self._geoJsonCollection.features.length}</b>`
+      //   ];
+      //   options.$legend.innerHTML = tooManyDocsInfo[0];
+      //   options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+      // }
 
       if ('Point' === geometry.type) {
 
@@ -69,8 +70,15 @@ define(function (require) {
       } else if ('Polygon' === geometry.type ||
         'MultiPolygon' === geometry.type) {
         const shapes = _.map(self._geoJsonCollection.features, (feature) => {
+          let popupContent = false;
+          if (options.popupFields.length > 0) {
+            popupContent = self._popupContent(feature, options.popupFields);
+          }
           return {
             type: 'Feature',
+            properties: {
+              label: popupContent
+            },
             geometry: feature.geometry
           };
 
@@ -78,7 +86,14 @@ define(function (require) {
         layer = L.geoJson(
           shapes,
           {
+            style: { color: options.color },
             onEachFeature: function onEachFeature(feature, polygon) {
+              if (feature.properties.label) {
+                polygon.bindPopup(feature.properties.label);
+                polygon.on('mouseover', self.addMouseOverGeoShape);
+                polygon.on('mouseout', self.addMouseOutToGeoShape);
+              }
+
               if (_.get(feature, 'geometry.type') === 'Polygon' ||
                 _.get(feature, 'geometry.type') === 'MultiPolygon') {
                 polygon._click = function fireEtmSelectFeature(e) {
@@ -206,17 +221,17 @@ define(function (require) {
           icon: markerIcon(options.color, options.size)
         });
 
-      // if (this.popupFields.length > 0) {
-      //   const content = this._popupContent(hit);
-      //   this._addMouseEventsGeoPoint(feature, content);
-      // }
+      if (this.popupFields.length > 0) {
+        const content = this._popupContent(hit);
+        this._addMouseEventsGeoPoint(feature, content);
+      }
       return feature;
     };
 
-    Vector.prototype._popupContent = function (hit) {
+    Vector.prototype._popupContent = function (feature, popupFields) {
       let dlContent = '';
-      this.popupFields.forEach(function (field) {
-        dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
+      popupFields.forEach(function (field) {
+        dlContent += `<dt>${field}</dt><dd>${feature.properties[field]}</dd>`;
       });
       return `<dl>${dlContent}</dl>`;
     };

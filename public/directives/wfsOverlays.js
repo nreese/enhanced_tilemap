@@ -17,7 +17,8 @@ define(function (require) {
         scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({
-            minZoom: 13
+            // minZoom: 13,
+            color: '#10aded'
           });
         };
         scope.removeLayer = function (layerIndex) {
