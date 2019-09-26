@@ -15,7 +15,6 @@ define(function (require) {
       link: function (scope, element, attrs) {
 
         scope.layer.wfsCapabilitiesSwitch = 0;
-        scope.layer.popupFields = [];
 
         function wfsRequest(url) {
           getWFSLayerList(url).then(wfsLayers => {

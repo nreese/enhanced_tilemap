@@ -236,6 +236,18 @@ define(function (require) {
       if (this._toolbench) this._toolbench.removeTools();
     };
 
+    TileMapMap.prototype.clearWfsOverlays = function () {
+      const self = this;
+      this._vectorOverlays = _.omitBy(self._vectorOverlays, overlay => {
+        if (overlay.type && overlay.type === 'WFS') {
+          overlay.destroy();
+          self._layerControl.removeLayer(overlay);
+          self.map.removeLayer(overlay);
+        }
+        return overlay.type && overlay.type === 'WFS';
+      });
+    };
+
     TileMapMap.prototype.addPOILayer = function (layerName, layer) {
       let isVisible = true;
       //remove layer if it already exists
@@ -275,36 +287,28 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addVectorLayer = function (layerName, layer, options) {
-      let isVisible = true;
-      //remove layer if it already exists
-      if (_.has(this._vectorOverlays, layerName)) {
-        const layer = this._vectorOverlays[layerName];
-        this._vectorOverlays[layerName].destroy();
-        isVisible = this.map.hasLayer(layer);
-        this._layerControl.removeLayer(layer);
-        this.map.removeLayer(layer);
-        delete this._vectorOverlays[layerName];
-      }
-
-      // if (isVisible) {
       this.map.addLayer(layer);
-      //}
 
-      const tooManyDocs = {
-        icon: layer.$legend.tooManyDocsInfo[0],
-        message: layer.$legend.tooManyDocsInfo[1]
-      };
+      /*********************************************************/
+      // Retaining functionality of too many features to draw 
+      // const tooManyDocs = {
+      //   icon: layer.$legend.tooManyDocsInfo[0],
+      //   message: layer.$legend.tooManyDocsInfo[1]
+      // };
+      // const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
+      // if (tooManyDocs.icon) {
+      //   this._layerControl.addOverlay(layer, toomanydocslayername, options.layerGroup);
+      // } else {
+      //   this._layerControl.addOverlay(layer, layerName, options.layerGroup);
+      // }
+      /*********************************************************/
 
-      const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
-      if (tooManyDocs.icon) {
-        this._layerControl.addOverlay(layer, toomanydocslayername, options.layerGroup);
-      } else {
-        this._layerControl.addOverlay(layer, layerName, options.layerGroup);
-      }
+      this._layerControl.addOverlay(layer, layerName, options.layerGroup);
 
       this._vectorOverlays[layerName] = layer;
+      this._vectorOverlays[layerName].type = options.type;
 
-      //Add tool to l.draw.toolbar so users can filter by POIs
+      //Add tool to l.draw.toolbar so users can filter by vector layers
       if (Object.keys(this._vectorOverlays).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();

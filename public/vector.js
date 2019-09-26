@@ -44,10 +44,12 @@ define(function (require) {
       const geometry = self._geoJsonCollection.features[0].geometry;
       geometry.type = capitalizeFirstLetter(geometry.type);
 
-      options.$legend = {};
-      options.$legend.innerHTML = '';
-      options.$legend.tooManyDocsInfo = '';
-
+      /*********************************************************************/
+      //for now, there is no limit on number of geoJsons to be drawn
+      //the below has been adapted to retain the functionality if desired.
+      // options.$legend = {};
+      // options.$legend.innerHTML = '';
+      // options.$legend.tooManyDocsInfo = '';
       //this is an option to have a too many features in map extent button
       // if (self._geoJsonCollection.features.length > 100) {
       //   const tooManyDocsInfo = [
@@ -58,14 +60,14 @@ define(function (require) {
       //   options.$legend.innerHTML = tooManyDocsInfo[0];
       //   options.$legend.tooManyDocsInfo = tooManyDocsInfo;
       // }
+      /*********************************************************************/
 
       if ('Point' === geometry.type) {
-
-        const markers = _.map(geometry.coordinates, hit => {
-          return self._createMarker(hit, options);
+        const markers = _.map(self._geoJsonCollection.features, feature => {
+          return self._createMarker(feature, options);
         });
         layer = new L.FeatureGroup(markers);
-        layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
+        layer.destroy = () => markers.forEach(self._removeMouseEventsPoint);
 
       } else if ('Polygon' === geometry.type ||
         'MultiPolygon' === geometry.type) {
@@ -89,9 +91,17 @@ define(function (require) {
             style: { color: options.color },
             onEachFeature: function onEachFeature(feature, polygon) {
               if (feature.properties.label) {
-                polygon.bindPopup(feature.properties.label);
-                polygon.on('mouseover', self.addMouseOverGeoShape);
-                polygon.on('mouseout', self.addMouseOutToGeoShape);
+
+                const popupOptions = {
+                  autoPan: false
+                };
+
+                const popup = L.popup(popupOptions)
+                  .setContent(feature.properties.label);
+
+                polygon.bindPopup(popup);
+                polygon.on('mouseover', self.addMouseOverPolygon);
+                polygon.on('mouseout', self.addMouseOverPolygon);
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon' ||
@@ -115,8 +125,8 @@ define(function (require) {
         );
         layer.destroy = () => {
           _.each(layer._layers, polygon => {
-            polygon.off('mouseover', self.addMouseOverGeoShape);
-            polygon.off('mouseout', self.addMouseOutToGeoShape);
+            polygon.off('mouseover', self.addMouseOverPolygon);
+            polygon.off('mouseout', self.addMouseOutPolygon);
             if (polygon._click) {
               polygon.off('click', polygon._click);
               polygon._click = null;
@@ -131,11 +141,11 @@ define(function (require) {
     };
 
     //Mouse event creation for GeoShape
-    Vector.prototype.addMouseOverGeoShape = function (e) {
+    Vector.prototype.addMouseOverPolygon = function (e) {
       this.openPopup();
     };
 
-    Vector.prototype.addMouseOutToGeoShape = function (e) {
+    Vector.prototype.addMouseOutPolygon = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
@@ -163,8 +173,8 @@ define(function (require) {
       polygon.on('click', polygon._click);
     };
 
-    //Mouse event creation and closing for GeoPoints
-    Vector.prototype._getMouseOverGeoPoint = function (content) {
+    //Mouse event creation and closing for Points
+    Vector.prototype._getMouseOverPoint = function (content) {
       const popup = function (e) {
         L.popup({
           autoPan: false,
@@ -179,7 +189,7 @@ define(function (require) {
       return popup;
     };
 
-    Vector.prototype._addMouseOutGeoPoint = function (e) {
+    Vector.prototype._addMouseOutPoint = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
@@ -204,26 +214,26 @@ define(function (require) {
       self._map.closePopup();
     };
 
-    Vector.prototype._addMouseEventsGeoPoint = function (feature, content) {
-      feature.on('mouseover', this._getMouseOverGeoPoint(content));
-      feature.on('mouseout', this._addMouseOutGeoPoint);
+    Vector.prototype._addMouseEventsPoint = function (feature, content) {
+      feature.on('mouseover', this._getMouseOverPoint(content));
+      feature.on('mouseout', this._addMouseOutPoint);
     };
 
-    Vector.prototype._removeMouseEventsGeoPoint = function (feature) {
+    Vector.prototype._removeMouseEventsPoint = function (feature) {
       feature.off('mouseover');
       feature.off('mouseout');
     };
 
     Vector.prototype._createMarker = function (hit, options) {
       const feature = L.marker(
-        toLatLng(_.get(hit, `_source[${this.geoField}]`)),
+        toLatLng(hit.geometry.coordinates),
         {
           icon: markerIcon(options.color, options.size)
         });
 
-      if (this.popupFields.length > 0) {
-        const content = this._popupContent(hit);
-        this._addMouseEventsGeoPoint(feature, content);
+      if (options.popupFields.length > 0) {
+        const content = this._popupContent(hit, options.popupFields);
+        this._addMouseEventsPoint(feature, content);
       }
       return feature;
     };
@@ -231,7 +241,8 @@ define(function (require) {
     Vector.prototype._popupContent = function (feature, popupFields) {
       let dlContent = '';
       popupFields.forEach(function (field) {
-        dlContent += `<dt>${field}</dt><dd>${feature.properties[field]}</dd>`;
+        const label = field.charAt(0).toUpperCase() + field.slice(1).toLowerCase();
+        dlContent += `<dt>${label}</dt><dd>${feature.properties[field]}</dd>`;
       });
       return `<dl>${dlContent}</dl>`;
     };
