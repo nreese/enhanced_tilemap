@@ -1,16 +1,11 @@
+import { filterHelper } from 'ui/kibi/components/dashboards360/filter_helper';
+
 define(function (require) {
   return function CallbacksFactory(Private, courier, config) {
     const _ = require('lodash');
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const L = require('leaflet');
-
-    function getSirenMetaFromAgg(agg) {
-      if (agg.vis._siren && agg.vis._siren.vis) {
-        return { vis: agg.vis._siren.vis };
-      };
-      return null;
-    };
 
     return {
       createMarker: function (event) {
@@ -115,9 +110,26 @@ define(function (require) {
           newFilter.geo_polygon[field] = { points: event.points };
         }
 
-        const _sirenMeta = getSirenMetaFromAgg(agg);
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
+        geoFilter.add(newFilter, field, indexPatternName);
+      },
+      polygonVector: function (event) {
+        if (!event.args.vector) return;
 
-        geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
+        let newFilter;
+        const field = event.args.geoFieldName;
+
+        if (_.isEqual(event.args.type.toLowerCase(), 'multipolygon')) {
+          newFilter = { geo_multi_polygon: {} };
+          newFilter.geo_multi_polygon[field] = { polygons: event.points };
+        } else if (_.isEqual(event.args.type.toLowerCase(), 'polygon')) {
+          newFilter = { geo_polygon: {} };
+          newFilter.geo_polygon[field] = { polygons: event.points };
+        }
+
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, event.args._siren);
+        geoFilter.add(newFilter, field, event.args.indexPattern);
+
       },
       rectangle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
@@ -133,9 +145,8 @@ define(function (require) {
         const newFilter = geoFilter.rectFilter(
           field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
-        const _sirenMeta = getSirenMetaFromAgg(agg);
-
-        geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
+        geoFilter.add(newFilter, field, indexPatternName);
       },
       circle: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
@@ -149,11 +160,11 @@ define(function (require) {
         }
 
         const newFilter = geoFilter.circleFilter(
-          field, center[0], center[1], radius);
+          field, center[0], center[1], radius
+        );
 
-        const _sirenMeta = getSirenMetaFromAgg(agg);
-
-        geoFilter.add(newFilter, field, indexPatternName, _sirenMeta);
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
+        geoFilter.add(newFilter, field, indexPatternName);
       }
     };
   };

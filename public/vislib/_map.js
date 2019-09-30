@@ -49,6 +49,7 @@ define(function (require) {
       this._container = container;
       this._poiLayers = {};
       this._wmsOverlays = {};
+      this._vectorOverlays = {};
 
       // keep a reference to all of the optional params
       this._callbacks = _.get(params, 'callbacks');
@@ -201,6 +202,7 @@ define(function (require) {
 
     TileMapMap.prototype.destroy = function () {
       this.clearPOILayers();
+      this.clearVectorLayers();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
@@ -220,6 +222,28 @@ define(function (require) {
       });
       this._poiLayers = {};
       if (this._toolbench) this._toolbench.removeTools();
+    };
+
+    TileMapMap.prototype.clearVectorLayers = function () {
+      Object.keys(this._vectorOverlays).forEach((key) => {
+        const layer = this._vectorOverlays[key];
+        layer.destroy();
+        this._layerControl.removeLayer(layer);
+        this.map.removeLayer(layer);
+      });
+      this._vectorOverlays = {};
+      if (this._toolbench) this._toolbench.removeTools();
+    };
+
+    TileMapMap.prototype.clearWfsOverlays = function () {
+      this._vectorOverlays = _.omitBy(this._vectorOverlays, overlay => {
+        if (overlay.type && overlay.type === 'WFS') {
+          overlay.destroy();
+          this._layerControl.removeLayer(overlay);
+          this.map.removeLayer(overlay);
+        }
+        return overlay.type && overlay.type === 'WFS';
+      });
     };
 
     TileMapMap.prototype.addPOILayer = function (layerName, layer) {
@@ -254,6 +278,36 @@ define(function (require) {
 
       //Add tool to l.draw.toolbar so users can filter by POIs
       if (Object.keys(this._poiLayers).length === 1) {
+        if (this._toolbench) this._toolbench.removeTools();
+        if (!this._toolbench) this._addDrawControl();
+        this._toolbench.addTool();
+      }
+    };
+
+    TileMapMap.prototype.addVectorLayer = function (layerName, layer, options) {
+      this.map.addLayer(layer);
+
+      /*********************************************************/
+      // Retaining functionality of too many features to draw 
+      // const tooManyDocs = {
+      //   icon: layer.$legend.tooManyDocsInfo[0],
+      //   message: layer.$legend.tooManyDocsInfo[1]
+      // };
+      // const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
+      // if (tooManyDocs.icon) {
+      //   this._layerControl.addOverlay(layer, toomanydocslayername, options.layerGroup);
+      // } else {
+      //   this._layerControl.addOverlay(layer, layerName, options.layerGroup);
+      // }
+      /*********************************************************/
+
+      this._layerControl.addOverlay(layer, layerName, options.layerGroup);
+
+      this._vectorOverlays[layerName] = layer;
+      this._vectorOverlays[layerName].type = options.type;
+
+      //Add tool to l.draw.toolbar so users can filter by vector layers
+      if (Object.keys(this._vectorOverlays).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
@@ -431,6 +485,14 @@ define(function (require) {
           chart: self._chartData,
           params: self._attr,
           points: e.geojson.geometry.coordinates[0]
+        });
+      });
+
+      this.map.on('etm:select-feature-vector', function (e) {
+        self._callbacks.polygonVector({
+          args: e.args,
+          params: self._attr,
+          points: e.geojson.geometry.coordinates
         });
       });
 

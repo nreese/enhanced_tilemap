@@ -11,6 +11,7 @@ import { ResizeCheckerProvider } from 'ui/vislib/lib/resize_checker';
 import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
+
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
@@ -27,6 +28,7 @@ define(function (require) {
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
+    const VectorProvider = Private(require('plugins/enhanced_tilemap/vector'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
@@ -43,6 +45,7 @@ define(function (require) {
     appendMap();
     modifyToDsl();
     setTooltipFormatter($scope.vis.params.tooltip);
+    drawWfsOverlays();
 
     const shapeFields = $scope.vis.indexPattern.fields.filter(function (field) {
       return field.type === 'geo_shape';
@@ -131,6 +134,33 @@ define(function (require) {
       });
     }
 
+    //geoJSON rendering from scripts
+    function renderScriptingGeoJson(layerName, geoJsonCollection, options) {
+      initVectorLayer(layerName, geoJsonCollection, options);
+    };
+
+    function initVectorLayer(layerName, geoJsonCollection, options) {
+
+      const optionsWithDefaults = {
+        color: _.get(options, 'color', '#008800'),
+        size: _.get(options, 'size', 'm'),
+        popupFields: _.get(options, 'popupFields', []),
+        layerGroup: _.get(options, 'layerGroup', '<b> Vector Overlays </b>'),
+        indexPattern: $scope.vis.indexPattern.title,
+        geoFieldName: $scope.vis.aggs[1].params.field.name,
+        _siren: $scope.vis._siren,
+        mapExtentFilter: {
+          geo_bounding_box: getGeoBoundingBox(),
+        },
+        type: _.get(options, 'type', 'noType')
+      };
+
+      const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
+      map.addVectorLayer(layerName, vector, optionsWithDefaults);
+
+    };
+
+
     $scope.$watch('vis.params', function (visParams, oldParams) {
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
@@ -153,6 +183,9 @@ define(function (require) {
         $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
           initPOILayer(layerParams);
         });
+
+        drawWfsOverlays();
+
       }
     });
 
@@ -229,15 +262,6 @@ define(function (require) {
         yRatio: _.get(tooltipParams, 'options.yRatio', 0.6)
       };
       const geoField = getGeoField();
-      // search directive changed a lot in 5.5 - no longer supported at this time
-      /*if (_.get(tooltipParams, 'type') === 'search') {
-        tooltip = new SearchTooltip(
-            _.get(tooltipParams, 'options.searchId'),
-            geoField.fieldname,
-            geoField.geotype,
-            options);
-        tooltipFormatter = tooltip.getFormatter();
-      }*/
       if (_.get(tooltipParams, 'type') === 'visualization') {
         tooltip = new VisTooltip(
           _.get(tooltipParams, 'options.visId'),
@@ -275,6 +299,42 @@ define(function (require) {
         geotype: geotype
       };
     }
+
+
+    function drawWfsOverlays() {
+      //clear all wfs overlays before redrawing
+      map.clearWfsOverlays();
+
+      if ($scope.vis.params.overlays.wfsOverlays &&
+        $scope.vis.params.overlays.wfsOverlays.length === 0) {
+        return;
+      };
+      _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
+        _.get(wfsOverlay, 'displayName', wfsOverlay.layers);
+
+        let popupFields = [];
+        if (_.get(wfsOverlay, 'popupFields') === '' || !_.get(wfsOverlay, 'popupFields')) {
+          popupFields = [];
+        } else if (_.get(wfsOverlay, 'popupFields').indexOf(',') > -1) {
+          popupFields = _.get(wfsOverlay, 'popupFields').split(',');
+        } else {
+          popupFields = [_.get(wfsOverlay, 'popupFields', [])];
+        };
+
+        const options = {
+          color: _.get(wfsOverlay, 'color', '#10aded'),
+          popupFields: popupFields,
+          layerGroup: '<b> WFS Overlays </b>',
+          type: 'WFS'
+        };
+        const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=json`;
+
+        return $http.get(getFeatureRequest)
+          .then(resp => {
+            initVectorLayer(wfsOverlay.displayName, resp.data, options);
+          });
+      });
+    };
 
     function drawWmsOverlays() {
       $scope.check = false;
