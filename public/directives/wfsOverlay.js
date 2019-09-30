@@ -14,7 +14,7 @@ define(function (require) {
       template: require('./wfsOverlay.html'),
       link: function (scope, element, attrs) {
 
-        scope.layer.wfsCapabilitiesSwitch = 0;
+        scope.layer.wfsCapabilitiesSwitch = false;
 
         function wfsRequest(url) {
           getWFSLayerList(url).then(wfsLayers => {
@@ -28,11 +28,11 @@ define(function (require) {
                 scope.layer.selected = [];
               }
 
-              scope.layer.wfsCapabilitiesSwitch = 1;
+              scope.layer.wfsCapabilitiesSwitch = true;
 
               //if there is not a valid response form WFS server
             } else {
-              scope.layer.wfsCapabilitiesSwitch = 0;
+              scope.layer.wfsCapabilitiesSwitch = false;
               //if there are selected layers present, but
               //url is not valid on this digest
               if (scope.layer && scope.layer.selected) {

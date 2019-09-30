@@ -12,7 +12,7 @@
     <input required type="text" class="form-control" name="url" ng-model="layer.url">
   </div>
 
-  <div ng-if="layer.wfsCapabilitiesSwitch === 0">
+  <div ng-if="layer.wfsCapabilitiesSwitch === false">
     <label>
       WFS Layers <kbn-info
         info="A comma seperated list of layers to use. If you have entered a valid (CORs enabled) WFS Url, a UI-based menu will appear for WFS layer(s) selection and ordering">
@@ -21,7 +21,7 @@
     <input required type="text" class="form-control" ng-model="layer.layers">
   </div>
   <!-- OR-->
-  <div class="vis-option-item form-group" ng-if="layer.wfsCapabilitiesSwitch === 1">
+  <div class="vis-option-item form-group" ng-if="layer.wfsCapabilitiesSwitch === true">
     <label>
       WFS Layers <kbn-info info="UI-based menu for selecting WFS layer">
     </label>
