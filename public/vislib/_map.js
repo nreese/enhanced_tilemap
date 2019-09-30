@@ -225,24 +225,22 @@ define(function (require) {
     };
 
     TileMapMap.prototype.clearVectorLayers = function () {
-      const self = this;
-      Object.keys(this._vectorOverlays).forEach(function (key) {
-        const layer = self._vectorOverlays[key];
+      Object.keys(this._vectorOverlays).forEach((key) => {
+        const layer = this._vectorOverlays[key];
         layer.destroy();
-        self._layerControl.removeLayer(layer);
-        self.map.removeLayer(layer);
+        this._layerControl.removeLayer(layer);
+        this.map.removeLayer(layer);
       });
       this._vectorOverlays = {};
       if (this._toolbench) this._toolbench.removeTools();
     };
 
     TileMapMap.prototype.clearWfsOverlays = function () {
-      const self = this;
-      this._vectorOverlays = _.omitBy(self._vectorOverlays, overlay => {
+      this._vectorOverlays = _.omitBy(this._vectorOverlays, overlay => {
         if (overlay.type && overlay.type === 'WFS') {
           overlay.destroy();
-          self._layerControl.removeLayer(overlay);
-          self.map.removeLayer(overlay);
+          this._layerControl.removeLayer(overlay);
+          this.map.removeLayer(overlay);
         }
         return overlay.type && overlay.type === 'WFS';
       });
