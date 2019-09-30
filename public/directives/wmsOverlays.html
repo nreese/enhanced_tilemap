@@ -2,15 +2,22 @@
   <label class="etm-options-section">
     WMS Layers <kbn-info info="Overlay raster tiles served from an external WMS server (like geoserver)."></kbn-info>
   </label>
-  <ul class="etm-options-list">
-    <li ng-repeat="layer in layers" class="etm-option-item">
-      <label>WMS Layer {{$index + 1}}</label>
-      <wms-overlay layer="layer"></wms-overlay>
+
+  <ul draggable-container="layers" class="etm-options-list" >
+    <li ng-repeat="layer in layers" draggable-item="layer" class="etm-option-item">
       <div class="btn-group rightCorner">
-        <button class="btn btn-xs btn-danger" ng-click="removeLayer($index)" > 
+        <!-- drag handle -->
+        <button draggable-handle ng-show="layers.length > 1" aria-label="Modify Priority by Dragging"
+          tooltip="Modify Priority by Dragging" tooltip-append-to-body="true" type="button"
+          class="kuiButton kuiButton--basic kuiButton--small">
+          <i aria-hidden="true" class="fa fa-arrows-alt-v"></i>
+        </button>
+        <button class="btn btn-xs btn-danger" ng-click="removeLayer($index)">
           <i class="fa fa-times"></i>
         </button>
       </div>
+      <label>WMS Layer {{$index + 1}}</label>
+      <wms-overlay layer="layer"></wms-overlay>
     </li>
   </ul>
   <button class="btn btn-xs btn-success" ng-click="addLayer()">
