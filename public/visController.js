@@ -136,6 +136,11 @@ define(function (require) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
 
+        //remove mouse related heatmap events when moving to a different geohash type
+        if (oldParams && oldParams.mapType === 'Heatmap') {
+          map.unfixMapTypeTooltips();
+        }
+
         map._redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
         setTooltipFormatter(visParams.tooltip);
 
