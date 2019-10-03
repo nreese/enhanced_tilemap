@@ -175,7 +175,6 @@ define(function (require) {
         updatedFilter.bool.must_not = donutsToExclude;
       };
 
-      console.log(updatedFilter);
       updatedFilter.meta.numFilters = numFilters;
       updatedFilter.meta.alias = filterAlias(field, numFilters);
       queryFilter.removeFilter(existingFilter);
@@ -192,21 +191,13 @@ define(function (require) {
 
     function addGeoFilter(newFilter, field, indexPatternName) {
       let existingFilter = null;
-      // _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
-      //   if (isGeoFilter(it, field) && ) {
-      //     existingFilter = it;
-      //   }
-      // });
-
 
       //counting total number of filters linked to the IndexPattern of NewFilter
       const allFilters = [...queryFilter.getAppFilters(), ...queryFilter.getGlobalFilters()];
       let numFiltersInIndexPattern = 0;
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          if ((_.isEqual(filter.meta.index, indexPatternName) &&
-            isGeoFilter(filter, field)) ||
-            numFiltersInIndexPattern < 2) {
+          if (filter.meta.index === indexPatternName && isGeoFilter(filter, field)) {
             existingFilter = filter;
             numFiltersInIndexPattern += filter.meta.numFilters;
           };
