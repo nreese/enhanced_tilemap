@@ -194,22 +194,26 @@ define(function (require) {
 
       //counting total number of filters linked to the IndexPattern of NewFilter
       const allFilters = [...queryFilter.getAppFilters(), ...queryFilter.getGlobalFilters()];
-      const newFilterVisMeta = newFilter.meta._siren.vis;
       let numFiltersInIndexPattern = 0;
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          const filterVisMeta = filter.meta._siren.vis;
-
-          if (filter.meta.index === indexPatternId &&
-            isGeoFilter(filter, field) &&
-            filterVisMeta.id === newFilterVisMeta.id &&
-            filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
-
-            numFiltersInIndexPattern += filter.meta.numFilters;
-            existingFilter = filter;
-
-          };
+          if (newFilter.meta && newFilter.meta._siren && newFilter.meta._siren.vis) {
+            const filterVisMeta = filter.meta._siren.vis;
+            const newFilterVisMeta = newFilter.meta._siren.vis;
+            if (filter.meta.index === indexPatternId &&
+              isGeoFilter(filter, field) &&
+              filterVisMeta.id === newFilterVisMeta.id &&
+              filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
+              numFiltersInIndexPattern += filter.meta.numFilters;
+              existingFilter = filter;
+            };
+          } else {
+            if (isGeoFilter(filter, field)) {
+              numFiltersInIndexPattern += filter.meta.numFilters;
+              existingFilter = filter;
+            };
+          }
         });
       };
 
