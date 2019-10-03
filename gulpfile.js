@@ -12,6 +12,8 @@ var fs = require('fs');
 var spawn = require('child_process').spawn;
 var minimist = require('minimist');
 var os = require('os');
+var jsdoc2md = require('jsdoc-to-markdown');
+var SimpleGit = require('simple-git');
 
 var pkg = require('./package.json');
 var packageName = pkg.name;
@@ -174,3 +176,38 @@ gulp.task('coverage', ['sync'], function (done) {
     stdio: 'inherit'
   }).on('close', done);
 });
+
+const API_FILES = [
+  'public/siren_api.js'
+];
+
+gulp.task('generateApiDocs', [], function (done) {
+  const root = path.resolve(__dirname);
+  jsdoc2md.render({
+    files: API_FILES,
+    separators: true,
+    'example-lang': 'javascript',
+    'name-format': 'backticks'
+  })
+    .then(renderedDoc => {
+      const destPath = path.relative(root, 'docs/siren_api/README.md');
+
+      console.log(`Writing generated docs to: ${destPath}`);
+
+      fs.writeFile(destPath, renderedDoc, (error) => {
+        if (error) {
+          return done(error);
+        }
+        console.log(`Adding ${destPath} to git staging area`);
+        const simpleGit = new SimpleGit(root);
+        simpleGit.add(destPath);
+        done();
+      });
+    })
+    .catch(done);
+});
+
+gulp.task('watchGenerateApiDocs', [], function (done) {
+  gulp.watch(API_FILES, { ignoreInitial: false },  ['generateApiDocs']);
+});
+

@@ -22,7 +22,7 @@ define(function (require) {
 
   module.controller('KbnEnhancedTilemapVisController', function (
     $scope, $rootScope, $element, $timeout,
-    Private, courier, config, getAppState, indexPatterns, $http) {
+    Private, courier, config, getAppState, indexPatterns, $http, $injector) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -133,11 +133,6 @@ define(function (require) {
         map.addPOILayer(layerParams.savedSearchId, layer);
       });
     }
-
-    //geoJSON rendering from scripts
-    function renderScriptingGeoJson(layerName, geoJsonCollection, options) {
-      initVectorLayer(layerName, geoJsonCollection, options);
-    };
 
     function initVectorLayer(layerName, geoJsonCollection, options) {
 
@@ -450,5 +445,18 @@ define(function (require) {
     function resizeArea() {
       if (map) map.updateSize();
     }
+
+    // ============================
+    // === API actions ===
+    // ============================
+
+    if ($injector.has('actionRegistry')) {
+      const actionRegistry = $injector.get('actionRegistry');
+
+      actionRegistry.register($scope.vis.id, 'renderGeoJsonCollection', async (layerName, geoJsonCollection, options) => {
+        initVectorLayer(layerName, geoJsonCollection, options);
+      });
+    }
+
   });
 });

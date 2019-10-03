@@ -24,7 +24,17 @@ define(function (require) {
   require('plugins/enhanced_tilemap/tooltip/popupVisualize.less');
   require('plugins/enhanced_tilemap/visController');
 
-  function EnhancedTileMapVisProvider(Private, getAppState, courier, config) {
+  function EnhancedTileMapVisProvider(Private, getAppState, courier, config, $injector) {
+    if ($injector.has('actionRegistry')) {
+      const actionRegistry = $injector.get('actionRegistry');
+      actionRegistry.registerActionDefinitionsForType('enhanced_tilemap', [
+        {
+          name: 'renderGeoJsonCollection',
+          whenNotYetAvailable: 'RESOLVE'
+        },
+      ]);
+    }
+
     const VisType = Private(VisVisTypeProvider);
     const TemplateVisType = Private(TemplateVisTypeProvider);
     const Schemas = Private(VisSchemasProvider);
