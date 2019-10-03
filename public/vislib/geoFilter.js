@@ -88,7 +88,7 @@ define(function (require) {
     };
 
 
-    function _applyFilter(newFilter, field, indexPatternName) {
+    function _applyFilter(newFilter, field, indexPatternId) {
       let numFilters = 1;
       let polygonFiltersAndDonuts = {};
       if (newFilter.geo_multi_polygon) {
@@ -114,7 +114,7 @@ define(function (require) {
         numFilters: numFilters,
         alias: filterAlias(field, numFilters),
         negate: false,
-        index: indexPatternName,
+        index: indexPatternId,
         key: field,
         _siren: _.get(newFilter, 'meta._siren', null)
       };
@@ -170,7 +170,7 @@ define(function (require) {
       // Update method removed - so just remove old filter and add updated filter
       updatedFilter.bool = { should: geoFilters };
       // adding all donuts
-      if (!_.isEqual(donutsToExclude.length, 0)) {
+      if (donutsToExclude.length !== 0) {
         numFilters += donutsToExclude.length;
         updatedFilter.bool.must_not = donutsToExclude;
       };
@@ -181,33 +181,43 @@ define(function (require) {
       queryFilter.addFilters(updatedFilter);
     }
 
-    function _overwriteFilters(newFilter, existingFilter, field, indexPatternName) {
+    function _overwriteFilters(newFilter, existingFilter, field, indexPatternId) {
       if (existingFilter) {
         queryFilter.removeFilter(existingFilter);
       }
 
-      _applyFilter(newFilter, field, indexPatternName);
+      _applyFilter(newFilter, field, indexPatternId);
     }
 
-    function addGeoFilter(newFilter, field, indexPatternName) {
+    function addGeoFilter(newFilter, field, indexPatternId) {
       let existingFilter = null;
 
       //counting total number of filters linked to the IndexPattern of NewFilter
       const allFilters = [...queryFilter.getAppFilters(), ...queryFilter.getGlobalFilters()];
+      const newFilterVisMeta = newFilter.meta._siren.vis;
       let numFiltersInIndexPattern = 0;
+
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          if (filter.meta.index === indexPatternName && isGeoFilter(filter, field)) {
-            existingFilter = filter;
+          const allFilters = filter.meta._siren.vis;
+
+          if (filter.meta.index === indexPatternId &&
+            isGeoFilter(filter, field) &&
+            allFilters.id === newFilterVisMeta.id &&
+            allFilters.panelIndex === newFilterVisMeta.panelIndex) {
+
             numFiltersInIndexPattern += filter.meta.numFilters;
+            existingFilter = filter;
+
           };
         });
       };
 
-      if (numFiltersInIndexPattern === 0 || numFiltersInIndexPattern >= 2) {
-        _applyFilter(newFilter, field, indexPatternName);
 
-      } else if (_.isEqual(numFiltersInIndexPattern, 1)) {
+      if (numFiltersInIndexPattern === 0 || numFiltersInIndexPattern >= 2) {
+        _applyFilter(newFilter, field, indexPatternId);
+
+      } else if (numFiltersInIndexPattern === 1) {
         const domNode = document.createElement('div');
         document.body.append(domNode);
         const title = 'Filter creation';
@@ -223,11 +233,11 @@ define(function (require) {
                 fill
                 size="s"
                 onClick={() => {
-                  _overwriteFilters(newFilter, existingFilter, field, indexPatternName);
+                  _overwriteFilters(newFilter, existingFilter, field, indexPatternId);
                   onClose();
                 }}
               >
-                Overwrite Filter
+                Overwrite existing filter
               </EuiButton>
             </EuiFlexItem>
 
@@ -236,7 +246,7 @@ define(function (require) {
                 fill
                 size="s"
                 onClick={() => {
-                  _applyFilter(newFilter, field, indexPatternName);
+                  _applyFilter(newFilter, field, indexPatternId);
                   onClose();
                 }}
               >
