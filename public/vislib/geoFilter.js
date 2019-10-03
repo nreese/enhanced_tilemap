@@ -199,12 +199,12 @@ define(function (require) {
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          const allFilters = filter.meta._siren.vis;
+          const filterVisMeta = filter.meta._siren.vis;
 
           if (filter.meta.index === indexPatternId &&
             isGeoFilter(filter, field) &&
-            allFilters.id === newFilterVisMeta.id &&
-            allFilters.panelIndex === newFilterVisMeta.panelIndex) {
+            filterVisMeta.id === newFilterVisMeta.id &&
+            filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
 
             numFiltersInIndexPattern += filter.meta.numFilters;
             existingFilter = filter;
