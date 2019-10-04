@@ -1,11 +1,20 @@
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+import { coatHelper } from 'ui/kibi/components/dashboards360/coat_helper';
+import React from 'react';
+import { modalWithForm } from './geoFilterModal/geoFilterModal';
+import { render, unmountComponentAtNode } from 'react-dom';
+import {
+  EuiButton,
+  EuiFlexGroup,
+  EuiFlexItem
+} from '@elastic/eui';
 
 define(function (require) {
   const L = require('leaflet');
   const LAT_INDEX = 1;
   const LON_INDEX = 0;
 
-  return function GeoFilterFactory(Private, confirmModal) {
+  return function GeoFilterFactory(Private) {
     const _ = require('lodash');
     const queryFilter = Private(FilterBarQueryFilterProvider);
 
@@ -79,7 +88,7 @@ define(function (require) {
     };
 
 
-    function _applyFilter(newFilter, field, indexPatternName) {
+    function _applyFilter(newFilter, field, indexPatternId) {
       let numFilters = 1;
       let polygonFiltersAndDonuts = {};
       if (newFilter.geo_multi_polygon) {
@@ -97,15 +106,19 @@ define(function (require) {
 
       //add all donuts
       if (polygonFiltersAndDonuts.donutsToExclude) {
+        numFilters += polygonFiltersAndDonuts.donutsToExclude.length;
         newFilter.bool.must_not = polygonFiltersAndDonuts.donutsToExclude;
       };
 
       newFilter.meta = {
+        numFilters: numFilters,
         alias: filterAlias(field, numFilters),
         negate: false,
-        index: indexPatternName,
-        key: field
+        index: indexPatternId,
+        key: field,
+        _siren: _.get(newFilter, 'meta._siren', null)
       };
+
       queryFilter.addFilters(newFilter);
     };
 
@@ -113,6 +126,9 @@ define(function (require) {
       let geoFilters = [];
       let donutsToExclude = [];
       let polygonFiltersAndDonuts = {};
+
+      const updatedFilter = { meta: existingFilter.meta };
+      delete newFilter.meta;
 
       //handling new filter, also adding new donuts
       if (_.has(newFilter, 'geo_multi_polygon')) {
@@ -149,58 +165,120 @@ define(function (require) {
         geoFilters.push({ geo_distance: existingFilter.geo_distance });
       }
 
-      // Update method removed - so just remove old filter and add updated filter
-      const updatedFilter = {
-        bool: {
-          should: geoFilters
-        },
-        meta: existingFilter.meta
-      };
+      let numFilters = geoFilters.length;
 
+      // Update method removed - so just remove old filter and add updated filter
+      updatedFilter.bool = { should: geoFilters };
       // adding all donuts
-      if (donutsToExclude) {
+      if (donutsToExclude.length !== 0) {
+        numFilters += donutsToExclude.length;
         updatedFilter.bool.must_not = donutsToExclude;
       };
 
-      updatedFilter.meta.alias = filterAlias(field, geoFilters.length);
+      updatedFilter.meta.numFilters = numFilters;
+      updatedFilter.meta.alias = filterAlias(field, numFilters);
       queryFilter.removeFilter(existingFilter);
-      queryFilter.addFilters([updatedFilter]);
+      queryFilter.addFilters(updatedFilter);
     }
 
-    function _overwriteFilters(newFilter, existingFilter, field, indexPatternName) {
+    function _overwriteFilters(newFilter, existingFilter, field, indexPatternId) {
       if (existingFilter) {
         queryFilter.removeFilter(existingFilter);
       }
 
-      _applyFilter(newFilter, field, indexPatternName);
+      _applyFilter(newFilter, field, indexPatternId);
     }
 
-    function addGeoFilter(newFilter, field, indexPatternName) {
+    function addGeoFilter(newFilter, field, indexPatternId) {
       let existingFilter = null;
-      _.flatten([queryFilter.getAppFilters(), queryFilter.getGlobalFilters()]).forEach(function (it) {
-        if (isGeoFilter(it, field)) {
-          existingFilter = it;
-        }
-      });
 
-      if (existingFilter) {
-        const confirmModalOptions = {
-          confirmButtonText: 'Combine with existing filters',
-          cancelButtonText: 'Overwrite existing filter',
-          onCancel: () => {
-            _overwriteFilters(newFilter, existingFilter, field, indexPatternName);
-          },
-          onConfirm: () => {
-            _combineFilters(newFilter, existingFilter, field);
+      //counting total number of filters linked to the IndexPattern of NewFilter
+      const allFilters = [...queryFilter.getAppFilters(), ...queryFilter.getGlobalFilters()];
+      let numFiltersInIndexPattern = 0;
+
+      if (allFilters.length > 0) {
+        _.each(allFilters, filter => {
+          if (newFilter.meta && newFilter.meta._siren && newFilter.meta._siren.vis) {
+            const filterVisMeta = filter.meta._siren.vis;
+            const newFilterVisMeta = newFilter.meta._siren.vis;
+            if (filter.meta.index === indexPatternId &&
+              isGeoFilter(filter, field) &&
+              filterVisMeta.id === newFilterVisMeta.id &&
+              filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
+              numFiltersInIndexPattern += filter.meta.numFilters;
+              existingFilter = filter;
+            };
+          } else {
+            if (isGeoFilter(filter, field)) {
+              numFiltersInIndexPattern += filter.meta.numFilters;
+              existingFilter = filter;
+            };
           }
+        });
+      };
+
+
+      if (numFiltersInIndexPattern === 0 || numFiltersInIndexPattern >= 2) {
+        _applyFilter(newFilter, field, indexPatternId);
+
+      } else if (numFiltersInIndexPattern === 1) {
+        const domNode = document.createElement('div');
+        document.body.append(domNode);
+        const title = 'Filter creation';
+        const form = 'How would you like this filter applied?';
+        const onClose = function () {
+          unmountComponentAtNode(domNode);
+          document.body.removeChild(domNode);
         };
+        const footer = (
+          <EuiFlexGroup gutterSize="s" alignItems="center">
+            <EuiFlexItem grow={false}>
+              <EuiButton
+                fill
+                size="s"
+                onClick={() => {
+                  _overwriteFilters(newFilter, existingFilter, field, indexPatternId);
+                  onClose();
+                }}
+              >
+                Overwrite existing filter
+              </EuiButton>
+            </EuiFlexItem>
 
-        confirmModal('How would you like this filter applied?', confirmModalOptions);
-      } else {
-        _applyFilter(newFilter, field, indexPatternName);
-      }
-    }
+            <EuiFlexItem grow={false}>
+              <EuiButton
+                fill
+                size="s"
+                onClick={() => {
+                  _applyFilter(newFilter, field, indexPatternId);
+                  onClose();
+                }}
+              >
+                Create new filter
+              </EuiButton>
+            </EuiFlexItem>
 
+            <EuiFlexItem grow={false}>
+              <EuiButton
+                fill
+                size="s"
+                onClick={() => {
+                  _combineFilters(newFilter, existingFilter, field);
+                  onClose();
+                }}
+              >
+                Combine with existing filters
+              </EuiButton>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        );
+
+        render(
+          modalWithForm(title, form, footer, onClose),
+          domNode
+        );
+      };
+    };
     /**
      * Convert elasticsearch geospatial filter to leaflet vectors
      *
