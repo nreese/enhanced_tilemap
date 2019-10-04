@@ -20,4 +20,10 @@ export class EnhancedMapVis {
   * @returns {Promise}
   */
   async renderGeoJsonCollection(layerName, geoJsonCollection, options) {}
+
+  /**
+  * Get the currently visible map extend
+  *
+  */
+  async getGeoBoundingBox() {}
 }

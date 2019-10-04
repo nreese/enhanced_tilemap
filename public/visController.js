@@ -454,8 +454,13 @@ define(function (require) {
       const actionRegistry = $injector.get('actionRegistry');
 
       actionRegistry.register($scope.vis.id, 'renderGeoJsonCollection', async (layerName, geoJsonCollection, options) => {
-        initVectorLayer(layerName, geoJsonCollection, options);
+        return initVectorLayer(layerName, geoJsonCollection, options);
       });
+
+      actionRegistry.register($scope.vis.id, 'getGeoBoundingBox', async () => {
+        return getGeoBoundingBox();
+      });
+
     }
 
   });

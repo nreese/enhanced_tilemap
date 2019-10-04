@@ -32,6 +32,10 @@ define(function (require) {
           name: 'renderGeoJsonCollection',
           whenNotYetAvailable: 'RESOLVE'
         },
+        {
+          name: 'getGeoBoundingBox',
+          whenNotYetAvailable: 'RESOLVE'
+        }
       ]);
     }
 
