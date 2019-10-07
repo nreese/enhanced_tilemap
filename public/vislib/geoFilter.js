@@ -142,7 +142,7 @@ define(function (require) {
 
       //counting total number of filters linked to the IndexPattern of NewFilter
       const allFilters = [...queryFilter.getAppFilters(), ...queryFilter.getGlobalFilters()];
-      let numFilters = 0;
+      let numFiltersFromThisInstance = 0;
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
@@ -153,12 +153,12 @@ define(function (require) {
               isGeoFilter(filter, field) &&
               filterVisMeta.id === newFilterVisMeta.id &&
               filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
-              numFilters += 1;
+              numFiltersFromThisInstance += 1;
               existingFilter = filter;
             };
           } else {
             if (isGeoFilter(filter, field)) {
-              numFilters += 1;
+              numFiltersFromThisInstance += 1;
               existingFilter = filter;
             };
           }
@@ -166,10 +166,10 @@ define(function (require) {
       };
 
 
-      if (numFilters === 0 || numFilters >= 2) {
+      if (numFiltersFromThisInstance === 0 || numFiltersFromThisInstance >= 2) {
         _applyFilter(newFilter, field, indexPatternId);
 
-      } else if (numFilters === 1) {
+      } else if (numFiltersFromThisInstance === 1) {
         const domNode = document.createElement('div');
         document.body.append(domNode);
         const title = 'Filter creation';
