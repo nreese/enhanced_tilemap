@@ -415,7 +415,7 @@ define(function (require) {
                 wmsOptions.format_options = formatOptions;
               }
               const layerOptions = {
-                isVisible: _.get(prevState, name, true),
+                isVisible: _.get(prevState, name, layerParams.isVisible),
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
               return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
