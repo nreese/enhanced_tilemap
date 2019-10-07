@@ -19,7 +19,11 @@ define(function (require) {
     const geoFilterHelper = require('./geoFilterHelper');
 
     function filterAlias(field, numBoxes) {
-      return field + ': ' + numBoxes + ' geo filters';
+      if (numBoxes === 1) {
+        return field + ': ' + numBoxes + ' shape';
+      } else {
+        return field + ': ' + numBoxes + ' shapes';
+      }
     }
 
     function _createPolygonFilter(polygonsToFilter) {
@@ -32,12 +36,12 @@ define(function (require) {
 
 
     function _applyFilter(newFilter, field, indexPatternId) {
-      let numFilters = 1;
+      let numShapes = 1;
       let polygonFiltersAndDonuts = {};
       if (newFilter.geo_multi_polygon) {
         const polygons = newFilter.geo_multi_polygon[field].polygons;
         polygonFiltersAndDonuts = geoFilterHelper.analyseMultiPolygon(polygons, field);
-        numFilters = polygons.length;
+        numShapes = polygons.length;
         newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
       } else if (newFilter.geo_polygon) {
         //Only analyse vector geo polygons, i.e. not drawn ones
@@ -48,14 +52,16 @@ define(function (require) {
       };
 
       //add all donuts
-      if (polygonFiltersAndDonuts.donutsToExclude) {
-        numFilters += polygonFiltersAndDonuts.donutsToExclude.length;
+      if (polygonFiltersAndDonuts &&
+        polygonFiltersAndDonuts.donutsToExclude &&
+        polygonFiltersAndDonuts.donutsToExclude.length >= 1) {
+        numShapes += polygonFiltersAndDonuts.donutsToExclude.length;
         newFilter.bool.must_not = polygonFiltersAndDonuts.donutsToExclude;
       };
 
       newFilter.meta = {
-        numFilters: numFilters,
-        alias: filterAlias(field, numFilters),
+        numShapes: numShapes,
+        alias: filterAlias(field, numShapes),
         negate: false,
         index: indexPatternId,
         key: field,
@@ -108,18 +114,17 @@ define(function (require) {
         geoFilters.push({ geo_distance: existingFilter.geo_distance });
       }
 
-      let numFilters = geoFilters.length;
+      let numShapes = geoFilters.length;
 
-      // Update method removed - so just remove old filter and add updated filter
       updatedFilter.bool = { should: geoFilters };
       // adding all donuts
       if (donutsToExclude.length !== 0) {
-        numFilters += donutsToExclude.length;
+        numShapes += donutsToExclude.length;
         updatedFilter.bool.must_not = donutsToExclude;
       };
 
-      updatedFilter.meta.numFilters = numFilters;
-      updatedFilter.meta.alias = filterAlias(field, numFilters);
+      updatedFilter.meta.numShapes = numShapes;
+      updatedFilter.meta.alias = filterAlias(field, numShapes);
       queryFilter.removeFilter(existingFilter);
       queryFilter.addFilters(updatedFilter);
     }
@@ -137,7 +142,7 @@ define(function (require) {
 
       //counting total number of filters linked to the IndexPattern of NewFilter
       const allFilters = [...queryFilter.getAppFilters(), ...queryFilter.getGlobalFilters()];
-      let numFiltersInIndexPattern = 0;
+      let numFilters = 0;
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
@@ -148,12 +153,12 @@ define(function (require) {
               isGeoFilter(filter, field) &&
               filterVisMeta.id === newFilterVisMeta.id &&
               filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
-              numFiltersInIndexPattern += filter.meta.numFilters;
+              numFilters += 1;
               existingFilter = filter;
             };
           } else {
             if (isGeoFilter(filter, field)) {
-              numFiltersInIndexPattern += filter.meta.numFilters;
+              numFilters += 1;
               existingFilter = filter;
             };
           }
@@ -161,10 +166,10 @@ define(function (require) {
       };
 
 
-      if (numFiltersInIndexPattern === 0 || numFiltersInIndexPattern >= 2) {
+      if (numFilters === 0 || numFilters >= 2) {
         _applyFilter(newFilter, field, indexPatternId);
 
-      } else if (numFiltersInIndexPattern === 1) {
+      } else if (numFilters === 1) {
         const domNode = document.createElement('div');
         document.body.append(domNode);
         const title = 'Filter creation';
