@@ -5,11 +5,11 @@ const ngMock = require('ng_mock');
 const sinon = require('sinon');
 
 const CallbacksFactory = require('../../callbacks');
-const fakePolygonObjects = require('./fakePolygonObjects.js');
-const fakeVectorPolygonEvent = require('./fakeVectorPolygonEvent.js');
-const fakeVectorMultiPolygonEvent = require('./fakeVectorMultiPolygonEvent.js');
-const fakeVectorDonutPolygonEvent = require('./fakeVectorDonutPolygonEvent.js');
-const fakeVectorMultiPolygonWithDonutEvent = require('./fakeVectorMultiPolygonWithDonutEvent.js');
+const fakePolygonObjects = require('./fakeCallbackObjects/fakePolygonObjects.js');
+const fakeVectorPolygonEvent = require('./fakeCallbackObjects/fakeVectorPolygonEvent.js');
+const fakeVectorMultiPolygonEvent = require('./fakeCallbackObjects/fakeVectorMultiPolygonEvent.js');
+const fakeVectorDonutPolygonEvent = require('./fakeCallbackObjects/fakeVectorDonutPolygonEvent.js');
+const fakeVectorMultiPolygonWithDonutEvent = require('./fakeCallbackObjects/fakeVectorMultiPolygonWithDonutEvent.js');
 
 describe('Kibi Enhanced Tilemap', () => {
 
