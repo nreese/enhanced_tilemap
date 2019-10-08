@@ -114,9 +114,9 @@ define(function (require) {
 
     function initPOILayer(layerParams) {
       const poi = new POIsProvider(layerParams);
-      const savedSearchLabel = layerParams.savedSearchLabel;
+      const displayName = layerParams.displayName || layerParams.savedSearchLabel;
       const options = {
-        savedSearchLabel,
+        displayName,
         color: _.get(layerParams, 'color', '#008800'),
         size: _.get(layerParams, 'markerSize', 'm'),
         mapExtentFilter: {
@@ -132,8 +132,9 @@ define(function (require) {
         options.$legend = $legend;
       }
 
+      console.log('Display name: ' + layerParams.displayName + ' Search Label: ' + layerParams.savedSearchLabel);
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(savedSearchLabel, layer);
+        map.addPOILayer(displayName, layer);
       });
     }
 
