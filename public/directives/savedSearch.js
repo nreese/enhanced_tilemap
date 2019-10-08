@@ -24,6 +24,7 @@ define(function (require) {
         scope.updateIndex = function () {
           scope.warn = '';
           scope.layer.savedSearchId = scope.savedSearch.value;
+          scope.layer.savedSearchLabel = scope.savedSearch.label;
           scope.layer.geoField = null;
           scope.layer.popupFields = [];
 

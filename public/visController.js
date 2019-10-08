@@ -114,7 +114,9 @@ define(function (require) {
 
     function initPOILayer(layerParams) {
       const poi = new POIsProvider(layerParams);
+      const savedSearchLabel = layerParams.savedSearchLabel;
       const options = {
+        savedSearchLabel,
         color: _.get(layerParams, 'color', '#008800'),
         size: _.get(layerParams, 'markerSize', 'm'),
         mapExtentFilter: {
@@ -131,7 +133,7 @@ define(function (require) {
       }
 
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(layerParams.savedSearchId, layer);
+        map.addPOILayer(savedSearchLabel, layer);
       });
     }
 
@@ -186,9 +188,7 @@ define(function (require) {
 
         //POI overlays
         map.clearPOILayers();
-        $scope.vis.params.overlays.savedSearches.forEach(function (layerParams) {
-          initPOILayer(layerParams);
-        });
+        $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
 
         drawWfsOverlays();
 
@@ -208,9 +208,9 @@ define(function (require) {
 
       //Initialize POI layer regardless of aggregations being present
       //the logic of whether to draw POI is handled in POI.js
+      map.clearPOILayers();
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
     });
-
 
     $scope.$watch(
       function () {
@@ -227,6 +227,8 @@ define(function (require) {
 
         if (newChecked !== oldChecked && $scope.flags.check === true) {
           drawWmsOverlays();
+
+          map.clearPOILayers();
           $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
         }
       }
