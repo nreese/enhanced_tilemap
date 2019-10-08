@@ -40,6 +40,7 @@ define(function (require) {
     let chartData = null;
     let tooltip = null;
     let tooltipFormatter = null;
+    $scope.flags = {};
 
     backwardsCompatible.updateParams($scope.vis.params);
     appendMap();
@@ -161,6 +162,7 @@ define(function (require) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
 
+        $scope.flags.isVisibleSource = 'visParams';
         //remove mouse related heatmap events when moving to a different geohash type
         if (oldParams && oldParams.mapType === 'Heatmap') {
           map.unfixMapTypeTooltips();
@@ -191,7 +193,6 @@ define(function (require) {
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations') && (resp.aggregations[2].doc_count > 0)) {
         chartData = respProcessor.process(resp);
-
         draw();
 
       };
@@ -211,9 +212,11 @@ define(function (require) {
         }
       },
       function (newChecked, oldChecked) {
-        if (!$scope.check) return;
+        if (!$scope.flags.check) return;
 
-        if (newChecked !== oldChecked && $scope.check === true) {
+        $scope.flags.isVisibleSource = 'layerControlCheckbox';
+
+        if (newChecked !== oldChecked && $scope.flags.check === true) {
           drawWmsOverlays();
           $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
         }
@@ -332,7 +335,7 @@ define(function (require) {
     };
 
     function drawWmsOverlays() {
-      $scope.check = false;
+      $scope.flags.check = false;
       const prevState = map.clearWMSOverlays();
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
@@ -414,8 +417,21 @@ define(function (require) {
               if (formatOptions.length !== 0) {
                 wmsOptions.format_options = formatOptions;
               }
+
+              let isVisible;
+              if ($scope.flags.isVisibleSource === 'visParams') {
+                isVisible = layerParams.isVisible;
+              } else if (prevState[name] ||
+                $scope.flags.isVisibleSource === 'layerControlCheckbox') {
+                isVisible = prevState[name];
+              } else {
+                isVisible = layerParams.isVisible;
+              };
+
+              $scope.flags.visibleSource = '';
+
               const layerOptions = {
-                isVisible: _.get(prevState, name, layerParams.isVisible),
+                isVisible,
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
               return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions);
@@ -424,7 +440,7 @@ define(function (require) {
       });
 
       Promise.all(wmsDrawAsync).then(function () {
-        $scope.check = true;
+        $scope.flags.check = true;
       });
     };
 
