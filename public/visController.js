@@ -132,7 +132,6 @@ define(function (require) {
         options.$legend = $legend;
       }
 
-      console.log('Display name: ' + layerParams.displayName + ' Search Label: ' + layerParams.savedSearchLabel);
       poi.getLayer(options, function (layer) {
         map.addPOILayer(displayName, layer);
       });
