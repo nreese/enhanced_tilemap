@@ -207,9 +207,7 @@ define(function (require) {
 
       };
 
-      //Initialize POI layer regardless of aggregations being present
-      //the logic of whether to draw POI is handled in POI.js
-      map.clearPOILayers();
+      //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
     });
 
@@ -229,6 +227,7 @@ define(function (require) {
         if (newChecked !== oldChecked && $scope.flags.check === true) {
           drawWmsOverlays();
 
+          //POI overlays
           map.clearPOILayers();
           $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
         }
