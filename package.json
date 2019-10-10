@@ -21,7 +21,8 @@
     "leaflet-mouse-position": "1.2.0",
     "leaflet.nontiledlayer": "1.0.7",
     "mgrs": "~1.0.0",
-    "xml2js": "^0.4.19"
+    "xml2js": "^0.4.19",
+    "scripting-interfaces": "sirensolutions/scripting-interfaces#a098f1ef4ee8ab1a3b79e65eeabeb66330a50d21"
   },
   "devDependencies": {
     "eslint-config-siren": "sirensolutions/eslint-config",
@@ -40,8 +41,6 @@
     "mkdirp": "^0.5.1",
     "natives": "^1.1.6",
     "rimraf": "^2.4.4",
-    "rsync": "^0.4.0",
-    "simple-git": "1.37.0",
-    "jsdoc-to-markdown": "4.0.1"
+    "rsync": "^0.4.0"
   }
 }

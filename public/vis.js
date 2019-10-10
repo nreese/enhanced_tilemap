@@ -7,6 +7,7 @@ import { VisVisTypeProvider } from 'ui/vis/vis_type';
 import { TemplateVisTypeProvider } from 'ui/template_vis_type/template_vis_type';
 import { VisTypesRegistryProvider } from 'ui/registry/vis_types';
 import { VisSchemasProvider } from 'ui/vis/schemas';
+import scriptingInterfaces from 'scripting-interfaces';
 
 import 'angularjs-slider';
 
@@ -27,16 +28,7 @@ define(function (require) {
   function EnhancedTileMapVisProvider(Private, getAppState, courier, config, $injector) {
     if ($injector.has('actionRegistry')) {
       const actionRegistry = $injector.get('actionRegistry');
-      actionRegistry.registerActionDefinitionsForType('enhanced_tilemap', [
-        {
-          name: 'renderGeoJsonCollection',
-          whenNotYetAvailable: 'RESOLVE'
-        },
-        {
-          name: 'getGeoBoundingBox',
-          whenNotYetAvailable: 'RESOLVE'
-        }
-      ]);
+      actionRegistry.registerInterfaceForType('enhanced_tilemap', scriptingInterfaces.visualizations.enhanced_tilemap);
     }
 
     const VisType = Private(VisVisTypeProvider);
