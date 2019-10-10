@@ -136,10 +136,19 @@ define(function (require) {
 
     function initVectorLayer(layerName, geoJsonCollection, options) {
 
+      let popupFields = [];
+      if (_.get(options, 'popupFields') === '' || !_.get(options, 'popupFields')) {
+        popupFields = [];
+      } else if (_.get(options, 'popupFields').indexOf(',') > -1) {
+        popupFields = _.get(options, 'popupFields').split(',');
+      } else {
+        popupFields = [_.get(options, 'popupFields', [])];
+      };
+
       const optionsWithDefaults = {
         color: _.get(options, 'color', '#008800'),
         size: _.get(options, 'size', 'm'),
-        popupFields: _.get(options, 'popupFields', []),
+        popupFields,
         layerGroup: _.get(options, 'layerGroup', '<b> Vector Overlays </b>'),
         indexPattern: $scope.vis.indexPattern.title,
         geoFieldName: $scope.vis.aggs[1].params.field.name,
@@ -295,7 +304,6 @@ define(function (require) {
       };
     }
 
-
     function drawWfsOverlays() {
       //clear all wfs overlays before redrawing
       map.clearWfsOverlays();
@@ -305,20 +313,10 @@ define(function (require) {
         return;
       };
       _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
-        _.get(wfsOverlay, 'displayName', wfsOverlay.layers);
-
-        let popupFields = [];
-        if (_.get(wfsOverlay, 'popupFields') === '' || !_.get(wfsOverlay, 'popupFields')) {
-          popupFields = [];
-        } else if (_.get(wfsOverlay, 'popupFields').indexOf(',') > -1) {
-          popupFields = _.get(wfsOverlay, 'popupFields').split(',');
-        } else {
-          popupFields = [_.get(wfsOverlay, 'popupFields', [])];
-        };
 
         const options = {
           color: _.get(wfsOverlay, 'color', '#10aded'),
-          popupFields: popupFields,
+          popupFields: _.get(wfsOverlay, 'popupFields', ''),
           layerGroup: '<b> WFS Overlays </b>',
           type: 'WFS'
         };
