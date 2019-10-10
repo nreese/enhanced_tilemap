@@ -108,14 +108,13 @@ define(function (require) {
 
             //Too many documents warning for each specific layer
             options.$legend.tooManyDocsInfo = '';
+            options.$legend.searchIcon = searchIcon;
 
             if (searchResp.hits.total > this.limit) {
-              options.$legend = {
-                innerHTML: tooManyDocsInfo[0],
-                tooManyDocsInfo: tooManyDocsInfo
-              };
+              options.$legend.innerHTML = tooManyDocsInfo[0];
+              options.$legend.tooManyDocsInfo = tooManyDocsInfo;
             };
-            options.$legend.searchIcon = searchIcon;
+
             callback(self._createLayer(searchResp.hits.hits, geoType, options));
           });
       });
@@ -287,7 +286,7 @@ define(function (require) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
-          icon: searchIcon(options.searchIcon, options.iconColor,  options.size)
+          icon: searchIcon(options.searchIcon, options.iconColor, options.size)
         });
 
       if (this.popupFields.length > 0) {
