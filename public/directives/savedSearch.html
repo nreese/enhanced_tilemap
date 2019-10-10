@@ -26,20 +26,20 @@
       <label>
         Geospatial Field
       </label>
-      <select required class="form-control" ng-model="layer.geoField" ng-options="item for item in geoFields">
+      <select required class="form-control" ng-model="layer.geoField" ng-change="isGeoShape()" ng-options="item for item in geoFields">
       </select>
     </div>
     <div class="form-group">
       <label>
         Styling
       </label>
-      <input minicolors ng-model="layer.color" type="text" class="form-control" name="color" />
-      <select ng-model="layer.markerSize" class="form-control marker-size">
-        <option value="xs">xs</option>
-        <option value="s">s</option>
-        <option value="m">m</option>
-        <option value="l">l</option>
-        <option value="xl">xl</option>
+      <input minicolors ng-if="layer.geoShape === true" ng-model="layer.color" type="text" class="form-control" name="color" />
+      <select ng-if="layer.geoShape === false" ng-model="layer.markerSize" class="form-control marker-size">
+        <option value="xs">Extra small</option>
+        <option value="s">Small</option>
+        <option value="m">Medium</option>
+        <option value="l">Large</option>
+        <option value="xl">Extra Large</option>
       </select>
     </div>
 

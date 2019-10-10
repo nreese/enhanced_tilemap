@@ -265,12 +265,13 @@ define(function (require) {
       }
 
       const tooManyDocs = {
-        icon: layer.$legend.tooManyDocsInfo[0],
+        warningIcon: layer.$legend.tooManyDocsInfo[0],
         message: layer.$legend.tooManyDocsInfo[1]
       };
 
-      const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
-      if (tooManyDocs.icon) {
+      layerName = `${layerName} ${layer.$legend.searchIcon}`;
+      const toomanydocslayername = layerName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
+      if (tooManyDocs.warningIcon) {
         this._layerControl.addOverlay(layer, toomanydocslayername, '<b> POI Overlays</b>');
       } else {
         this._layerControl.addOverlay(layer, layerName, '<b> POI Overlays</b>');
@@ -290,7 +291,7 @@ define(function (require) {
       this.map.addLayer(layer);
 
       /*********************************************************/
-      // Retaining functionality of too many features to draw 
+      // Retaining functionality of too many features to draw
       // const tooManyDocs = {
       //   icon: layer.$legend.tooManyDocsInfo[0],
       //   message: layer.$legend.tooManyDocsInfo[1]

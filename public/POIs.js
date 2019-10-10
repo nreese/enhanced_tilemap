@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const L = require('leaflet');
-import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import { searchIcon } from 'plugins/enhanced_tilemap/vislib/searchIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
@@ -55,6 +55,11 @@ define(function (require) {
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
 
+        //creating icon from search for map and layerControl
+        options.iconColor = savedSearch.siren.ui.color;
+        options.searchIcon = savedSearch.siren.ui.icon;
+        const searchIcon = `<i class="${options.searchIcon}" style="color:${options.iconColor};"></i>`;
+
         function createMapExtentFilter(rect) {
           const bounds = rect.geo_bounding_box.geoBoundingBox;
           return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
@@ -105,9 +110,12 @@ define(function (require) {
             options.$legend.tooManyDocsInfo = '';
 
             if (searchResp.hits.total > this.limit) {
-              options.$legend.innerHTML = tooManyDocsInfo[0];
-              options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+              options.$legend = {
+                innerHTML: tooManyDocsInfo[0],
+                tooManyDocsInfo: tooManyDocsInfo
+              };
             };
+            options.$legend.searchIcon = searchIcon;
             callback(self._createLayer(searchResp.hits.hits, geoType, options));
           });
       });
@@ -279,7 +287,7 @@ define(function (require) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
-          icon: markerIcon(options.color, options.size)
+          icon: searchIcon(options.searchIcon, options.iconColor,  options.size)
         });
 
       if (this.popupFields.length > 0) {
