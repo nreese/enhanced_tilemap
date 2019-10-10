@@ -248,6 +248,8 @@ define(function (require) {
     TileMapMap.prototype.addPOILayer = function (layerName, layer) {
       let isVisible = true;
 
+      layerName = `${layerName} ${layer.$legend.searchIcon}`;
+
       //remove layer if it already exists
       //this is required on page load with the option to have user defined POI user
       //name in edit mode as there are two watchers, i.e. vis.params and esResponse
@@ -269,7 +271,6 @@ define(function (require) {
         message: layer.$legend.tooManyDocsInfo[1]
       };
 
-      layerName = `${layerName} ${layer.$legend.searchIcon}`;
       const toomanydocslayername = layerName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
       if (tooManyDocs.warningIcon) {
         this._layerControl.addOverlay(layer, toomanydocslayername, '<b> POI Overlays</b>');
