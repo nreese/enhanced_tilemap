@@ -512,6 +512,16 @@ define(function (require) {
         });
       });
 
+      //stop popups appearing when drawing has started
+      this.map.on('draw:drawstart', function (e) {
+        this.disablePopups = true;
+      });
+
+      //start popups appearing finished drawing
+      this.map.on('draw:drawstop', function (e) {
+        this.disablePopups = false;
+      });
+
       this.map.on('draw:created', function (e) {
         switch (e.layerType) {
           case 'marker':
