@@ -19,6 +19,8 @@ define(function (require) {
      * Turns saved search results into easily consumible data for leaflet.
      */
     function POIs(params) {
+      this.displayName = params.displayName;
+      this.savedSearchLabel = params.savedSearchLabel;
       this.savedSearchId = params.savedSearchId;
       this.geoField = params.geoField;
       //remain backwards compatible
