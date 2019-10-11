@@ -80,6 +80,18 @@
       </kbn-info>
     </label>
   </div>
+
+  <div class="vis-option-item form-group">
+    <label>
+      <input type="checkbox" ng-model="layer.isVisible" name="layer.isVisible" />
+
+      Visible On Load
+      
+      <kbn-info info="When true, this layer will draw when the visualization is loaded.">
+      </kbn-info>
+    </label>
+  </div>
+
   <div>
     <label class="etm-well-section">
       Elasticsearch WMS Options <kbn-info
