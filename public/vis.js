@@ -28,7 +28,7 @@ define(function (require) {
   function EnhancedTileMapVisProvider(Private, getAppState, courier, config, $injector) {
     if ($injector.has('actionRegistry')) {
       const actionRegistry = $injector.get('actionRegistry');
-      actionRegistry.registerInterfaceForType('enhanced_tilemap', scriptingInterfaces.visualizations.enhanced_tilemap);
+      actionRegistry.registerInterfaceForType('enhanced_tilemap', scriptingInterfaces.v1.visualizations.enhanced_tilemap);
     }
 
     const VisType = Private(VisVisTypeProvider);
