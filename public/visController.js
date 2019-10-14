@@ -107,7 +107,6 @@ define(function (require) {
     });
 
     function getGeoBoundingBox() {
-      //collarscale is hardcoded to exactly the size of the map canvas
       const geoBoundingBox = utils.scaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
       return { geoBoundingBox };
     };

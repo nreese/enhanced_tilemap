@@ -25,7 +25,7 @@ define(function (require) {
             if (scope.layer.geoField === geoFieldType.name &&
               geoFieldType.type === 'geo_shape') {
               scope.layer.geoShape = true;
-              return;
+              return false;
             };
           });
         };
