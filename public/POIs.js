@@ -200,22 +200,27 @@ define(function (require) {
 
     //Mouse event creation for GeoShape
     POIs.prototype.addMouseOverGeoShape = function (e) {
-      this.openPopup();
+      if (!e.target._map.disablePopups) {
+        this.openPopup();
+      }
     };
 
     POIs.prototype.addMouseOutToGeoShape = function (e) {
       const self = this;
 
       self._popupMouseOut = function (e) {
-        // detach the event
-        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-        // get the element that the mouse hovered onto
-        const target = e.toElement || e.relatedTarget;
-        // check to see if the element is a popup
-        if (getParentWithClass(target, 'leaflet-popup')) {
-          return true;
+        // detach the event, if one exists
+        if (self._map) {
+          L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
+
+          // get the element that the mouse hovered onto
+          const target = e.toElement || e.relatedTarget;
+          // check to see if the element is a popup
+          if (getParentWithClass(target, 'leaflet-popup')) {
+            return true;
+          }
+          self.closePopup();
         }
-        self.closePopup();
       };
 
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
@@ -234,15 +239,17 @@ define(function (require) {
     //Mouse event creation and closing for GeoPoints
     POIs.prototype._getMouseOverGeoPoint = function (content) {
       const popup = function (e) {
-        L.popup({
-          autoPan: false,
-          maxHeight: 'auto',
-          maxWidth: 'auto',
-          offset: utils.popupOffset(this._map, content, e.latlng)
-        })
-          .setLatLng(e.latlng)
-          .setContent(content)
-          .openOn(this._map);
+        if (!e.target._map.disablePopups) {
+          L.popup({
+            autoPan: false,
+            maxHeight: 'auto',
+            maxWidth: 'auto',
+            offset: utils.popupOffset(this._map, content, e.latlng)
+          })
+            .setLatLng(e.latlng)
+            .setContent(content)
+            .openOn(this._map);
+        };
       };
       return popup;
     };
@@ -251,15 +258,17 @@ define(function (require) {
       const self = this;
 
       self._popupMouseOut = function (e) {
-        // detach the event
-        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-        // get the element that the mouse hovered onto
-        const target = e.toElement || e.relatedTarget;
-        // check to see if the element is a popup
-        if (getParentWithClass(target, 'leaflet-popup')) {
-          return true;
-        }
-        self._map.closePopup();
+        // detach the event, if one exists
+        if (self._map) {
+          L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
+          // get the element that the mouse hovered onto
+          const target = e.toElement || e.relatedTarget;
+          // check to see if the element is a popup
+          if (getParentWithClass(target, 'leaflet-popup')) {
+            return true;
+          }
+          self._map.closePopup();
+        };
       };
 
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;

@@ -196,7 +196,9 @@ define(function (require) {
           if (!L.Browser.ie && !L.Browser.opera) {
             layer.bringToFront();
           }
-          self._showTooltip(feature);
+          if (!e.target._map.disablePopups) {
+            self._showTooltip(feature);
+          };
         },
         mouseout: function (e) {
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
