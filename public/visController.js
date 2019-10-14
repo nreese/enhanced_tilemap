@@ -466,12 +466,13 @@ define(function (require) {
 
     if ($injector.has('actionRegistry')) {
       const actionRegistry = $injector.get('actionRegistry');
+      const apiVersion = '1';
 
-      actionRegistry.register($scope.vis.id, 'renderGeoJsonCollection', async (layerName, geoJsonCollection, options) => {
+      actionRegistry.register(apiVersion, $scope.vis.id, 'renderGeoJsonCollection', async (layerName, geoJsonCollection, options) => {
         return initVectorLayer(layerName, geoJsonCollection, options);
       });
 
-      actionRegistry.register($scope.vis.id, 'getGeoBoundingBox', async () => {
+      actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
         return getGeoBoundingBox();
       });
 
