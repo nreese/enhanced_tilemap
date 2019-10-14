@@ -203,6 +203,7 @@ define(function (require) {
     TileMapMap.prototype.destroy = function () {
       this.clearPOILayers();
       this.clearVectorLayers();
+      this._clearDrawStopAndStartEvents();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
@@ -458,6 +459,11 @@ define(function (require) {
           this.map.scrollWheelZoom.disable();
         }
       }
+    };
+
+    TileMapMap.prototype._clearDrawStopAndStartEvents = function () {
+      this.map.off('draw:drawstart');
+      this.map.off('draw:drawstop');
     };
 
     TileMapMap.prototype._attachEvents = function () {
