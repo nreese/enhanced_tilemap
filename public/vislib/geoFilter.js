@@ -1,6 +1,6 @@
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import React from 'react';
-import { modalWithForm } from './geoFilterModal/geoFilterModal';
+import { modalWithForm } from './modals/genericModal';
 import { render, unmountComponentAtNode } from 'react-dom';
 import {
   EuiButton,

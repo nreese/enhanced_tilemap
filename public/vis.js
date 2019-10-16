@@ -71,7 +71,8 @@ define(function (require) {
           overlays: {
             savedSearches: [],
             wmsOverlays: [],
-            wfsOverlays: []
+            wfsOverlays: [],
+            dragAndDropPoiLayers: []
           },
           wms: config.get('visualization:tileMap:WMSdefaults')
         },

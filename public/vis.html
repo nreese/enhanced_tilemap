@@ -1,4 +1,13 @@
 <div ng-controller="KbnEnhancedTilemapVisController" class="etm-vis">
+
+  <!-- Messages for the dashboard drag&drop -->
+  <div class="siren-dashboard-drop-hover dashed-line" ng-if="showDropHover && showDropMessage">
+    <div class="message">Drop the dashboard here to add its content</div>
+  </div>
+  <div class="siren-dashboard-drop-hover" ng-if="showDropHover && !showDropMessage">
+    <div class="message">The selected dashboard does not have an associated search</div>
+  </div>
+
   <div class="chart tilemap">
   </div>
 </div>

@@ -6,6 +6,18 @@ import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
 
+//react modal
+import React from 'react';
+import { modalWithForm } from './vislib/modals/genericModal';
+import { render, unmountComponentAtNode } from 'react-dom';
+import {
+  EuiFormRow,
+  EuiSelect,
+  EuiButton,
+  EuiFlexGroup,
+  EuiFlexItem
+} from '@elastic/eui';
+
 define(function (require) {
   return function POIsFactory(Private, savedSearches) {
 
@@ -19,10 +31,9 @@ define(function (require) {
      * Turns saved search results into easily consumible data for leaflet.
      */
     function POIs(params) {
-      this.displayName = params.displayName;
-      this.savedSearchLabel = params.savedSearchLabel;
       this.savedSearchId = params.savedSearchId;
-      this.geoField = params.geoField;
+      this.draggedState = params.draggedState;
+      this.geoField = params.geoField || undefined;
       //remain backwards compatible
       if (!params.geoField && params.geoPointField) {
         this.geoField = params.geoPointField;
@@ -33,6 +44,17 @@ define(function (require) {
       this.limit = _.get(params, 'limit', 100);
       this.syncFilters = _.get(params, 'syncFilters', false);
     }
+
+    function getGeoFields(savedSearch) {
+      const geoFields = [];
+      savedSearch.searchSource._state.index.fields.forEach(field => {
+        if (field.esType === 'geo_point' ||
+          field.esType === 'geo_shape') {
+          geoFields.push({ type: field.esType, name: field.name });
+        }
+      });
+      return geoFields;
+    };
 
     const getParentWithClass = function (element, className) {
       let parent = element;
@@ -45,6 +67,7 @@ define(function (require) {
       return false;
     };
 
+
     /**
      * @param {options} options: styling options
      * @param {Function} callback(layer)
@@ -53,12 +76,103 @@ define(function (require) {
     POIs.prototype.getLayer = function (options, callback) {
       const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
-        const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
 
-        //creating icon from search for map and layerControl
-        options.iconColor = savedSearch.siren.ui.color;
+        //handling case where savedSearch is coming from vis params or drag and drop
+        if (this.geoField) {
+          this.geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+        } else if (!this.geoType) {
+          const geoFields = getGeoFields(savedSearch);
+
+          if (geoFields.length === 1) {
+            this.geoField = geoFields[0].name;
+            this.geoType = geoFields[0].type;
+
+          } else if (geoFields.length >= 2) {
+
+            this.options = [];
+            _.each(geoFields, geoField => {
+              this.options.push({ value: geoField.name, text: geoField.name });
+            });
+
+            function getGeoType(geoFieldName) {
+              return _.find(geoFields, function (geoField) {
+                return geoField.name === geoFieldName;
+              });
+            }
+
+            const domNode = document.createElement('div');
+            document.body.append(domNode);
+            const title = 'Geo field selection';
+
+            let selected = this.options[0].value;
+
+            const onChange = e => {
+              selected = e.target.value;
+            };
+
+            const form = (
+
+              <EuiFlexGroup gutterSize="l" alignItems="flexEnd" justifyContent="spaceBetween" style={{ marginLeft: '0px' }}>
+                <EuiFlexItem grow={true}>
+                  <EuiFormRow label="Select the Geo field for POI layer">
+                    <EuiSelect
+                      options={this.options}
+                      onChange={onChange}
+                      style={{ minWidth: '180px' }}
+                    />
+                  </EuiFormRow>
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            );
+
+            const onClose = function () {
+              unmountComponentAtNode(domNode);
+              document.body.removeChild(domNode);
+            };
+            const footer = (
+              <EuiFlexGroup>
+                <EuiFlexItem grow={false}>
+                  <EuiButton
+                    size="s"
+                    onClick={() => {
+                      onClose();
+                    }}
+                  >
+                    Cancel
+                  </EuiButton>
+                </EuiFlexItem>
+
+                <EuiFlexItem grow={false}>
+                  <EuiButton
+                    fill
+                    size="s"
+                    onClick={() => {
+                      this.geoField = selected;
+                      this.geoType = getGeoType(this.geoField).type;
+                      onClose();
+                    }}
+                  >
+                    Confirm
+                  </EuiButton>
+
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            );
+
+            render(
+              modalWithForm(title, form, footer, onClose),
+              domNode
+            );
+          };
+        };
+
+        //const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+
+        //creating icon and title from search for map and layerControl
+        options.displayName = options.displayName || savedSearch.title;
+        options.color = savedSearch.siren.ui.color;
         options.searchIcon = savedSearch.siren.ui.icon;
-        const searchIcon = `<i class="${options.searchIcon}" style="color:${options.iconColor};"></i>`;
+        const searchIcon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
 
         function createMapExtentFilter(rect) {
           const bounds = rect.geo_bounding_box.geoBoundingBox;
@@ -71,6 +185,19 @@ define(function (require) {
           searchSource.inherits(savedSearch.searchSource);
           const allFilters = queryFilter.getFilters();
           allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+          searchSource.filter(allFilters);
+        } else if (this.draggedState) {
+          //Use filters from search of other dashboard if drag and drop
+          searchSource.inherits(false);
+          searchSource.index(this.draggedState.index);
+          searchSource.query(this.draggedState.query[0]);
+          const allFilters = this.draggedState.filters;
+
+          //The last element in this array is always the map extent filter
+          //of other dashboard, so we replace it with this extent
+          allFilters.pop();
+          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+
           searchSource.filter(allFilters);
         } else {
           //Do not filter POIs by time so can not inherit from rootSearchSource
@@ -115,7 +242,7 @@ define(function (require) {
               options.$legend.tooManyDocsInfo = tooManyDocsInfo;
             };
 
-            callback(self._createLayer(searchResp.hits.hits, geoType, options));
+            callback(self._createLayer(searchResp.hits.hits, this.geoType, options));
           });
       });
     };
@@ -194,7 +321,9 @@ define(function (require) {
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
+      layer.displayName = options.displayName;
       layer.$legend = options.$legend;
+      layer.layerGroup = options.layerGroup;
       return layer;
     };
 
@@ -295,7 +424,7 @@ define(function (require) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
-          icon: searchIcon(options.searchIcon, options.iconColor, options.size)
+          icon: searchIcon(options.searchIcon, options.color, options.size)
         });
 
       if (this.popupFields.length > 0) {

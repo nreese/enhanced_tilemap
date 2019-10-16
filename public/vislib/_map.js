@@ -246,7 +246,7 @@ define(function (require) {
       });
     };
 
-    TileMapMap.prototype.addPOILayer = function (layerName, layer) {
+    TileMapMap.prototype.addPOILayer = function (layerName, layer, layerGroup) {
       let isVisible = true;
 
       layerName = `${layerName} ${layer.$legend.searchIcon}`;
@@ -274,9 +274,9 @@ define(function (require) {
 
       const toomanydocslayername = layerName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
       if (tooManyDocs.warningIcon) {
-        this._layerControl.addOverlay(layer, toomanydocslayername, '<b> POI Overlays</b>');
+        this._layerControl.addOverlay(layer, toomanydocslayername, layerGroup || '<b> POI Overlays</b>');
       } else {
-        this._layerControl.addOverlay(layer, layerName, '<b> POI Overlays</b>');
+        this._layerControl.addOverlay(layer, layerName, layerGroup || '<b> POI Overlays</b>');
       }
 
       this._poiLayers[layerName] = layer;

@@ -1,4 +1,4 @@
-import _ from'lodash';
+import _ from 'lodash';
 
 /**
  * As new features are added, sometimes the visualization parameters needs to change

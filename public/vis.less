@@ -1,3 +1,5 @@
+@import (reference) "~ui/styles/mixins.less";
+
 .etm-vis {
   //padding can't be 0 as causes
   // x_content_parse_exception without applying marging-top
@@ -22,6 +24,35 @@
     background-color: #ffffff;
     border          : 1px solid #ecf0f1;
     border-radius   : 4px;
+  }
+
+  .siren-dashboard-drop-hover {
+    position: absolute;
+    background-color: #f8f8f8b9;
+    width: 100%;
+    height: 100%;
+    z-index: 99999;
+    text-align: center;
+    display: table-cell;
+
+    .message {
+      font-size: 24px;
+      color: @gray5;
+      width: 100%;
+      position: absolute;
+      top: 50%;
+    }
+  }
+
+  .siren-dashboard-drop-hover.dashed-line {
+    outline: 3px dashed @gray11;
+    outline-offset: -8px;
+  }
+
+  // This is to hide the drag and drop shadow and list item when you
+  // try to drag a dashboard on the graph
+  .dragging-pointer, .dashboards-nav-edit-link-dashboard {
+    display: none;
   }
 
   .marker-icon {
