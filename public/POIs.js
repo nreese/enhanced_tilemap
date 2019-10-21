@@ -76,18 +76,112 @@ define(function (require) {
     POIs.prototype.getLayer = function (options, callback) {
       const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
+        const geoFields = getGeoFields(savedSearch);
 
-        //handling case where savedSearch is coming from vis params or drag and drop
-        if (this.geoField) {
-          this.geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
-        } else if (!this.geoType) {
-          const geoFields = getGeoFields(savedSearch);
+        if (geoFields.length === 1) {
+          this.geoField = geoFields[0].name;
+          this.geoType = geoFields[0].type;
+        }
 
-          if (geoFields.length === 1) {
-            this.geoField = geoFields[0].name;
-            this.geoType = geoFields[0].type;
+        const processLayer = () => {
+          //const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+          //creating icon and title from search for map and layerControl
+          options.displayName = options.displayName || savedSearch.title;
 
-          } else if (geoFields.length >= 2) {
+          // geo_shape color search color used for drag and drop or geo_point types
+          options.color = _.get(options, 'color', savedSearch.siren.ui.color);
+          options.searchIcon = savedSearch.siren.ui.icon;
+
+          let searchIcon;
+          if (this.geoType === 'geo_point') {
+            searchIcon = `<i class="${options.searchIcon}" style="color:${savedSearch.siren.ui.color};"></i>`;
+          } else {
+            //use square icon for geo_shape fields
+            searchIcon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+          };
+
+          function createMapExtentFilter(rect) {
+            const bounds = rect.geo_bounding_box.geoBoundingBox;
+            return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
+          }
+
+          const searchSource = new SearchSource();
+
+          if (this.syncFilters) {
+            searchSource.inherits(savedSearch.searchSource);
+            const allFilters = queryFilter.getFilters();
+            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+            searchSource.filter(allFilters);
+          } else if (this.draggedState) {
+            //Use filters from search of other dashboard if drag and drop
+            searchSource.inherits(false);
+            searchSource.index(this.draggedState.index);
+            searchSource.query(this.draggedState.query[0]);
+            const allFilters = this.draggedState.filters;
+
+            //The last element in this array is always the map extent filter
+            //of other dashboard, so it is removed
+            allFilters.pop();
+
+            /************************** */
+            // This is an option to add a filter for the current map extent
+            // Having difficulty saving the state, which is necessary in order
+            // to redraw the layers.
+            //allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+            /************************** */
+
+            searchSource.filter(allFilters);
+          } else {
+            //Do not filter POIs by time so can not inherit from rootSearchSource
+            searchSource.inherits(false);
+            searchSource.index(savedSearch.searchSource._state.index);
+            searchSource.query(savedSearch.searchSource.get('query'));
+            searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
+          }
+          searchSource.size(this.limit);
+          searchSource.source({
+            includes: _.compact(_.flatten([this.geoField, this.popupFields])),
+            excludes: []
+          });
+
+          // assigning the placeholder value of 1000 POIs in the
+          // case where number in the limit field has been replaced with null
+          let poiLimitToDisplay;
+          if (this.limit) {
+            poiLimitToDisplay = this.limit;
+          } else {
+            poiLimitToDisplay = 1000;
+          }
+
+          const tooManyDocsInfo = [
+            `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
+            `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
+                                            to having reached the limit currently set to: ${poiLimitToDisplay}</b>`
+          ];
+
+          //Removal of previous too many documents warning when map is changed to a new extent
+          options.$legend.innerHTML = '';
+
+          searchSource.fetch()
+            .then(searchResp => {
+
+              //Too many documents warning for each specific layer
+              options.$legend.tooManyDocsInfo = '';
+
+              options.$legend.searchIcon = `${searchIcon} (Total on map: ${searchResp.hits.hits.length})`;
+
+              if (searchResp.hits.total > this.limit) {
+                options.$legend.innerHTML = tooManyDocsInfo[0];
+                options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+              };
+
+              callback(self._createLayer(searchResp.hits.hits, this.geoType, options));
+            });
+        };
+
+        const geoFieldSelectModal = () => {
+
+          if (geoFields.length >= 2) {
 
             this.options = [];
             _.each(geoFields, geoField => {
@@ -98,7 +192,7 @@ define(function (require) {
               return _.find(geoFields, function (geoField) {
                 return geoField.name === geoFieldName;
               });
-            }
+            };
 
             const domNode = document.createElement('div');
             document.body.append(domNode);
@@ -125,15 +219,22 @@ define(function (require) {
               </EuiFlexGroup>
             );
 
-            const onClose = function () {
+            const onClose = () => {
               unmountComponentAtNode(domNode);
               document.body.removeChild(domNode);
             };
+
+            const onConFirm = () => {
+              this.geoField = selected;
+              this.geoType = getGeoType(this.geoField).type;
+              processLayer();
+            };
+
             const footer = (
               <EuiFlexGroup>
                 <EuiFlexItem grow={false}>
                   <EuiButton
-                    size="s"
+                    size='s'
                     onClick={() => {
                       onClose();
                     }}
@@ -145,16 +246,14 @@ define(function (require) {
                 <EuiFlexItem grow={false}>
                   <EuiButton
                     fill
-                    size="s"
+                    size='s'
                     onClick={() => {
-                      this.geoField = selected;
-                      this.geoType = getGeoType(this.geoField).type;
+                      onConFirm();
                       onClose();
                     }}
                   >
                     Confirm
                   </EuiButton>
-
                 </EuiFlexItem>
               </EuiFlexGroup>
             );
@@ -166,84 +265,14 @@ define(function (require) {
           };
         };
 
-        //const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+        //handling case where savedSearch is coming from vis params or drag and drop
+        if (this.geoField) {
+          this.geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+          processLayer();
+        } else if (!this.geoType) {
+          geoFieldSelectModal();
+        };
 
-        //creating icon and title from search for map and layerControl
-        options.displayName = options.displayName || savedSearch.title;
-        options.color = savedSearch.siren.ui.color;
-        options.searchIcon = savedSearch.siren.ui.icon;
-        const searchIcon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
-
-        function createMapExtentFilter(rect) {
-          const bounds = rect.geo_bounding_box.geoBoundingBox;
-          return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
-        }
-
-        const searchSource = new SearchSource();
-
-        if (this.syncFilters) {
-          searchSource.inherits(savedSearch.searchSource);
-          const allFilters = queryFilter.getFilters();
-          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-          searchSource.filter(allFilters);
-        } else if (this.draggedState) {
-          //Use filters from search of other dashboard if drag and drop
-          searchSource.inherits(false);
-          searchSource.index(this.draggedState.index);
-          searchSource.query(this.draggedState.query[0]);
-          const allFilters = this.draggedState.filters;
-
-          //The last element in this array is always the map extent filter
-          //of other dashboard, so we replace it with this extent
-          allFilters.pop();
-          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-
-          searchSource.filter(allFilters);
-        } else {
-          //Do not filter POIs by time so can not inherit from rootSearchSource
-          searchSource.inherits(false);
-          searchSource.index(savedSearch.searchSource._state.index);
-          searchSource.query(savedSearch.searchSource.get('query'));
-          searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
-        }
-        searchSource.size(this.limit);
-        searchSource.source({
-          includes: _.compact(_.flatten([this.geoField, this.popupFields])),
-          excludes: []
-        });
-
-        // assigning the placeholder value of 1000 POIs in the
-        // case where number in the limit field has been replaced with null
-        let poiLimitToDisplay;
-        if (this.limit) {
-          poiLimitToDisplay = this.limit;
-        } else {
-          poiLimitToDisplay = 1000;
-        }
-
-        const tooManyDocsInfo = [
-          `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
-          `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                            to having reached the limit currently set to: ${poiLimitToDisplay}</b>`
-        ];
-
-        //Removal of previous too many documents warning when map is changed to a new extent
-        options.$legend.innerHTML = '';
-
-        searchSource.fetch()
-          .then(searchResp => {
-
-            //Too many documents warning for each specific layer
-            options.$legend.tooManyDocsInfo = '';
-            options.$legend.searchIcon = searchIcon;
-
-            if (searchResp.hits.total > this.limit) {
-              options.$legend.innerHTML = tooManyDocsInfo[0];
-              options.$legend.tooManyDocsInfo = tooManyDocsInfo;
-            };
-
-            callback(self._createLayer(searchResp.hits.hits, this.geoType, options));
-          });
       });
     };
 

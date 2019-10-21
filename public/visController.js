@@ -85,21 +85,24 @@ define(function (require) {
             return;
           };
 
-          const draggedState = await kibiState.getState(dashboardId);
-          draggedState.query = draggedState.queries;
-          delete draggedState.queries;
-          draggedState.index = await indexPatterns.get(draggedState.index);
+          let dragAndDropPoiLayer = await kibiState.getState(dashboardId);
 
-          const options = { layerGroup: '<b>Drag and Drop Overlays</b>' };
-          const dragAndDropPoiLayer = { savedSearchId, draggedState, options };
+          dragAndDropPoiLayer.savedSearchId = savedSearchId;
+          dragAndDropPoiLayer.draggedState = {
+            filters: dragAndDropPoiLayer.filters,
+            query: dragAndDropPoiLayer.queries,
+            index: await indexPatterns.get(dragAndDropPoiLayer.index),
+            savedSearchId: savedSearchId
+          };
+          dragAndDropPoiLayer.layerGroup = '<b> Drag and Drop Overlays </b>';
 
           // initialize on drop
           initPOILayer(dragAndDropPoiLayer);
 
-          // store the layer so it will rerender with ES response watcher
+          // placehoder for storing layer so it will rerender with ES response watcher
           // CHANGE WHERE THIS IS STORED FOR SCOPE SAVING
-          $scope.vis.params.overlays
-            .dragAndDropPoiLayers[dragAndDropPoiLayer.savedSearchId] = dragAndDropPoiLayer;
+          // $scope.vis.params.overlays
+          //   .dragAndDropPoiLayers[dragAndDropPoiLayer.savedSearchId] = dragAndDropPoiLayer;
         };
       }
     };
@@ -152,8 +155,8 @@ define(function (require) {
       const displayName = layerParams.displayName || layerParams.savedSearchLabel;
       const options = {
         displayName,
-        layerGroup: layerParams.options.layerGroup,
-        // color: _.get(layerParams, 'color', '#008800'),
+        layerGroup: layerParams.layerGroup || '<b> POI Overlays </b> ',
+        color: layerParams.color,
         size: _.get(layerParams, 'markerSize', 'm'),
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
@@ -244,7 +247,7 @@ define(function (require) {
 
       //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-      $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(initPOILayer);
+      //$scope.vis.params.overlays.dragAndDropPoiLayers.forEach(initPOILayer);
     });
 
     $scope.$watch(
