@@ -118,18 +118,7 @@ define(function (require) {
             searchSource.index(this.draggedState.index);
             searchSource.query(this.draggedState.query[0]);
             const allFilters = this.draggedState.filters;
-
-            //The last element in this array is always the map extent filter
-            //of other dashboard, so it is removed
-            allFilters.pop();
-
-            /************************** */
-            // This is an option to add a filter for the current map extent
-            // Having difficulty saving the state, which is necessary in order
-            // to redraw the layers.
-            //allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-            /************************** */
-
+            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
             searchSource.filter(allFilters);
           } else {
             //Do not filter POIs by time so can not inherit from rootSearchSource
