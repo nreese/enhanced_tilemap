@@ -6,23 +6,23 @@ export const searchIcon = function (faIcon, color, size) {
   switch (size) {
     case 'xs':
       faIcon = `${faIcon} fa-xs`;
-      iconSize = [30,30];
+      iconSize = [15,15];
       break;
     case 's':
       faIcon = `${faIcon} fa-lg`;
-      iconSize = [50,50];
+      iconSize = [25,25];
       break;
     case 'm':
       faIcon = `${faIcon} fa-2x`;
-      iconSize = [80,80];
+      iconSize = [40,40];
       break;
     case 'l':
       faIcon = `${faIcon} fa-5x`;
-      iconSize = [200,200];
+      iconSize = [80,80];
       break;
     case 'xl':
       faIcon = `${faIcon} fa-10x`;
-      iconSize = [300,300];
+      iconSize = [160,160];
       break;
   }
 
