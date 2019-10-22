@@ -89,11 +89,11 @@ define(function (require) {
           options.displayName = options.displayName || savedSearch.title;
 
           // geo_shape color search color used for drag and drop or geo_point types
-          options.color = _.get(options, 'color', savedSearch.siren.ui.color);
           options.searchIcon = savedSearch.siren.ui.icon;
 
           let searchIcon;
           if (this.geoType === 'geo_point') {
+            options.color = savedSearch.siren.ui.color;
             searchIcon = `<i class="${options.searchIcon}" style="color:${savedSearch.siren.ui.color};"></i>`;
           } else {
             //use square icon for geo_shape fields
@@ -157,7 +157,11 @@ define(function (require) {
               //Too many documents warning for each specific layer
               options.$legend.tooManyDocsInfo = '';
 
-              options.$legend.searchIcon = `${searchIcon} (Total on map: ${searchResp.hits.hits.length})`;
+              if (this.draggedState) {
+                options.$legend.searchIcon = `${options.displayName} ${searchIcon} (Total on map: ${searchResp.hits.hits.length})`;
+              } else {
+                options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
+              }
 
               if (searchResp.hits.total > this.limit) {
                 options.$legend.innerHTML = tooManyDocsInfo[0];

@@ -249,8 +249,6 @@ define(function (require) {
     TileMapMap.prototype.addPOILayer = function (layerName, layer, layerGroup) {
       let isVisible = true;
 
-      layerName = `${layerName} ${layer.$legend.searchIcon}`;
-
       //remove layer if it already exists
       //this is required on page load with the option to have user defined POI user
       //name in edit mode as there are two watchers, i.e. vis.params and esResponse

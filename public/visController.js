@@ -44,6 +44,7 @@ define(function (require) {
     $scope.flags = {};
 
     backwardsCompatible.updateParams($scope.vis.params);
+    //createDragAndDropPoiLayers();
     appendMap();
     modifyToDsl();
     setTooltipFormatter($scope.vis.params.tooltip);
@@ -99,11 +100,17 @@ define(function (require) {
           // initialize on drop
           initPOILayer(dragAndDropPoiLayer);
 
-          // placehoder for storing layer so it will rerender with ES response watcher
-          // CHANGE WHERE THIS IS STORED FOR SCOPE SAVING
-          // $scope.vis.params.overlays
-          //   .dragAndDropPoiLayers[dragAndDropPoiLayer.savedSearchId] = dragAndDropPoiLayer;
+          //create drag and drop Poi layers array if one doesn't exist
+          createDragAndDropPoiLayers();
+          $scope.vis.params.overlays.dragAndDropPoiLayers.push(dragAndDropPoiLayer);
+
         };
+      }
+    };
+
+    function createDragAndDropPoiLayers() {
+      if (!$scope.vis.params.overlays.dragAndDropPoiLayers) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers = [];
       }
     };
 
@@ -172,7 +179,7 @@ define(function (require) {
       }
 
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(layer.displayName, layer, layer.layerGroup);
+        map.addPOILayer(layer.$legend.searchIcon, layer, layer.layerGroup);
       });
     }
 
