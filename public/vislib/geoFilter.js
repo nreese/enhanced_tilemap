@@ -19,12 +19,8 @@ define(function (require) {
     const geoFilterHelper = require('./geoFilterHelper');
 
     function filterAlias(field, numBoxes) {
-      if (numBoxes === 1) {
-        return field + ': ' + numBoxes + ' shape';
-      } else {
-        return field + ': ' + numBoxes + ' shapes';
-      }
-    }
+      return `${field}: ${numBoxes} ${numBoxes === 1 ? 'shape' : 'shapes'}`;
+    };
 
     function _createPolygonFilter(polygonsToFilter) {
       return {
@@ -43,18 +39,14 @@ define(function (require) {
         polygonFiltersAndDonuts = geoFilterHelper.analyseMultiPolygon(polygons, field);
         numShapes = polygons.length;
         newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
-      } else if (newFilter.geo_polygon) {
+      } else if (newFilter.geo_polygon && newFilter.geo_polygon[field].polygons) {
         //Only analyse vector geo polygons, i.e. not drawn ones
-        if (newFilter.geo_polygon[field].polygons) {
-          polygonFiltersAndDonuts = geoFilterHelper.analyseSimplePolygon(newFilter, field);
-          newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
-        };
+        polygonFiltersAndDonuts = geoFilterHelper.analyseSimplePolygon(newFilter, field);
+        newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
       };
 
       //add all donuts
-      if (polygonFiltersAndDonuts &&
-        polygonFiltersAndDonuts.donutsToExclude &&
-        polygonFiltersAndDonuts.donutsToExclude.length >= 1) {
+      if (_.get(polygonFiltersAndDonuts, 'donutsToExclude.length') >= 1) {
         numShapes += polygonFiltersAndDonuts.donutsToExclude.length;
         newFilter.bool.must_not = polygonFiltersAndDonuts.donutsToExclude;
       };
@@ -146,7 +138,7 @@ define(function (require) {
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          if (newFilter.meta && newFilter.meta._siren && newFilter.meta._siren.vis) {
+          if (_.get(newFilter, 'meta._siren.vis')) {
             const filterVisMeta = filter.meta._siren.vis;
             const newFilterVisMeta = newFilter.meta._siren.vis;
             if (filter.meta.index === indexPatternId &&
