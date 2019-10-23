@@ -31,6 +31,8 @@ define(function (require) {
      * Turns saved search results into easily consumible data for leaflet.
      */
     function POIs(params) {
+      this.params = params;
+      this.isInitialDragAndDrop = params.isInitialDragAndDrop;
       this.savedSearchId = params.savedSearchId;
       this.draggedState = params.draggedState;
       this.geoField = params.geoField || undefined;
@@ -91,6 +93,10 @@ define(function (require) {
           // geo_shape color search color used for drag and drop or geo_point types
           options.searchIcon = savedSearch.siren.ui.icon;
 
+          if (this.draggedState) {
+            options.color = savedSearch.siren.ui.color;
+          };
+
           let searchIcon;
           if (this.geoType === 'geo_point') {
             options.color = savedSearch.siren.ui.color;
@@ -107,17 +113,30 @@ define(function (require) {
 
           const searchSource = new SearchSource();
 
-          if (this.syncFilters) {
+          if (this.draggedState) {
+            //For drag and drop overlays
+            if (this.isInitialDragAndDrop) {
+              //Use filters from search drag and drop
+              searchSource.inherits(false);
+              searchSource.index(this.draggedState.index);
+              searchSource.query(this.draggedState.query[0]);
+              const allFilters = this.draggedState.filters;
+              allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+              searchSource.filter(allFilters);
+            } else {
+              //When drag and drop layer already exists, i.e. ES response watcher
+              searchSource.inherits(false);
+              searchSource.index(this.params.draggedStateInitial.index);
+              searchSource.query(this.params.draggedStateInitial.query[0]);
+              const allFilters = this.params.draggedStateInitial.filters;
+              allFilters.pop(); // remove previous map extent filter
+              allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+              searchSource.filter(allFilters);
+            }
+            //for vis params overlays
+          } else if (this.syncFilters) {
             searchSource.inherits(savedSearch.searchSource);
             const allFilters = queryFilter.getFilters();
-            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-            searchSource.filter(allFilters);
-          } else if (this.draggedState) {
-            //Use filters from search of other dashboard if drag and drop
-            searchSource.inherits(false);
-            searchSource.index(this.draggedState.index);
-            searchSource.query(this.draggedState.query[0]);
-            const allFilters = this.draggedState.filters;
             allFilters.push(createMapExtentFilter(options.mapExtentFilter));
             searchSource.filter(allFilters);
           } else {
@@ -158,14 +177,30 @@ define(function (require) {
               options.$legend.tooManyDocsInfo = '';
 
               if (this.draggedState) {
-                options.$legend.searchIcon = `${options.displayName} ${searchIcon} (Total on map: ${searchResp.hits.hits.length})`;
+                if (this.isInitialDragAndDrop) {
+                  options.$legend.searchIcon =
+                    `<b>${options.displayName}</b> from <b>${this.params.savedDashboardTitle}</b> ${searchIcon}`;
+                } else {
+                  options.$legend.searchIcon =
+                    `<b>${options.displayName}</b> from <b>${this.params.savedDashboardTitleInitial}</b> ${searchIcon}`;
+                };
               } else {
                 options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
-              }
+              };
 
               if (searchResp.hits.total > this.limit) {
                 options.$legend.innerHTML = tooManyDocsInfo[0];
                 options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+              };
+
+              //Storing this information on the params object for use
+              //in ES Response watcher
+              if (this.isInitialDragAndDrop) {
+                this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
+                this.params.draggedStateInitial = this.params.draggedState;
+                this.params.geoField = this.geoField;
+                this.params.geoType = this.geoType;
+                this.params.displayName = options.displayName;
               };
 
               callback(self._createLayer(searchResp.hits.hits, this.geoType, options));
@@ -174,7 +209,7 @@ define(function (require) {
 
         const geoFieldSelectModal = () => {
 
-          if (geoFields.length >= 2) {
+          if (geoFields.length >= 2 && this.isInitialDragAndDrop) {
 
             this.options = [];
             _.each(geoFields, geoField => {

@@ -21,7 +21,7 @@ define(function (require) {
   ]);
 
   module.controller('KbnEnhancedTilemapVisController', function (
-    kibiState, savedDashboards, dashboardGroups,
+    kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout,
     Private, courier, config, getAppState, indexPatterns, $http, $injector) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
@@ -44,7 +44,7 @@ define(function (require) {
     $scope.flags = {};
 
     backwardsCompatible.updateParams($scope.vis.params);
-    //createDragAndDropPoiLayers();
+    createDragAndDropPoiLayers();
     appendMap();
     modifyToDsl();
     setTooltipFormatter($scope.vis.params.tooltip);
@@ -95,8 +95,9 @@ define(function (require) {
             index: await indexPatterns.get(dragAndDropPoiLayer.index),
             savedSearchId: savedSearchId
           };
+          dragAndDropPoiLayer.savedDashboardTitle = savedDashboard.lastSavedTitle;
           dragAndDropPoiLayer.layerGroup = '<b> Drag and Drop Overlays </b>';
-
+          dragAndDropPoiLayer.isInitialDragAndDrop = true;
           // initialize on drop
           initPOILayer(dragAndDropPoiLayer);
 
@@ -254,7 +255,12 @@ define(function (require) {
 
       //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-      //$scope.vis.params.overlays.dragAndDropPoiLayers.forEach(initPOILayer);
+
+      //Drag and Drop POI Overlays - no need to clear all layers for this watcher
+      $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
+        dragAndDrop.isInitialDragAndDrop = false;
+        initPOILayer(dragAndDrop);
+      });
     });
 
     $scope.$watch(
@@ -538,10 +544,16 @@ define(function (require) {
       addPOILayerFromDashboardWithModal(dashboardId);
     });
 
-    kibiState.on('drag_on_graph', (showDropHover, dashHasSearch) => {
-      $scope.showDropHover = showDropHover;
-      $scope.showDropMessage = dashHasSearch;
-    });
+    kibiState.on('drag_on_graph', async (showDropHover, dashHasSearch, dashboardId) => {
+      const savedDashboard = await savedDashboards.get(dashboardId);
+      const savedSearchId = savedDashboard.getMainSavedSearchId();
 
+      const savedSearch = await savedSearches.get(savedSearchId);
+      const fieldWithGeo = _.get(savedSearch, 'searchSource._state.index.fields', [])
+        .find(field => (field.esType === 'geo_point' || field.esType === 'geo_shape') && dashHasSearch);
+
+      $scope.showDropHover = showDropHover;
+      $scope.showDropMessage = !!fieldWithGeo;
+    });
   });
 });
