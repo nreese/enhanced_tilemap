@@ -46,9 +46,7 @@ define(function (require) {
       };
 
       //add all donuts
-      if (polygonFiltersAndDonuts &&
-        polygonFiltersAndDonuts.donutsToExclude &&
-        polygonFiltersAndDonuts.donutsToExclude.length >= 1) {
+      if (_.get(polygonFiltersAndDonuts, 'donutsToExclude.length') >= 1) {
         numShapes += polygonFiltersAndDonuts.donutsToExclude.length;
         newFilter.bool.must_not = polygonFiltersAndDonuts.donutsToExclude;
       };
@@ -140,7 +138,7 @@ define(function (require) {
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          if (newFilter.meta && newFilter.meta._siren && newFilter.meta._siren.vis) {
+          if (_.get(newFilter, 'meta._siren.vis')) {
             const filterVisMeta = filter.meta._siren.vis;
             const newFilterVisMeta = newFilter.meta._siren.vis;
             if (filter.meta.index === indexPatternId &&

@@ -7,6 +7,10 @@ function createFilters(polygons, field) {
   const polygonLocation = {};
   const geoDonut = {};
   const donutLocation = {};
+
+  //creation of donuts to exclude and polygons to include documents from
+  //geoJson spec states that index 0 is exterior polygon and
+  //any additional arrays are donuts in the exterior polygon
   for (let i = 0; i < polygons.length; i++) {
     if (i === 0) {
       polygonLocation[field] = { points: polygons[i] };
@@ -17,28 +21,24 @@ function createFilters(polygons, field) {
       geoDonut.geo_polygon = donutLocation;
       donutExclusions.push(geoDonut);
     };
-    return {
-      polygonFilters,
-      donutExclusions
-    };
+  };
+  return {
+    polygonFilters,
+    donutExclusions
   };
 };
 
 module.exports = {
 
   analyseMultiPolygon: function (polygons, field) {
-    const polygonFilters = [];
-    const donutExclusions = [];
+    let polygonFilters = [];
+    let donutExclusions = [];
     _.each(polygons, polygon => {
 
-      //creation of donuts to exclude and polygons to include documents from
-      //geoJson spec states that index 0 is exterior polygon and
-      //any additional arrays are donuts in the exterior polygon
-      for (let i = 0; i < polygon.length; i++) {
-        const filters = createFilters(polygon, field);
-        polygonFilters.concat(filters.polygonsFilters);
-        donutExclusions.concat(filters.donutExclusions);
-      }
+
+      const filters = createFilters(polygon, field);
+      polygonFilters = polygonFilters.concat(filters.polygonFilters);
+      donutExclusions = donutExclusions.concat(filters.donutExclusions);
     });
     return {
       polygonsToFilter: polygonFilters,
