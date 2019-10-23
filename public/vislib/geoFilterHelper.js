@@ -1,6 +1,31 @@
 const _ = require('lodash');
 
+function createFilters(polygons, field) {
+  const polygonFilters = [];
+  const donutExclusions = [];
+  const geoPolygon = {};
+  const polygonLocation = {};
+  const geoDonut = {};
+  const donutLocation = {};
+  for (let i = 0; i < polygons.length; i++) {
+    if (i === 0) {
+      polygonLocation[field] = { points: polygons[i] };
+      geoPolygon.geo_polygon = polygonLocation;
+      polygonFilters.push(geoPolygon);
+    } else {
+      donutLocation[field] = { points: polygons[i] };
+      geoDonut.geo_polygon = donutLocation;
+      donutExclusions.push(geoDonut);
+    };
+    return {
+      polygonFilters,
+      donutExclusions
+    };
+  };
+};
+
 module.exports = {
+
   analyseMultiPolygon: function (polygons, field) {
     const polygonFilters = [];
     const donutExclusions = [];
@@ -10,19 +35,9 @@ module.exports = {
       //geoJson spec states that index 0 is exterior polygon and
       //any additional arrays are donuts in the exterior polygon
       for (let i = 0; i < polygon.length; i++) {
-        const geoPolygon = {};
-        const polygonLocation = {};
-        const geoDonut = {};
-        const donutLocation = {};
-        if (i === 0) {
-          polygonLocation[field] = { points: polygon[i] };
-          geoPolygon.geo_polygon = polygonLocation;
-          polygonFilters.push(geoPolygon);
-        } else {
-          donutLocation[field] = { points: polygon[i] };
-          geoDonut.geo_polygon = donutLocation;
-          donutExclusions.push(geoDonut);
-        }
+        const filters = createFilters(polygon, field);
+        polygonFilters.concat(filters.polygonsFilters);
+        donutExclusions.concat(filters.donutExclusions);
       }
     });
     return {
@@ -32,30 +47,11 @@ module.exports = {
   },
 
   analyseSimplePolygon: function (newFilter, field) {
-    const polygonFilters = [];
-    const donutExclusions = [];
-    const geoPolygon = {};
-    const polygonLocation = {};
-    const geoDonut = {};
-    const donutLocation = {};
-
     const polygons = newFilter.geo_polygon[field].polygons;
-
-    for (let i = 0; i < polygons.length; i++) {
-      if (i === 0) {
-        polygonLocation[field] = { points: polygons[i] };
-        geoPolygon.geo_polygon = polygonLocation;
-        polygonFilters.push(geoPolygon);
-      } else if (polygons.length > 1) {
-        donutLocation[field] = { points: polygons[i] };
-        geoDonut.geo_polygon = donutLocation;
-        donutExclusions.push(geoDonut);
-      };
-    };
+    const filters = createFilters(polygons, field);
     return {
-      polygonsToFilter: polygonFilters,
-      donutsToExclude: donutExclusions
+      polygonsToFilter: filters.polygonFilters,
+      donutsToExclude: filters.donutExclusions
     };
   }
-
 };
