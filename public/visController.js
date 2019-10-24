@@ -180,7 +180,7 @@ define(function (require) {
       }
 
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(layer.$legend.searchIcon, layer, layer.layerGroup);
+        map.addPOILayer(layer.$legend.searchIcon, layer, layer.layerGroup, layer.close);
       });
     }
 

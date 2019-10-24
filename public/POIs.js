@@ -94,6 +94,7 @@ define(function (require) {
           options.searchIcon = savedSearch.siren.ui.icon;
 
           if (this.draggedState) {
+            options.close = true;
             options.color = savedSearch.siren.ui.color;
           };
 
@@ -378,6 +379,7 @@ define(function (require) {
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
+      layer.close = options.close;
       layer.displayName = options.displayName;
       layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;

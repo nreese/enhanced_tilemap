@@ -69,8 +69,8 @@ L.Control.GroupedLayers = L.Control.extend({
     return this;
   },
 
-  addOverlay: function (layer, name, group) {
-    this._addLayer(layer, name, group, true);
+  addOverlay: function (layer, name, group, close) {
+    this._addLayer(layer, name, group, true, close);
     this._update();
     return this;
   },
@@ -141,13 +141,14 @@ L.Control.GroupedLayers = L.Control.extend({
     container.appendChild(form);
   },
 
-  _addLayer: function (layer, name, group, overlay) {
+  _addLayer: function (layer, name, group, overlay, close) {
     let id = L.Util.stamp(layer);
 
     let _layer = {
       layer: layer,
       name: name,
-      overlay: overlay
+      overlay: overlay,
+      close
     };
     this._layers.push(_layer);
 
@@ -232,6 +233,10 @@ L.Control.GroupedLayers = L.Control.extend({
     return radioFragment.firstChild;
   },
 
+  _removeLayerOnClick: function (layer) {
+    this.removeLayer(layer);
+  },
+
   _addItem: function (obj) {
     let label = document.createElement('label'),
       input,
@@ -262,6 +267,18 @@ L.Control.GroupedLayers = L.Control.extend({
 
     label.appendChild(input);
     label.appendChild(name);
+
+    if (obj.close) {
+      const closeButton = document.createElement('BUTTON');
+      closeButton.innerHTML = '<i class="fa fa-times-circle"></i>';
+
+      L.DomEvent.on(closeButton, 'click', () => {
+        this.removeLayer(obj.layer);
+        this._map.fire('removeClickedLayer' , obj);
+      });
+
+      label.appendChild(closeButton);
+    };
 
     if (obj.overlay) {
       container = this._overlaysList;
