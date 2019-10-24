@@ -35,7 +35,7 @@ var knownOptions = {
 };
 
 var options = minimist(process.argv.slice(2), knownOptions);
-var kibanaPluginDir = path.resolve(__dirname, options.kibanahomepath + '/siren_plugins/' + packageName);
+var kibanaPluginDir = path.resolve(__dirname, path.join(options.kibanahomepath, 'siren_plugins', packageName));
 
 
 function syncPluginTo(dest, done) {
@@ -75,22 +75,22 @@ function syncPluginTo(dest, done) {
         });
       });
     }))
-    .then(function () {
-      return new Promise(function (resolve, reject) {
-        mkdirp(path.join(buildTarget, 'node_modules'), function (err) {
-          if (err) return reject(err);
-          resolve();
+      .then(function () {
+        return new Promise(function (resolve, reject) {
+          mkdirp(path.join(buildTarget, 'node_modules'), function (err) {
+            if (err) return reject(err);
+            resolve();
+          });
         });
-      });
-    })
-    .then(function () {
-      spawn('npm', ['install', '--production'], {
-        cwd: dest,
-        stdio: 'inherit'
       })
-      .on('close', done);
-    })
-    .catch(done);
+      .then(function () {
+        spawn('npm', ['install', '--production'], {
+          cwd: dest,
+          stdio: 'inherit'
+        })
+          .on('close', done);
+      })
+      .catch(done);
   });
 }
 
@@ -118,8 +118,8 @@ gulp.task('lint', function (done) {
     '!public/vislib/**',
     '!**/webpackShims/**'
   ]).pipe(eslint(eslintOptions))
-  .pipe(eslint.formatEach())
-  .pipe(eslint.failOnError());
+    .pipe(eslint.formatEach())
+    .pipe(eslint.failOnError());
 });
 
 gulp.task('clean', function (done) {
@@ -133,44 +133,44 @@ gulp.task('clean', function (done) {
   }).nodeify(done);
 });
 
-gulp.task('build', ['clean'], function (done) {
+gulp.task('build', gulp.series('clean', function (done) {
   syncPluginTo(buildTarget, done);
-});
+}));
 
-gulp.task('package', ['build'], function (done) {
+gulp.task('package', gulp.series('build', function (done) {
   return gulp.src([
     path.join(buildDir, '**', '*')
   ])
-  .pipe(zip(packageName + '.zip'))
-  .pipe(gulp.dest(targetDir));
-});
+    .pipe(zip(packageName + '.zip'))
+    .pipe(gulp.dest(targetDir));
+}));
 
-gulp.task('dev', ['sync'], function (done) {
+gulp.task('dev', gulp.series('sync', function (done) {
   gulp.watch([
     'package.json',
     'index.js',
     'public/**/*'
-  ], ['sync', 'lint']);
-});
+  ], gulp.series('sync', 'lint'));
+}));
 
-gulp.task('test', ['sync'], function (done) {
+gulp.task('test', gulp.series('sync', function (done) {
   spawn('grunt', [ 'test:browser', '--grep=Kibi Enhanced Tilemap'], {
     cwd: options.kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
-});
+}));
 
-gulp.task('testdev', ['sync'], function (done) {
+gulp.task('testdev', gulp.series('sync', function (done) {
   spawn('grunt', ['test:dev', '--browser=Chrome', '--kbnServer.ignoreDevYml'], {
     cwd: options.kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
-});
+}));
 
-gulp.task('coverage', ['sync'], function (done) {
+gulp.task('coverage', gulp.series('sync', function (done) {
   spawn('grunt', ['test:coverage', '--grep=Kibi Enhanced Tilemap'], {
     cwd: options.kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
-});
+}));
 
