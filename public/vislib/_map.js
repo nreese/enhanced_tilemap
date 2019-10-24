@@ -682,7 +682,7 @@ define(function (require) {
      */
     TileMapMap.prototype._getDataRectangles = function () {
       if (!this._geoJson) return [];
-      return _.pluck(this._geoJson.features, 'properties.rectangle');
+      return _.map(this._geoJson.features, 'properties.rectangle');
     };
     return TileMapMap;
   };

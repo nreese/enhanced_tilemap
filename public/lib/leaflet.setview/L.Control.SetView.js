@@ -97,7 +97,7 @@ L.SetViewToolbar = L.Class.extend({
       .on(input, 'dblclick', L.DomEvent.stopPropagation)
     if (options.callback) {
       L.DomEvent
-        .on(input, 'change');
+        .on(input, 'change', this.clickEvent.callback);
     }
     return input;
   },
@@ -126,7 +126,7 @@ L.SetViewToolbar = L.Class.extend({
       .off(button, 'mousedown', L.DomEvent.stopPropagation)
       .off(button, 'dblclick', L.DomEvent.stopPropagation)
       .off(button, 'click', L.DomEvent.preventDefault)
-      .off(button, 'click', this.clickEvent.callback, this.clickEvent.context);
+      .off(button, 'click', this.clickEvent.callback);
   },
   _hideActionsToolbar: function () {
     this._actionsContainer.style.display = 'none';
