@@ -197,6 +197,7 @@ define(function (require) {
               //Storing this information on the params object for use
               //in ES Response watcher
               if (this.isInitialDragAndDrop) {
+                this.params.searchIcon = options.$legend.searchIcon;
                 this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
                 this.params.draggedStateInitial = this.params.draggedState;
                 this.params.geoField = this.geoField;

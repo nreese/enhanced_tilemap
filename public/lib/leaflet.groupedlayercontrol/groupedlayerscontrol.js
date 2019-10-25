@@ -233,10 +233,6 @@ L.Control.GroupedLayers = L.Control.extend({
     return radioFragment.firstChild;
   },
 
-  _removeLayerOnClick: function (layer) {
-    this.removeLayer(layer);
-  },
-
   _addItem: function (obj) {
     let label = document.createElement('label'),
       input,
@@ -268,13 +264,15 @@ L.Control.GroupedLayers = L.Control.extend({
     label.appendChild(input);
     label.appendChild(name);
 
+    //adding close button
     if (obj.close) {
       const closeButton = document.createElement('BUTTON');
-      closeButton.innerHTML = '<i class="fa fa-times-circle"></i>';
+
+      closeButton.innerHTML = '<i class="fas fa-times-square"></i>';
 
       L.DomEvent.on(closeButton, 'click', () => {
         this.removeLayer(obj.layer);
-        this._map.fire('removeClickedLayer' , obj);
+        this._map.fire('groupLayerControl:removeClickedLayer', obj);
       });
 
       label.appendChild(closeButton);

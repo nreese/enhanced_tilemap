@@ -469,7 +469,7 @@ define(function (require) {
     TileMapMap.prototype._attachEvents = function () {
       const self = this;
 
-      this.map.on('removeClickedLayer', (e) => {
+      this.map.on('groupLayerControl:removeClickedLayer', (e) => {
         const layerName = e.name;
         if (_.has(this._poiLayers, layerName)) {
           const layer = this._poiLayers[layerName];

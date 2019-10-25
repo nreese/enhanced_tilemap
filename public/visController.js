@@ -242,6 +242,13 @@ define(function (require) {
       }
     });
 
+    map.map.on('groupLayerControl:removeClickedLayer', function (e) {
+      $scope.vis.params.overlays.dragAndDropPoiLayers =
+      _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
+        return dragAndDropPoiLayer.searchIcon !== e.name;
+      });
+    });
+
     $scope.$listen(queryFilter, 'update', function () {
       setTooltipFormatter($scope.vis.params.tooltip);
     });
