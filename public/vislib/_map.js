@@ -246,7 +246,7 @@ define(function (require) {
       });
     };
 
-    TileMapMap.prototype.addPOILayer = function (layerName, layer, layerGroup, close) {
+    TileMapMap.prototype.addPOILayer = function (layerName, layer, layerGroup, options) {
       let isVisible = true;
 
       //remove layer if it already exists
@@ -272,9 +272,9 @@ define(function (require) {
 
       const toomanydocslayername = layerName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
       if (tooManyDocs.warningIcon) {
-        this._layerControl.addOverlay(layer, toomanydocslayername, layerGroup || '<b> POI Overlays</b>', close);
+        this._layerControl.addOverlay(layer, toomanydocslayername, layerGroup || '<b> POI Overlays</b>', options);
       } else {
-        this._layerControl.addOverlay(layer, layerName, layerGroup || '<b> POI Overlays</b>', close);
+        this._layerControl.addOverlay(layer, layerName, layerGroup || '<b> POI Overlays</b>', options);
       }
 
       this._poiLayers[layerName] = layer;

@@ -15,6 +15,10 @@
 
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
+
+const $ = require('jquery');
+const _ = require('lodash');
+
 L.Control.GroupedLayers = L.Control.extend({
 
   options: {
@@ -69,8 +73,8 @@ L.Control.GroupedLayers = L.Control.extend({
     return this;
   },
 
-  addOverlay: function (layer, name, group, close) {
-    this._addLayer(layer, name, group, true, close);
+  addOverlay: function (layer, name, group, options) {
+    this._addLayer(layer, name, group, true, options);
     this._update();
     return this;
   },
@@ -141,14 +145,16 @@ L.Control.GroupedLayers = L.Control.extend({
     container.appendChild(form);
   },
 
-  _addLayer: function (layer, name, group, overlay, close) {
+  _addLayer: function (layer, name, group, overlay, options) {
     let id = L.Util.stamp(layer);
 
     let _layer = {
       layer: layer,
       name: name,
       overlay: overlay,
-      close
+      filterPopupContent: _.get(options, 'filterPopupContent', undefined),
+      close: _.get(options, 'close', undefined),
+      tooManyDocs: _.get(options, 'tooManyDocs', false)
     };
     this._layers.push(_layer);
 
@@ -234,6 +240,39 @@ L.Control.GroupedLayers = L.Control.extend({
   },
 
   _addItem: function (obj) {
+
+    function addTooltip(event, filterPopupContent) {
+      const tooltipContent = filterPopupContent;
+      const selector = $(event.target);
+      const api = selector.qtip('api');
+      if (api) {
+        // qtip already exists
+        api.show();
+      } else {
+        selector.qtip({
+          content: {
+            text: function () {
+              return tooltipContent;
+            }
+          },
+          position: {
+            my: 'top right',
+            at: 'left bottom',
+            effect: false
+          },
+          show: {
+            solo: true
+          },
+          hide: {
+            event: 'mouseleave'
+          },
+          style: {
+            classes: 'qtip-light qtip-rounded qtip-shadow dashboard-filter-tooltip'
+          }
+        }).qtip('show');
+      }
+    };
+
     let label = document.createElement('label'),
       input,
       checked = this._map.hasLayer(obj.layer),
@@ -264,18 +303,41 @@ L.Control.GroupedLayers = L.Control.extend({
     label.appendChild(input);
     label.appendChild(name);
 
+    //adding filters and popup
+    if (obj.filterPopupContent) {
+      const filterPopup = document.createElement('span');
+      filterPopup.innerHTML = `<i class="fa fa-filter"></i>`;
+
+      L.DomEvent.on(filterPopup, 'mouseover', (e) => {
+        addTooltip(e, obj.filterPopupContent);
+      });
+
+      label.appendChild(filterPopup);
+    };
+
     //adding close button
     if (obj.close) {
       const closeButton = document.createElement('BUTTON');
-
       closeButton.innerHTML = '<i class="fas fa-times-square"></i>';
-
       L.DomEvent.on(closeButton, 'click', () => {
         this.removeLayer(obj.layer);
         this._map.fire('groupLayerControl:removeClickedLayer', obj);
       });
-
       label.appendChild(closeButton);
+
+    };
+
+    //adding warning icon for too many documents
+    if (obj.tooManyDocs) {
+      const warningIcon = document.createElement('span');
+      const tooManyDocsInfo = [
+        `<i class="fa fa-exclamation-triangle"></i>`,
+        `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
+                                        to having reached the limit currently set to: ${obj.tooManyDocs}</b>`
+      ];
+      warningIcon.innerHTML = ` ${tooManyDocsInfo[0]} ${tooManyDocsInfo[1]}`;
+      label.appendChild(warningIcon);
+
     };
 
     if (obj.overlay) {

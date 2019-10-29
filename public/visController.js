@@ -22,7 +22,7 @@ define(function (require) {
 
   module.controller('KbnEnhancedTilemapVisController', function (
     kibiState, savedSearches, savedDashboards, dashboardGroups,
-    $scope, $rootScope, $element, $timeout,
+    $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -180,7 +180,12 @@ define(function (require) {
       }
 
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(layer.$legend.searchIcon, layer, layer.layerGroup, layer.close);
+        const options = {
+          filterPopupContent: layer.filterPopupContent,
+          close: layer.close,
+          tooManyDocs: layer.tooManyDocs
+        };
+        map.addPOILayer(layer.$legend.searchIcon, layer, layer.layerGroup, options);
       });
     }
 
@@ -244,9 +249,9 @@ define(function (require) {
 
     map.map.on('groupLayerControl:removeClickedLayer', function (e) {
       $scope.vis.params.overlays.dragAndDropPoiLayers =
-      _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
-        return dragAndDropPoiLayer.searchIcon !== e.name;
-      });
+        _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
+          return dragAndDropPoiLayer.searchIcon !== e.name;
+        });
     });
 
     $scope.$listen(queryFilter, 'update', function () {

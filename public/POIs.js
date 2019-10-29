@@ -19,7 +19,7 @@ import {
 } from '@elastic/eui';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches) {
+  return function POIsFactory(Private, savedSearches, joinExplanation) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -122,6 +122,13 @@ define(function (require) {
               searchSource.index(this.draggedState.index);
               searchSource.query(this.draggedState.query[0]);
               const allFilters = this.draggedState.filters;
+
+              //adding html of filters from dragged dashboard
+              Promise.resolve(joinExplanation.constructFilterIconMessage(allFilters, this.draggedState.query))
+                .then(filterPopupContent => {
+                  options.filterPopupContent = filterPopupContent;
+                });
+
               allFilters.push(createMapExtentFilter(options.mapExtentFilter));
               searchSource.filter(allFilters);
             } else {
@@ -133,6 +140,7 @@ define(function (require) {
               allFilters.pop(); // remove previous map extent filter
               allFilters.push(createMapExtentFilter(options.mapExtentFilter));
               searchSource.filter(allFilters);
+              options.filterPopupContent = this.params.filterPopupContent; //adding filter popup content from drop
             }
             //for vis params overlays
           } else if (this.syncFilters) {
@@ -162,11 +170,7 @@ define(function (require) {
             poiLimitToDisplay = 1000;
           }
 
-          const tooManyDocsInfo = [
-            `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
-            `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                            to having reached the limit currently set to: ${poiLimitToDisplay}</b>`
-          ];
+          const tooManyDocsInfo = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
 
           //Removal of previous too many documents warning when map is changed to a new extent
           options.$legend.innerHTML = '';
@@ -174,29 +178,23 @@ define(function (require) {
           searchSource.fetch()
             .then(searchResp => {
 
-              //Too many documents warning for each specific layer
-              options.$legend.tooManyDocsInfo = '';
-
-              if (this.draggedState) {
-                if (this.isInitialDragAndDrop) {
-                  options.$legend.searchIcon =
-                    `<b>${options.displayName}</b> from <b>${this.params.savedDashboardTitle}</b> ${searchIcon}`;
-                } else {
-                  options.$legend.searchIcon =
-                    `<b>${options.displayName}</b> from <b>${this.params.savedDashboardTitleInitial}</b> ${searchIcon}`;
-                };
-              } else {
-                options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
+              if (searchResp.hits.total > this.limit) {
+                options.$legend.innerHTML = tooManyDocsInfo;
+                options.tooManyDocs = this.limit;
               };
 
-              if (searchResp.hits.total > this.limit) {
-                options.$legend.innerHTML = tooManyDocsInfo[0];
-                options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+              //Too many documents warning for each specific layer
+              options.$legend.tooManyDocsInfo = '';
+              if (this.draggedState) {
+                options.$legend.searchIcon = `<i>${options.displayName}</i> ${searchIcon}`;
+              } else {
+                options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
               };
 
               //Storing this information on the params object for use
               //in ES Response watcher
               if (this.isInitialDragAndDrop) {
+                this.params.filterPopupContent = options.filterPopupContent;
                 this.params.searchIcon = options.$legend.searchIcon;
                 this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
                 this.params.draggedStateInitial = this.params.draggedState;
@@ -380,6 +378,8 @@ define(function (require) {
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
+      layer.tooManyDocs = options.tooManyDocs;
+      layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
       layer.displayName = options.displayName;
       layer.$legend = options.$legend;
