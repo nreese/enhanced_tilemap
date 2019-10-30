@@ -101,7 +101,7 @@ define(function (require) {
 
                 polygon.bindPopup(popup);
                 polygon.on('mouseover', self.addMouseOverPolygon);
-                polygon.on('mouseout', self.addMouseOverPolygon);
+                polygon.on('mouseout', self.addMouseOutPolygon);
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon' ||
