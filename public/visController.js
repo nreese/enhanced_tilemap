@@ -554,8 +554,9 @@ define(function (require) {
     // ============================
     // ==POI drag and drop events==
     // ============================
-    kibiState.on('drop_on_graph', dashboardId => {
-      addPOILayerFromDashboardWithModal(dashboardId);
+
+    kibiState.on('drop_on_graph', (dashboardId, droppedContainerId) => {
+      if ($scope.vis.id === droppedContainerId) addPOILayerFromDashboardWithModal(dashboardId);
     });
 
     kibiState.on('drag_on_graph', async (showDropHover, dashHasSearch, dashboardId) => {
