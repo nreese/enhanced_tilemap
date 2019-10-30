@@ -8,7 +8,7 @@ import {
 } from '@elastic/eui';
 import React from 'react';
 
-function modalWithForm(title, form, footer, onClose) {
+const modalWithForm = (title, form, footer, onClose) => {
   return (
     <EuiOverlayMask>
       <EuiModal

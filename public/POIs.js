@@ -6,8 +6,20 @@ import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
 
+//react modal
+import React from 'react';
+import { modalWithForm } from './vislib/modals/genericModal';
+import { render, unmountComponentAtNode } from 'react-dom';
+import {
+  EuiFormRow,
+  EuiSelect,
+  EuiButton,
+  EuiFlexGroup,
+  EuiFlexItem
+} from '@elastic/eui';
+
 define(function (require) {
-  return function POIsFactory(Private, savedSearches) {
+  return function POIsFactory(Private, savedSearches, joinExplanation) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -19,10 +31,11 @@ define(function (require) {
      * Turns saved search results into easily consumible data for leaflet.
      */
     function POIs(params) {
-      this.displayName = params.displayName;
-      this.savedSearchLabel = params.savedSearchLabel;
+      this.params = params;
+      this.isInitialDragAndDrop = params.isInitialDragAndDrop;
       this.savedSearchId = params.savedSearchId;
-      this.geoField = params.geoField;
+      this.draggedState = params.draggedState;
+      this.geoField = params.geoField || undefined;
       //remain backwards compatible
       if (!params.geoField && params.geoPointField) {
         this.geoField = params.geoPointField;
@@ -33,6 +46,17 @@ define(function (require) {
       this.limit = _.get(params, 'limit', 100);
       this.syncFilters = _.get(params, 'syncFilters', false);
     }
+
+    function getGeoFields(savedSearch) {
+      const geoFields = [];
+      savedSearch.searchSource._state.index.fields.forEach(field => {
+        if (field.esType === 'geo_point' ||
+          field.esType === 'geo_shape') {
+          geoFields.push({ type: field.esType, name: field.name });
+        }
+      });
+      return geoFields;
+    };
 
     const getParentWithClass = function (element, className) {
       let parent = element;
@@ -45,6 +69,7 @@ define(function (require) {
       return false;
     };
 
+
     /**
      * @param {options} options: styling options
      * @param {Function} callback(layer)
@@ -53,70 +78,223 @@ define(function (require) {
     POIs.prototype.getLayer = function (options, callback) {
       const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
-        const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+        const geoFields = getGeoFields(savedSearch);
 
-        //creating icon from search for map and layerControl
-        options.iconColor = savedSearch.siren.ui.color;
-        options.searchIcon = savedSearch.siren.ui.icon;
-        const searchIcon = `<i class="${options.searchIcon}" style="color:${options.iconColor};"></i>`;
-
-        function createMapExtentFilter(rect) {
-          const bounds = rect.geo_bounding_box.geoBoundingBox;
-          return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
+        if (geoFields.length === 1) {
+          this.geoField = geoFields[0].name;
+          this.geoType = geoFields[0].type;
         }
 
-        const searchSource = new SearchSource();
+        const processLayer = () => {
+          //creating icon and title from search for map and layerControl
+          options.displayName = options.displayName || savedSearch.title;
 
-        if (this.syncFilters) {
-          searchSource.inherits(savedSearch.searchSource);
-          const allFilters = queryFilter.getFilters();
-          allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-          searchSource.filter(allFilters);
-        } else {
-          //Do not filter POIs by time so can not inherit from rootSearchSource
-          searchSource.inherits(false);
-          searchSource.index(savedSearch.searchSource._state.index);
-          searchSource.query(savedSearch.searchSource.get('query'));
-          searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
-        }
-        searchSource.size(this.limit);
-        searchSource.source({
-          includes: _.compact(_.flatten([this.geoField, this.popupFields])),
-          excludes: []
-        });
+          // geo_shape color search color used for drag and drop or geo_point types
+          options.searchIcon = savedSearch.siren.ui.icon;
 
-        // assigning the placeholder value of 1000 POIs in the
-        // case where number in the limit field has been replaced with null
-        let poiLimitToDisplay;
-        if (this.limit) {
-          poiLimitToDisplay = this.limit;
-        } else {
-          poiLimitToDisplay = 1000;
-        }
+          if (this.draggedState) {
+            options.close = true;
+            options.color = savedSearch.siren.ui.color;
+          };
 
-        const tooManyDocsInfo = [
-          `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`,
-          `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                            to having reached the limit currently set to: ${poiLimitToDisplay}</b>`
-        ];
+          let searchIcon;
+          if (this.geoType === 'geo_point') {
+            options.color = savedSearch.siren.ui.color;
+            searchIcon = `<i class="${options.searchIcon}" style="color:${savedSearch.siren.ui.color};"></i>`;
+          } else {
+            //use square icon for geo_shape fields
+            searchIcon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+          };
 
-        //Removal of previous too many documents warning when map is changed to a new extent
-        options.$legend.innerHTML = '';
+          function createMapExtentFilter(rect) {
+            const bounds = rect.geo_bounding_box.geoBoundingBox;
+            return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
+          }
 
-        searchSource.fetch()
-          .then(searchResp => {
+          const searchSource = new SearchSource();
 
-            //Too many documents warning for each specific layer
-            options.$legend.tooManyDocsInfo = '';
-            options.$legend.searchIcon = searchIcon;
+          if (this.draggedState) {
+            //For drag and drop overlays
+            if (this.isInitialDragAndDrop) {
+              //Use filters from search drag and drop
+              searchSource.inherits(false);
+              searchSource.index(this.draggedState.index);
+              searchSource.query(this.draggedState.query[0]);
+              const allFilters = this.draggedState.filters;
 
-            if (searchResp.hits.total > this.limit) {
-              options.$legend.innerHTML = tooManyDocsInfo[0];
-              options.$legend.tooManyDocsInfo = tooManyDocsInfo;
+              //adding html of filters from dragged dashboard
+              Promise.resolve(joinExplanation.constructFilterIconMessage(allFilters, this.draggedState.query))
+                .then(filterPopupContent => {
+                  options.filterPopupContent = filterPopupContent;
+                });
+
+              allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+              searchSource.filter(allFilters);
+            } else {
+              //When drag and drop layer already exists, i.e. ES response watcher
+              searchSource.inherits(false);
+              searchSource.index(this.params.draggedStateInitial.index);
+              searchSource.query(this.params.draggedStateInitial.query[0]);
+              const allFilters = this.params.draggedStateInitial.filters;
+              allFilters.pop(); // remove previous map extent filter
+              allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+              searchSource.filter(allFilters);
+              options.filterPopupContent = this.params.filterPopupContent; //adding filter popup content from drop
+            }
+            //for vis params overlays
+          } else if (this.syncFilters) {
+            searchSource.inherits(savedSearch.searchSource);
+            const allFilters = queryFilter.getFilters();
+            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+            searchSource.filter(allFilters);
+          } else {
+            //Do not filter POIs by time so can not inherit from rootSearchSource
+            searchSource.inherits(false);
+            searchSource.index(savedSearch.searchSource._state.index);
+            searchSource.query(savedSearch.searchSource.get('query'));
+            searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
+          }
+          searchSource.size(this.limit);
+          searchSource.source({
+            includes: _.compact(_.flatten([this.geoField, this.popupFields])),
+            excludes: []
+          });
+
+          // assigning the placeholder value of 1000 POIs in the
+          // case where number in the limit field has been replaced with null
+          const poiLimitToDisplay = this.limit || 1000;
+
+          const tooManyDocsInfo = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
+
+          //Removal of previous too many documents warning when map is changed to a new extent
+          options.$legend.innerHTML = '';
+
+          searchSource.fetch()
+            .then(searchResp => {
+
+              if (searchResp.hits.total > this.limit) {
+                options.$legend.innerHTML = tooManyDocsInfo;
+                options.tooManyDocs = poiLimitToDisplay;
+              };
+
+              //Too many documents warning for each specific layer
+              options.$legend.tooManyDocsInfo = '';
+              if (this.draggedState) {
+                options.$legend.searchIcon = `<i>${options.displayName}</i> ${searchIcon}`;
+              } else {
+                options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
+              };
+
+              //Storing this information on the params object for use
+              //in ES Response watcher
+              if (this.isInitialDragAndDrop) {
+                this.params.filterPopupContent = options.filterPopupContent;
+                this.params.searchIcon = options.$legend.searchIcon;
+                this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
+                this.params.draggedStateInitial = this.params.draggedState;
+                this.params.geoField = this.geoField;
+                this.params.geoType = this.geoType;
+                this.params.displayName = options.displayName;
+              };
+
+              callback(self._createLayer(searchResp.hits.hits, this.geoType, options));
+            });
+        };
+
+        const geoFieldSelectModal = () => {
+
+          if (geoFields.length >= 2 && this.isInitialDragAndDrop) {
+
+            this.options = [];
+            _.each(geoFields, geoField => {
+              this.options.push({ value: geoField.name, text: geoField.name });
+            });
+
+            function getGeoType(geoFieldName) {
+              return _.find(geoFields, function (geoField) {
+                return geoField.name === geoFieldName;
+              });
             };
 
-            callback(self._createLayer(searchResp.hits.hits, geoType, options));
-          });
+            const domNode = document.createElement('div');
+            document.body.append(domNode);
+            const title = 'Geo field selection';
+
+            let selected = this.options[0].value;
+
+            const onChange = e => {
+              selected = e.target.value;
+            };
+
+            const form = (
+
+              <EuiFlexGroup gutterSize="l" alignItems="flexEnd" justifyContent="spaceBetween" style={{ marginLeft: '0px' }}>
+                <EuiFlexItem grow={true}>
+                  <EuiFormRow label="Select the Geo field for POI layer">
+                    <EuiSelect
+                      options={this.options}
+                      onChange={onChange}
+                      style={{ minWidth: '180px' }}
+                    />
+                  </EuiFormRow>
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            );
+
+            const onClose = () => {
+              unmountComponentAtNode(domNode);
+              document.body.removeChild(domNode);
+            };
+
+            const onConFirm = () => {
+              this.geoField = selected;
+              this.geoType = getGeoType(this.geoField).type;
+              processLayer();
+            };
+
+            const footer = (
+              <EuiFlexGroup>
+                <EuiFlexItem grow={false}>
+                  <EuiButton
+                    size='s'
+                    onClick={() => {
+                      onClose();
+                    }}
+                  >
+                    Cancel
+                  </EuiButton>
+                </EuiFlexItem>
+
+                <EuiFlexItem grow={false}>
+                  <EuiButton
+                    fill
+                    size='s'
+                    onClick={() => {
+                      onConFirm();
+                      onClose();
+                    }}
+                  >
+                    Confirm
+                  </EuiButton>
+                </EuiFlexItem>
+              </EuiFlexGroup>
+            );
+
+            render(
+              modalWithForm(title, form, footer, onClose),
+              domNode
+            );
+          };
+        };
+
+        //handling case where savedSearch is coming from vis params or drag and drop
+        if (this.geoField) {
+          this.geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
+          processLayer();
+        } else if (!this.geoType) {
+          geoFieldSelectModal();
+        };
+
       });
     };
 
@@ -194,7 +372,12 @@ define(function (require) {
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
+      layer.tooManyDocs = options.tooManyDocs;
+      layer.filterPopupContent = options.filterPopupContent;
+      layer.close = options.close;
+      layer.displayName = options.displayName;
       layer.$legend = options.$legend;
+      layer.layerGroup = options.layerGroup;
       return layer;
     };
 
@@ -295,7 +478,7 @@ define(function (require) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
-          icon: searchIcon(options.searchIcon, options.iconColor, options.size)
+          icon: searchIcon(options.searchIcon, options.color, options.size)
         });
 
       if (this.popupFields.length > 0) {

@@ -21,7 +21,8 @@ define(function (require) {
   ]);
 
   module.controller('KbnEnhancedTilemapVisController', function (
-    $scope, $rootScope, $element, $timeout,
+    kibiState, savedSearches, savedDashboards, dashboardGroups,
+    $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -43,6 +44,7 @@ define(function (require) {
     $scope.flags = {};
 
     backwardsCompatible.updateParams($scope.vis.params);
+    createDragAndDropPoiLayers();
     appendMap();
     modifyToDsl();
     setTooltipFormatter($scope.vis.params.tooltip);
@@ -67,6 +69,53 @@ define(function (require) {
     // kibi: moved processor to separate file
     const respProcessor = new RespProcessor($scope.vis, buildChartData, utils);
     // kibi: end
+
+    async function addPOILayerFromDashboardWithModal(dashboardId) {
+      const group = dashboardGroups.getGroup(dashboardId);
+      if (group) {
+        const dash = _.find(group.dashboards, { id: dashboardId });
+
+        if (dash && dash.count && dash.count > 0) {
+          const dashCounts = {};
+          dashCounts[dashboardId] = dash.count;
+
+          const savedDashboard = await savedDashboards.get(dashboardId);
+          const savedSearchId = savedDashboard.getMainSavedSearchId();
+
+          if (!savedSearchId) {
+            return;
+          };
+
+          let dragAndDropPoiLayer = await kibiState.getState(dashboardId);
+          const index = await indexPatterns.get(dragAndDropPoiLayer.index);
+
+          dragAndDropPoiLayer.savedSearchId = savedSearchId;
+
+          dragAndDropPoiLayer.draggedState = {
+            filters: dragAndDropPoiLayer.filters,
+            query: dragAndDropPoiLayer.queries,
+            index,
+            savedSearchId: savedSearchId
+          };
+          dragAndDropPoiLayer.savedDashboardTitle = savedDashboard.lastSavedTitle;
+          dragAndDropPoiLayer.layerGroup = '<b> Drag and Drop Overlays </b>';
+          dragAndDropPoiLayer.isInitialDragAndDrop = true;
+          // initialize on drop
+          initPOILayer(dragAndDropPoiLayer);
+
+          //create drag and drop Poi layers array if one doesn't exist
+          createDragAndDropPoiLayers();
+          $scope.vis.params.overlays.dragAndDropPoiLayers.push(dragAndDropPoiLayer);
+
+        };
+      }
+    };
+
+    function createDragAndDropPoiLayers() {
+      if (!$scope.vis.params.overlays.dragAndDropPoiLayers) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers = [];
+      }
+    };
 
     function modifyToDsl() {
       $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
@@ -116,7 +165,8 @@ define(function (require) {
       const displayName = layerParams.displayName || layerParams.savedSearchLabel;
       const options = {
         displayName,
-        color: _.get(layerParams, 'color', '#008800'),
+        layerGroup: layerParams.layerGroup || '<b> POI Overlays </b> ',
+        color: layerParams.color,
         size: _.get(layerParams, 'markerSize', 'm'),
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
@@ -132,7 +182,12 @@ define(function (require) {
       }
 
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(displayName, layer);
+        const options = {
+          filterPopupContent: layer.filterPopupContent,
+          close: layer.close,
+          tooManyDocs: layer.tooManyDocs
+        };
+        map.addPOILayer(layer.$legend.searchIcon, layer, layer.layerGroup, options);
       });
     }
 
@@ -185,13 +240,20 @@ define(function (require) {
 
         map.saturateTiles(visParams.isDesaturated);
 
-        //POI overlays
+        //POI overlays from vis params
         map.clearPOILayers();
         $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
 
         drawWfsOverlays();
 
       }
+    });
+
+    map.map.on('groupLayerControl:removeClickedLayer', function (e) {
+      $scope.vis.params.overlays.dragAndDropPoiLayers =
+        _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
+          return dragAndDropPoiLayer.searchIcon !== e.name;
+        });
     });
 
     $scope.$listen(queryFilter, 'update', function () {
@@ -207,6 +269,12 @@ define(function (require) {
 
       //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+
+      //Drag and Drop POI Overlays - no need to clear all layers for this watcher
+      $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
+        dragAndDrop.isInitialDragAndDrop = false;
+        initPOILayer(dragAndDrop);
+      });
     });
 
     $scope.$watch(
@@ -235,9 +303,15 @@ define(function (require) {
     $scope.$on('$destroy', function () {
       binder.destroy();
       resizeChecker.destroy();
+      destroyKibiStateEvents();
       if (map) map.destroy();
       if (tooltip) tooltip.destroy();
     });
+
+    function destroyKibiStateEvents() {
+      kibiState.off('drop_on_graph');
+      kibiState.off('drag_on_graph');
+    };
 
     function draw() {
       if (!chartData || chartData.hits === 0) {
@@ -475,8 +549,25 @@ define(function (require) {
       actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
         return getGeoBoundingBox();
       });
+    };
 
-    }
+    // ============================
+    // ==POI drag and drop events==
+    // ============================
+    kibiState.on('drop_on_graph', dashboardId => {
+      addPOILayerFromDashboardWithModal(dashboardId);
+    });
 
+    kibiState.on('drag_on_graph', async (showDropHover, dashHasSearch, dashboardId) => {
+      const savedDashboard = await savedDashboards.get(dashboardId);
+      const savedSearchId = savedDashboard.getMainSavedSearchId();
+
+      const savedSearch = await savedSearches.get(savedSearchId);
+      const fieldWithGeo = _.get(savedSearch, 'searchSource._state.index.fields', [])
+        .find(field => (field.esType === 'geo_point' || field.esType === 'geo_shape') && dashHasSearch);
+
+      $scope.showDropHover = showDropHover;
+      $scope.showDropMessage = !!fieldWithGeo;
+    });
   });
 });

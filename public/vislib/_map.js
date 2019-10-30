@@ -246,10 +246,8 @@ define(function (require) {
       });
     };
 
-    TileMapMap.prototype.addPOILayer = function (layerName, layer) {
+    TileMapMap.prototype.addPOILayer = function (layerName, layer, layerGroup, options) {
       let isVisible = true;
-
-      layerName = `${layerName} ${layer.$legend.searchIcon}`;
 
       //remove layer if it already exists
       //this is required on page load with the option to have user defined POI user
@@ -274,9 +272,9 @@ define(function (require) {
 
       const toomanydocslayername = layerName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
       if (tooManyDocs.warningIcon) {
-        this._layerControl.addOverlay(layer, toomanydocslayername, '<b> POI Overlays</b>');
+        this._layerControl.addOverlay(layer, toomanydocslayername, layerGroup || '<b> POI Overlays</b>', options);
       } else {
-        this._layerControl.addOverlay(layer, layerName, '<b> POI Overlays</b>');
+        this._layerControl.addOverlay(layer, layerName, layerGroup || '<b> POI Overlays</b>', options);
       }
 
       this._poiLayers[layerName] = layer;
@@ -470,6 +468,17 @@ define(function (require) {
 
     TileMapMap.prototype._attachEvents = function () {
       const self = this;
+
+      this.map.on('groupLayerControl:removeClickedLayer', (e) => {
+        const layerName = e.name;
+        if (_.has(this._poiLayers, layerName)) {
+          const layer = this._poiLayers[layerName];
+          this._poiLayers[layerName].destroy();
+          this.map.removeLayer(layer);
+          delete this._poiLayers[layerName];
+        }
+      });
+
       this.map.on('moveend', _.debounce(function setZoomCenter(ev) {
         if (!self.map) return;
         if (self._hasSameLocation()) return;
