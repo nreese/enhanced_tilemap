@@ -86,7 +86,6 @@ define(function (require) {
         }
 
         const processLayer = () => {
-          //const geoType = savedSearch.searchSource._state.index.fields.byName[self.geoField].type;
           //creating icon and title from search for map and layerControl
           options.displayName = options.displayName || savedSearch.title;
 
@@ -163,12 +162,7 @@ define(function (require) {
 
           // assigning the placeholder value of 1000 POIs in the
           // case where number in the limit field has been replaced with null
-          let poiLimitToDisplay;
-          if (this.limit) {
-            poiLimitToDisplay = this.limit;
-          } else {
-            poiLimitToDisplay = 1000;
-          }
+          const poiLimitToDisplay = this.limit || 1000;
 
           const tooManyDocsInfo = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
 
@@ -180,7 +174,7 @@ define(function (require) {
 
               if (searchResp.hits.total > this.limit) {
                 options.$legend.innerHTML = tooManyDocsInfo;
-                options.tooManyDocs = this.limit;
+                options.tooManyDocs = poiLimitToDisplay;
               };
 
               //Too many documents warning for each specific layer

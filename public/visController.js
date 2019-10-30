@@ -87,12 +87,14 @@ define(function (require) {
           };
 
           let dragAndDropPoiLayer = await kibiState.getState(dashboardId);
+          const index = await indexPatterns.get(dragAndDropPoiLayer.index);
 
           dragAndDropPoiLayer.savedSearchId = savedSearchId;
+
           dragAndDropPoiLayer.draggedState = {
             filters: dragAndDropPoiLayer.filters,
             query: dragAndDropPoiLayer.queries,
-            index: await indexPatterns.get(dragAndDropPoiLayer.index),
+            index,
             savedSearchId: savedSearchId
           };
           dragAndDropPoiLayer.savedDashboardTitle = savedDashboard.lastSavedTitle;
