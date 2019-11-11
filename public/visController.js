@@ -86,7 +86,7 @@ define(function (require) {
             return;
           };
 
-          let dragAndDropPoiLayer = await kibiState.getState(dashboardId);
+          const dragAndDropPoiLayer = await kibiState.getState(dashboardId);
           const index = await indexPatterns.get(dragAndDropPoiLayer.index);
 
           dragAndDropPoiLayer.savedSearchId = savedSearchId;
@@ -554,8 +554,9 @@ define(function (require) {
     // ============================
     // ==POI drag and drop events==
     // ============================
-    kibiState.on('drop_on_graph', dashboardId => {
-      addPOILayerFromDashboardWithModal(dashboardId);
+
+    kibiState.on('drop_on_graph', (dashboardId, droppedContainerId) => {
+      if ($scope.vis.id === droppedContainerId) addPOILayerFromDashboardWithModal(dashboardId);
     });
 
     kibiState.on('drag_on_graph', async (showDropHover, dashHasSearch, dashboardId) => {
