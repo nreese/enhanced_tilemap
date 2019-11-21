@@ -90,7 +90,7 @@ task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
  */
 task npmInstallKibi(type: NpmTask, dependsOn: [extractKibi]) {
     def kibiInstallDir = new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
-    println "${kibiInstallDir}"
+
     execOverrides {
         it.workingDir = kibiInstallDir
     }
@@ -98,7 +98,6 @@ task npmInstallKibi(type: NpmTask, dependsOn: [extractKibi]) {
     setArgs( ['ci'] )
     inputs.file { file("$kibiInstallDir/package.json") }
     inputs.file { file("$kibiInstallDir/package-lock.json") }
-    // outputs.dir { file("$kibiInstallDir/node_modules") }
 }
 
 /**
