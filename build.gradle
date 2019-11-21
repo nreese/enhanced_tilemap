@@ -90,7 +90,7 @@ task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
  */
 task npmInstallKibi(type: GradleBuild, dependsOn: [extractKibi]) {
     dir new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
-    args = ['npmInstall']
+    tasks = ['npmInstall']
 }
 
 /**
