@@ -88,9 +88,9 @@ task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
 /**
  * Task to execute the `npmInstall` gradle's task from the kibi distribution
  */
-task npmInstallKibi(type: NpmTask, dependsOn: [extractKibi]) {
+task npmInstallKibi(type: GradleTask, dependsOn: [extractKibi]) {
     dir new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
-    args = ['ci']
+    args = ['npmInstall']
 }
 
 /**
