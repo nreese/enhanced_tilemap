@@ -81,7 +81,7 @@ task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
     from { zipTree(new File(downloadKibi.destinationDir, "investigate-core.zip")) }
     into new File(buildDir, 'investigate-core')
     exclude '**/.gradle/**'
-    exclude '**/build.gradle'
+    exclude '**/settings.gradle'
     includeEmptyDirs = false
 }
 
