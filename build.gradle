@@ -80,16 +80,22 @@ task downloadKibi(type: Copy) {
 task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
     from { zipTree(new File(downloadKibi.destinationDir, "investigate-core.zip")) }
     into new File(buildDir, 'investigate-core')
-    exclude '**/.gradle/**'
     includeEmptyDirs = false
 }
 
 /**
  * Task to execute the `npmInstall` gradle's task from the kibi distribution
  */
-task npmInstallKibi(type: GradleBuild, dependsOn: [extractKibi]) {
-    dir new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
-    tasks = ['npmInstall']
+task npmInstallKibi(type: NpmTask, dependsOn: [extractKibi]) {
+    def kibiInstallDir = new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
+
+    execOverrides {
+        it.workingDir = kibiInstallDir
+    }
+
+    setArgs( ['ci'] )
+    inputs.file { file("$kibiInstallDir/package.json") }
+    inputs.file { file("$kibiInstallDir/package-lock.json") }
 }
 
 /**
