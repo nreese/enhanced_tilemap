@@ -88,9 +88,12 @@ task extractKibi(type: Copy, dependsOn: [downloadKibi]) {
 /**
  * Task to execute the `npmInstall` gradle's task from the kibi distribution
  */
-task npmInstallKibi(type: GradleBuild, dependsOn: [extractKibi]) {
-    dir new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
-    tasks = ['npmInstall']
+task npmInstallKibi(type: NpmTask, dependsOn: [extractKibi]) {
+    def workDir = new File(extractKibi.destinationDir, "investigate-core-${investigateVersion}-sources")
+    args = ['ci']
+    inputs.file { file("$workDir/package.json") }
+    inputs.file { file("$workDir/package-lock.json") }
+    outputs.dir { file("$workDir/node_modules") }
 }
 
 /**
