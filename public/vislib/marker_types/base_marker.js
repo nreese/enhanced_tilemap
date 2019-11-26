@@ -298,7 +298,7 @@ define(function (require) {
 
       if (this.isVisible) this.map.addLayer(this._markerGroup);
 
-      if (this.geoJson.features.length > 1) {
+      if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length > 1) {
         this.addLegend();
       }
     };
@@ -352,9 +352,10 @@ define(function (require) {
             },
             200);
         }
-
-        this._addToMap();
+      } else {
+        this._markerGroup = L.geoJson();
       };
+      this._addToMap();
     };
     /**
      * Checks if event latlng is within bounds of mapData
