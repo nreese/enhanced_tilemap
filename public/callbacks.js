@@ -53,9 +53,9 @@ define(function (require) {
         if (vis && vis.hasUiState()) {
           vis.getUiState().set('mapZoom', event.zoom);
         }
-
         const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
-        if (autoPrecision) {
+
+        if (autoPrecision || !event.chart) {
           courier.fetch();
         }
       },
