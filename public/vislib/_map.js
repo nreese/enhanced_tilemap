@@ -52,6 +52,7 @@ define(function (require) {
       this._vectorOverlays = {};
 
       // keep a reference to all of the optional params
+      this.uiState = params.uiState;
       this._callbacks = _.get(params, 'callbacks');
       this._setMarkerType(params.mapType);
       const centerArray = _.get(params, 'center') || defaultMapCenter;
@@ -261,6 +262,14 @@ define(function (require) {
         delete this._poiLayers[layerName];
       }
 
+      // the uiState takes precedence
+      const presentInUiState = this.uiState.get(layerName);
+      if (presentInUiState) {
+        isVisible = true;
+      } else if (presentInUiState === false) {
+        isVisible = false;
+      }
+
       if (isVisible) {
         this.map.addLayer(layer);
       }
@@ -288,23 +297,22 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addVectorLayer = function (layerName, layer, options) {
-      this.map.addLayer(layer);
-
-      /*********************************************************/
-      // Retaining functionality of too many features to draw
-      // const tooManyDocs = {
-      //   icon: layer.$legend.tooManyDocsInfo[0],
-      //   message: layer.$legend.tooManyDocsInfo[1]
-      // };
-      // const toomanydocslayername = layerName + '  ' + tooManyDocs.icon + tooManyDocs.message;
-      // if (tooManyDocs.icon) {
-      //   this._layerControl.addOverlay(layer, toomanydocslayername, options.layerGroup);
-      // } else {
-      //   this._layerControl.addOverlay(layer, layerName, options.layerGroup);
-      // }
-      /*********************************************************/
+      let isVisible;
 
       this._layerControl.addOverlay(layer, layerName, options.layerGroup);
+
+
+      // the uiState takes precedence
+      const presentInUiState = this.uiState.get(layerName);
+      if (presentInUiState) {
+        isVisible = true;
+      } else if (presentInUiState === false) {
+        isVisible = false;
+      }
+
+      if (isVisible) {
+        this.map.addLayer(layer);
+      }
 
       this._vectorOverlays[layerName] = layer;
       this._vectorOverlays[layerName].type = options.type;
@@ -336,6 +344,7 @@ define(function (require) {
       }
 
       this._markers = this._createMarkers({
+        uiState: this.uiState,
         tooltipFormatter: tooltipFormatter,
         valueFormatter: valueFormatter,
         prevState: prevState,
@@ -359,14 +368,27 @@ define(function (require) {
 
       const style = {
         fillColor: '#ccc',
-        color: '#ccc',
-        weight: 1.5,
+        color: '#777777',
+        weight: 2,
         opacity: 1,
         fillOpacity: 0.75
       };
       this._filters = L.featureGroup(filters);
       this._filters.setStyle(style);
-      if (isVisible) this.map.addLayer(this._filters);
+
+      // the uiState takes precedence
+      const presentInUiState = this.uiState.get('Applied Filters');
+      if (presentInUiState) {
+        isVisible = true;
+      } else if (presentInUiState === false) {
+        isVisible = false;
+      }
+
+      if (isVisible) {
+        this.map.addLayer(this._filters);
+      }
+
+
       this._layerControl.addOverlay(this._filters, 'Applied Filters');
     };
 

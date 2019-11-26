@@ -256,6 +256,14 @@ define(function (require) {
         });
     });
 
+    // saving checkbox status to dashboard uiState
+    map.map.on('overlayadd', function (e) {
+      $scope.vis.getUiState().set(e.name, e.name);
+    });
+    map.map.on('overlayremove', function (e) {
+      $scope.vis.getUiState().set(e.name, false);
+    });
+
     $scope.$listen(queryFilter, 'update', function () {
       setTooltipFormatter($scope.vis.params.tooltip);
     });
@@ -271,34 +279,13 @@ define(function (require) {
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
 
       //Drag and Drop POI Overlays - no need to clear all layers for this watcher
-      $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
-        dragAndDrop.isInitialDragAndDrop = false;
-        initPOILayer(dragAndDrop);
-      });
-    });
-
-    $scope.$watch(
-      function () {
-        const checked = $element
-          .find('div.leaflet-control-layers-overlays input.leaflet-control-layers-selector:checked');
-        if (checked) {
-          return checked.length;
-        }
-      },
-      function (newChecked, oldChecked) {
-        if (!$scope.flags.check) return;
-
-        $scope.flags.isVisibleSource = 'layerControlCheckbox';
-
-        if (newChecked !== oldChecked && $scope.flags.check === true) {
-          drawWmsOverlays();
-
-          //POI overlays
-          map.clearPOILayers();
-          $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-        }
+      if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
+          dragAndDrop.isInitialDragAndDrop = false;
+          initPOILayer(dragAndDrop);
+        });
       }
-    );
+    });
 
     $scope.$on('$destroy', function () {
       binder.destroy();
@@ -500,6 +487,13 @@ define(function (require) {
                 isVisible = layerParams.isVisible;
               };
 
+              const presentInUiState = $scope.vis.getUiState().get(name);
+              if (presentInUiState) {
+                isVisible = true;
+              } else if (presentInUiState === false) {
+                isVisible = false;
+              }
+
               $scope.flags.visibleSource = '';
 
               const layerOptions = {
@@ -526,7 +520,8 @@ define(function (require) {
         callbacks: callbacks,
         mapType: params.mapType,
         attr: params,
-        editable: $scope.vis.getEditableVis() ? true : false
+        editable: $scope.vis.getEditableVis() ? true : false,
+        uiState: $scope.vis.getUiState()
       });
     }
 
