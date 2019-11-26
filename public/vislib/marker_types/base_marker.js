@@ -45,7 +45,9 @@ define(function (require) {
       this._attr = params.attr || {};
 
       // set up the default legend colors
-      this.quantizeLegendColors();
+      if (_.has(this, 'geoJson.features')) {
+        this.quantizeLegendColors();
+      }
     }
 
     /**
@@ -324,35 +326,36 @@ define(function (require) {
         }
       };
 
-      if (self.geoJson.features.length <= 250) {
-        this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
-      } else {
-        //don't block UI when processing lots of features
-        this._markerGroup = L.geoJson(self.geoJson.features.slice(0, 100), _.defaults(defaultOptions, options));
-        this._stopLoadingGeohash();
+      if (_.has(self, 'geoJson.features.length')) {
+        if (self.geoJson.features.length <= 250) {
+          this._markerGroup = L.geoJson(self.geoJson, _.defaults(defaultOptions, options));
+        } else {
+          //don't block UI when processing lots of features
+          this._markerGroup = L.geoJson(self.geoJson.features.slice(0, 100), _.defaults(defaultOptions, options));
+          this._stopLoadingGeohash();
 
-        this._createSpinControl();
-        var place = 100;
-        this._intervalId = setInterval(
-          function () {
-            var stopIndex = place + 100;
-            var halt = false;
-            if (stopIndex > self.geoJson.features.length) {
-              stopIndex = self.geoJson.features.length;
-              halt = true;
-            }
-            for (var i = place; i < stopIndex; i++) {
-              place++;
-              self._markerGroup.addData(self.geoJson.features[i]);
-            }
-            if (halt) self._stopLoadingGeohash();
-          },
-          200);
-      }
+          this._createSpinControl();
+          var place = 100;
+          this._intervalId = setInterval(
+            function () {
+              var stopIndex = place + 100;
+              var halt = false;
+              if (stopIndex > self.geoJson.features.length) {
+                stopIndex = self.geoJson.features.length;
+                halt = true;
+              }
+              for (var i = place; i < stopIndex; i++) {
+                place++;
+                self._markerGroup.addData(self.geoJson.features[i]);
+              }
+              if (halt) self._stopLoadingGeohash();
+            },
+            200);
+        }
 
-      this._addToMap();
+        this._addToMap();
+      };
     };
-
     /**
      * Checks if event latlng is within bounds of mapData
      * features and shows tooltip for that feature
