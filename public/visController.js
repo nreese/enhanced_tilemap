@@ -26,7 +26,7 @@ define(function (require) {
     Private, courier, config, getAppState, indexPatterns, $http, $injector) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
-    const getCallbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
+    const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
     const VectorProvider = Private(require('plugins/enhanced_tilemap/vector'));
@@ -520,8 +520,6 @@ define(function (require) {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
-      const callbacks = getCallbacks();
-
       map = new TileMapMap(container, {
         center: initialMapState.center,
         zoom: initialMapState.zoom,
