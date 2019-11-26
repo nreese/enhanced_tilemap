@@ -15,7 +15,8 @@ define(function (require) {
      * @param params {Object}
      */
     function BaseMarker(map, geoJson, layerControl, params) {
-      this.map = map;
+      this.uiState = params.uiState;
+      this.map = map; // this is the leaflet map (i.e. L.map())
       this.geoJson = geoJson;
       this.layerControl = layerControl;
       this.popups = [];
@@ -284,6 +285,15 @@ define(function (require) {
 
     BaseMarker.prototype._addToMap = function () {
       this.layerControl.addOverlay(this._markerGroup, 'Aggregation');
+
+      // the uiState takes precedence
+      const presentInUiState = this.uiState.get('Aggregation');
+      if (presentInUiState) {
+        this.isVisible = true;
+      } else if (presentInUiState === false) {
+        this.isVisible = false;
+      }
+
       if (this.isVisible) this.map.addLayer(this._markerGroup);
 
       if (this.geoJson.features.length > 1) {
