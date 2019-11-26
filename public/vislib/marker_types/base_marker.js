@@ -298,7 +298,7 @@ define(function (require) {
 
       if (this.isVisible) this.map.addLayer(this._markerGroup);
 
-      if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length > 1) {
+      if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {
         this.addLegend();
       }
     };
