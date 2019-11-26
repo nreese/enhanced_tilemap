@@ -269,7 +269,7 @@ define(function (require) {
     });
 
     $scope.$watch('esResponse', function (resp) {
-      if (_.has(resp, 'aggregations') && (resp.aggregations[2].doc_count > 0)) {
+      if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         draw();
 
