@@ -138,7 +138,7 @@ define(function (require) {
 
       if (allFilters.length > 0) {
         _.each(allFilters, filter => {
-          if (_.get(newFilter, 'meta._siren.vis')) {
+          if (_.get(newFilter, 'meta._siren.vis') && _.get(filter, 'meta._siren.vis')) {
             const filterVisMeta = filter.meta._siren.vis;
             const newFilterVisMeta = newFilter.meta._siren.vis;
             if (filter.meta.index === indexPatternId &&
