@@ -43,6 +43,9 @@ define(function (require) {
         //Only analyse vector geo polygons, i.e. not drawn ones
         polygonFiltersAndDonuts = geoFilterHelper.analyseSimplePolygon(newFilter, field);
         newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
+      } else if (newFilter.bool) {
+        //currently this in only for multiple geo_distance filters
+        numShapes = newFilter.bool.should.length;
       };
 
       //add all donuts
@@ -160,7 +163,7 @@ define(function (require) {
 
       if (numFiltersFromThisInstance === 0 || numFiltersFromThisInstance >= 2) {
         _applyFilter(newFilter, field, indexPatternId);
-        
+
       } else if (numFiltersFromThisInstance === 1) {
         const domNode = document.createElement('div');
         document.body.append(domNode);
