@@ -43,6 +43,9 @@ define(function (require) {
         //Only analyse vector geo polygons, i.e. not drawn ones
         polygonFiltersAndDonuts = geoFilterHelper.analyseSimplePolygon(newFilter, field);
         newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
+      } else if (newFilter.bool) {
+        //currently this in only for multiple geo_distance filters
+        numShapes = newFilter.bool.should.length;
       };
 
       //add all donuts
@@ -247,7 +250,10 @@ define(function (require) {
         let distance = 1000;
         if (_.includes(distanceStr, 'km')) {
           distance = parseFloat(distanceStr.replace('km', '')) * 1000;
-        }
+        } else if (typeof distanceStr === 'number') {
+          distance = distanceStr;
+        };
+
         const center = _.get(filter, ['geo_distance', field]);
         if (center) {
           features.push(L.circle([center.lat, center.lon], distance));

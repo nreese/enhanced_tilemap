@@ -66,7 +66,12 @@ define(function (require) {
         const field = agg.fieldName();
         const indexPatternName = agg.vis.indexPattern.id;
 
-        const filters = [];
+        const boolFilter = {
+          bool: {
+            should: []
+          }
+        };
+
         event.poiLayers.forEach(function (poiLayer) {
           poiLayer.getLayers().forEach(function (feature) {
             if (feature instanceof L.Marker) {
@@ -75,11 +80,13 @@ define(function (require) {
                 'lat': feature.getLatLng().lat,
                 'lon': feature.getLatLng().lng
               };
-              filters.push(filter);
+
+              boolFilter.bool.should.push(filter);
             }
           });
         });
-        geoFilter.add(filters, field, indexPatternName);
+        filterHelper.addSirenPropertyToFilterMeta(boolFilter, agg.vis._siren);
+        geoFilter.add(boolFilter, field, indexPatternName);
       },
       polygon: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');
