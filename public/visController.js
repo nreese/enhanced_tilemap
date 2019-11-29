@@ -301,7 +301,7 @@ define(function (require) {
     };
 
     function draw() {
-      if (!chartData || chartData.hits === 0) {
+      if (!chartData) {
         return;
       }
       //add overlay layer to provide visibility of filtered area
