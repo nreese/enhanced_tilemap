@@ -75,11 +75,11 @@ define(function (require) {
                 'lat': feature.getLatLng().lat,
                 'lon': feature.getLatLng().lng
               };
-              filters.push(filter);
+              filterHelper.addSirenPropertyToFilterMeta(filter, agg.vis._siren);
+              geoFilter.add(filter, field, indexPatternName);
             }
           });
         });
-        geoFilter.add(filters, field, indexPatternName);
       },
       polygon: function (event) {
         const agg = _.get(event, 'chart.geohashGridAgg');

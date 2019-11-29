@@ -160,7 +160,7 @@ define(function (require) {
 
       if (numFiltersFromThisInstance === 0 || numFiltersFromThisInstance >= 2) {
         _applyFilter(newFilter, field, indexPatternId);
-
+        
       } else if (numFiltersFromThisInstance === 1) {
         const domNode = document.createElement('div');
         document.body.append(domNode);
@@ -247,7 +247,10 @@ define(function (require) {
         let distance = 1000;
         if (_.includes(distanceStr, 'km')) {
           distance = parseFloat(distanceStr.replace('km', '')) * 1000;
-        }
+        } else if (typeof distanceStr === 'number') {
+          distance = distanceStr;
+        };
+
         const center = _.get(filter, ['geo_distance', field]);
         if (center) {
           features.push(L.circle([center.lat, center.lon], distance));
