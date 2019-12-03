@@ -271,6 +271,7 @@ define(function (require) {
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
+        chartData.searchSource = $scope.searchSource;
         draw();
 
       };

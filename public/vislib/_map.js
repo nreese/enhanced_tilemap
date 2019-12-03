@@ -2,6 +2,7 @@ import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 
 define(function (require) {
   return function MapFactory(Private) {
+    const BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
     const formatcoords = require('formatcoords');
     const mgrs = require('mgrs/dist/mgrs.js');
     const _ = require('lodash');
@@ -700,14 +701,21 @@ define(function (require) {
      * @return {boolean}
      */
     TileMapMap.prototype._fitBounds = function () {
-      const bounds = this._getDataRectangles();
-      if (bounds.length > 0) {
-        this.map.fitBounds(bounds);
-      }
+
+      const params = {
+        searchSource: this._chartData.searchSource,
+        field: this._chartData.geohashGridAgg.params.field.name
+      };
+
+      const boundsHelper = new BoundsHelper(params);
+      Promise.resolve(boundsHelper.getBoundsOfEntireDataSelection())
+        .then(entireBounds => {
+          this.map.fitBounds(entireBounds);
+        });
     };
 
     /**
-     * Get the Rectangles representing the geohash grid
+     * Get all Rectangles representing the geohash grid
      *
      * @return {LatLngRectangles[]}
      */
