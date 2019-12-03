@@ -694,7 +694,8 @@ define(function (require) {
     };
 
     /**
-     * zoom map to fit all features in featureLayer
+     * zoom map to fit all features in featureLayer, 
+     * even those NOT currently within map canvas extent
      *
      * @method _fitBounds
      * @param map {Leaflet Object}
@@ -712,16 +713,6 @@ define(function (require) {
         .then(entireBounds => {
           this.map.fitBounds(entireBounds);
         });
-    };
-
-    /**
-     * Get all Rectangles representing the geohash grid
-     *
-     * @return {LatLngRectangles[]}
-     */
-    TileMapMap.prototype._getDataRectangles = function () {
-      if (!this._geoJson) return [];
-      return _.map(this._geoJson.features, 'properties.rectangle');
     };
     return TileMapMap;
   };
