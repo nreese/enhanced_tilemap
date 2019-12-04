@@ -45,8 +45,8 @@ define(function (require) {
       //console.log("bottom right lon " + _.round(bottomRight.lng, 5) + " -> " + bottomRightLon);
 
       return {
-        'top_left': { lat: topLeftLat, lon: topLeftLon },
-        'bottom_right': { lat: bottomRightLat, lon: bottomRightLon }
+        top_left: { lat: topLeftLat, lon: topLeftLon },
+        bottom_right: { lat: bottomRightLat, lon: bottomRightLon }
       };
     },
     contains: function (collar, bounds) {

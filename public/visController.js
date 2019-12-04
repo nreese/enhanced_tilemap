@@ -12,6 +12,7 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
 
+
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
@@ -36,6 +37,7 @@ define(function (require) {
     const ResizeChecker = Private(ResizeCheckerProvider);
     const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
+    const BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
     let map = null;
     let collar = null;
     let chartData = null;
@@ -262,6 +264,16 @@ define(function (require) {
     });
     map.map.on('overlayremove', function (e) {
       $scope.vis.getUiState().set(e.name, false);
+    });
+
+
+    map.map.on('setview:fitBounds', function (e) {
+      const params = { searchSource: chartData.searchSource, field: chartData.geohashGridAgg.params.field.name };
+      const boundsHelper = new BoundsHelper(params);
+      boundsHelper.getBoundsOfEntireDataSelection()
+        .then(entireBounds => {
+          map.map.fitBounds(entireBounds);
+        });
     });
 
     $scope.$listen(queryFilter, 'update', function () {
