@@ -45,8 +45,8 @@ define(function (require) {
       //console.log("bottom right lon " + _.round(bottomRight.lng, 5) + " -> " + bottomRightLon);
 
       return {
-        'top_left': {lat: topLeftLat, lon: topLeftLon},
-        'bottom_right': {lat: bottomRightLat, lon: bottomRightLon}
+        top_left: { lat: topLeftLat, lon: topLeftLon },
+        bottom_right: { lat: bottomRightLat, lon: bottomRightLon }
       };
     },
     contains: function (collar, bounds) {
@@ -151,9 +151,9 @@ define(function (require) {
         maxWidth: 'auto',
         offset: new L.Point(mapWidth * -2, mapHeight * -2)
       })
-      .setLatLng(latLng)
-      .setContent(content)
-      .openOn(map);
+        .setLatLng(latLng)
+        .setContent(content)
+        .openOn(map);
       const popupHeight = popup._contentNode.clientHeight;
       const popupWidth = popup._contentNode.clientWidth / 2;
 

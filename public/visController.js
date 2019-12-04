@@ -12,6 +12,7 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 
 
+
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
@@ -36,6 +37,7 @@ define(function (require) {
     const ResizeChecker = Private(ResizeCheckerProvider);
     const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
+    const BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
     let map = null;
     let collar = null;
     let chartData = null;
@@ -69,6 +71,31 @@ define(function (require) {
     // kibi: moved processor to separate file
     const respProcessor = new RespProcessor($scope.vis, buildChartData, utils);
     // kibi: end
+
+    /*
+     * Field used for Geospatial filtering can be set in multiple places
+     * 1) field specified by geohash_grid aggregation
+     * 2) field specified under options. Allows for filtering by geo_shape
+     *
+     * Use this method to locate the field
+     */
+    function getGeoField() {
+      let fieldname = null;
+      let geotype = 'geo_point';
+      if ($scope.vis.params.filterByShape && $scope.vis.params.shapeField) {
+        fieldname = $scope.vis.params.shapeField;
+        geotype = 'geo_shape';
+      } else {
+        const agg = utils.getAggConfig($scope.vis.aggs, 'segment');
+        if (agg) {
+          fieldname = agg.fieldName();
+        }
+      }
+      return {
+        fieldname: fieldname,
+        geotype: geotype
+      };
+    }
 
     async function addPOILayerFromDashboardWithModal(dashboardId) {
       const group = dashboardGroups.getGroup(dashboardId);
@@ -264,6 +291,16 @@ define(function (require) {
       $scope.vis.getUiState().set(e.name, false);
     });
 
+
+    map.map.on('setview:fitBounds', function (e) {
+      const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
+      const boundsHelper = new BoundsHelper(params);
+      boundsHelper.getBoundsOfEntireDataSelection()
+        .then(entireBounds => {
+          map.map.fitBounds(entireBounds);
+        });
+    });
+
     $scope.$listen(queryFilter, 'update', function () {
       setTooltipFormatter($scope.vis.params.tooltip);
     });
@@ -271,6 +308,7 @@ define(function (require) {
     $scope.$watch('esResponse', function (resp) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
+        chartData.searchSource = $scope.searchSource;
         draw();
 
       };
@@ -341,31 +379,6 @@ define(function (require) {
         tooltipFormatter = Private(TileMapTooltipFormatterProvider);
       }
 
-    }
-
-    /**
-     * Field used for Geospatial filtering can be set in multiple places
-     * 1) field specified by geohash_grid aggregation
-     * 2) field specified under options. Allows for filtering by geo_shape
-     *
-     * Use this method to locate the field
-     */
-    function getGeoField() {
-      let fieldname = null;
-      let geotype = 'geo_point';
-      if ($scope.vis.params.filterByShape && $scope.vis.params.shapeField) {
-        fieldname = $scope.vis.params.shapeField;
-        geotype = 'geo_shape';
-      } else {
-        const agg = utils.getAggConfig($scope.vis.aggs, 'segment');
-        if (agg) {
-          fieldname = agg.fieldName();
-        }
-      }
-      return {
-        fieldname: fieldname,
-        geotype: geotype
-      };
     }
 
     function drawWfsOverlays() {

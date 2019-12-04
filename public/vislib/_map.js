@@ -204,7 +204,7 @@ define(function (require) {
     TileMapMap.prototype.destroy = function () {
       this.clearPOILayers();
       this.clearVectorLayers();
-      this._clearDrawEvents();
+      this._destroyMapEvents();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
@@ -481,11 +481,26 @@ define(function (require) {
       }
     };
 
-    TileMapMap.prototype._clearDrawEvents = function () {
-      this.map.off('draw:drawstart');
-      this.map.off('draw:drawstop');
-      this.map.off('draw:created');
-      this.map.off('draw:deleted');
+    TileMapMap.prototype._destroyMapEvents = function () {
+      const allEvents = [
+        'draw:drawstart',
+        'draw:drawstop',
+        'draw:created',
+        'draw:deleted',
+        'setview:fitBounds',
+        'groupLayerControl:removeClickedLayer',
+        'moveend',
+        'etm:select-feature',
+        'etm:select-feature-vector',
+        'toolbench:poiFilter',
+        'zoomend',
+        'overlayadd',
+        'overlayremove'
+      ];
+
+      allEvents.forEach(event => {
+        this.map.off(event);
+      });
     };
 
     TileMapMap.prototype._attachEvents = function () {
@@ -518,10 +533,6 @@ define(function (require) {
           zoom: self._mapZoom,
         });
       }, 150, false));
-
-      this.map.on('setview:fitBounds', function (e) {
-        self._fitBounds();
-      });
 
       this.map.on('etm:select-feature', function (e) {
         self._callbacks.polygon({
@@ -618,7 +629,7 @@ define(function (require) {
         self._callbacks.mapZoomEnd({
           chart: self._chartData,
           map: self.map,
-          zoom: self.map.getZoom(),
+          zoom: self.map.getZoom()
         });
       }, 150, false));
 
@@ -693,27 +704,15 @@ define(function (require) {
     };
 
     /**
-     * zoom map to fit all features in featureLayer
+     * zoom map to fit all features in featureLayer, 
+     * even those NOT currently within map canvas extent
      *
      * @method _fitBounds
      * @param map {Leaflet Object}
      * @return {boolean}
      */
-    TileMapMap.prototype._fitBounds = function () {
-      const bounds = this._getDataRectangles();
-      if (bounds.length > 0) {
-        this.map.fitBounds(bounds);
-      }
-    };
-
-    /**
-     * Get the Rectangles representing the geohash grid
-     *
-     * @return {LatLngRectangles[]}
-     */
-    TileMapMap.prototype._getDataRectangles = function () {
-      if (!this._geoJson) return [];
-      return _.map(this._geoJson.features, 'properties.rectangle');
+    TileMapMap.prototype.fitBounds = function (entireBounds) {
+      this.map.fitBounds(entireBounds);
     };
     return TileMapMap;
   };
