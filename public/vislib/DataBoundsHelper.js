@@ -43,12 +43,16 @@ define(function () {
                   currentLat = location.lat;
                   currentLon = location.lon;
 
-                } else if (typeof location === 'string' && location.split(',').length === 2 &&
-                  typeof Number(location.split(',')[0]) === 'number' && typeof Number(location.split(',')[1]) === 'number') {
-                  const coordinates = location.split(',');
-                  currentLon = Number(coordinates[1]);
-                  currentLat = Number(coordinates[0]);
+                } else if (typeof location === 'string') {
+                  const locationSplit = location.split(',');
 
+                  if (locationSplit.length === 2 &&
+                    typeof Number(locationSplit[0]) === 'number' &&
+                    typeof Number(locationSplit[1]) === 'number') {
+                    const coordinates = location.split(',');
+                    currentLon = Number(coordinates[1]);
+                    currentLat = Number(coordinates[0]);
+                  }
                 } else {
                   warnings.push(`Fit bounds unable to process geo_point data: ${location}`);
 
