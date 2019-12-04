@@ -55,7 +55,7 @@ define(function (require) {
         }
         const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
 
-        if (autoPrecision || !event.chart) {
+        if (autoPrecision && !event.chart) {
           courier.fetch();
         }
       },

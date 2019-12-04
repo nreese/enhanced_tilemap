@@ -30,12 +30,29 @@ define(function () {
 
         return searchSource.fetch()
           .then(searchResp => {
+            const warnings = [];
+
             searchResp.hits.hits.forEach(hit => {
 
               if (hit && hit._source && hit._source[this.field]) {
-                const coordinates = hit._source[this.field].split(',');
-                const currentLon = Number(coordinates[1]);
-                const currentLat = Number(coordinates[0]);
+                const location = hit._source[this.field];
+                let currentLat;
+                let currentLon;
+
+                if (typeof location === 'object' && location !== null) {
+                  currentLat = location.lat;
+                  currentLon = location.lon;
+
+                } else if (typeof location === 'string' && location.split(',').length === 2 &&
+                  typeof Number(location.split(',')[0]) === 'number' && typeof Number(location.split(',')[1]) === 'number') {
+                  const coordinates = location.split(',');
+                  currentLon = Number(coordinates[1]);
+                  currentLat = Number(coordinates[0]);
+
+                } else {
+                  warnings.push(`Fit bounds unable to process geo_point data: ${location}`);
+
+                };
 
                 if (currentLat > maxLat) maxLat = currentLat;
                 if (currentLon > maxLon) maxLon = currentLon;
@@ -43,6 +60,10 @@ define(function () {
                 if (currentLon < minLon) minLon = currentLon;
               };
             });
+
+            if (warnings.length > 0) {
+              warnings.forEach(warning => console.warn(warning));
+            };
 
             const topRight = L.latLng(maxLat, maxLon);
             const bottomLeft = L.latLng(minLat, minLon);

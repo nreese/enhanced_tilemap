@@ -204,7 +204,7 @@ define(function (require) {
     TileMapMap.prototype.destroy = function () {
       this.clearPOILayers();
       this.clearVectorLayers();
-      this._clearDrawEvents();
+      this._destroyMapEvents();
       if (this._label) this._label.removeFrom(this.map);
       if (this._fitControl) this._fitControl.removeFrom(this.map);
       if (this._drawControl) this._drawControl.remove(this.map);
@@ -481,11 +481,26 @@ define(function (require) {
       }
     };
 
-    TileMapMap.prototype._clearDrawEvents = function () {
-      this.map.off('draw:drawstart');
-      this.map.off('draw:drawstop');
-      this.map.off('draw:created');
-      this.map.off('draw:deleted');
+    TileMapMap.prototype._destroyMapEvents = function () {
+      const allEvents = [
+        'draw:drawstart',
+        'draw:drawstop',
+        'draw:created',
+        'draw:deleted',
+        'setview:fitBounds',
+        'groupLayerControl:removeClickedLayer',
+        'moveend',
+        'etm:select-feature',
+        'etm:select-feature-vector',
+        'toolbench:poiFilter',
+        'zoomend',
+        'overlayadd',
+        'overlayremove'
+      ];
+
+      allEvents.forEach(event => {
+        this.map.off(event);
+      });
     };
 
     TileMapMap.prototype._attachEvents = function () {
@@ -614,7 +629,7 @@ define(function (require) {
         self._callbacks.mapZoomEnd({
           chart: self._chartData,
           map: self.map,
-          zoom: self.map.getZoom(),
+          zoom: self.map.getZoom()
         });
       }, 150, false));
 

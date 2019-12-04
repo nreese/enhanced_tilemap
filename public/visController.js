@@ -72,6 +72,31 @@ define(function (require) {
     const respProcessor = new RespProcessor($scope.vis, buildChartData, utils);
     // kibi: end
 
+    /*
+     * Field used for Geospatial filtering can be set in multiple places
+     * 1) field specified by geohash_grid aggregation
+     * 2) field specified under options. Allows for filtering by geo_shape
+     *
+     * Use this method to locate the field
+     */
+    function getGeoField() {
+      let fieldname = null;
+      let geotype = 'geo_point';
+      if ($scope.vis.params.filterByShape && $scope.vis.params.shapeField) {
+        fieldname = $scope.vis.params.shapeField;
+        geotype = 'geo_shape';
+      } else {
+        const agg = utils.getAggConfig($scope.vis.aggs, 'segment');
+        if (agg) {
+          fieldname = agg.fieldName();
+        }
+      }
+      return {
+        fieldname: fieldname,
+        geotype: geotype
+      };
+    }
+
     async function addPOILayerFromDashboardWithModal(dashboardId) {
       const group = dashboardGroups.getGroup(dashboardId);
       if (group) {
@@ -268,7 +293,7 @@ define(function (require) {
 
 
     map.map.on('setview:fitBounds', function (e) {
-      const params = { searchSource: chartData.searchSource, field: chartData.geohashGridAgg.params.field.name };
+      const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
       const boundsHelper = new BoundsHelper(params);
       boundsHelper.getBoundsOfEntireDataSelection()
         .then(entireBounds => {
@@ -354,31 +379,6 @@ define(function (require) {
         tooltipFormatter = Private(TileMapTooltipFormatterProvider);
       }
 
-    }
-
-    /**
-     * Field used for Geospatial filtering can be set in multiple places
-     * 1) field specified by geohash_grid aggregation
-     * 2) field specified under options. Allows for filtering by geo_shape
-     *
-     * Use this method to locate the field
-     */
-    function getGeoField() {
-      let fieldname = null;
-      let geotype = 'geo_point';
-      if ($scope.vis.params.filterByShape && $scope.vis.params.shapeField) {
-        fieldname = $scope.vis.params.shapeField;
-        geotype = 'geo_shape';
-      } else {
-        const agg = utils.getAggConfig($scope.vis.aggs, 'segment');
-        if (agg) {
-          fieldname = agg.fieldName();
-        }
-      }
-      return {
-        fieldname: fieldname,
-        geotype: geotype
-      };
     }
 
     function drawWfsOverlays() {
