@@ -1,0 +1,22 @@
+extends: ['eslint-config-siren']
+env:
+  browser: true
+  node: true
+  es6: true
+  jest: true
+globals:
+    L: true
+    angular: true
+    jQuery: true
+rules:
+  import/no-unresolved: [ 'error', { ignore: [ 'plugins/enhanced_tilemap/', 'jquery', 'd3', '@elastic/', 'react', 'ui/', 'expect.js', 'sinon' ] }]
+  no-unused-vars: 0
+  no-var: 1
+  prefer-const: 1
+  no-extra-semi: 0
+  quotes: 0
+  import/named: 0
+  import/no-named-as-default-member: 0
+  import/no-duplicates: 0
+  import/default: 0
+  memoryleaks: 1

@@ -704,7 +704,7 @@ define(function (require) {
     };
 
     /**
-     * zoom map to fit all features in featureLayer, 
+     * zoom map to fit all features in featureLayer,
      * even those NOT currently within map canvas extent
      *
      * @method _fitBounds

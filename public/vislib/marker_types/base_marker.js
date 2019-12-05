@@ -61,7 +61,7 @@ define(function (require) {
       // ensure we only ever create 1 legend
       if (this._legend) return;
 
-      let self = this;
+      const self = this;
 
       // create the legend control, keep a reference
       self._legend = L.control({ position: 'bottomright' });
@@ -69,7 +69,7 @@ define(function (require) {
       self._legend.onAdd = function () {
         // creates all the neccessary DOM elements for the control, adds listeners
         // on relevant map events, and returns the element containing the control
-        let $div = $('<div>').addClass('tilemap-legend');
+        const $div = $('<div>').addClass('tilemap-legend');
 
         self.$sliderScope = $rootScope.$new();
         self.$sliderScope.slider = {
@@ -91,14 +91,14 @@ define(function (require) {
         $div.append($sliderEl);
 
         _.each(self._legendColors, function (color, i) {
-          let labelText = self._legendQuantizer
+          const labelText = self._legendQuantizer
             .invertExtent(color)
             .map(self._valueFormatter)
             .join(' – ');
 
-          let label = $('<div>').text(labelText);
+          const label = $('<div>').text(labelText);
 
-          let icon = $('<i>').css({
+          const icon = $('<i>').css({
             background: color,
             'border-color': self.darkerColor(color)
           });
@@ -192,9 +192,9 @@ define(function (require) {
         return false;
       };
 
-      let popup = layer.on({
+      const popup = layer.on({
         mouseover: function (e) {
-          let layer = e.target;
+          const layer = e.target;
           // bring layer to front if not older browser
           if (!L.Browser.ie && !L.Browser.opera) {
             layer.bringToFront();
@@ -310,9 +310,9 @@ define(function (require) {
      * @param options {Object} Options to pass to L.geoJson
      */
     BaseMarker.prototype._createMarkerGroup = function (options) {
-      let self = this;
+      const self = this;
       self.markerOptions = options;
-      let defaultOptions = {
+      const defaultOptions = {
         filter: function (feature) {
           const value = _.get(feature, 'properties.value', 0);
           return value >= self.threshold.min && value <= self.threshold.max;
@@ -321,7 +321,7 @@ define(function (require) {
           self.bindPopup(feature, layer);
         },
         style: function (feature) {
-          let value = _.get(feature, 'properties.value');
+          const value = _.get(feature, 'properties.value');
           return self.applyShadingStyle(value);
         }
       };
@@ -335,16 +335,16 @@ define(function (require) {
           this._stopLoadingGeohash();
 
           this._createSpinControl();
-          var place = 100;
+          let place = 100;
           this._intervalId = setInterval(
             function () {
-              var stopIndex = place + 100;
-              var halt = false;
+              let stopIndex = place + 100;
+              let halt = false;
               if (stopIndex > self.geoJson.features.length) {
                 stopIndex = self.geoJson.features.length;
                 halt = true;
               }
-              for (var i = place; i < stopIndex; i++) {
+              for (let i = place; i < stopIndex; i++) {
                 place++;
                 self._markerGroup.addData(self.geoJson.features[i]);
               }
@@ -368,11 +368,11 @@ define(function (require) {
      */
     BaseMarker.prototype._showTooltip = function (feature, latLng) {
       if (!this.map) return;
-      let lat = _.get(feature, 'geometry.coordinates.1');
-      let lng = _.get(feature, 'geometry.coordinates.0');
+      const lat = _.get(feature, 'geometry.coordinates.1');
+      const lng = _.get(feature, 'geometry.coordinates.0');
       latLng = latLng || L.latLng(lat, lng);
 
-      let content = this._tooltipFormatter(feature, this.map);
+      const content = this._tooltipFormatter(feature, this.map);
 
       if (!content) return;
       this._createTooltip(content, latLng);
@@ -411,12 +411,12 @@ define(function (require) {
     BaseMarker.prototype._createSpinControl = function () {
       if (this._spinControl) return;
 
-      var SpinControl = L.Control.extend({
+      const SpinControl = L.Control.extend({
         options: {
           position: 'topright'
         },
         onAdd: function (map) {
-          var container = L.DomUtil.create('div', 'leaflet-control leaflet-spin-control');
+          const container = L.DomUtil.create('div', 'leaflet-control leaflet-spin-control');
           container.innerHTML = '<a class="fa fa-spinner fa-pulse fa-2x fa-fw" href="#" title="Loading Geohash Grids"></a>';
           return container;
         },
@@ -470,7 +470,7 @@ define(function (require) {
         const reds3 = ['#fecc5c', '#fd8d3c', '#e31a1c'];
         const reds5 = ['#fed976', '#feb24c', '#fd8d3c', '#f03b20', '#bd0026'];
 
-        let features = this.geoJson.features;
+        const features = this.geoJson.features;
         const featureLength = features.length;
 
         if (featureLength <= 1 || range <= 1) {
@@ -494,7 +494,7 @@ define(function (require) {
           const ranges = [];
           const bands = this._legendColors.length;
           for (let i = 1; i < bands; i++) {
-            let index = Math.round(i * featureLength / bands);
+            const index = Math.round(i * featureLength / bands);
             if (index <= featureLength - 1) {
               ranges.push(features[index].properties.value);
             }

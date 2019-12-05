@@ -1,53 +1,53 @@
-var gulp = require('gulp');
-var gulpIf = require('gulp-if');
-var _ = require('lodash');
-var path = require('path');
-var mkdirp = require('mkdirp');
-var Rsync = require('rsync');
-var Promise = require('bluebird');
-var eslint = require('gulp-eslint');
-var rimraf = require('rimraf');
-var zip = require('gulp-zip');
-var fs = require('fs');
-var spawn = require('child_process').spawn;
-var minimist = require('minimist');
-var os = require('os');
-var pkg = require('./package.json');
-var packageName = pkg.name;
+const gulp = require('gulp');
+const gulpIf = require('gulp-if');
+const _ = require('lodash');
+const path = require('path');
+const mkdirp = require('mkdirp');
+const Rsync = require('rsync');
+const Promise = require('bluebird');
+const eslint = require('gulp-eslint');
+const rimraf = require('rimraf');
+const zip = require('gulp-zip');
+const fs = require('fs');
+const spawn = require('child_process').spawn;
+const minimist = require('minimist');
+const os = require('os');
+const pkg = require('./package.json');
+const packageName = pkg.name;
 
 // in their own sub-directory to not interfere with Gradle
-var buildDir = path.resolve(__dirname, 'build/gulp');
-var fixtureDir = path.resolve(buildDir, 'fixtures');
-var targetDir = path.resolve(__dirname, 'target/gulp');
-var buildTarget = path.resolve(buildDir, 'kibana', packageName);
+const buildDir = path.resolve(__dirname, 'build/gulp');
+const fixtureDir = path.resolve(buildDir, 'fixtures');
+const targetDir = path.resolve(__dirname, 'target/gulp');
+const buildTarget = path.resolve(buildDir, 'kibana', packageName);
 
-var include = [
+const include = [
   'package.json',
   'index.js',
   'public'
 ];
 
-var knownOptions = {
+const knownOptions = {
   string: 'kibanahomepath',
   default: {
     kibanahomepath: '../kibi-internal'
   }
 };
 
-var options = minimist(process.argv.slice(2), knownOptions);
-var kibanaPluginDir = path.resolve(__dirname, path.join(options.kibanahomepath, 'siren_plugins', packageName));
+const options = minimist(process.argv.slice(2), knownOptions);
+const kibanaPluginDir = path.resolve(__dirname, path.join(options.kibanahomepath, 'siren_plugins', packageName));
 
 
 function syncPluginTo(dest, done) {
   mkdirp(dest, function (err) {
     if (err) return done(err);
     Promise.all(include.map(function (name) {
-      var source = path.resolve(__dirname, name);
+      const source = path.resolve(__dirname, name);
       return new Promise(function (resolve, reject) {
-        var rsync = new Rsync();
+        const rsync = new Rsync();
 
-        var newSource = '';
-        var newDestination = '';
+        let newSource = '';
+        let newDestination = '';
 
         if (os.platform() === 'win32') {
           newSource = '/cygdrive/' + source.replace(/\\/g, '/');
@@ -114,8 +114,6 @@ function isFixed(file) {
 gulp.task('lint', function (done) {
   return gulp.src([
     'public/**/*.js',
-    '!public/lib/**',
-    '!public/vislib/**',
     '!**/webpackShims/**'
   ]).pipe(eslint(eslintOptions))
     .pipe(eslint.formatEach())

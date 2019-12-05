@@ -57,7 +57,7 @@ describe('Kibi Enhanced Tilemap', () => {
       it(`should produce correct for geofilter.js for simple polygon using polygonVector callback`, () => {
         const geoFilterSpy = sinon.spy(geoFilter, 'add');
 
-        let calledCount = 1;
+        const calledCount = 1;
 
         callbacksFactory.polygonVector(fakeVectorPolygonEvent);
         const resultingPolygon = geoFilterSpy.getCall(0).args[0];
@@ -89,7 +89,7 @@ describe('Kibi Enhanced Tilemap', () => {
       it(`should produce correct input for geofilter.js for multipolygon using polygonVector callback`, () => {
         const geoFilterSpy = sinon.spy(geoFilter, 'add');
 
-        let calledCount = 1;
+        const calledCount = 1;
 
         callbacksFactory.polygonVector(fakeVectorMultiPolygonEvent);
         const resultingPolygon = geoFilterSpy.getCall(0).args[0];
@@ -182,7 +182,7 @@ describe('Kibi Enhanced Tilemap', () => {
       it(`should produce correct newFiler for geofilter.js for polygon with donut using polygonVector callback`, () => {
         const geoFilterSpy = sinon.spy(geoFilter, 'add');
 
-        let calledCount = 1;
+        const calledCount = 1;
 
         callbacksFactory.polygonVector(fakeVectorDonutPolygonEvent);
         const resultingPolygon = geoFilterSpy.getCall(0).args[0];
@@ -218,7 +218,7 @@ describe('Kibi Enhanced Tilemap', () => {
       with one polygon containing donut using polygonVector callback`, () => {
         const geoFilterSpy = sinon.spy(geoFilter, 'add');
 
-        let calledCount = 1;
+        const calledCount = 1;
 
         callbacksFactory.polygonVector(fakeVectorMultiPolygonWithDonutEvent);
         const resultingPolygon = geoFilterSpy.getCall(0).args[0];

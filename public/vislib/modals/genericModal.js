@@ -30,7 +30,7 @@ const modalWithForm = (title, form, footer, onClose) => {
       </EuiModal>
     </EuiOverlayMask>
   );
-}
+};
 
 export {
   modalWithForm
