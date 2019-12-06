@@ -1,5 +1,6 @@
 
 const L = require('leaflet');
+const _ = require('lodash');
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
@@ -51,19 +52,23 @@ define(function () {
         return searchSource.fetch()
           .then(searchResp => {
             const chartData = respProcessor.process(searchResp);
-            chartData.geoJson.features.forEach(feature => {
-              const currentLon = feature.geometry.coordinates[0];
-              const currentLat = feature.geometry.coordinates[1];
+            if (_.has(chartData, 'geoJson.features') >= 1) {
+              chartData.geoJson.features.forEach(feature => {
+                const currentLon = feature.geometry.coordinates[0];
+                const currentLat = feature.geometry.coordinates[1];
 
-              if (currentLat > maxLat) maxLat = currentLat;
-              if (currentLon > maxLon) maxLon = currentLon;
-              if (currentLat < minLat) minLat = currentLat;
-              if (currentLon < minLon) minLon = currentLon;
-            });
+                if (currentLat > maxLat) maxLat = currentLat;
+                if (currentLon > maxLon) maxLon = currentLon;
+                if (currentLat < minLat) minLat = currentLat;
+                if (currentLon < minLon) minLon = currentLon;
+              });
 
-            const topRight = L.latLng(maxLat, maxLon);
-            const bottomLeft = L.latLng(minLat, minLon);
-            return L.latLngBounds(topRight, bottomLeft);
+              const topRight = L.latLng(maxLat, maxLon);
+              const bottomLeft = L.latLng(minLat, minLon);
+              return L.latLngBounds(topRight, bottomLeft);
+            } else {
+              console.warn('Unable to fit bounds as no data was detected');
+            }
           });
       };
     }

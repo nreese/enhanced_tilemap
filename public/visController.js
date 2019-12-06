@@ -297,7 +297,12 @@ define(function (require) {
       const boundsHelper = new BoundsHelper(params);
       boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
         .then(entireBounds => {
-          map.map.fitBounds(entireBounds);
+          if (entireBounds) {
+            map.map.fitBounds(entireBounds);
+
+            //update zoom to correct geohash precision
+            $scope.vis.getUiState().set('mapZoom', e.target._zoom);
+          };
         });
     });
 
