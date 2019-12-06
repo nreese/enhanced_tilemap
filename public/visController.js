@@ -295,7 +295,7 @@ define(function (require) {
     map.map.on('setview:fitBounds', function (e) {
       const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
       const boundsHelper = new BoundsHelper(params);
-      boundsHelper.getBoundsOfEntireDataSelection()
+      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
         .then(entireBounds => {
           map.map.fitBounds(entireBounds);
         });
