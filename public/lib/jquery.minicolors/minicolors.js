@@ -1,17 +1,17 @@
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2013 Kai Henzler
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy of
 // this software and associated documentation files (the "Software"), to deal in
 // the Software without restriction, including without limitation the rights to
 // use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
 // the Software, and to permit persons to whom the Software is furnished to do so,
 // subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 // FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
@@ -21,8 +21,8 @@
 require('plugins/enhanced_tilemap/lib/jquery.minicolors/jquery.minicolors');
 require('plugins/enhanced_tilemap/lib/jquery.minicolors/jquery.minicolors.css');
 
-var module = require('ui/modules').get('kibana/enhanced_tilemap');
-module.provider('minicolors', function() {
+const module = require('ui/modules').get('kibana/enhanced_tilemap');
+module.provider('minicolors', function () {
   this.defaults = {
     theme: 'bootstrap',
     position: 'top left',
@@ -41,7 +41,7 @@ module.provider('minicolors', function() {
     showSpeed: 100
   };
 
-  this.$get = function() {
+  this.$get = function () {
     return this;
   };
 });
@@ -50,35 +50,35 @@ module.directive('minicolors', ["minicolors", "$timeout", function (minicolors, 
     require: '?ngModel',
     restrict: 'A',
     priority: 1, //since we bind on an input element, we have to set a higher priority than angular-default input
-    link: function(scope, element, attrs, ngModel) {
+    link: function (scope, element, attrs, ngModel) {
 
-      var inititalized = false;
+      let inititalized = false;
 
       //gets the settings object
-      var getSettings = function() {
-        var config = angular.extend({}, minicolors.defaults, scope.$eval(attrs.minicolors));
+      const getSettings = function () {
+        const config = angular.extend({}, minicolors.defaults, scope.$eval(attrs.minicolors));
         return config;
       };
 
       //what to do if the value changed
-      ngModel.$render = function() {
+      ngModel.$render = function () {
 
         //we are in digest or apply, and therefore call a timeout function
-        $timeout(function() {
-          var color = ngModel.$viewValue;
+        $timeout(function () {
+          const color = ngModel.$viewValue;
           element.minicolors('value', color);
         }, 0, false);
       };
 
       //init method
-      var initMinicolors = function() {
+      const initMinicolors = function () {
 
         if (!ngModel) {
           return;
         }
-        var settings = getSettings();
-        settings.change = function(hex) {
-          scope.$apply(function() {
+        const settings = getSettings();
+        settings.change = function (hex) {
+          scope.$apply(function () {
             ngModel.$setViewValue(hex);
           });
         };
@@ -95,8 +95,8 @@ module.directive('minicolors', ["minicolors", "$timeout", function (minicolors, 
         //needs to be wrapped in $timeout, to prevent $apply / $digest errors
         //$scope.$apply will be called by $timeout, so we don't have to handle that case
         if (!inititalized) {
-          $timeout(function() {
-            var color = ngModel.$viewValue;
+          $timeout(function () {
+            const color = ngModel.$viewValue;
             element.minicolors('value', color);
           }, 0);
           inititalized = true;

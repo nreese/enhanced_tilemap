@@ -11,14 +11,14 @@ describe('Kibi Enhanced Tilemap - respProcessor', function () {
       isHierarchical: function () {
         return true;
       }
-    }
+    };
 
     const fakeUtils = {
       getGeoExtents: getGeoExtentsSpy
     };
     const fakeBuildChartData = function (data) {
       return data;
-    }
+    };
     const fakeResp = {
       aggregations: {
         2: {
@@ -44,5 +44,5 @@ describe('Kibi Enhanced Tilemap - respProcessor', function () {
     expect(chartData).to.eql(expectedData);
   });
 
-})
+});
 

@@ -1,9 +1,9 @@
 define(function (require) {
   return function ScaledCircleMarkerFactory(Private) {
-    let _ = require('lodash');
-    let L = require('leaflet');
+    const _ = require('lodash');
+    const L = require('leaflet');
 
-    let BaseMarker = Private(require('./base_marker'));
+    const BaseMarker = Private(require('./base_marker'));
 
     /**
      * Map overlay: circle markers that are scaled to illustrate values
@@ -14,7 +14,7 @@ define(function (require) {
      */
     _.class(ScaledCircleMarker).inherits(BaseMarker);
     function ScaledCircleMarker(map, geoJson, params) {
-      let self = this;
+      const self = this;
       ScaledCircleMarker.Super.apply(this, arguments);
 
       // Earth circumference in meters
@@ -25,7 +25,7 @@ define(function (require) {
 
       this._createMarkerGroup({
         pointToLayer: function (feature, latlng) {
-          let scaledRadius = self._radiusScale(feature);
+          const scaledRadius = self._radiusScale(feature);
           return L.circleMarker(latlng).setRadius(scaledRadius);
         }
       });
@@ -40,8 +40,8 @@ define(function (require) {
      * @return {Number}
      */
     ScaledCircleMarker.prototype._geohashMinDistance = function (feature) {
-      let centerPoint = _.get(feature, 'properties.center');
-      let geohashRect = _.get(feature, 'properties.rectangle');
+      const centerPoint = _.get(feature, 'properties.center');
+      const geohashRect = _.get(feature, 'properties.rectangle');
 
       // centerPoint is an array of [lat, lng]
       // geohashRect is the 4 corners of the geoHash rectangle
@@ -49,16 +49,16 @@ define(function (require) {
       //   clockwise, each value being an array of [lat, lng]
 
       // center lat and southeast lng
-      let east   = L.latLng([centerPoint[0], geohashRect[2][1]]);
+      const east   = L.latLng([centerPoint[0], geohashRect[2][1]]);
       // southwest lat and center lng
-      let north  = L.latLng([geohashRect[3][0], centerPoint[1]]);
+      const north  = L.latLng([geohashRect[3][0], centerPoint[1]]);
 
       // get latLng of geohash center point
-      let center = L.latLng([centerPoint[0], centerPoint[1]]);
+      const center = L.latLng([centerPoint[0], centerPoint[1]]);
 
       // get smallest radius at center of geohash grid rectangle
-      let eastRadius  = Math.floor(center.distanceTo(east));
-      let northRadius = Math.floor(center.distanceTo(north));
+      const eastRadius  = Math.floor(center.distanceTo(east));
+      const northRadius = Math.floor(center.distanceTo(north));
       return _.min([eastRadius, northRadius]);
     };
 
@@ -72,13 +72,13 @@ define(function (require) {
      * @return {Number}
      */
     ScaledCircleMarker.prototype._radiusScale = function (feature) {
-      let radius = this._geohashMinDistance(feature);
-      let orgMin = this.geoJson.properties.allmin;
-      let orgMax = this.geoJson.properties.allmax;
+      const radius = this._geohashMinDistance(feature);
+      const orgMin = this.geoJson.properties.allmin;
+      const orgMax = this.geoJson.properties.allmax;
       // Don't let the circle size get any smaller than one-third the max size
-      let min = orgMax / 3;
-      let max = orgMax;
-      let value = this._scaleValueBetween(feature.properties.value, min, max, orgMin, orgMax);
+      const min = orgMax / 3;
+      const max = orgMax;
+      const value = this._scaleValueBetween(feature.properties.value, min, max, orgMin, orgMax);
       return radius * (value / max) / this._metersPerPixel;
     };
 

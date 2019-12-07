@@ -1,10 +1,10 @@
 define(function (require) {
   return function HeatmapMarkerFactory(Private) {
-    let d3 = require('d3');
-    let _ = require('lodash');
-    let L = require('leaflet');
+    const d3 = require('d3');
+    const _ = require('lodash');
+    const L = require('leaflet');
 
-    let BaseMarker = Private(require('./base_marker'));
+    const BaseMarker = Private(require('./base_marker'));
 
     /**
      * Map overlay: canvas layer with leaflet.heat plugin
@@ -15,7 +15,7 @@ define(function (require) {
      */
     _.class(HeatmapMarker).inherits(BaseMarker);
     function HeatmapMarker(map, geoJson, params) {
-      let self = this;
+      const self = this;
       this._disableTooltips = false;
       HeatmapMarker.Super.apply(this, arguments);
 
@@ -36,8 +36,8 @@ define(function (require) {
     HeatmapMarker.prototype.addLegend = _.noop;
 
     HeatmapMarker.prototype._createMarkerGroup = function (options) {
-      let max = _.get(this.geoJson, 'properties.allmax');
-      let points = this._dataToHeatArray(max);
+      const max = _.get(this.geoJson, 'properties.allmax');
+      const points = this._dataToHeatArray(max);
 
       this._markerGroup = L.heatLayer(points, options);
       this._fixTooltips();
@@ -52,8 +52,8 @@ define(function (require) {
     };
 
     HeatmapMarker.prototype._fixTooltips = function () {
-      let self = this;
-      let debouncedMouseMoveLocation = _.debounce(mouseMoveLocation.bind(this), 15, {
+      const self = this;
+      const debouncedMouseMoveLocation = _.debounce(mouseMoveLocation.bind(this), 15, {
         'leading': true,
         'trailing': false
       });
@@ -73,7 +73,7 @@ define(function (require) {
       }
 
       function mouseMoveLocation(e) {
-        let latlng = e.latlng;
+        const latlng = e.latlng;
 
         this.map.closePopup();
 
@@ -85,7 +85,7 @@ define(function (require) {
         }
 
         // find nearest feature to event latlng
-        let feature = this._nearestFeature(latlng);
+        const feature = this._nearestFeature(latlng);
 
         // show tooltip if close enough to event latlng
         if (this._tooltipProximity(latlng, feature)) {
@@ -119,7 +119,7 @@ define(function (require) {
      * @return nearestPoint {Leaflet latLng}
      */
     HeatmapMarker.prototype._nearestFeature = function (latLng) {
-      let self = this;
+      const self = this;
       let nearest;
 
       if (latLng.lng < -180 || latLng.lng > 180) {
@@ -127,8 +127,8 @@ define(function (require) {
       }
 
       _.reduce(this.geoJson.features, function (distance, feature) {
-        let featureLatLng = self._getLatLng(feature);
-        let dist = latLng.distanceTo(featureLatLng);
+        const featureLatLng = self._getLatLng(feature);
+        const dist = latLng.distanceTo(featureLatLng);
 
         if (dist < distance) {
           nearest = feature;
@@ -153,30 +153,30 @@ define(function (require) {
       if (!feature) return;
 
       let showTip = false;
-      let featureLatLng = this._getLatLng(feature);
+      const featureLatLng = this._getLatLng(feature);
 
       // zoomScale takes map zoom and returns proximity value for tooltip display
       // domain (input values) is map zoom (min 1 and max 18)
       // range (output values) is distance in meters
       // used to compare proximity of event latlng to feature latlng
-      let zoomScale = d3.scale.linear()
+      const zoomScale = d3.scale.linear()
         .domain([1, 4, 7, 10, 13, 16, 18])
         .range([1000000, 300000, 100000, 15000, 2000, 150, 50]);
 
-      let proximity = zoomScale(this.map.getZoom());
-      let distance = latlng.distanceTo(featureLatLng);
+      const proximity = zoomScale(this.map.getZoom());
+      const distance = latlng.distanceTo(featureLatLng);
 
       // maxLngDif is max difference in longitudes
       // to prevent feature tooltip from appearing 360°
       // away from event latlng
-      let maxLngDif = 40;
-      let lngDif = Math.abs(latlng.lng - featureLatLng.lng);
+      const maxLngDif = 40;
+      const lngDif = Math.abs(latlng.lng - featureLatLng.lng);
 
       if (distance < proximity && lngDif < maxLngDif) {
         showTip = true;
       }
 
-      let testScale = d3.scale.pow().exponent(0.2)
+      const testScale = d3.scale.pow().exponent(0.2)
         .domain([1, 18])
         .range([1500000, 50]);
       return showTip;
@@ -193,12 +193,12 @@ define(function (require) {
      * @return {Array}
      */
     HeatmapMarker.prototype._dataToHeatArray = function (max) {
-      let self = this;
-      let mapData = this.geoJson;
+      const self = this;
+      const mapData = this.geoJson;
 
       return this.geoJson.features.map(function (feature) {
-        let lat = feature.geometry.coordinates[1];
-        let lng = feature.geometry.coordinates[0];
+        const lat = feature.geometry.coordinates[1];
+        const lng = feature.geometry.coordinates[0];
         let heatIntensity;
 
         if (!self._attr.heatNormalizeData) {

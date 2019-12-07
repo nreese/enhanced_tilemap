@@ -45,7 +45,7 @@ define(function (require) {
         };
 
         scope.filterVisList = function () {
-          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;   
+          scope.tooltipFormat.options.visFilter = this.tooltipFormat.options.visFilter;
           fetchVisList();
         };
 

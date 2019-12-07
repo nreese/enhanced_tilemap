@@ -77,7 +77,7 @@ define(function (require) {
       text: 'Create',
       container: L.DomUtil.create('li', '', this._actionsContainer),
       callback: function () {
-        self._map.fire('toolbench:poiFilter', {radius: radius});
+        self._map.fire('toolbench:poiFilter', { radius: radius });
         self._actionsContainer.style.display = 'none';
         self._clearActions();
       }

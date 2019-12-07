@@ -6,7 +6,7 @@ L.Control.SetView = L.Control.extend({
     this._toolbar = new L.SetViewToolbar(options);
   },
   onAdd: function (map) {
-    var container = L.DomUtil.create('div', 'leaflet-draw');
+    const container = L.DomUtil.create('div', 'leaflet-draw');
     container.appendChild(this._toolbar.addToolbar(map));
     return container;
   },
@@ -20,13 +20,13 @@ L.SetViewToolbar = L.Class.extend({
     this._decimalDegrees = true;
   },
   addToolbar: function (map) {
-    var container = L.DomUtil.create('div', 'leaflet-draw-section');
+    const container = L.DomUtil.create('div', 'leaflet-draw-section');
     this._toolbarContainer = L.DomUtil.create('div', 'leaflet-bar');
     this._actionsContainer = L.DomUtil.create('ul', 'leaflet-draw-actions');
     container.appendChild(this._toolbarContainer);
     container.appendChild(this._actionsContainer);
 
-    var self = this;
+    const self = this;
     this._map = map;
     this._tools = [];
 
@@ -34,7 +34,7 @@ L.SetViewToolbar = L.Class.extend({
       title: "Fit Data Bounds",
       className: 'fa fa-crop',
       container: this._toolbarContainer,
-      callback: function() {
+      callback: function () {
         self._hideActionsToolbar();
         self._map.fire('setview:fitBounds', {});
       },
@@ -44,12 +44,12 @@ L.SetViewToolbar = L.Class.extend({
       title: "Set View Location",
       className: 'fa fa-eye',
       container: this._toolbarContainer,
-      callback: function() {
+      callback: function () {
         self._showInputs();
       },
       context: {}
     }));
-    
+
     return container;
 
   },
@@ -59,7 +59,7 @@ L.SetViewToolbar = L.Class.extend({
     });
   },
   _createButton: function (options) {
-    var link = L.DomUtil.create('a', options.className || '', options.container);
+    const link = L.DomUtil.create('a', options.className || '', options.container);
     link.href = '#';
     if (options.text) {
       link.innerHTML = options.text;
@@ -83,7 +83,7 @@ L.SetViewToolbar = L.Class.extend({
     return link;
   },
   _createInput: function (options) {
-    var input = L.DomUtil.create('input', options.className || '', options.container);
+    const input = L.DomUtil.create('input', options.className || '', options.container);
     input.type = options.inputType;
     if (options.placeholder) {
       input.placeholder = options.placeholder;
@@ -92,9 +92,9 @@ L.SetViewToolbar = L.Class.extend({
     if (options.value) {
       input.value = options.value;
     }
-     L.DomEvent
+    L.DomEvent
       .on(input, 'mousedown', L.DomEvent.stopPropagation)
-      .on(input, 'dblclick', L.DomEvent.stopPropagation)
+      .on(input, 'dblclick', L.DomEvent.stopPropagation);
     if (options.callback) {
       L.DomEvent
         .on(input, 'change', this.clickEvent.callback);
@@ -102,15 +102,15 @@ L.SetViewToolbar = L.Class.extend({
     return input;
   },
   _createSelect: function (options) {
-    var select = L.DomUtil.create('select', options.className || '', options.container);
+    const select = L.DomUtil.create('select', options.className || '', options.container);
     if (options.title) {
       select.title = options.title;
     }
     options.choices.forEach(function (choice) {
-      var option = L.DomUtil.create('option', '', select);
+      const option = L.DomUtil.create('option', '', select);
       option.innerHTML = choice.display;
       option.value = choice.value;
-      if(options.selectedValue === choice.value) {
+      if (options.selectedValue === choice.value) {
         option.selected = 'selected';
       }
     });
@@ -137,32 +137,32 @@ L.SetViewToolbar = L.Class.extend({
     L.DomUtil.removeClass(this._actionsContainer, 'leaflet-draw-actions-bottom');
   },
   _showInputs: function () {
-    var self = this;
-    var container = this._actionsContainer;
+    const self = this;
+    const container = this._actionsContainer;
     // Clean up any old stuff
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
 
-    var listItemClass = '';
+    let listItemClass = '';
     if (this._map.getSize().x < 375) {
       listItemClass = 'small-screen';
     }
 
-    var center = this._map.getCenter();
+    const center = this._map.getCenter();
     this._lat = L.Util.formatNum(center.lat, 5);
     this._lon = L.Util.formatNum(center.lng, 5);
     this._zoom = this._map.getZoom();
 
     let unitValue = 'dd';
-    if(!this._decimalDegrees) unitValue = 'dms';
+    if (!this._decimalDegrees) unitValue = 'dms';
     this._createSelect({
       container: L.DomUtil.create('li', listItemClass, container),
       name: 'unit',
       title: 'Select coordinate units; decimal degrees (dd) or degrees minutes seconds (dms)',
       selectedValue: unitValue,
-      choices: [{display:'dd', value: 'dd'}, {display:'dms', value: 'dms'}],
-      callback: function(event) {
+      choices: [{ display:'dd', value: 'dd' }, { display:'dms', value: 'dms' }],
+      callback: function (event) {
         self._decimalDegrees = !self._decimalDegrees;
         self._hideActionsToolbar();
         self._showInputs();
@@ -175,7 +175,7 @@ L.SetViewToolbar = L.Class.extend({
         placeholder: 'lat',
         name: 'lat',
         value: this._lat,
-        callback: function(event) {
+        callback: function (event) {
           self._setLat(self._getValue(event));
         }
       });
@@ -185,7 +185,7 @@ L.SetViewToolbar = L.Class.extend({
         name: 'lon',
         placeholder: 'lon',
         value: this._lon,
-        callback: function(event) {
+        callback: function (event) {
           self._setLon(self._getValue(event));
         }
       });
@@ -197,19 +197,19 @@ L.SetViewToolbar = L.Class.extend({
         placeholder: 'lat DDMMSS',
         name: 'latDms',
         value: this._latDms,
-        callback: function(event) {
+        callback: function (event) {
           self._latDms = self._getValue(event);
         }
       });
       this._latDirection = 'n';
-      if(this._lat < 0) this._latDirection = 's';
+      if (this._lat < 0) this._latDirection = 's';
       this._createSelect({
         container: L.DomUtil.create('li', listItemClass, container),
         name: 'latDirection',
         title: 'Latitude: North or South',
         selectedValue: this._latDirection,
-        choices: [{display:'n', value: 'n'}, {display:'s', value: 's'}],
-        callback: function(event) {
+        choices: [{ display:'n', value: 'n' }, { display:'s', value: 's' }],
+        callback: function (event) {
           self._latDirection = self._getValue(event);
         }
       });
@@ -220,26 +220,26 @@ L.SetViewToolbar = L.Class.extend({
         placeholder: 'lon DDMMSS',
         name: 'lonDms',
         value: this._lonDms,
-        callback: function(event) {
+        callback: function (event) {
           self._lonDms = self._getValue(event);
         }
       });
       this._lonDirection = 'e';
-      if(this._lon < 0) this._lonDirection = 'w';
+      if (this._lon < 0) this._lonDirection = 'w';
       this._createSelect({
         container: L.DomUtil.create('li', listItemClass, container),
         name: 'lonDirection',
         title: 'Longitude: East or West',
         selectedValue: this._lonDirection,
-        choices: [{display:'e', value: 'e'}, {display:'w', value: 'w'}],
-        callback: function(event) {
+        choices: [{ display:'e', value: 'e' }, { display:'w', value: 'w' }],
+        callback: function (event) {
           self._lonDirection = self._getValue(event);
         }
       });
 
     }
-    var choices = [];
-    for(var i = this._map.getMinZoom(); i <= this._map.getMaxZoom(); i++) {
+    const choices = [];
+    for (let i = this._map.getMinZoom(); i <= this._map.getMaxZoom(); i++) {
       choices.push({
         display: i,
         value: i
@@ -251,7 +251,7 @@ L.SetViewToolbar = L.Class.extend({
       title: 'zoom level',
       selectedValue: this._map.getZoom(),
       choices: choices,
-      callback: function(event) {
+      callback: function (event) {
         self._zoom = self._getValue(event);
       }
     });
@@ -259,8 +259,8 @@ L.SetViewToolbar = L.Class.extend({
       title: "Click to set map view to provided values.",
       text: "Set View",
       container: L.DomUtil.create('li', listItemClass, container),
-      callback: function() {
-        if(!self._decimalDegrees) {
+      callback: function () {
+        if (!self._decimalDegrees) {
           self._setLat(self._dmsToDd(self._latDms, self._latDirection));
           self._setLon(self._dmsToDd(self._lonDms, self._lonDirection));
         }
@@ -272,7 +272,7 @@ L.SetViewToolbar = L.Class.extend({
       title: "Click to cancel.",
       text: "Cancel",
       container: L.DomUtil.create('li', listItemClass, container),
-      callback: function() {
+      callback: function () {
         self._hideActionsToolbar();
       }
     });
@@ -281,51 +281,51 @@ L.SetViewToolbar = L.Class.extend({
     this._actionsContainer.style.top = '25px';
     this._actionsContainer.style.display = 'block';
   },
-  _getValue: function(event) {
+  _getValue: function (event) {
     const el = event.target || event.srcElement;
     return el.value;
   },
-  _setLat: function(lat) {
+  _setLat: function (lat) {
     if (lat < -90) lat = -90;
     if (lat > 90) lat = 90;
     this._lat = lat;
   },
-  _setLon: function(lon) {
+  _setLon: function (lon) {
     if (lon < -180) lon = -180;
     if (lon > 180) lon = 180;
     this._lon = lon;
   },
-  _formatNumber: function(num) {
+  _formatNumber: function (num) {
     let sNum = parseInt(num, 10) + '';
-    if(num < 10) sNum = '0' + sNum;
+    if (num < 10) sNum = '0' + sNum;
     return sNum;
   },
-  _ddToDms: function(dd) {
-    let deg = parseInt(Math.abs(dd), 10);
-    let frac = Math.abs(Math.abs(dd) - deg);
-    let min = parseInt(frac * 60, 10);
+  _ddToDms: function (dd) {
+    const deg = parseInt(Math.abs(dd), 10);
+    const frac = Math.abs(Math.abs(dd) - deg);
+    const min = parseInt(frac * 60, 10);
     let sec = frac * 3600 - min * 60;
-    if(sec >= 60) sec = 0;
+    if (sec >= 60) sec = 0;
     return this._formatNumber(deg) + this._formatNumber(min) + this._formatNumber(sec);
   },
-  _dmsToDd: function(dms, dir) {
+  _dmsToDd: function (dms, dir) {
     let safeDms = '';
     //remove any non-numerical characters
-    dms.split('').forEach(function(char) {
+    dms.split('').forEach(function (char) {
       if (char >= '0' && char <= '9') safeDms += char;
     });
     //Ensure dms is at least 6 characters
-    while(safeDms.length < 6) {
+    while (safeDms.length < 6) {
       safeDms += '0';
     }
 
     let degLength = 2;
-    if(safeDms.length > 6) {
+    if (safeDms.length > 6) {
       degLength = 3;
     }
-    let deg = parseInt(safeDms.substring(0, degLength), 10);
-    let min = parseInt(safeDms.substring(degLength, degLength+2), 10);
-    let sec = parseInt(safeDms.substring(degLength+2, degLength+4), 10);
+    const deg = parseInt(safeDms.substring(0, degLength), 10);
+    const min = parseInt(safeDms.substring(degLength, degLength + 2), 10);
+    const sec = parseInt(safeDms.substring(degLength + 2, degLength + 4), 10);
     let dd = deg + (min / 60.0) + (sec / 3600.0);
     if (dir.toLowerCase() === 'w' || dir.toLowerCase() === 's') dd = dd * -1;
     return dd;

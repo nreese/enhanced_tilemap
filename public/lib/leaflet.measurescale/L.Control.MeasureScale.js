@@ -22,7 +22,7 @@ L.Control.MeasureScale = L.Control.Scale.extend({
         cont: 'Click to continue drawing line.',
         end: 'Click last point to finish line.'
       }
-    }
+    };
     this.polyline = new L.Draw.Polyline(this._map, options);
   },
   startMeasure: function () {

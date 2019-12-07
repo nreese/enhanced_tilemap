@@ -1,11 +1,11 @@
 import _ from 'lodash';
 
 export default class RespProcessor {
-	constructor(vis, buildChartData, utils) {
-		this.buildChartData = buildChartData;
+  constructor(vis, buildChartData, utils) {
+    this.buildChartData = buildChartData;
     this.utils = utils;
     this.vis = vis;
-	}
+  }
 
   process(resp) {
     const respClone = _.cloneDeep(resp);
