@@ -33,9 +33,7 @@ define(function () {
         searchSource.inherits(this.searchSource);
         searchSource.filter(null);
         searchSource.filter(queryFilter.getFilters());
-        console.log(searchSource.aggs);
         searchSource.aggs(() => {
-          console.log('CALLED');
           vis.requesting();
           const dsl = vis.aggs.toDsl();
           //removing the map canvas geo filter from request

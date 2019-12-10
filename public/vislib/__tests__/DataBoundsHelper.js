@@ -1,9 +1,10 @@
 
 import ngMock from 'ng_mock';
 import sinon from 'sinon';
+const expect = require('expect.js');
+
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
-const expect = require('expect.js');
 
 const fakeVis = {
   type: {
@@ -16,34 +17,12 @@ const fakeVis = {
       }
     },
     responseConverter: (vis, table) => {
-
     }
   },
+  requesting: () => { },
   isHierarchical: () => { },
-  aggs: [
-    {
-      id: "1",
-      enabled: true,
-      type: "count",
-      schema: "metric",
-      params: {}
-    },
-    {
-      id: "2",
-      enabled: true,
-      type: "geohash_grid",
-      schema: "segment",
-      params: {
-        field: "location",
-        autoPrecision: true,
-        aggPrecisionType: "Performance",
-        useGeocentroid: true,
-        precision: 2
-      }
-    }],
+  aggs: [{ id: "1" }, { id: "2" }]
 };
-fakeVis.aggs.bySchemaGroup = { metrics: '' };
-fakeVis.aggs.getResponseAggs = () => { return []; };
 fakeVis.aggs.toDsl = function () {
   return {
     "2": {
@@ -60,134 +39,62 @@ fakeVis.aggs.toDsl = function () {
             }
           }
         }
-      },
-      aggs: {
-        filtered_geohash: {
-          geohash_grid: {
-            field: "location",
-            precision: 3
-          },
-          aggs: {
-            "3": {
-              geo_centroid: {
-                field: "location"
-              }
-            }
-          }
-        }
       }
     }
   };
 };
+fakeVis.aggs.bySchemaGroup = { metrics: '' };
+fakeVis.aggs.getResponseAggs = () => { return []; };
 
-const fakeSearchResponses = {
-  "took": 30,
-  "timed_out": false,
-  "_shards": {
-    "total": 5,
-    "successful": 5,
-    "skipped": 0,
-    "failed": 0
-  },
-  "hits": {
-    "total": 3,
-    "max_score": 0,
-    "hits": {
-    }
-  },
-  "aggregations": {
-    "2": {}
-  },
-  "planner": {
-    "node": "t7t_5TgYSDG0mwyZIDlZGA",
-    "took_in_millis": 31,
-    "timestamp": {
-      "start_in_millis": 1575991613435,
-      "stop_in_millis": 1575991613466,
-      "took_in_millis": 31
-    },
-    "is_pruned": false
-  },
-  "status": 200
-};
 
 const fakeChartData = {
-  "title": null,
-  "geohashGridAgg": {
-    "id": "2",
-    "enabled": true,
-    "type": "geohash_grid",
-    "schema": "segment",
-    "params": {
-      "field": "location",
-      "autoPrecision": true,
-      "aggPrecisionType": "Performance",
-      "useGeocentroid": true,
-      "precision": 2
-    }
-  },
-  "geoJson": {
-    "type": "FeatureCollection",
-    "features": [
+  geoJson: {
+    type: "FeatureCollection",
+    features: [
       {
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [
-            177,
-            -87
-          ]
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [177, -87]
         }
       },
       {
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [
-            -176,
-            86
-          ]
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [-176, 86]
         }
       },
       {
-        "type": "Feature",
-        "geometry": {
-          "type": "Point",
-          "coordinates": [
-            -0,
-            0
-          ]
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [-0, 0]
         }
       }
     ]
-  },
-  "hits": 26923
+  }
 };
 
 describe('DataBoundsHelper', () => {
 
-  let aggSpy;
   let BoundsHelper;
   let SearchSource;
-  let testAggs;
-  //const vis = {};
 
   beforeEach(ngMock.module('kibana'));
   beforeEach(() => {
 
     ngMock.inject(function (Private) {
-      SearchSource = Private(SearchSourceProvider);
+      // SearchSource = Private(SearchSourceProvider);
+      const SearchSourceStub = createSearchSourceStubProvider();
+      Private.stub(SearchSourceProvider, SearchSourceStub);
+      SearchSource = new SearchSourceStub();
+
       BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
-
-
-      // SearchSource.prototype.aggs = cb => testAggs = cb();
-      // sinon.stub(SearchSource.prototype, 'aggs').callsFake(cb => testAggs = cb());
-      sinon.stub(SearchSource.prototype, 'fetch').returns(Promise.resolve(fakeSearchResponses));
       sinon.stub(RespProcessor.prototype, 'process').returns(fakeChartData);
 
     });
   });
-
 
   it('should have correct agg dsl and process max bounds correctly', function (done) {
     const params = {
@@ -196,16 +103,9 @@ describe('DataBoundsHelper', () => {
     };
 
     const boundsHelper = new BoundsHelper(params);
-    sinon.stub(SearchSource.prototype, 'aggs').callsFake(cb => testAggs = cb());
-
-    // aggSpy = sinon.spy('aggs');
-    // boundsHelper.searchSource.aggSpy()
-    //   .then(d => { console.log('edwin ', d); });
 
     boundsHelper.getBoundsOfEntireDataSelection(fakeVis)
       .then((entireBounds) => {
-
-        console.log(testAggs);
 
         const expectedEntireBounds = {
           _southWest: {
@@ -227,11 +127,24 @@ describe('DataBoundsHelper', () => {
           }
         };
 
-        expect(entireBounds).to.eql(expectedEntireBounds);
-        expect(expectedAggsDsl).to.eql(expectedAggsDsl);
+        const callBackOfAggs = SearchSource.aggs.getCalls()[0].args[0];
+        const dsl = callBackOfAggs();
 
+        expect(entireBounds).to.eql(expectedEntireBounds);
+        expect(dsl[2].filter).to.eql(expectedAggsDsl);
         done();
       }).catch(done);
 
   });
+
+  function createSearchSourceStubProvider() {
+    const searchSourceStub = {};
+    searchSourceStub.aggs = sinon.stub();
+    searchSourceStub.filter = sinon.stub().returns(searchSourceStub);
+    searchSourceStub.fetch = sinon.stub().resolves({});
+    searchSourceStub.inherits = sinon.stub().returns(searchSourceStub);
+    return function SearchSourceStubProvider() {
+      return searchSourceStub;
+    };
+  }
 });
