@@ -11,6 +11,7 @@ define(function () {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
+    console.log(queryFilter);
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const utils = require('plugins/enhanced_tilemap/utils');
@@ -29,13 +30,15 @@ define(function () {
         let minLat = 90;
         let minLon = 180;
 
+        console.log(vis.aggs);
         const searchSource = new SearchSource();
-        searchSource.inherits(this.searchSource);
-        searchSource.filter(null);
-        searchSource.filter(queryFilter.getFilters());
-        searchSource.aggs(() => {
+        searchSource.inherits(this.searchSource); // test callsWith <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        searchSource.filter(null); // test callsWith <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        searchSource.filter(queryFilter.getFilters()); // test callsWith <<<<<<<<<<<<<<<<<<<<<<<<<<<<<< []
+        searchSource.aggs(() => { // sinon.stub(SearchSource.prototype, 'aggs').callsFake(cb => someVariable = cb());
           vis.requesting();
           const dsl = vis.aggs.toDsl();
+          console.log('CALLED');
 
           //removing the map canvas geo filter from request
           dsl[2].filter = {
@@ -47,9 +50,9 @@ define(function () {
             }
           };
           return dsl;
-        });
+        }); // test callsWith <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-        return searchSource.fetch()
+        return searchSource.fetch() // FakePromise - fetch = Promise.resolve(serachResp) <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
           .then(searchResp => {
             const chartData = respProcessor.process(searchResp);
             if (_.has(chartData, 'geoJson.features') >= 1) {
