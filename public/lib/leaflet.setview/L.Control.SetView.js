@@ -117,10 +117,8 @@ L.SetViewToolbar = L.Class.extend({
   },
   _dispose: function (button, callback) {
     L.DomEvent
-      .off(button, 'click', L.DomEvent.stopPropagation)
       .off(button, 'mousedown', L.DomEvent.stopPropagation)
       .off(button, 'dblclick', L.DomEvent.stopPropagation)
-      .off(button, 'click', L.DomEvent.preventDefault)
       .off(button, 'click');
   },
   _hideActionsToolbar: function () {
