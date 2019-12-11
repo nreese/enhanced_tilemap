@@ -55,9 +55,18 @@ L.SetViewToolbar = L.Class.extend({
   },
   removeToolbar: function () {
     this._tools.forEach((tool) => {
-      this._dispose(tool);
+      const existingTool = this._toolEventDetails.find(toolEvent => tool.title === toolEvent.title);
+      if (existingTool) {
+        this._dispose(tool, existingTool.callback, existingTool.context);
+      };
     });
   },
+
+  _storeToolEventDetails: function (toolEventDetails) {
+    if (!this._toolEventDetails) this._toolEventDetails = [];
+    this._toolEventDetails.push(toolEventDetails);
+  },
+
   _createButton: function (options) {
     const link = L.DomUtil.create('a', options.className || '', options.container);
     link.href = '#';
@@ -67,6 +76,12 @@ L.SetViewToolbar = L.Class.extend({
     if (options.title) {
       link.title = options.title;
     }
+
+    this._storeToolEventDetails({
+      title: options.title,
+      callback: options.callback,
+      context: options.context,
+    });
 
     L.DomEvent
       .on(link, 'click', L.DomEvent.stopPropagation)
@@ -115,11 +130,13 @@ L.SetViewToolbar = L.Class.extend({
     }
     return select;
   },
-  _dispose: function (button, callback) {
+  _dispose: function (button, callback, context) {
     L.DomEvent
+      .off(button, 'click', L.DomEvent.stopPropagation)
       .off(button, 'mousedown', L.DomEvent.stopPropagation)
       .off(button, 'dblclick', L.DomEvent.stopPropagation)
-      .off(button, 'click');
+      .off(button, 'click', L.DomEvent.preventDefault)
+      .off(button, 'click', callback, context);
   },
   _hideActionsToolbar: function () {
     this._actionsContainer.style.display = 'none';
