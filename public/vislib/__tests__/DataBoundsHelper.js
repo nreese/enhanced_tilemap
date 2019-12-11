@@ -21,11 +21,11 @@ const fakeVis = {
   },
   requesting: () => { },
   isHierarchical: () => { },
-  aggs: [{ id: "1" }, { id: "2" }]
+  aggs: [{ id: '1' }, { id: '2' }]
 };
 fakeVis.aggs.toDsl = function () {
   return {
-    "2": {
+    '2': {
       filter: {
         geo_bounding_box: {
           location: {
@@ -49,26 +49,26 @@ fakeVis.aggs.getResponseAggs = () => { return []; };
 
 const fakeChartData = {
   geoJson: {
-    type: "FeatureCollection",
+    type: 'FeatureCollection',
     features: [
       {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "Point",
+          type: 'Point',
           coordinates: [177, -87]
         }
       },
       {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "Point",
+          type: 'Point',
           coordinates: [-176, 86]
         }
       },
       {
-        type: "Feature",
+        type: 'Feature',
         geometry: {
-          type: "Point",
+          type: 'Point',
           coordinates: [-0, 0]
         }
       }
@@ -85,7 +85,6 @@ describe('DataBoundsHelper', () => {
   beforeEach(() => {
 
     ngMock.inject(function (Private) {
-      // SearchSource = Private(SearchSourceProvider);
       const SearchSourceStub = createSearchSourceStubProvider();
       Private.stub(SearchSourceProvider, SearchSourceStub);
       SearchSource = new SearchSourceStub();
