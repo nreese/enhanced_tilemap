@@ -55,9 +55,18 @@ L.SetViewToolbar = L.Class.extend({
   },
   removeToolbar: function () {
     this._tools.forEach((tool) => {
-      this._dispose(tool);
+      const existingTool = this._toolEventDetails.find(toolEvent => tool.title === toolEvent.title);
+      if (existingTool) {
+        this._dispose(tool, existingTool.callback, existingTool.context);
+      };
     });
   },
+
+  _storeToolEventDetails: function (toolEventDetails) {
+    if (!this._toolEventDetails) this._toolEventDetails = [];
+    this._toolEventDetails.push(toolEventDetails);
+  },
+
   _createButton: function (options) {
     const link = L.DomUtil.create('a', options.className || '', options.container);
     link.href = '#';
@@ -68,17 +77,18 @@ L.SetViewToolbar = L.Class.extend({
       link.title = options.title;
     }
 
-    this.clickEvent = {
+    this._storeToolEventDetails({
+      title: options.title,
       callback: options.callback,
-      context: options.context
-    };
+      context: options.context,
+    });
 
     L.DomEvent
       .on(link, 'click', L.DomEvent.stopPropagation)
       .on(link, 'mousedown', L.DomEvent.stopPropagation)
       .on(link, 'dblclick', L.DomEvent.stopPropagation)
       .on(link, 'click', L.DomEvent.preventDefault)
-      .on(link, 'click', this.clickEvent.callback, this.clickEvent.context);
+      .on(link, 'click', options.callback, options.context);
 
     return link;
   },
@@ -97,7 +107,7 @@ L.SetViewToolbar = L.Class.extend({
       .on(input, 'dblclick', L.DomEvent.stopPropagation);
     if (options.callback) {
       L.DomEvent
-        .on(input, 'change', this.clickEvent.callback);
+        .on(input, 'change', options.callback);
     }
     return input;
   },
@@ -120,13 +130,13 @@ L.SetViewToolbar = L.Class.extend({
     }
     return select;
   },
-  _dispose: function (button, callback) {
+  _dispose: function (button, callback, context) {
     L.DomEvent
       .off(button, 'click', L.DomEvent.stopPropagation)
       .off(button, 'mousedown', L.DomEvent.stopPropagation)
       .off(button, 'dblclick', L.DomEvent.stopPropagation)
       .off(button, 'click', L.DomEvent.preventDefault)
-      .off(button, 'click', this.clickEvent.callback);
+      .off(button, 'click', callback, context);
   },
   _hideActionsToolbar: function () {
     this._actionsContainer.style.display = 'none';
@@ -161,7 +171,7 @@ L.SetViewToolbar = L.Class.extend({
       name: 'unit',
       title: 'Select coordinate units; decimal degrees (dd) or degrees minutes seconds (dms)',
       selectedValue: unitValue,
-      choices: [{ display:'dd', value: 'dd' }, { display:'dms', value: 'dms' }],
+      choices: [{ display: 'dd', value: 'dd' }, { display: 'dms', value: 'dms' }],
       callback: function (event) {
         self._decimalDegrees = !self._decimalDegrees;
         self._hideActionsToolbar();
@@ -208,7 +218,7 @@ L.SetViewToolbar = L.Class.extend({
         name: 'latDirection',
         title: 'Latitude: North or South',
         selectedValue: this._latDirection,
-        choices: [{ display:'n', value: 'n' }, { display:'s', value: 's' }],
+        choices: [{ display: 'n', value: 'n' }, { display: 's', value: 's' }],
         callback: function (event) {
           self._latDirection = self._getValue(event);
         }
@@ -231,7 +241,7 @@ L.SetViewToolbar = L.Class.extend({
         name: 'lonDirection',
         title: 'Longitude: East or West',
         selectedValue: this._lonDirection,
-        choices: [{ display:'e', value: 'e' }, { display:'w', value: 'w' }],
+        choices: [{ display: 'e', value: 'e' }, { display: 'w', value: 'w' }],
         callback: function (event) {
           self._lonDirection = self._getValue(event);
         }
