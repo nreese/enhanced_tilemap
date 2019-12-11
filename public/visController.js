@@ -276,36 +276,6 @@ define(function (require) {
       }
     });
 
-    map.map.on('groupLayerControl:removeClickedLayer', function (e) {
-      $scope.vis.params.overlays.dragAndDropPoiLayers =
-        _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
-          return dragAndDropPoiLayer.searchIcon !== e.name;
-        });
-    });
-
-    // saving checkbox status to dashboard uiState
-    map.map.on('overlayadd', function (e) {
-      $scope.vis.getUiState().set(e.name, e.name);
-    });
-    map.map.on('overlayremove', function (e) {
-      $scope.vis.getUiState().set(e.name, false);
-    });
-
-
-    map.map.on('setview:fitBounds', function (e) {
-      const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
-      const boundsHelper = new BoundsHelper(params);
-      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
-        .then(entireBounds => {
-          if (entireBounds) {
-            map.map.fitBounds(entireBounds);
-
-            //update zoom to correct geohash precision
-            $scope.vis.getUiState().set('mapZoom', e.target._zoom);
-          };
-        });
-    });
-
     $scope.$listen(queryFilter, 'update', function () {
       setTooltipFormatter($scope.vis.params.tooltip);
     });
@@ -583,5 +553,72 @@ define(function (require) {
       $scope.showDropHover = showDropHover;
       $scope.showDropMessage = !!fieldWithGeo;
     });
+
+    // ===========================
+    // ==  Map callback events  ==
+    // ==  requiring access to  ==
+    // ==       vis object      ==
+    // ===========================
+
+    map.map.on('groupLayerControl:removeClickedLayer', function (e) {
+      $scope.vis.params.overlays.dragAndDropPoiLayers =
+        _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
+          return dragAndDropPoiLayer.searchIcon !== e.name;
+        });
+    });
+
+    // saving checkbox status to dashboard uiState
+    map.map.on('overlayadd', function (e) {
+      $scope.vis.getUiState().set(e.name, e.name);
+    });
+    map.map.on('overlayremove', function (e) {
+      $scope.vis.getUiState().set(e.name, false);
+    });
+
+    map.map.on('moveend', _.debounce(function setZoomCenter(ev) {
+      if (!map.map) return;
+      if (map._hasSameLocation()) return;
+
+      // update internal center and zoom references
+      map._mapCenter = map.map.getCenter();
+      map._mapZoom = map.map.getZoom();
+
+      map._callbacks.mapMoveEnd({
+        vis: $scope.vis,
+        chart: map._chartData,
+        collar: map._collar,
+        mapBounds: map.mapBounds(),
+        map: map.map,
+        center: map._mapCenter,
+        zoom: map._mapZoom,
+      });
+    }, 150, false));
+
+    map.map.on('zoomend', _.debounce(function () {
+      if (!map.map) return;
+      if (map._hasSameLocation()) return;
+      if (!map._callbacks) return;
+      map._callbacks.mapZoomEnd({
+        chart: map._chartData,
+        vis: $scope.vis,
+        map: map.map,
+        zoom: map.map.getZoom()
+      });
+    }, 150, false));
+
+    map.map.on('setview:fitBounds', function (e) {
+      const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
+      const boundsHelper = new BoundsHelper(params);
+      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
+        .then(entireBounds => {
+          if (entireBounds) {
+            map.map.fitBounds(entireBounds);
+
+            //update zoom to correct geohash precision
+            $scope.vis.getUiState().set('mapZoom', e.target._zoom);
+          };
+        });
+    });
+
   });
 });

@@ -33,8 +33,8 @@ define(function (require) {
         });
       },
       mapMoveEnd: function (event) {
-        const vis = _.get(event, 'chart.geohashGridAgg.vis');
-        if (vis && vis.hasUiState()) {
+        const vis = event.vis;
+        if (vis.hasUiState()) {
           vis.getUiState().set('mapCenter', [
             _.round(event.center.lat, 5),
             _.round(event.center.lng, 5)
@@ -49,8 +49,8 @@ define(function (require) {
         }
       },
       mapZoomEnd: function (event) {
-        const vis = _.get(event, 'chart.geohashGridAgg.vis');
-        if (vis && vis.hasUiState()) {
+        const vis = event.vis;
+        if (vis.hasUiState()) {
           vis.getUiState().set('mapZoom', event.zoom);
         }
         const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
