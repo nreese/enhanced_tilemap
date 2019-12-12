@@ -569,7 +569,7 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.map.on('overlayadd', function (e) {
-      $scope.vis.getUiState().set(e.name, e.name);
+      $scope.vis.getUiState().set(e.name, !!e.name);
     });
     map.map.on('overlayremove', function (e) {
       $scope.vis.getUiState().set(e.name, false);
