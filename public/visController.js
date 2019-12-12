@@ -581,16 +581,15 @@ define(function (require) {
 
       // update internal center and zoom references
       map._mapCenter = map.map.getCenter();
-      map._mapZoom = map.map.getZoom();
+      $scope.vis.getUiState().set('mapCenter', [
+        _.round(map._mapCenter.lat, 5),
+        _.round(map._mapCenter.lng, 5)
+      ]);
+      $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
 
       map._callbacks.mapMoveEnd({
-        vis: $scope.vis,
-        chart: map._chartData,
         collar: map._collar,
-        mapBounds: map.mapBounds(),
-        map: map.map,
-        center: map._mapCenter,
-        zoom: map._mapZoom,
+        mapBounds: map.mapBounds()
       });
     }, 150, false));
 
@@ -598,11 +597,10 @@ define(function (require) {
       if (!map.map) return;
       if (map._hasSameLocation()) return;
       if (!map._callbacks) return;
+      $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
+
       map._callbacks.mapZoomEnd({
-        chart: map._chartData,
-        vis: $scope.vis,
-        map: map.map,
-        zoom: map.map.getZoom()
+        chart: map._chartData
       });
     }, 150, false));
 
@@ -613,9 +611,8 @@ define(function (require) {
         .then(entireBounds => {
           if (entireBounds) {
             map.map.fitBounds(entireBounds);
-
-            //update zoom to correct geohash precision
-            $scope.vis.getUiState().set('mapZoom', e.target._zoom);
+            //update uiState zoom so correct geohash precision will be used
+            $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
           };
         });
     });

@@ -36,7 +36,7 @@ define(function () {
         searchSource.aggs(() => {
           vis.requesting();
           const dsl = vis.aggs.toDsl();
-          //removing the map canvas geo filter from request
+          //Replacing the map canvas geo filter with bounds of entire world for request
           dsl[2].filter = {
             geo_bounding_box: {
               [this.field]: {
@@ -66,7 +66,7 @@ define(function () {
               const bottomLeft = L.latLng(minLat, minLon);
               return L.latLngBounds(topRight, bottomLeft);
             } else {
-              console.warn('Unable to fit bounds as no data was detected');
+              console.warn('Unable to fit bounds as no data were detected');
             }
           });
       };

@@ -33,15 +33,6 @@ define(function (require) {
         });
       },
       mapMoveEnd: function (event) {
-        const vis = event.vis;
-        if (vis.hasUiState()) {
-          vis.getUiState().set('mapCenter', [
-            _.round(event.center.lat, 5),
-            _.round(event.center.lng, 5)
-          ]);
-          vis.getUiState().set('mapZoom', event.zoom);
-        }
-
         //Fetch new data if map bounds are outsize of collar
         const bounds = utils.scaleBounds(event.mapBounds, 1);
         if (_.has(event, 'collar.top_left') && !utils.contains(event.collar, bounds)) {
@@ -49,10 +40,6 @@ define(function (require) {
         }
       },
       mapZoomEnd: function (event) {
-        const vis = event.vis;
-        if (vis.hasUiState()) {
-          vis.getUiState().set('mapZoom', event.zoom);
-        }
         const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
         if (autoPrecision) {
           courier.fetch();
