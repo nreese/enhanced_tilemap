@@ -59,7 +59,7 @@ function syncPluginTo(dest, done) {
         rsync
           .source(newSource ? newSource : source)
           .destination(newDestination ? newDestination : dest)
-          .flags('uav')
+          .flags('uavq')
           .recursive(true)
           .set('delete')
           .output(function (data) {
@@ -84,7 +84,7 @@ function syncPluginTo(dest, done) {
         });
       })
       .then(function () {
-        spawn('npm', ['install', '--production'], {
+        spawn('npm', ['install', '--production', '--silent'], {
           cwd: dest,
           stdio: 'inherit'
         })
