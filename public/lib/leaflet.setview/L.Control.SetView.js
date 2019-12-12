@@ -102,6 +102,7 @@ L.SetViewToolbar = L.Class.extend({
     if (options.value) {
       input.value = options.value;
     }
+    L.DomEvent.disableClickPropagation(input);
     L.DomEvent
       .on(input, 'mousedown', L.DomEvent.stopPropagation)
       .on(input, 'dblclick', L.DomEvent.stopPropagation);
