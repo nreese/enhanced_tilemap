@@ -106,7 +106,7 @@ define(function (require) {
           label.append(icon);
           $div.append(label);
         });
-
+        L.DomEvent.disableClickPropagation($div.get(0));
         return $div.get(0);
       };
 

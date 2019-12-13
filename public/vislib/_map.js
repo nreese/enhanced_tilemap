@@ -516,24 +516,6 @@ define(function (require) {
         }
       });
 
-      this.map.on('moveend', _.debounce(function setZoomCenter(ev) {
-        if (!self.map) return;
-        if (self._hasSameLocation()) return;
-
-        // update internal center and zoom references
-        self._mapCenter = self.map.getCenter();
-        self._mapZoom = self.map.getZoom();
-
-        self._callbacks.mapMoveEnd({
-          chart: self._chartData,
-          collar: self._collar,
-          mapBounds: self.mapBounds(),
-          map: self.map,
-          center: self._mapCenter,
-          zoom: self._mapZoom,
-        });
-      }, 150, false));
-
       this.map.on('etm:select-feature', function (e) {
         self._callbacks.polygon({
           chart: self._chartData,
@@ -621,17 +603,6 @@ define(function (require) {
           deletedLayers: e.layers,
         });
       });
-
-      this.map.on('zoomend', _.debounce(function () {
-        if (!self.map) return;
-        if (self._hasSameLocation()) return;
-        if (!self._callbacks) return;
-        self._callbacks.mapZoomEnd({
-          chart: self._chartData,
-          map: self.map,
-          zoom: self.map.getZoom()
-        });
-      }, 150, false));
 
       this.map.on('overlayadd', function (e) {
         if (self._markers && e.name === 'Aggregation') {
