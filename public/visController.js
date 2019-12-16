@@ -24,7 +24,8 @@ define(function (require) {
   module.controller('KbnEnhancedTilemapVisController', function (
     kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout, joinExplanation,
-    Private, courier, config, getAppState, indexPatterns, $http, $injector) {
+    Private, courier, config, getAppState, indexPatterns, $http, $injector,
+    timeFilter,appState) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -169,6 +170,21 @@ define(function (require) {
       };
     }
 
+    function fitMapBoundsToData() {
+      const boundsHelper = new BoundsHelper({
+        searchSource: chartData.searchSource,
+        field: getGeoField().fieldname
+      });
+      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
+        .then(entireBounds => {
+          if (entireBounds) {
+            map.map.fitBounds(entireBounds);
+            //update uiState zoom so correct geohash precision will be used
+            $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
+          };
+        });
+    }
+
     function aggFilter(field) {
       collar = utils.scaleBounds(
         map.mapBounds(),
@@ -287,6 +303,9 @@ define(function (require) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         chartData.searchSource = $scope.searchSource;
+        if ($scope.vis.params.autoFitBoundsToData) fitMapBoundsToData();
+        console.log('timeFilter: ', timeFilter);
+        console.log('appState: ', appState);
         draw();
 
       };
@@ -301,6 +320,7 @@ define(function (require) {
           initPOILayer(dragAndDrop);
         });
       }
+
     });
 
     $scope.$on('$destroy', function () {
@@ -334,6 +354,7 @@ define(function (require) {
         tooltipFormatter,
         _.get(chartData, 'valueFormatter', _.identity),
         collar);
+
     }
 
     function setTooltipFormatter(tooltipParams) {
@@ -606,16 +627,7 @@ define(function (require) {
     }, 150, false));
 
     map.map.on('setview:fitBounds', function (e) {
-      const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
-      const boundsHelper = new BoundsHelper(params);
-      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
-        .then(entireBounds => {
-          if (entireBounds) {
-            map.map.fitBounds(entireBounds);
-            //update uiState zoom so correct geohash precision will be used
-            $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
-          };
-        });
+      fitMapBoundsToData();
     });
 
     map.map.on('draw:created', function (e) {

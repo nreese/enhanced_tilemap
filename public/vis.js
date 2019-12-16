@@ -80,7 +80,8 @@ define(function (require) {
         scaleTypes: ['Dynamic - Linear', 'Dynamic - Uneven', 'Static'],
         canDesaturate: !!supports.cssFilters,
         editor: require('plugins/enhanced_tilemap/options.html'),
-        syncMap: false
+        syncMap: false,
+        autoFitBoundsToData: false
       },
       hierarchicalData: function (vis) {
         return false;
