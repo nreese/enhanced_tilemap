@@ -1,17 +1,9 @@
 module.exports = [
   {
-    chart: {
-      geohashGridAgg: {
-        vis: {
-          indexPattern: {
-            id: 'index-pattern:fake'
-          }
-        }
-      }
-    },
-    params: {
-      filterByShape: true,
-      shapeField: 'geo_shape_polygon',
+    indexPatternId: 'index-pattern:fake',
+    field: {
+      fieldname: 'geo_shape_polygon',
+      geotype: 'geo_shape'
     },
     points: [
       [102, 2],
@@ -22,18 +14,10 @@ module.exports = [
     ]
   },
   {
-    chart: {
-      geohashGridAgg: {
-        vis: {
-          indexPattern: {
-            id: 'index-pattern:fake'
-          }
-        }
-      }
-    },
-    params: {
-      filterByShape: true,
-      shapeField: 'drawn_polygon',
+    indexPatternId: 'index-pattern:fake',
+    field: {
+      fieldname: 'geo_shape_polygon',
+      geotype: 'geo_shape'
     },
     points: [
       [102, 2],
