@@ -79,7 +79,8 @@ define(function (require) {
         mapTypes: ['Scaled Circle Markers', 'Shaded Circle Markers', 'Shaded Geohash Grid', 'Heatmap'],
         scaleTypes: ['Dynamic - Linear', 'Dynamic - Uneven', 'Static'],
         canDesaturate: !!supports.cssFilters,
-        editor: require('plugins/enhanced_tilemap/options.html')
+        editor: require('plugins/enhanced_tilemap/options.html'),
+        syncMap: false
       },
       hierarchicalData: function (vis) {
         return false;

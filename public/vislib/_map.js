@@ -68,6 +68,7 @@ define(function (require) {
         maxBounds: L.latLngBounds([-90, -220], [90, 220]),
         scrollWheelZoom: _.get(params.attr, 'scrollWheelZoom', true),
         fadeAnimation: false,
+        syncMap: params.syncMap
       };
 
       this._createMap(mapOptions);
@@ -608,7 +609,7 @@ define(function (require) {
       this._addMousePositionControl();
       L.control.measureScale().addTo(this.map);
       this._attachEvents();
-      syncMaps.add(this.map);
+      if (mapOptions.syncMap) syncMaps.add(this.map);
     };
 
     /**

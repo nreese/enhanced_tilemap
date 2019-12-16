@@ -385,13 +385,13 @@ define(function (require) {
     };
 
     function drawWmsOverlays() {
-      $scope.flags.check = false;
+
       const prevState = map.clearWMSOverlays();
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
 
-      const wmsDrawAsync = $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
+      $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
         const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
         return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
@@ -496,9 +496,6 @@ define(function (require) {
         });
       });
 
-      Promise.all(wmsDrawAsync).then(function () {
-        $scope.flags.check = true;
-      });
     };
 
     function appendMap() {
@@ -512,7 +509,8 @@ define(function (require) {
         mapType: params.mapType,
         attr: params,
         editable: $scope.vis.getEditableVis() ? true : false,
-        uiState: $scope.vis.getUiState()
+        uiState: $scope.vis.getUiState(),
+        syncMap: params.syncMap
       });
     }
 

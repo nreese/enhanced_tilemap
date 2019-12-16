@@ -183,6 +183,17 @@
     <div class="vis-option-item form-group">
       <label>
         <input type="checkbox"
+        name="syncMap"
+        ng-model="vis.params.syncMap">
+
+        Synchronize map
+
+        <kbn-info info="Tick this box to sync the view extent with other maps when in dashboard mode"></kbn-info>
+      </label>
+    </div>
+    <div class="vis-option-item form-group">
+      <label>
+        <input type="checkbox"
         name="wms.enabled"
         ng-model="vis.params.wms.enabled">
 
