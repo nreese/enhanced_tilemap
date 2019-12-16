@@ -516,31 +516,11 @@ define(function (require) {
         }
       });
 
-      this.map.on('etm:select-feature', function (e) {
-        self._callbacks.polygon({
-          chart: self._chartData,
-          params: self._attr,
-          points: e.geojson.geometry.coordinates[0]
-        });
-      });
-
       this.map.on('etm:select-feature-vector', function (e) {
         self._callbacks.polygonVector({
           args: e.args,
           params: self._attr,
           points: e.geojson.geometry.coordinates
-        });
-      });
-
-      this.map.on('toolbench:poiFilter', function (e) {
-        const poiLayers = [];
-        Object.keys(self._poiLayers).forEach(function (key) {
-          poiLayers.push(self._poiLayers[key]);
-        });
-        self._callbacks.poiFilter({
-          chart: self._chartData,
-          poiLayers: poiLayers,
-          radius: _.get(e, 'radius', 10)
         });
       });
 
@@ -552,49 +532,6 @@ define(function (require) {
       //start popups appearing finished drawing
       this.map.on('draw:drawstop', function (e) {
         this.disablePopups = false;
-      });
-
-      this.map.on('draw:created', function (e) {
-        switch (e.layerType) {
-          case 'marker':
-            self._drawnItems.addLayer(e.layer);
-            self._callbacks.createMarker({
-              e: e,
-              chart: self._chartData,
-              latlng: e.layer._latlng
-            });
-            break;
-          case 'polygon':
-            const points = [];
-            e.layer._latlngs[0].forEach(function (latlng) {
-              const lat = L.Util.formatNum(latlng.lat, 5);
-              const lon = L.Util.formatNum(latlng.lng, 5);
-              points.push([lon, lat]);
-            });
-            self._callbacks.polygon({
-              chart: self._chartData,
-              params: self._attr,
-              points: points
-            });
-            break;
-          case 'rectangle':
-            self._callbacks.rectangle({
-              e: e,
-              chart: self._chartData,
-              params: self._attr,
-              bounds: utils.scaleBounds(e.layer.getBounds(), 1)
-            });
-            break;
-          case 'circle':
-            self._callbacks.circle({
-              e: e,
-              chart: self._chartData,
-              params: self._attr,
-            });
-            break;
-          default:
-            console.log('draw:created, unexpected layerType: ' + e.layerType);
-        }
       });
 
       this.map.on('draw:deleted', function (e) {

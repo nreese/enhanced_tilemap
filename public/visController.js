@@ -97,6 +97,9 @@ define(function (require) {
       };
     }
 
+    function getIndexPatternId() { return $scope.vis.indexPattern.id; }
+    function getSirenMeta() { return $scope.vis._siren; }
+
     async function addPOILayerFromDashboardWithModal(dashboardId) {
       const group = dashboardGroups.getGroup(dashboardId);
       if (group) {
@@ -615,6 +618,77 @@ define(function (require) {
             $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
           };
         });
+    });
+
+    map.map.on('draw:created', function (e) {
+      const indexPatternId = getIndexPatternId();
+      const field = getGeoField();
+      const sirenMeta = getSirenMeta();
+
+      switch (e.layerType) {
+        case 'marker':
+          map._drawnItems.addLayer(e.layer);
+          map._callbacks.createMarker({
+            latlng: e.layer._latlng
+          });
+          break;
+        case 'polygon':
+          const points = [];
+          e.layer._latlngs[0].forEach(function (latlng) {
+            const lat = L.Util.formatNum(latlng.lat, 5);
+            const lon = L.Util.formatNum(latlng.lng, 5);
+            points.push([lon, lat]);
+          });
+          map._callbacks.polygon({
+            points,
+            indexPatternId,
+            field,
+            sirenMeta
+          });
+          break;
+        case 'rectangle':
+          map._callbacks.rectangle({
+            bounds: utils.scaleBounds(e.layer.getBounds(), 1),
+            indexPatternId,
+            field,
+            sirenMeta
+          });
+          break;
+        case 'circle':
+          map._callbacks.circle({
+            radius: e.layer._mRadius,
+            center: [e.layer._latlng.lat, e.layer._latlng.lng],
+            indexPatternId,
+            field,
+            sirenMeta
+          });
+          break;
+        default:
+          console.log('draw:created, unexpected layerType: ' + e.layerType);
+      }
+    });
+
+    map.map.on('etm:select-feature', function (e) {
+      map._callbacks.polygon({
+        points: e.geojson.geometry.coordinates[0],
+        field: getGeoField(),
+        sirenMeta: getSirenMeta(),
+      });
+    });
+
+    map.map.on('toolbench:poiFilter', function (e) {
+      const poiLayers = [];
+      Object.keys(map._poiLayers).forEach(function (key) {
+        poiLayers.push(map._poiLayers[key]);
+      });
+      map._callbacks.poiFilter({
+        chart: map._chartData,
+        poiLayers: poiLayers,
+        radius: _.get(e, 'radius', 10),
+        indexPatternId: getIndexPatternId(),
+        field: getGeoField(),
+        sirenMeta: getSirenMeta()
+      });
     });
 
   });

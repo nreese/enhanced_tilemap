@@ -46,11 +46,6 @@ define(function (require) {
         }
       },
       poiFilter: function (event) {
-        const agg = _.get(event, 'chart.geohashGridAgg');
-        if (!agg) return;
-
-        const field = agg.fieldName();
-        const indexPatternName = agg.vis.indexPattern.id;
 
         const boolFilter = {
           bool: {
@@ -62,7 +57,7 @@ define(function (require) {
           poiLayer.getLayers().forEach(function (feature) {
             if (feature instanceof L.Marker) {
               const filter = { geo_distance: { distance: event.radius + 'km' } };
-              filter.geo_distance[field] = {
+              filter.geo_distance[event.field.fieldname] = {
                 'lat': feature.getLatLng().lat,
                 'lon': feature.getLatLng().lng
               };
@@ -71,40 +66,8 @@ define(function (require) {
             }
           });
         });
-        filterHelper.addSirenPropertyToFilterMeta(boolFilter, agg.vis._siren);
-        geoFilter.add(boolFilter, field, indexPatternName);
-      },
-      polygon: function (event) {
-        const agg = _.get(event, 'chart.geohashGridAgg');
-        if (!agg) return;
-        const indexPatternName = agg.vis.indexPattern.id;
-
-        let newFilter;
-        let field;
-
-        const firstPoint = event.points[0];
-        const lastPoint = event.points[event.points.length - 1];
-        if (!_.isEqual(firstPoint, lastPoint)) {
-          event.points.push(firstPoint);
-        }
-
-        if (event.params.filterByShape && event.params.shapeField) {
-          field = event.params.shapeField;
-          newFilter = { geo_shape: {} };
-          newFilter.geo_shape[field] = {
-            shape: {
-              type: 'Polygon',
-              coordinates: [event.points]
-            }
-          };
-        } else {
-          field = agg.fieldName();
-          newFilter = { geo_polygon: {} };
-          newFilter.geo_polygon[field] = { points: event.points };
-        }
-
-        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
-        geoFilter.add(newFilter, field, indexPatternName);
+        filterHelper.addSirenPropertyToFilterMeta(boolFilter, event.sirenMeta);
+        geoFilter.add(boolFilter, event.field.fieldname, event.indexPatternId);
       },
       polygonVector: function (event) {
         if (!event.args.vector) return;
@@ -124,40 +87,46 @@ define(function (require) {
         geoFilter.add(newFilter, field, event.args.indexPattern);
 
       },
-      rectangle: function (event) {
-        const agg = _.get(event, 'chart.geohashGridAgg');
-        if (!agg) return;
-        const indexPatternName = agg.vis.indexPattern.id;
+      polygon: function (event) {
+        let newFilter;
+        const field = event.field.fieldname;
 
-        let field = agg.fieldName();
-        let geotype = 'geo_point';
-        if (event.params.filterByShape && event.params.shapeField) {
-          field = event.params.shapeField;
-          geotype = 'geo_shape';
+        const firstPoint = event.points[0];
+        const lastPoint = event.points[event.points.length - 1];
+        if (!_.isEqual(firstPoint, lastPoint)) {
+          event.points.push(firstPoint);
         }
-        const newFilter = geoFilter.rectFilter(
-          field, geotype, event.bounds.top_left, event.bounds.bottom_right);
 
-        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
-        geoFilter.add(newFilter, field, indexPatternName);
+        if (event.field.geotype === 'geo_shape') {
+          newFilter = { geo_shape: {} };
+          newFilter.geo_shape[field] = {
+            shape: {
+              type: 'Polygon',
+              coordinates: [event.points]
+            }
+          };
+        } else {
+          newFilter = { geo_polygon: {} };
+          newFilter.geo_polygon[field] = { points: event.points };
+        }
+
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, event.sirenMeta);
+        geoFilter.add(newFilter, event.field.fieldname, event.indexPatternId);
+      },
+      rectangle: function (event) {
+        const newFilter = geoFilter.rectFilter(
+          event.field.fieldname, event.field.geotype, event.bounds.top_left, event.bounds.bottom_right);
+
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, event.sirenMeta);
+        geoFilter.add(newFilter, event.field.fieldname, event.indexPatternId);
       },
       circle: function (event) {
-        const agg = _.get(event, 'chart.geohashGridAgg');
-        if (!agg) return;
-        const indexPatternName = agg.vis.indexPattern.id;
-        const center = [event.e.layer._latlng.lat, event.e.layer._latlng.lng];
-        const radius = event.e.layer._mRadius;
-        let field = agg.fieldName();
-        if (event.params.filterByShape && event.params.shapeField) {
-          field = event.params.shapeField;
-        }
-
         const newFilter = geoFilter.circleFilter(
-          field, center[0], center[1], radius
+          event.field.fieldname, event.center[0], event.center[1], event.radius
         );
 
-        filterHelper.addSirenPropertyToFilterMeta(newFilter, agg.vis._siren);
-        geoFilter.add(newFilter, field, indexPatternName);
+        filterHelper.addSirenPropertyToFilterMeta(newFilter, event.sirenMeta);
+        geoFilter.add(newFilter, event.field.fieldname, event.indexPatternId);
       }
     };
   };
