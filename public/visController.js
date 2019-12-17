@@ -25,7 +25,7 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timeFilter,appState) {
+    timefilter) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -44,6 +44,13 @@ define(function (require) {
     let chartData = null;
     let tooltip = null;
     let tooltipFormatter = null;
+    let storedTime = timefilter.time;
+    const appState = getAppState();
+    let storedState = {
+      filters: _.cloneDeep(appState.filters),
+      query: _.cloneDeep(appState.query)
+    };
+
     $scope.flags = {};
 
     backwardsCompatible.updateParams($scope.vis.params);
@@ -170,7 +177,31 @@ define(function (require) {
       };
     }
 
-    function fitMapBoundsToData() {
+    //checking appstate and time filters to identify
+    //if map change was related to map event or
+    //a separate change on a dashboard
+    function shouldAutoFitMapBoundsToData() {
+      const newTime = timefilter.time;
+      const appState = getAppState();
+      const newState = {
+        filters: appState.filters,
+        query: appState.query
+      };
+console.log(newState, storedState)
+
+      const timeIsDifferent = !kibiState.compareTimes(newTime, storedTime);
+      const stateIsDifferent = !kibiState.compareStates(newState, storedState).stateEqual;
+
+      console.log(timeIsDifferent, stateIsDifferent, $scope.vis.params.autoFitBoundsToData);
+      if ((timeIsDifferent || stateIsDifferent) && $scope.vis.params.autoFitBoundsToData) {
+        storedTime = _.cloneDeep(newTime);
+        storedState = _.cloneDeep(newState);
+        return true;
+      };
+      return false;
+    }
+
+    function doFitMapBoundsToData() {
       const boundsHelper = new BoundsHelper({
         searchSource: chartData.searchSource,
         field: getGeoField().fieldname
@@ -300,27 +331,25 @@ define(function (require) {
     });
 
     $scope.$watch('esResponse', function (resp) {
-      if (_.has(resp, 'aggregations')) {
-        chartData = respProcessor.process(resp);
-        chartData.searchSource = $scope.searchSource;
-        if ($scope.vis.params.autoFitBoundsToData) fitMapBoundsToData();
-        console.log('timeFilter: ', timeFilter);
-        console.log('appState: ', appState);
-        draw();
+      if (shouldAutoFitMapBoundsToData()) {
+        doFitMapBoundsToData();
+      } else {
+        if (_.has(resp, 'aggregations')) {
+          chartData = respProcessor.process(resp);
+          chartData.searchSource = $scope.searchSource;
+          draw();
+        };
 
-      };
-
-      //POI overlays - no need to clear all layers for this watcher
-      $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-
-      //Drag and Drop POI Overlays - no need to clear all layers for this watcher
-      if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
-        $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
-          dragAndDrop.isInitialDragAndDrop = false;
-          initPOILayer(dragAndDrop);
-        });
+        //POI overlays - no need to clear all layers for this watcher
+        $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+        //Drag and Drop POI Overlays - no need to clear all layers for this watcher
+        if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
+          $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
+            dragAndDrop.isInitialDragAndDrop = false;
+            initPOILayer(dragAndDrop);
+          });
+        }
       }
-
     });
 
     $scope.$on('$destroy', function () {
@@ -591,6 +620,7 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.map.on('overlayadd', function (e) {
+      map.saturateWMSTiles();
       $scope.vis.getUiState().set(e.name, !!e.name);
     });
     map.map.on('overlayremove', function (e) {
@@ -627,7 +657,7 @@ define(function (require) {
     }, 150, false));
 
     map.map.on('setview:fitBounds', function (e) {
-      fitMapBoundsToData();
+      doFitMapBoundsToData();
     });
 
     map.map.on('draw:created', function (e) {
