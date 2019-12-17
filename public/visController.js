@@ -187,12 +187,10 @@ define(function (require) {
         filters: appState.filters,
         query: appState.query
       };
-console.log(newState, storedState)
 
       const timeIsDifferent = !kibiState.compareTimes(newTime, storedTime);
       const stateIsDifferent = !kibiState.compareStates(newState, storedState).stateEqual;
 
-      console.log(timeIsDifferent, stateIsDifferent, $scope.vis.params.autoFitBoundsToData);
       if ((timeIsDifferent || stateIsDifferent) && $scope.vis.params.autoFitBoundsToData) {
         storedTime = _.cloneDeep(newTime);
         storedState = _.cloneDeep(newState);
@@ -331,24 +329,21 @@ console.log(newState, storedState)
     });
 
     $scope.$watch('esResponse', function (resp) {
-      if (shouldAutoFitMapBoundsToData()) {
-        doFitMapBoundsToData();
-      } else {
-        if (_.has(resp, 'aggregations')) {
-          chartData = respProcessor.process(resp);
-          chartData.searchSource = $scope.searchSource;
-          draw();
-        };
+      if (_.has(resp, 'aggregations')) {
+        chartData = respProcessor.process(resp);
+        chartData.searchSource = $scope.searchSource;
+        if (shouldAutoFitMapBoundsToData()) doFitMapBoundsToData();
+        draw();
+      };
 
-        //POI overlays - no need to clear all layers for this watcher
-        $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-        //Drag and Drop POI Overlays - no need to clear all layers for this watcher
-        if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
-          $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
-            dragAndDrop.isInitialDragAndDrop = false;
-            initPOILayer(dragAndDrop);
-          });
-        }
+      //POI overlays - no need to clear all layers for this watcher
+      $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+      //Drag and Drop POI Overlays - no need to clear all layers for this watcher
+      if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
+          dragAndDrop.isInitialDragAndDrop = false;
+          initPOILayer(dragAndDrop);
+        });
       }
     });
 
