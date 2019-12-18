@@ -16,9 +16,9 @@ define(function () {
     const utils = require('plugins/enhanced_tilemap/utils');
 
     class BoundsHelper {
-      constructor(params) {
-        this.searchSource = params.searchSource;
-        this.field = params.field;
+      constructor(searchSource, field) {
+        this.searchSource = searchSource;
+        this.field = field;
       };
 
       getBoundsOfEntireDataSelection(vis) {
@@ -29,11 +29,9 @@ define(function () {
         let minLat = 90;
         let minLon = 180;
 
-        const searchSource = new SearchSource();
-        searchSource.inherits(this.searchSource);
-        searchSource.filter(null);
-        searchSource.filter(queryFilter.getFilters());
-        searchSource.aggs(() => {
+        this.searchSource.filter(null);
+        this.searchSource.filter(queryFilter.getFilters());
+        this.searchSource.aggs(() => {
           vis.requesting();
           const dsl = vis.aggs.toDsl();
           //Replacing the map canvas geo filter with bounds of entire world for request
@@ -48,7 +46,7 @@ define(function () {
           return dsl;
         });
 
-        return searchSource.fetch()
+        return this.searchSource.fetch()
           .then(searchResp => {
             const chartData = respProcessor.process(searchResp);
             if (_.has(chartData, 'geoJson.features') >= 1) {

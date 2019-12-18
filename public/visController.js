@@ -44,7 +44,7 @@ define(function (require) {
     let chartData = null;
     let tooltip = null;
     let tooltipFormatter = null;
-    let storedTime = timefilter.time;
+    let storedTime = _.cloneDeep(timefilter.time);
     const appState = getAppState();
     let storedState = {
       filters: _.cloneDeep(appState.filters),
@@ -179,8 +179,8 @@ define(function (require) {
 
     //checking appstate and time filters to identify
     //if map change was related to map event or
-    //a separate change on a dashboard
-    function shouldAutoFitMapBoundsToData() {
+    //a separate change on a dashboard OR from vis params
+    function _shouldAutoFitMapBoundsToData(calledFromVisParams = false) {
       const newTime = timefilter.time;
       const appState = getAppState();
       const newState = {
@@ -188,22 +188,19 @@ define(function (require) {
         query: appState.query
       };
 
-      const timeIsDifferent = !kibiState.compareTimes(newTime, storedTime);
-      const stateIsDifferent = !kibiState.compareStates(newState, storedState).stateEqual;
+      const differentTimeOrState = !kibiState.compareStates(newState, storedState).stateEqual ||
+      !kibiState.compareTimes(newTime, storedTime);
 
-      if ((timeIsDifferent || stateIsDifferent) && $scope.vis.params.autoFitBoundsToData) {
+      if ((calledFromVisParams || differentTimeOrState) &&
+        $scope.vis.params.autoFitBoundsToData) {
         storedTime = _.cloneDeep(newTime);
         storedState = _.cloneDeep(newState);
         return true;
       };
-      return false;
     }
 
-    function doFitMapBoundsToData() {
-      const boundsHelper = new BoundsHelper({
-        searchSource: chartData.searchSource,
-        field: getGeoField().fieldname
-      });
+    function _doFitMapBoundsToData() {
+      const boundsHelper = new BoundsHelper(chartData.searchSource, getGeoField().fieldname);
       boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
         .then(entireBounds => {
           if (entireBounds) {
@@ -301,7 +298,7 @@ define(function (require) {
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
-
+        if (_shouldAutoFitMapBoundsToData(true)) _doFitMapBoundsToData();
         $scope.flags.isVisibleSource = 'visParams';
         //remove mouse related heatmap events when moving to a different geohash type
         if (oldParams && oldParams.mapType === 'Heatmap') {
@@ -332,7 +329,7 @@ define(function (require) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         chartData.searchSource = $scope.searchSource;
-        if (shouldAutoFitMapBoundsToData()) doFitMapBoundsToData();
+        if (_shouldAutoFitMapBoundsToData()) _doFitMapBoundsToData();
         draw();
       };
 
@@ -635,6 +632,7 @@ define(function (require) {
       $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
 
       map._callbacks.mapMoveEnd({
+        searchSource: $scope.searchSource,
         collar: map._collar,
         mapBounds: map.mapBounds()
       });
@@ -647,12 +645,13 @@ define(function (require) {
       $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
 
       map._callbacks.mapZoomEnd({
+        searchSource: $scope.searchSource,
         chart: map._chartData
       });
     }, 150, false));
 
     map.map.on('setview:fitBounds', function (e) {
-      doFitMapBoundsToData();
+      _doFitMapBoundsToData();
     });
 
     map.map.on('draw:created', function (e) {
