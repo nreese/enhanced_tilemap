@@ -23,7 +23,7 @@
     "leaflet.nontiledlayer": "1.0.7",
     "mgrs": "~1.0.0",
     "xml2js": "^0.4.19",
-    "scripting-interfaces": "sirensolutions/scripting-interfaces#c7cfc7fd899c7b4f492a79dabea254e9d07adcb4"
+    "scripting-interfaces": "sirensolutions/scripting-interfaces"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
