@@ -24,7 +24,8 @@ define(function (require) {
   module.controller('KbnEnhancedTilemapVisController', function (
     kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout, joinExplanation,
-    Private, courier, config, getAppState, indexPatterns, $http, $injector) {
+    Private, courier, config, getAppState, indexPatterns, $http, $injector,
+    timefilter) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -43,6 +44,13 @@ define(function (require) {
     let chartData = null;
     let tooltip = null;
     let tooltipFormatter = null;
+    let storedTime = _.cloneDeep(timefilter.time);
+    const appState = getAppState();
+    let storedState = {
+      filters: _.cloneDeep(appState.filters),
+      query: _.cloneDeep(appState.query)
+    };
+
     $scope.flags = {};
 
     backwardsCompatible.updateParams($scope.vis.params);
@@ -169,6 +177,42 @@ define(function (require) {
       };
     }
 
+    //checking appstate and time filters to identify
+    //if map change was related to map event or
+    //a separate change on a dashboard OR from vis params
+    function _shouldAutoFitMapBoundsToData(calledFromVisParams = false) {
+      if (!$scope.vis.params.autoFitBoundsToData) {
+        return false;
+      }
+      const newTime = timefilter.time;
+      const appState = getAppState();
+      const newState = {
+        filters: appState.filters,
+        query: appState.query
+      };
+
+      const differentTimeOrState = !kibiState.compareStates(newState, storedState).stateEqual ||
+      !kibiState.compareTimes(newTime, storedTime);
+
+      if (calledFromVisParams || differentTimeOrState) {
+        storedTime = _.cloneDeep(newTime);
+        storedState = _.cloneDeep(newState);
+        return true;
+      };
+    }
+
+    function _doFitMapBoundsToData() {
+      const boundsHelper = new BoundsHelper(chartData.searchSource, getGeoField().fieldname);
+      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
+        .then(entireBounds => {
+          if (entireBounds) {
+            map.map.fitBounds(entireBounds);
+            //update uiState zoom so correct geohash precision will be used
+            $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
+          };
+        });
+    }
+
     function aggFilter(field) {
       collar = utils.scaleBounds(
         map.mapBounds(),
@@ -256,7 +300,7 @@ define(function (require) {
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
-
+        if (_shouldAutoFitMapBoundsToData(true)) _doFitMapBoundsToData();
         $scope.flags.isVisibleSource = 'visParams';
         //remove mouse related heatmap events when moving to a different geohash type
         if (oldParams && oldParams.mapType === 'Heatmap') {
@@ -287,13 +331,12 @@ define(function (require) {
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         chartData.searchSource = $scope.searchSource;
+        if (_shouldAutoFitMapBoundsToData()) _doFitMapBoundsToData();
         draw();
-
       };
 
       //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-
       //Drag and Drop POI Overlays - no need to clear all layers for this watcher
       if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
         $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
@@ -334,6 +377,7 @@ define(function (require) {
         tooltipFormatter,
         _.get(chartData, 'valueFormatter', _.identity),
         collar);
+
     }
 
     function setTooltipFormatter(tooltipParams) {
@@ -570,6 +614,7 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.map.on('overlayadd', function (e) {
+      map.saturateWMSTiles();
       $scope.vis.getUiState().set(e.name, !!e.name);
     });
     map.map.on('overlayremove', function (e) {
@@ -589,6 +634,7 @@ define(function (require) {
       $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
 
       map._callbacks.mapMoveEnd({
+        searchSource: $scope.searchSource,
         collar: map._collar,
         mapBounds: map.mapBounds()
       });
@@ -601,21 +647,13 @@ define(function (require) {
       $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
 
       map._callbacks.mapZoomEnd({
+        searchSource: $scope.searchSource,
         chart: map._chartData
       });
     }, 150, false));
 
     map.map.on('setview:fitBounds', function (e) {
-      const params = { searchSource: chartData.searchSource, field: getGeoField().fieldname };
-      const boundsHelper = new BoundsHelper(params);
-      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
-        .then(entireBounds => {
-          if (entireBounds) {
-            map.map.fitBounds(entireBounds);
-            //update uiState zoom so correct geohash precision will be used
-            $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
-          };
-        });
+      _doFitMapBoundsToData();
     });
 
     map.map.on('draw:created', function (e) {

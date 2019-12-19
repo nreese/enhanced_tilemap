@@ -421,7 +421,25 @@ define(function (require) {
 
       this._layerControl.addOverlay(overlay, name, '<b> WMS Overlays</b>');
       this._wmsOverlays[name] = overlay;
-      $(overlay.getContainer()).addClass('no-filter');
+
+      if (this._attr.isDesaturated) {
+        $(overlay.getContainer()).removeClass('no-filter');
+      } else {
+        $(overlay.getContainer()).addClass('no-filter');
+      }
+    };
+
+    TileMapMap.prototype.saturateWMSTiles = function () {
+      for (const key in this._wmsOverlays) {
+        if (!this._wmsOverlays.hasOwnProperty(key)) {
+          continue;
+        }
+        if (this._attr.isDesaturated) {
+          $(this._wmsOverlays[key].getContainer()).removeClass('no-filter');
+        } else {
+          $(this._wmsOverlays[key].getContainer()).addClass('no-filter');
+        }
+      }
     };
 
     TileMapMap.prototype.mapBounds = function () {
@@ -598,6 +616,7 @@ define(function (require) {
 
       // add base layer based on above logic and decide saturation based on saved settings
       this._tileLayer.addTo(this.map);
+
       this.saturateTiles(this._attr.isDesaturated);
 
       const options = { groupCheckboxes: true };

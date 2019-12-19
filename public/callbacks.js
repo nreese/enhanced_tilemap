@@ -36,13 +36,13 @@ define(function (require) {
         //Fetch new data if map bounds are outsize of collar
         const bounds = utils.scaleBounds(event.mapBounds, 1);
         if (_.has(event, 'collar.top_left') && !utils.contains(event.collar, bounds)) {
-          courier.fetch();
+          event.searchSource.fetch();
         }
       },
       mapZoomEnd: function (event) {
         const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
         if (autoPrecision) {
-          courier.fetch();
+          event.searchSource.fetch();
         }
       },
       poiFilter: function (event) {

@@ -194,6 +194,17 @@
     <div class="vis-option-item form-group">
       <label>
         <input type="checkbox"
+        name="autoFitBoundsToData"
+        ng-model="vis.params.autoFitBoundsToData">
+
+        Auto-fit map to data
+
+        <kbn-info info="Check to enable auto-fitting of the map canvas each time the data is fetched"></kbn-info>
+      </label>
+    </div>
+    <div class="vis-option-item form-group">
+      <label>
+        <input type="checkbox"
         name="wms.enabled"
         ng-model="vis.params.wms.enabled">
 

@@ -16,9 +16,9 @@ define(function () {
     const utils = require('plugins/enhanced_tilemap/utils');
 
     class BoundsHelper {
-      constructor(params) {
-        this.searchSource = params.searchSource;
-        this.field = params.field;
+      constructor(searchSource, field) {
+        this.searchSource = searchSource;
+        this.field = field;
       };
 
       getBoundsOfEntireDataSelection(vis) {
