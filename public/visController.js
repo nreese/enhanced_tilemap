@@ -194,8 +194,7 @@ define(function (require) {
       const differentTimeOrState = !kibiState.compareStates(newState, storedState).stateEqual ||
       !kibiState.compareTimes(newTime, storedTime);
 
-      if ((calledFromVisParams || differentTimeOrState) &&
-        $scope.vis.params.autoFitBoundsToData) {
+      if (calledFromVisParams || differentTimeOrState) {
         storedTime = _.cloneDeep(newTime);
         storedState = _.cloneDeep(newState);
         return true;
