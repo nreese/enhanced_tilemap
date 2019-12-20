@@ -3,6 +3,7 @@ import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+import { addSirenPropertyToVisOrSearch } from 'ui/kibi/components/dashboards360/add_property_to_vis_or_search.js';
 
 define(function (require) {
   return function VisTooltipFactory(
@@ -16,7 +17,7 @@ define(function (require) {
     const UI_STATE_ID = 'popupVis';
 
     class VisTooltip {
-      constructor(visId, fieldname, geotype, options) {
+      constructor(visId, fieldname, geotype, sirenMeta, options) {
         this.visId = visId;
         this.fieldname = fieldname;
         this.geotype = geotype;
@@ -24,6 +25,7 @@ define(function (require) {
         this.$tooltipScope = $rootScope.$new();
         this.$visEl = null;
         this.parentUiState = $state.makeStateful('uiState');
+        this.sirenMeta = sirenMeta;
       }
 
       destroy() {
@@ -69,6 +71,14 @@ define(function (require) {
 
           //Flag identifies that this is a record table vis, required for doc_table.js
           self.$tooltipScope.savedObj.searchSource.replaceHits = true;
+
+          if (self.sirenMeta) {
+            //the assumption is that the popup visualization is always
+            // based on the same saved search as the map vis
+            const panelIndexObj = { panelIndex: self.sirenMeta.vis.panelIndex };
+            self.$tooltipScope.savedObj.mapVisId = self.sirenMeta.vis.id;
+            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, self.sirenMeta, panelIndexObj);
+          };
 
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
           self.$tooltipScope.savedObj.searchSource._state.filter = [];

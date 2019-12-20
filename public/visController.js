@@ -57,7 +57,7 @@ define(function (require) {
     createDragAndDropPoiLayers();
     appendMap();
     modifyToDsl();
-    setTooltipFormatter($scope.vis.params.tooltip);
+    setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
     drawWfsOverlays();
 
     const shapeFields = $scope.vis.indexPattern.fields.filter(function (field) {
@@ -192,7 +192,7 @@ define(function (require) {
       };
 
       const differentTimeOrState = !kibiState.compareStates(newState, storedState).stateEqual ||
-      !kibiState.compareTimes(newTime, storedTime);
+        !kibiState.compareTimes(newTime, storedTime);
 
       if (calledFromVisParams || differentTimeOrState) {
         storedTime = _.cloneDeep(newTime);
@@ -308,7 +308,7 @@ define(function (require) {
         }
 
         map._redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
-        setTooltipFormatter(visParams.tooltip);
+        setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
 
         draw();
 
@@ -324,7 +324,7 @@ define(function (require) {
     });
 
     $scope.$listen(queryFilter, 'update', function () {
-      setTooltipFormatter($scope.vis.params.tooltip);
+      setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
     });
 
     $scope.$watch('esResponse', function (resp) {
@@ -380,7 +380,7 @@ define(function (require) {
 
     }
 
-    function setTooltipFormatter(tooltipParams) {
+    function setTooltipFormatter(tooltipParams, sirenMeta) {
       if (tooltip) {
         tooltip.destroy();
       }
@@ -395,7 +395,9 @@ define(function (require) {
           _.get(tooltipParams, 'options.visId'),
           geoField.fieldname,
           geoField.geotype,
-          options);
+          sirenMeta,
+          options
+        );
         tooltipFormatter = tooltip.getFormatter();
       } else {
         tooltipFormatter = Private(TileMapTooltipFormatterProvider);
