@@ -73,11 +73,24 @@ define(function (require) {
           self.$tooltipScope.savedObj.searchSource.replaceHits = true;
 
           if (self.sirenMeta) {
-            //the assumption is that the popup visualization is always
-            // based on the same saved search as the map vis
-            const panelIndexObj = { panelIndex: self.sirenMeta.vis.panelIndex };
-            self.$tooltipScope.savedObj.mapVisId = self.sirenMeta.vis.id;
-            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, self.sirenMeta, panelIndexObj);
+            //the required meta information is already in the coat. Below is the logic to retrive it and assign it to
+            const panelIndexObj = {};
+            //cloneDeep required as main dashboard count updates on popup creation otherwise
+            const sirenMetaTooltip = _.cloneDeep(self.sirenMeta);
+            self.sirenMeta.coat.items.forEach(item => {
+              if (item.type === 'node' && item.d.entity.id === self.sirenMeta.coat.node.d.entity.id) {
+                item.d.widgets.forEach(widget => {
+                  if (widget.id === self.visId) {
+                    panelIndexObj.panelIndex = widget.panelIndex;
+                    sirenMetaTooltip.vis.id = widget.id;
+                    sirenMetaTooltip.vis.title = widget.title;
+                    sirenMetaTooltip.vis.panelIndex = widget.panelIndex;
+                  };
+                });
+              }
+            });
+
+            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaTooltip, panelIndexObj);
           };
 
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
