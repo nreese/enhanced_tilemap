@@ -10,13 +10,13 @@ define(function (require) {
     /**
      * Base map marker overlay, all other markers inherit from this class
      *
-     * @param map {Leaflet Object}
+     * @param leafletMap {Leaflet Object}
      * @param geoJson {geoJson Object}
      * @param params {Object}
      */
-    function BaseMarker(map, geoJson, layerControl, params) {
+    function BaseMarker(leafletMap, geoJson, layerControl, params) {
       this.uiState = params.uiState;
-      this.map = map; // this is the leaflet map (i.e. L.map())
+      this.leafletMap = leafletMap;
       this.geoJson = geoJson;
       this.layerControl = layerControl;
       this.popups = [];
@@ -110,7 +110,7 @@ define(function (require) {
         return $div.get(0);
       };
 
-      if (self.isVisible) self._legend.addTo(self.map);
+      if (self.isVisible) self._legend.addTo(self.leafletMap);
     };
 
     BaseMarker.prototype.removeLegend = function () {
@@ -120,7 +120,7 @@ define(function (require) {
 
       if (this._legend) {
         if (this._legend._map) {
-          this.map.removeControl(this._legend);
+          this.leafletMap.removeControl(this._legend);
         }
         this._legend = undefined;
       }
@@ -164,7 +164,7 @@ define(function (require) {
 
       self._popupMouseOut = function (e) {
         // detach the event
-        L.DomEvent.off(self.map._popup, 'mouseout', self._popupMouseOut, self);
+        L.DomEvent.off(self.leafletMap._popup, 'mouseout', self._popupMouseOut, self);
 
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
@@ -208,7 +208,7 @@ define(function (require) {
 
           // check to see if the element is a popup
           if (self._getParent(target, 'leaflet-popup')) {
-            L.DomEvent.on(self.map._popup._container, 'mouseout', self._popupMouseOut, self);
+            L.DomEvent.on(self.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
             return true;
           }
 
@@ -241,7 +241,7 @@ define(function (require) {
      */
     BaseMarker.prototype.destroy = function () {
       const state = {
-        isVisible: this._markerGroup && this.map.hasLayer(this._markerGroup),
+        isVisible: this._markerGroup && this.leafletMap.hasLayer(this._markerGroup),
         threshold: {
           floor: _.get(this.geoJson, 'properties.allmin', 0),
           ceil: _.get(this.geoJson, 'properties.allmax', 1),
@@ -263,8 +263,8 @@ define(function (require) {
       // remove marker layer from map
       if (this._markerGroup) {
         this.layerControl.removeLayer(this._markerGroup);
-        if (this.map.hasLayer(this._markerGroup)) {
-          this.map.removeLayer(this._markerGroup);
+        if (this.leafletMap.hasLayer(this._markerGroup)) {
+          this.leafletMap.removeLayer(this._markerGroup);
         }
         this._markerGroup = undefined;
       }
@@ -275,13 +275,13 @@ define(function (require) {
     BaseMarker.prototype.hide = function () {
       this._stopLoadingGeohash();
       if (this._legend) {
-        this.map.removeControl(this._legend);
+        this.leafletMap.removeControl(this._legend);
       }
     };
 
     BaseMarker.prototype.show = function () {
       if (this._legend) {
-        this._legend.addTo(this.map);
+        this._legend.addTo(this.leafletMap);
       }
     };
 
@@ -296,7 +296,7 @@ define(function (require) {
         this.isVisible = false;
       }
 
-      if (this.isVisible) this.map.addLayer(this._markerGroup);
+      if (this.isVisible) this.leafletMap.addLayer(this._markerGroup);
 
       if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {
         this.addLegend();
@@ -367,12 +367,12 @@ define(function (require) {
      * @return undefined
      */
     BaseMarker.prototype._showTooltip = function (feature, latLng) {
-      if (!this.map) return;
+      if (!this.leafletMap) return;
       const lat = _.get(feature, 'geometry.coordinates.1');
       const lng = _.get(feature, 'geometry.coordinates.0');
       latLng = latLng || L.latLng(lat, lng);
 
-      const content = this._tooltipFormatter(feature, this.map);
+      const content = this._tooltipFormatter(feature, this.leafletMap);
 
       if (!content) return;
       this._createTooltip(content, latLng);
@@ -389,11 +389,11 @@ define(function (require) {
         className: className,
         maxHeight: 'auto',
         maxWidth: 'auto',
-        offset: utils.popupOffset(this.map, content, latLng)
+        offset: utils.popupOffset(this.leafletMap, content, latLng)
       })
         .setLatLng(latLng)
         .setContent(content)
-        .openOn(this.map);
+        .openOn(this.leafletMap);
     };
 
     /**
@@ -403,9 +403,9 @@ define(function (require) {
      * @return undefined
      */
     BaseMarker.prototype._hidePopup = function () {
-      if (!this.map) return;
+      if (!this.leafletMap) return;
 
-      this.map.closePopup();
+      this.leafletMap.closePopup();
     };
 
     BaseMarker.prototype._createSpinControl = function () {
@@ -425,13 +425,13 @@ define(function (require) {
       });
 
       this._spinControl = new SpinControl();
-      this.map.addControl(this._spinControl);
+      this.leafletMap.addControl(this._spinControl);
     };
 
     BaseMarker.prototype._removeSpinControl = function () {
       if (!this._spinControl) return;
 
-      this.map.removeControl(this._spinControl);
+      this.leafletMap.removeControl(this._spinControl);
       this._spinControl = null;
     };
 

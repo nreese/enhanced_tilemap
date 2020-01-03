@@ -135,15 +135,15 @@ define(function (require) {
      * anchor popups so content fits inside map bounds.
      *
      * @method popupOffset
-     * @param map {L.Map} Leaflet map
+     * @param leafletMap {L.Map} Leaflet map
      * @param content {String} String containing html popup content
      * @param latLng {L.LatLng} popup location
      * @return {L.Point} offset
      */
-    popupOffset: function (map, content, latLng) {
-      const mapWidth = map.getSize().x;
-      const mapHeight = map.getSize().y;
-      const popupPoint = map.latLngToContainerPoint(latLng);
+    popupOffset: function (leafletMap, content, latLng) {
+      const mapWidth = leafletMap.getSize().x;
+      const mapHeight = leafletMap.getSize().y;
+      const popupPoint = leafletMap.latLngToContainerPoint(latLng);
       //Create popup that is out of view to determine dimensions
       const popup = L.popup({
         autoPan: false,
@@ -153,7 +153,7 @@ define(function (require) {
       })
         .setLatLng(latLng)
         .setContent(content)
-        .openOn(map);
+        .openOn(leafletMap);
       const popupHeight = popup._contentNode.clientHeight;
       const popupWidth = popup._contentNode.clientWidth / 2;
 
