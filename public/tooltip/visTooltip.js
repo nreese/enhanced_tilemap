@@ -4,6 +4,7 @@ import utils from 'plugins/enhanced_tilemap/utils';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { addSirenPropertyToVisOrSearch } from 'ui/kibi/components/dashboards360/add_property_to_vis_or_search.js';
+import { findItemByVisIdAndPanelIndex } from 'ui/kibi/components/dashboards360/lib/coat/find_item_by_vis_id_and_panel_index';
 
 define(function (require) {
   return function VisTooltipFactory(
@@ -73,22 +74,26 @@ define(function (require) {
           self.$tooltipScope.savedObj.searchSource.replaceHits = true;
 
           if (self.sirenMeta) {
-            //the required meta information is already in the coat. Below is the logic to retrive it and assign it to
             const panelIndexObj = {};
-            //cloneDeep required as main dashboard count updates on popup creation otherwise
+            const panelIndex = Math.floor(Math.random() * 10000) + 1000;
+            //cloneDeep required as document count on dashboard updates when map popup is created otherwise
             const sirenMetaTooltip = _.cloneDeep(self.sirenMeta);
-            self.sirenMeta.coat.items.forEach(item => {
-              if (item.type === 'node' && item.d.entity.id === self.sirenMeta.coat.node.d.entity.id) {
-                item.d.widgets.forEach(widget => {
-                  if (widget.id === self.visId) {
-                    panelIndexObj.panelIndex = widget.panelIndex;
-                    sirenMetaTooltip.vis.id = widget.id;
-                    sirenMetaTooltip.vis.title = widget.title;
-                    sirenMetaTooltip.vis.panelIndex = widget.panelIndex;
-                  };
-                });
-              }
+
+            //retrieving and adding popup vis to coat so that join filters work
+            const etmVisNode = findItemByVisIdAndPanelIndex(
+              sirenMetaTooltip.coat.items,
+              self.sirenMeta.vis.id,
+              self.sirenMeta.vis.panelIndex
+            );
+
+            etmVisNode.d.widgets.push({
+              id: self.visId,
+              panelIndex
             });
+
+            sirenMetaTooltip.vis.id = self.visId;
+            sirenMetaTooltip.vis.panelIndex = panelIndex;
+            panelIndexObj.panelIndex = panelIndex;
 
             addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaTooltip, panelIndexObj);
           };
