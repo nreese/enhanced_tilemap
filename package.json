@@ -6,12 +6,15 @@
   },
   "scripts": {
     "test": "gulp test",
-    "testdev": "gulp testdev",
     "test:coverage": "gulp coverage",
+    "test:server": "gulp testserve",
+    "test:browser": "gulp testbrowser",
+    "test:dev": "gulp testdev",
     "start": "gulp dev",
+    "sync": "gulp sync",
     "precommit": "gulp lint",
-    "build": "gulp build",
-    "sync": "gulp sync"
+    "lint": "gulp lint",
+    "build": "gulp build"
   },
   "dependencies": {
     "angularjs-dropdown-multiselect": "^2.0.0-beta.10",

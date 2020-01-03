@@ -35,7 +35,11 @@ const knownOptions = {
 };
 
 const options = minimist(process.argv.slice(2), knownOptions);
-const kibanaPluginDir = path.resolve(__dirname, path.join(options.kibanahomepath, 'siren_plugins', packageName));
+// here we have to make sure we always take the last provided kibanahomepath
+const kibanahomepath = Array.isArray(options.kibanahomepath) ?
+                       options.kibanahomepath[options.kibanahomepath.length - 1] :
+                       options.kibanahomepath;
+const kibanaPluginDir = path.resolve(__dirname, path.join(kibanahomepath, 'siren_plugins', packageName));
 
 
 function syncPluginTo(dest, done) {
@@ -102,7 +106,7 @@ const eslintOptions = {
   rules: {
     memoryleaks: 1
   },
-  rulePaths: [path.resolve(__dirname, options.kibanahomepath, 'scripts', 'eslintrules')],
+  rulePaths: [path.resolve(__dirname, kibanahomepath, 'scripts', 'eslintrules')],
   fix: true
 };
 
@@ -153,21 +157,21 @@ gulp.task('dev', gulp.series('sync', function (done) {
 
 gulp.task('test', gulp.series('sync', function (done) {
   spawn('grunt', [ 'test:browser', '--grep=Kibi Enhanced Tilemap'], {
-    cwd: options.kibanahomepath,
+    cwd: kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
 }));
 
 gulp.task('testdev', gulp.series('sync', function (done) {
   spawn('grunt', ['test:dev', '--browser=Chrome', '--kbnServer.ignoreDevYml'], {
-    cwd: options.kibanahomepath,
+    cwd: kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
 }));
 
 gulp.task('coverage', gulp.series('sync', function (done) {
   spawn('grunt', ['test:coverage', '--grep=Kibi Enhanced Tilemap'], {
-    cwd: options.kibanahomepath,
+    cwd: kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
 }));
