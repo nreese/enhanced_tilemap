@@ -202,15 +202,17 @@ define(function (require) {
     }
 
     function _doFitMapBoundsToData() {
-      const boundsHelper = new BoundsHelper(chartData.searchSource, getGeoField().fieldname);
-      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
-        .then(entireBounds => {
-          if (entireBounds) {
-            map.leafletMap.fitBounds(entireBounds);
-            //update uiState zoom so correct geohash precision will be used
-            $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
-          };
-        });
+      if (_.has(chartData, 'searchSource')) {
+        const boundsHelper = new BoundsHelper(chartData.searchSource, getGeoField().fieldname);
+        boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
+          .then(entireBounds => {
+            if (entireBounds) {
+              map.leafletMap.fitBounds(entireBounds);
+              //update uiState zoom so correct geohash precision will be used
+              $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
+            };
+          });
+      }
     }
 
     function aggFilter(field) {
