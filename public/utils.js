@@ -140,15 +140,17 @@ define(function (require) {
      * @param latLng {L.LatLng} popup location
      * @return {L.Point} offset
      */
-    popupOffset: function (leafletMap, content, latLng) {
+    popupOffset: function (leafletMap, content, latLng, popupDimensions) {
       const mapWidth = leafletMap.getSize().x;
       const mapHeight = leafletMap.getSize().y;
       const popupPoint = leafletMap.latLngToContainerPoint(latLng);
+      const maxHeight = _.get(popupDimensions, 'height', 'auto');
+      const maxWidth = _.get(popupDimensions, 'width', 'auto');
       //Create popup that is out of view to determine dimensions
       const popup = L.popup({
         autoPan: false,
-        maxHeight: 'auto',
-        maxWidth: 'auto',
+        maxHeight,
+        maxWidth,
         offset: new L.Point(mapWidth * -2, mapHeight * -2)
       })
         .setLatLng(latLng)
