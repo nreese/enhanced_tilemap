@@ -5,6 +5,7 @@ import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { addSirenPropertyToVisOrSearch } from 'ui/kibi/components/dashboards360/add_property_to_vis_or_search.js';
 import { findItemByVisIdAndPanelIndex } from 'ui/kibi/components/dashboards360/lib/coat/find_item_by_vis_id_and_panel_index';
+import { findMainCoatNode } from 'ui/kibi/components/dashboards360/coat_tree';
 
 define(function (require) {
   return function VisTooltipFactory(
@@ -58,12 +59,12 @@ define(function (require) {
           return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right);
         }
 
-        return function (feature, map) {
+        return function (feature, leafletMap) {
           if (!feature) return '';
           if (!self.$visEl) return 'initializing';
 
-          const width = Math.round(map.getSize().x * _.get(self.options, 'xRatio', 0.6));
-          const height = Math.round(map.getSize().y * _.get(self.options, 'yRatio', 0.6));
+          const width = Math.round(leafletMap.getSize().x * _.get(self.options, 'xRatio', 0.6));
+          const height = Math.round(leafletMap.getSize().y * _.get(self.options, 'yRatio', 0.6));
           const style = 'style="height: ' + height + 'px; width: ' + width + 'px;"';
           const loadHtml = '<div ' + style + '>Loading Visualization Data</div>';
 
@@ -86,10 +87,19 @@ define(function (require) {
               self.sirenMeta.vis.panelIndex
             );
 
-            etmVisNode.d.widgets.push({
-              id: self.visId,
-              panelIndex
-            });
+            //if vis is not assigned in coat tree, assign popup to main node
+            if (!etmVisNode) {
+              const mainNode = findMainCoatNode(sirenMetaTooltip.coat.items);
+              mainNode.d.widgets.push({
+                id: self.visId,
+                panelIndex
+              });
+            } else if (_.has(etmVisNode, 'd.widgets')) {
+              etmVisNode.d.widgets.push({
+                id: self.visId,
+                panelIndex
+              });
+            };
 
             sirenMetaTooltip.vis.id = self.visId;
             sirenMetaTooltip.vis.panelIndex = panelIndex;
@@ -110,7 +120,7 @@ define(function (require) {
               height: height
             });
 
-            const $popup = $(map.getContainer()).find('.leaflet-popup-content');
+            const $popup = $(leafletMap.getContainer()).find('.leaflet-popup-content');
 
             //A lot can happed between calling fetch and getting a response
             //Only update popup content if the popup context is still for this fetch

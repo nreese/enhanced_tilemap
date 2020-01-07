@@ -202,15 +202,17 @@ define(function (require) {
     }
 
     function _doFitMapBoundsToData() {
-      const boundsHelper = new BoundsHelper(chartData.searchSource, getGeoField().fieldname);
-      boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
-        .then(entireBounds => {
-          if (entireBounds) {
-            map.map.fitBounds(entireBounds);
-            //update uiState zoom so correct geohash precision will be used
-            $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
-          };
-        });
+      if (_.has(chartData, 'searchSource')) {
+        const boundsHelper = new BoundsHelper(chartData.searchSource, getGeoField().fieldname);
+        boundsHelper.getBoundsOfEntireDataSelection($scope.vis)
+          .then(entireBounds => {
+            if (entireBounds) {
+              map.leafletMap.fitBounds(entireBounds);
+              //update uiState zoom so correct geohash precision will be used
+              $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
+            };
+          });
+      }
     }
 
     function aggFilter(field) {
@@ -607,7 +609,7 @@ define(function (require) {
     // ==       vis object      ==
     // ===========================
 
-    map.map.on('groupLayerControl:removeClickedLayer', function (e) {
+    map.leafletMap.on('groupLayerControl:removeClickedLayer', function (e) {
       $scope.vis.params.overlays.dragAndDropPoiLayers =
         _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
           return dragAndDropPoiLayer.searchIcon !== e.name;
@@ -615,25 +617,25 @@ define(function (require) {
     });
 
     // saving checkbox status to dashboard uiState
-    map.map.on('overlayadd', function (e) {
+    map.leafletMap.on('overlayadd', function (e) {
       map.saturateWMSTiles();
       $scope.vis.getUiState().set(e.name, !!e.name);
     });
-    map.map.on('overlayremove', function (e) {
+    map.leafletMap.on('overlayremove', function (e) {
       $scope.vis.getUiState().set(e.name, false);
     });
 
-    map.map.on('moveend', _.debounce(function setZoomCenter(ev) {
-      if (!map.map) return;
+    map.leafletMap.on('moveend', _.debounce(function setZoomCenter(ev) {
+      if (!map.leafletMap) return;
       if (map._hasSameLocation()) return;
 
       // update internal center and zoom references
-      map._mapCenter = map.map.getCenter();
+      map._mapCenter = map.leafletMap.getCenter();
       $scope.vis.getUiState().set('mapCenter', [
         _.round(map._mapCenter.lat, 5),
         _.round(map._mapCenter.lng, 5)
       ]);
-      $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
+      $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
 
       map._callbacks.mapMoveEnd({
         searchSource: $scope.searchSource,
@@ -642,11 +644,11 @@ define(function (require) {
       });
     }, 150, false));
 
-    map.map.on('zoomend', _.debounce(function () {
-      if (!map.map) return;
+    map.leafletMap.on('zoomend', _.debounce(function () {
+      if (!map.leafletMap) return;
       if (map._hasSameLocation()) return;
       if (!map._callbacks) return;
-      $scope.vis.getUiState().set('mapZoom', map.map.getZoom());
+      $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
 
       map._callbacks.mapZoomEnd({
         searchSource: $scope.searchSource,
@@ -654,11 +656,11 @@ define(function (require) {
       });
     }, 150, false));
 
-    map.map.on('setview:fitBounds', function (e) {
+    map.leafletMap.on('setview:fitBounds', function (e) {
       _doFitMapBoundsToData();
     });
 
-    map.map.on('draw:created', function (e) {
+    map.leafletMap.on('draw:created', function (e) {
       const indexPatternId = getIndexPatternId();
       const field = getGeoField();
       const sirenMeta = getSirenMeta();
@@ -706,7 +708,7 @@ define(function (require) {
       }
     });
 
-    map.map.on('etm:select-feature', function (e) {
+    map.leafletMap.on('etm:select-feature', function (e) {
       map._callbacks.polygon({
         points: e.geojson.geometry.coordinates[0],
         field: getGeoField(),
@@ -714,7 +716,7 @@ define(function (require) {
       });
     });
 
-    map.map.on('toolbench:poiFilter', function (e) {
+    map.leafletMap.on('toolbench:poiFilter', function (e) {
       const poiLayers = [];
       Object.keys(map._poiLayers).forEach(function (key) {
         poiLayers.push(map._poiLayers[key]);

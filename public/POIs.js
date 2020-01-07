@@ -423,11 +423,15 @@ define(function (require) {
     POIs.prototype._getMouseOverGeoPoint = function (content) {
       const popup = function (e) {
         if (!e.target._map.disablePopups) {
+          const popupDimensions = {
+            height: this._map.getSize().y * 0.9,
+            width: Math.min(this._map.getSize().x * 0.9, 400)
+          };
           L.popup({
             autoPan: false,
-            maxHeight: 'auto',
-            maxWidth: 'auto',
-            offset: utils.popupOffset(this._map, content, e.latlng)
+            maxHeight: popupDimensions.height,
+            maxWidth: popupDimensions.width,
+            offset: utils.popupOffset(this._map, content, e.latlng, popupDimensions)
           })
             .setLatLng(e.latlng)
             .setContent(content)

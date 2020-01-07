@@ -9,12 +9,12 @@ define(function (require) {
     /**
      * Map overlay: canvas layer with leaflet.heat plugin
      *
-     * @param map {Leaflet Object}
+     * @param leafletMap {Leaflet Object}
      * @param geoJson {geoJson Object}
      * @param params {Object}
      */
     _.class(HeatmapMarker).inherits(BaseMarker);
-    function HeatmapMarker(map, geoJson, params) {
+    function HeatmapMarker(leafletMap, geoJson, params) {
       const self = this;
       this._disableTooltips = false;
       HeatmapMarker.Super.apply(this, arguments);
@@ -45,10 +45,10 @@ define(function (require) {
     };
 
     HeatmapMarker.prototype.unfixTooltips = function () {
-      this.map.off('mousemove');
-      this.map.off('mouseout');
-      this.map.off('mousedown');
-      this.map.off('mouseup');
+      this.leafletMap.off('mousemove');
+      this.leafletMap.off('mouseout');
+      this.leafletMap.off('mousedown');
+      this.leafletMap.off('mouseup');
     };
 
     HeatmapMarker.prototype._fixTooltips = function () {
@@ -59,15 +59,15 @@ define(function (require) {
       });
 
       if (!this._disableTooltips && this._attr.addTooltip) {
-        this.map.on('mousemove', debouncedMouseMoveLocation);
-        this.map.on('mouseout', function () {
-          self.map.closePopup();
+        this.leafletMap.on('mousemove', debouncedMouseMoveLocation);
+        this.leafletMap.on('mouseout', function () {
+          self.leafletMap.closePopup();
         });
-        this.map.on('mousedown', function () {
+        this.leafletMap.on('mousedown', function () {
           self._disableTooltips = true;
-          self.map.closePopup();
+          self.leafletMap.closePopup();
         });
-        this.map.on('mouseup', function () {
+        this.leafletMap.on('mouseup', function () {
           self._disableTooltips = false;
         });
       }
@@ -75,7 +75,7 @@ define(function (require) {
       function mouseMoveLocation(e) {
         const latlng = e.latlng;
 
-        this.map.closePopup();
+        this.leafletMap.closePopup();
 
         // unhighlight all svgs
         d3.selectAll('path.geohash', this.chartEl).classed('geohash-hover', false);
@@ -163,7 +163,7 @@ define(function (require) {
         .domain([1, 4, 7, 10, 13, 16, 18])
         .range([1000000, 300000, 100000, 15000, 2000, 150, 50]);
 
-      const proximity = zoomScale(this.map.getZoom());
+      const proximity = zoomScale(this.leafletMap.getZoom());
       const distance = latlng.distanceTo(featureLatLng);
 
       // maxLngDif is max difference in longitudes

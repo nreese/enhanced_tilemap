@@ -90,7 +90,7 @@ define(function (require) {
             point,
             { icon: markerIcon(color) }));
       });
-      this.map.addLayer(this._drawnItems);
+      this.leafletMap.addLayer(this._drawnItems);
       this._layerControl.addOverlay(this._drawnItems, 'Markers');
 
       //https://github.com/Leaflet/Leaflet.draw
@@ -122,16 +122,16 @@ define(function (require) {
       }
 
       this._drawControl = new L.Control.Draw(drawOptions);
-      this.map.addControl(this._drawControl);
+      this.leafletMap.addControl(this._drawControl);
 
-      this._toolbench = new LDrawToolbench(this.map, this._drawControl);
+      this._toolbench = new LDrawToolbench(this.leafletMap, this._drawControl);
     };
 
     TileMapMap.prototype._addSetViewControl = function () {
       if (this._setViewControl) return;
 
       this._setViewControl = new L.Control.SetView();
-      this.map.addControl(this._setViewControl);
+      this.leafletMap.addControl(this._setViewControl);
     };
 
     TileMapMap.prototype._addMousePositionControl = function () {
@@ -154,7 +154,7 @@ define(function (require) {
           }
         ]
       });
-      this.map.addControl(this._mousePositionControl);
+      this.leafletMap.addControl(this._mousePositionControl);
     };
 
     /**
@@ -179,7 +179,7 @@ define(function (require) {
       };
 
       // label.addTo(this.map);
-      this.map.addControl(label);
+      this.leafletMap.addControl(label);
     };
 
     /**
@@ -197,7 +197,7 @@ define(function (require) {
     };
 
     TileMapMap.prototype.updateSize = function () {
-      this.map.invalidateSize({
+      this.leafletMap.invalidateSize({
         debounceMoveend: true
       });
     };
@@ -206,13 +206,13 @@ define(function (require) {
       this.clearPOILayers();
       this.clearVectorLayers();
       this._destroyMapEvents();
-      if (this._label) this._label.removeFrom(this.map);
-      if (this._fitControl) this._fitControl.removeFrom(this.map);
-      if (this._drawControl) this._drawControl.remove(this.map);
+      if (this._label) this._label.removeFrom(this.leafletMap);
+      if (this._fitControl) this._fitControl.removeFrom(this.leafletMap);
+      if (this._drawControl) this._drawControl.remove(this.leafletMap);
       if (this._markers) this._markers.destroy();
-      syncMaps.remove(this.map);
-      this.map.remove();
-      this.map = undefined;
+      syncMaps.remove(this.leafletMap);
+      this.leafletMap.remove();
+      this.leafletMap = undefined;
     };
 
     TileMapMap.prototype.clearPOILayers = function () {
@@ -220,7 +220,7 @@ define(function (require) {
         const layer = this._poiLayers[key];
         layer.destroy();
         this._layerControl.removeLayer(layer);
-        this.map.removeLayer(layer);
+        this.leafletMap.removeLayer(layer);
       });
       this._poiLayers = {};
       if (this._toolbench) this._toolbench.removeTools();
@@ -231,7 +231,7 @@ define(function (require) {
         const layer = this._vectorOverlays[key];
         layer.destroy();
         this._layerControl.removeLayer(layer);
-        this.map.removeLayer(layer);
+        this.leafletMap.removeLayer(layer);
       });
       this._vectorOverlays = {};
       if (this._toolbench) this._toolbench.removeTools();
@@ -242,7 +242,7 @@ define(function (require) {
         if (overlay.type && overlay.type === 'WFS') {
           overlay.destroy();
           this._layerControl.removeLayer(overlay);
-          this.map.removeLayer(overlay);
+          this.leafletMap.removeLayer(overlay);
         }
         return overlay.type && overlay.type === 'WFS';
       });
@@ -257,9 +257,9 @@ define(function (require) {
       if (_.has(this._poiLayers, layerName)) {
         const layer = this._poiLayers[layerName];
         this._poiLayers[layerName].destroy();
-        isVisible = this.map.hasLayer(layer);
+        isVisible = this.leafletMap.hasLayer(layer);
         this._layerControl.removeLayer(layer);
-        this.map.removeLayer(layer);
+        this.leafletMap.removeLayer(layer);
         delete this._poiLayers[layerName];
       }
 
@@ -272,7 +272,7 @@ define(function (require) {
       }
 
       if (isVisible) {
-        this.map.addLayer(layer);
+        this.leafletMap.addLayer(layer);
       }
 
       const tooManyDocs = {
@@ -312,7 +312,7 @@ define(function (require) {
       }
 
       if (isVisible) {
-        this.map.addLayer(layer);
+        this.leafletMap.addLayer(layer);
       }
 
       this._vectorOverlays[layerName] = layer;
@@ -360,11 +360,11 @@ define(function (require) {
     TileMapMap.prototype.addFilters = function (filters) {
       let isVisible = false;
       if (this._filters) {
-        if (this.map.hasLayer(this._filters)) {
+        if (this.leafletMap.hasLayer(this._filters)) {
           isVisible = true;
         }
         this._layerControl.removeLayer(this._filters);
-        this.map.removeLayer(this._filters);
+        this.leafletMap.removeLayer(this._filters);
       }
 
       const style = {
@@ -386,7 +386,7 @@ define(function (require) {
       }
 
       if (isVisible) {
-        this.map.addLayer(this._filters);
+        this.leafletMap.addLayer(this._filters);
       }
 
 
@@ -397,9 +397,9 @@ define(function (require) {
       const prevState = {};
       Object.keys(this._wmsOverlays).forEach(key => {
         const layer = this._wmsOverlays[key];
-        prevState[key] = this.map.hasLayer(layer);
+        prevState[key] = this.leafletMap.hasLayer(layer);
         this._layerControl.removeLayer(layer);
-        this.map.removeLayer(layer);
+        this.leafletMap.removeLayer(layer);
       });
       this._wmsOverlays = {};
       return prevState;
@@ -416,7 +416,7 @@ define(function (require) {
 
       overlay.layerOptions = layerOptions;
 
-      if (layerOptions.isVisible) this.map.addLayer(overlay);
+      if (layerOptions.isVisible) this.leafletMap.addLayer(overlay);
 
 
       this._layerControl.addOverlay(overlay, name, '<b> WMS Overlays</b>');
@@ -443,7 +443,7 @@ define(function (require) {
     };
 
     TileMapMap.prototype.mapBounds = function () {
-      let bounds = this.map.getBounds();
+      let bounds = this.leafletMap.getBounds();
 
       //When map is not visible, there is no width or height.
       //Need to manually create bounds based on container width/height
@@ -453,8 +453,8 @@ define(function (require) {
           parent = parent.parentNode;
         }
 
-        const southWest = this.map.layerPointToLatLng(L.point(parent.clientWidth / 2 * -1, parent.clientHeight / 2 * -1));
-        const northEast = this.map.layerPointToLatLng(L.point(parent.clientWidth / 2, parent.clientHeight / 2));
+        const southWest = this.leafletMap.layerPointToLatLng(L.point(parent.clientWidth / 2 * -1, parent.clientHeight / 2 * -1));
+        const northEast = this.leafletMap.layerPointToLatLng(L.point(parent.clientWidth / 2, parent.clientHeight / 2));
         bounds = L.latLngBounds(southWest, northEast);
       }
       return bounds;
@@ -469,7 +469,7 @@ define(function (require) {
      */
     TileMapMap.prototype._createMarkers = function (options) {
       const MarkerType = markerTypes[this._markerType];
-      return new MarkerType(this.map, this._geoJson, this._layerControl, options);
+      return new MarkerType(this.leafletMap, this._geoJson, this._layerControl, options);
     };
 
     TileMapMap.prototype.unfixMapTypeTooltips = function () {
@@ -491,11 +491,11 @@ define(function (require) {
       }
 
       //update map options based on new attributes
-      if (this.map) {
+      if (this.leafletMap) {
         if (this._attr.scrollWheelZoom) {
-          this.map.scrollWheelZoom.enable();
+          this.leafletMap.scrollWheelZoom.enable();
         } else {
-          this.map.scrollWheelZoom.disable();
+          this.leafletMap.scrollWheelZoom.disable();
         }
       }
     };
@@ -518,24 +518,24 @@ define(function (require) {
       ];
 
       allEvents.forEach(event => {
-        this.map.off(event);
+        this.leafletMap.off(event);
       });
     };
 
     TileMapMap.prototype._attachEvents = function () {
       const self = this;
 
-      this.map.on('groupLayerControl:removeClickedLayer', (e) => {
+      this.leafletMap.on('groupLayerControl:removeClickedLayer', (e) => {
         const layerName = e.name;
         if (_.has(this._poiLayers, layerName)) {
           const layer = this._poiLayers[layerName];
           this._poiLayers[layerName].destroy();
-          this.map.removeLayer(layer);
+          this.leafletMap.removeLayer(layer);
           delete this._poiLayers[layerName];
         }
       });
 
-      this.map.on('etm:select-feature-vector', function (e) {
+      this.leafletMap.on('etm:select-feature-vector', function (e) {
         self._callbacks.polygonVector({
           args: e.args,
           params: self._attr,
@@ -544,29 +544,29 @@ define(function (require) {
       });
 
       //stop popups appearing when drawing has started
-      this.map.on('draw:drawstart', function (e) {
+      this.leafletMap.on('draw:drawstart', function (e) {
         this.disablePopups = true;
       });
 
       //start popups appearing finished drawing
-      this.map.on('draw:drawstop', function (e) {
+      this.leafletMap.on('draw:drawstop', function (e) {
         this.disablePopups = false;
       });
 
-      this.map.on('draw:deleted', function (e) {
+      this.leafletMap.on('draw:deleted', function (e) {
         self._callbacks.deleteMarkers({
           chart: self._chartData,
           deletedLayers: e.layers,
         });
       });
 
-      this.map.on('overlayadd', function (e) {
+      this.leafletMap.on('overlayadd', function (e) {
         if (self._markers && e.name === 'Aggregation') {
           self._markers.show();
         }
       });
 
-      this.map.on('overlayremove', function (e) {
+      this.leafletMap.on('overlayremove', function (e) {
         if (self._markers && e.name === 'Aggregation') {
           self._markers.hide();
         }
@@ -576,12 +576,12 @@ define(function (require) {
     TileMapMap.prototype._hasSameLocation = function () {
       const oldLat = this._mapCenter.lat.toFixed(5);
       const oldLon = this._mapCenter.lng.toFixed(5);
-      const newLat = this.map.getCenter().lat.toFixed(5);
-      const newLon = this.map.getCenter().lng.toFixed(5);
+      const newLat = this.leafletMap.getCenter().lat.toFixed(5);
+      const newLon = this.leafletMap.getCenter().lng.toFixed(5);
       let isSame = false;
       if (oldLat === newLat
         && oldLon === newLon
-        && this.map.getZoom() === this._mapZoom) {
+        && this.leafletMap.getZoom() === this._mapZoom) {
         isSame = true;
       }
       return isSame;
@@ -596,11 +596,11 @@ define(function (require) {
         this._tileLayer.remove();
         this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
       }
-      this._tileLayer.addTo(this.map);
+      this._tileLayer.addTo(this.leafletMap);
     };
 
     TileMapMap.prototype._createMap = function (mapOptions) {
-      if (this.map) this.destroy();
+      if (this.leafletMap) this.destroy();
 
       // Use WMS compliant server, if not enabled, use OSM mapTiles as default
       if (this._attr.wms && this._attr.wms.enabled) {
@@ -612,23 +612,23 @@ define(function (require) {
       mapOptions.center = this._mapCenter;
       mapOptions.zoom = this._mapZoom;
 
-      this.map = L.map(this._container, mapOptions);
+      this.leafletMap = L.map(this._container, mapOptions);
 
       // add base layer based on above logic and decide saturation based on saved settings
-      this._tileLayer.addTo(this.map);
+      this._tileLayer.addTo(this.leafletMap);
 
       this.saturateTiles(this._attr.isDesaturated);
 
       const options = { groupCheckboxes: true };
       this._layerControl = L.control.groupedLayers();
-      this._layerControl.addTo(this.map);
+      this._layerControl.addTo(this.leafletMap);
 
       this._addSetViewControl();
       this._addDrawControl();
       this._addMousePositionControl();
-      L.control.measureScale().addTo(this.map);
+      L.control.measureScale().addTo(this.leafletMap);
       this._attachEvents();
-      if (mapOptions.syncMap) syncMaps.add(this.map);
+      if (mapOptions.syncMap) syncMaps.add(this.leafletMap);
     };
 
     /**
@@ -636,11 +636,11 @@ define(function (require) {
      * even those NOT currently within map canvas extent
      *
      * @method _fitBounds
-     * @param map {Leaflet Object}
+     * @param leafletMap {Leaflet Object}
      * @return {boolean}
      */
     TileMapMap.prototype.fitBounds = function (entireBounds) {
-      this.map.fitBounds(entireBounds);
+      this.leafletMap.fitBounds(entireBounds);
     };
     return TileMapMap;
   };

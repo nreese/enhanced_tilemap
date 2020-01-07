@@ -8,19 +8,19 @@ define(function (require) {
     /**
      * Map overlay: circle markers that are scaled to illustrate values
      *
-     * @param map {Leaflet Object}
+     * @param leafletMap {Leaflet Object}
      * @param mapData {geoJson Object}
      * @param params {Object}
      */
     _.class(ScaledCircleMarker).inherits(BaseMarker);
-    function ScaledCircleMarker(map, geoJson, params) {
+    function ScaledCircleMarker(leafletMap, geoJson, params) {
       const self = this;
       ScaledCircleMarker.Super.apply(this, arguments);
 
       // Earth circumference in meters
       const earthCircumference = 40075017;
-      const mapZoom = map.getZoom();
-      const latitudeRadians = map.getCenter().lat * (Math.PI / 180);
+      const mapZoom = leafletMap.getZoom();
+      const latitudeRadians = leafletMap.getCenter().lat * (Math.PI / 180);
       this._metersPerPixel = earthCircumference * Math.cos(latitudeRadians) / Math.pow(2, mapZoom + 8);
 
       this._createMarkerGroup({
