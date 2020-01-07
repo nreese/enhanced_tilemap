@@ -5,6 +5,7 @@ import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { addSirenPropertyToVisOrSearch } from 'ui/kibi/components/dashboards360/add_property_to_vis_or_search.js';
 import { findItemByVisIdAndPanelIndex } from 'ui/kibi/components/dashboards360/lib/coat/find_item_by_vis_id_and_panel_index';
+import { findMainCoatNode } from 'ui/kibi/components/dashboards360/coat_tree';
 
 define(function (require) {
   return function VisTooltipFactory(
@@ -86,12 +87,19 @@ define(function (require) {
               self.sirenMeta.vis.panelIndex
             );
 
-            if (_.has(etmVisNode, 'd.widgets')) {
+            //if vis is not assigned in coat tree, assign popup to main node
+            if (!etmVisNode) {
+              const mainNode = findMainCoatNode(sirenMetaTooltip.coat.items);
+              mainNode.d.widgets.push({
+                id: self.visId,
+                panelIndex
+              });
+            } else if (_.has(etmVisNode, 'd.widgets')) {
               etmVisNode.d.widgets.push({
                 id: self.visId,
                 panelIndex
               });
-            }
+            };
 
             sirenMetaTooltip.vis.id = self.visId;
             sirenMetaTooltip.vis.panelIndex = panelIndex;
