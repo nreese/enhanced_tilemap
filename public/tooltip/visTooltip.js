@@ -86,10 +86,12 @@ define(function (require) {
               self.sirenMeta.vis.panelIndex
             );
 
-            etmVisNode.d.widgets.push({
-              id: self.visId,
-              panelIndex
-            });
+            if (_.has(etmVisNode, 'd.widgets')) {
+              etmVisNode.d.widgets.push({
+                id: self.visId,
+                panelIndex
+              });
+            }
 
             sirenMetaTooltip.vis.id = self.visId;
             sirenMetaTooltip.vis.panelIndex = panelIndex;

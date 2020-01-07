@@ -425,7 +425,7 @@ define(function (require) {
         if (!e.target._map.disablePopups) {
           const popupDimensions = {
             height: this._map.getSize().y * 0.9,
-            width: 400
+            width: Math.min(this._map.getSize().x * 0.9, 400)
           };
           L.popup({
             autoPan: false,
