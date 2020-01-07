@@ -17,10 +17,6 @@ define(function (require) {
       const self = this;
       ShadedCircleMarker.Super.apply(this, arguments);
 
-      // super min and max from all chart data
-      const min = this.geoJson.properties.allmin;
-      const max = this.geoJson.properties.allmax;
-
       // multiplier to reduce size of all circles
       const scaleFactor = 0.8;
 
@@ -50,15 +46,15 @@ define(function (require) {
       //   clockwise, each value being an array of [lat, lng]
 
       // center lat and southeast lng
-      const east   = L.latLng([centerPoint[0], geohashRect[2][1]]);
+      const east = L.latLng([centerPoint[0], geohashRect[2][1]]);
       // southwest lat and center lng
-      const north  = L.latLng([geohashRect[3][0], centerPoint[1]]);
+      const north = L.latLng([geohashRect[3][0], centerPoint[1]]);
 
       // get latLng of geohash center point
       const center = L.latLng([centerPoint[0], centerPoint[1]]);
 
       // get smallest radius at center of geohash grid rectangle
-      const eastRadius  = Math.floor(center.distanceTo(east));
+      const eastRadius = Math.floor(center.distanceTo(east));
       const northRadius = Math.floor(center.distanceTo(north));
       return _.min([eastRadius, northRadius]);
     };
