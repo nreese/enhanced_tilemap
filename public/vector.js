@@ -137,6 +137,7 @@ define(function (require) {
         console.warn('Unexpected feature geo type: ' + geometry.type);
       }
       layer.$legend = options.$legend;
+      layer.id = options.id;
       return layer;
     };
 
@@ -153,13 +154,13 @@ define(function (require) {
       self._popupMouseOut = function (e) {
         // detach the event, if one exists
         if (self._map) {
-          L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
           // get the element that the mouse hovered onto
           const target = e.toElement || e.relatedTarget;
           // check to see if the element is a popup
           if (getParentWithClass(target, 'leaflet-popup')) {
             return true;
           }
+          L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
           self.closePopup();
         }
       };
@@ -201,13 +202,13 @@ define(function (require) {
       self._popupMouseOut = function (e) {
         // detach the event, if one exists
         if (self._map) {
-          L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
           // get the element that the mouse hovered onto
           const target = e.toElement || e.relatedTarget;
           // check to see if the element is a popup
           if (getParentWithClass(target, 'leaflet-popup')) {
             return true;
           }
+          L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
           self._map.closePopup();
         }
       };

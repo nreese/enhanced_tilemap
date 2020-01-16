@@ -1,4 +1,5 @@
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import { is } from 'bluebird';
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -47,9 +48,9 @@ define(function (require) {
      */
     function TileMapMap(container, params) {
       this._container = container;
-      this._poiLayers = {};
-      this._wmsOverlays = {};
-      this._vectorOverlays = {};
+      this.poiLayers = {};
+      this.wmsOverlays = {};
+      this.vectorOverlays = {};
 
       // keep a reference to all of the optional params
       this.uiState = params.uiState;
@@ -90,7 +91,12 @@ define(function (require) {
             point,
             { icon: markerIcon(color) }));
       });
-      this.leafletMap.addLayer(this._drawnItems);
+
+      let isVisible = true;
+      if (this.uiState.get('Markers') === false) isVisible = false;
+
+      if (isVisible) this.leafletMap.addLayer(this._drawnItems);
+
       this._layerControl.addOverlay(this._drawnItems, 'Markers');
 
       //https://github.com/Leaflet/Leaflet.draw
@@ -203,8 +209,8 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
-      this.clearPOILayers();
-      this.clearVectorLayers();
+      this.clearLayers(this.poiLayers);
+      this.clearLayers(this.vectorOverlays);
       this._destroyMapEvents();
       if (this._label) this._label.removeFrom(this.leafletMap);
       if (this._fitControl) this._fitControl.removeFrom(this.leafletMap);
@@ -215,61 +221,57 @@ define(function (require) {
       this.leafletMap = undefined;
     };
 
-    TileMapMap.prototype.clearPOILayers = function () {
-      Object.keys(this._poiLayers).forEach((key) => {
-        const layer = this._poiLayers[key];
+    TileMapMap.prototype.clearLayers = function (overlayArray) {
+      Object.keys(overlayArray).forEach((key) => {
+        const layer = overlayArray[key];
         layer.destroy();
         this._layerControl.removeLayer(layer);
         this.leafletMap.removeLayer(layer);
       });
-      this._poiLayers = {};
+      overlayArray = {};
       if (this._toolbench) this._toolbench.removeTools();
     };
 
-    TileMapMap.prototype.clearVectorLayers = function () {
-      Object.keys(this._vectorOverlays).forEach((key) => {
-        const layer = this._vectorOverlays[key];
-        layer.destroy();
+    TileMapMap.prototype.clearLayersAndReturnPrevState = function (overlayArray) {
+      const prevState = {};
+      Object.keys(overlayArray).forEach(key => {
+        const layer = overlayArray[key];
+        prevState[key] = this.leafletMap.hasLayer(layer);
         this._layerControl.removeLayer(layer);
         this.leafletMap.removeLayer(layer);
       });
-      this._vectorOverlays = {};
-      if (this._toolbench) this._toolbench.removeTools();
+      overlayArray = {};
+      return prevState;
     };
 
-    TileMapMap.prototype.clearWfsOverlays = function () {
-      this._vectorOverlays = _.omitBy(this._vectorOverlays, overlay => {
-        if (overlay.type && overlay.type === 'WFS') {
+    TileMapMap.prototype.clearLayersByType = function (overlayArray, type) {
+      overlayArray = _.omitBy(overlayArray, overlay => {
+        if (overlay.type && overlay.type === type) {
           overlay.destroy();
           this._layerControl.removeLayer(overlay);
           this.leafletMap.removeLayer(overlay);
         }
-        return overlay.type && overlay.type === 'WFS';
+        return overlay.type && overlay.type === type;
       });
     };
 
-    TileMapMap.prototype.addPOILayer = function (layerName, layer, layerGroup, options) {
-      let isVisible = true;
+    TileMapMap.prototype.addPOILayer = function (id, layer, layerGroup, options) {
+      let isVisible = false;
 
       //remove layer if it already exists
       //this is required on page load with the option to have user defined POI user
       //name in edit mode as there are two watchers, i.e. vis.params and esResponse
-      if (_.has(this._poiLayers, layerName)) {
-        const layer = this._poiLayers[layerName];
-        this._poiLayers[layerName].destroy();
+      if (_.has(this.poiLayers, id)) {
+        const layer = this.poiLayers[id];
+        this.poiLayers[id].destroy();
         isVisible = this.leafletMap.hasLayer(layer);
         this._layerControl.removeLayer(layer);
         this.leafletMap.removeLayer(layer);
-        delete this._poiLayers[layerName];
+        delete this.poiLayers[id];
       }
 
       // the uiState takes precedence
-      const presentInUiState = this.uiState.get(layerName);
-      if (presentInUiState) {
-        isVisible = true;
-      } else if (presentInUiState === false) {
-        isVisible = false;
-      }
+      if (this.uiState.get(id)) isVisible = true;
 
       if (isVisible) {
         this.leafletMap.addLayer(layer);
@@ -280,46 +282,33 @@ define(function (require) {
         message: layer.$legend.tooManyDocsInfo[1]
       };
 
-      const toomanydocslayername = layerName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
+      const toomanydocslayername = layer.displayName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
       if (tooManyDocs.warningIcon) {
         this._layerControl.addOverlay(layer, toomanydocslayername, layerGroup || '<b> POI Overlays</b>', options);
       } else {
-        this._layerControl.addOverlay(layer, layerName, layerGroup || '<b> POI Overlays</b>', options);
+        this._layerControl.addOverlay(layer, layer.displayName, layerGroup || '<b> POI Overlays</b>', options);
       }
 
-      this._poiLayers[layerName] = layer;
+      this.poiLayers[id] = layer;
 
       //Add tool to l.draw.toolbar so users can filter by POIs
-      if (Object.keys(this._poiLayers).length === 1) {
+      if (Object.keys(this.poiLayers).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
       }
     };
 
-    TileMapMap.prototype.addVectorLayer = function (layerName, layer, options) {
-      let isVisible;
+    TileMapMap.prototype.addVectorLayer = function (id, layerName, layer, options) {
 
       this._layerControl.addOverlay(layer, layerName, options.layerGroup);
+      if (this.uiState.get(id)) this.leafletMap.addLayer(layer);
 
-
-      // the uiState takes precedence
-      const presentInUiState = this.uiState.get(layerName);
-      if (presentInUiState) {
-        isVisible = true;
-      } else if (presentInUiState === false) {
-        isVisible = false;
-      }
-
-      if (isVisible) {
-        this.leafletMap.addLayer(layer);
-      }
-
-      this._vectorOverlays[layerName] = layer;
-      this._vectorOverlays[layerName].type = options.type;
+      this.vectorOverlays[id] = layer;
+      this.vectorOverlays[id].type = options.type;
 
       //Add tool to l.draw.toolbar so users can filter by vector layers
-      if (Object.keys(this._vectorOverlays).length === 1) {
+      if (Object.keys(this.vectorOverlays).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
@@ -393,19 +382,7 @@ define(function (require) {
       this._layerControl.addOverlay(this._filters, 'Applied Filters');
     };
 
-    TileMapMap.prototype.clearWMSOverlays = function () {
-      const prevState = {};
-      Object.keys(this._wmsOverlays).forEach(key => {
-        const layer = this._wmsOverlays[key];
-        prevState[key] = this.leafletMap.hasLayer(layer);
-        this._layerControl.removeLayer(layer);
-        this.leafletMap.removeLayer(layer);
-      });
-      this._wmsOverlays = {};
-      return prevState;
-    };
-
-    TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, layerOptions) {
+    TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, layerOptions, id) {
 
       let overlay = null;
       if (layerOptions.nonTiled) {
@@ -420,7 +397,7 @@ define(function (require) {
 
 
       this._layerControl.addOverlay(overlay, name, '<b> WMS Overlays</b>');
-      this._wmsOverlays[name] = overlay;
+      this.wmsOverlays[id] = overlay;
 
       if (this._attr.isDesaturated) {
         $(overlay.getContainer()).removeClass('no-filter');
@@ -430,14 +407,14 @@ define(function (require) {
     };
 
     TileMapMap.prototype.saturateWMSTiles = function () {
-      for (const key in this._wmsOverlays) {
-        if (!this._wmsOverlays.hasOwnProperty(key)) {
+      for (const key in this.wmsOverlays) {
+        if (!this.wmsOverlays.hasOwnProperty(key)) {
           continue;
         }
         if (this._attr.isDesaturated) {
-          $(this._wmsOverlays[key].getContainer()).removeClass('no-filter');
+          $(this.wmsOverlays[key].getContainer()).removeClass('no-filter');
         } else {
-          $(this._wmsOverlays[key].getContainer()).addClass('no-filter');
+          $(this.wmsOverlays[key].getContainer()).addClass('no-filter');
         }
       }
     };
@@ -526,17 +503,17 @@ define(function (require) {
       const self = this;
 
       this.leafletMap.on('groupLayerControl:removeClickedLayer', (e) => {
-        const layerName = e.name;
-        if (_.has(this._poiLayers, layerName)) {
-          const layer = this._poiLayers[layerName];
-          this._poiLayers[layerName].destroy();
+        const id = e.layer.id;
+        if (_.has(this.poiLayers, id)) {
+          const layer = this.poiLayers[id];
+          this.poiLayers[id].destroy();
           this.leafletMap.removeLayer(layer);
-          delete this._poiLayers[layerName];
+          delete this.poiLayers[id];
         }
       });
 
       this.leafletMap.on('etm:select-feature-vector', function (e) {
-        self._callbacks.polygonVector({
+        self._callbacks.polygonVeleafletMapctor({
           args: e.args,
           params: self._attr,
           points: e.geojson.geometry.coordinates
@@ -558,18 +535,6 @@ define(function (require) {
           chart: self._chartData,
           deletedLayers: e.layers,
         });
-      });
-
-      this.leafletMap.on('overlayadd', function (e) {
-        if (self._markers && e.name === 'Aggregation') {
-          self._markers.show();
-        }
-      });
-
-      this.leafletMap.on('overlayremove', function (e) {
-        if (self._markers && e.name === 'Aggregation') {
-          self._markers.hide();
-        }
       });
     };
 

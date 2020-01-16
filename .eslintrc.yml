@@ -9,7 +9,7 @@ globals:
     angular: true
     jQuery: true
 rules:
-  import/no-unresolved: [ 'error', { ignore: [ 'plugins/enhanced_tilemap/', 'jquery', 'd3', '@elastic/', 'react', 'ui/', 'expect.js', 'sinon', 'ng_mock' ] }]
+  import/no-unresolved: [ 'error', { ignore: [ 'plugins/enhanced_tilemap/', 'jquery', 'd3', '@elastic/', 'react', 'ui/', 'expect.js', 'sinon', 'ng_mock', 'uuid' ] }]
   no-unused-vars: 0
   no-var: 1
   prefer-const: 1

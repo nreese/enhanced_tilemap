@@ -1,6 +1,8 @@
 const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 import { parseString } from 'xml2js';
+import { backwardsCompatible } from 'plugins/enhanced_tilemap/backwardsCompatible';
+import uuid from 'uuid';
 
 define(function (require) {
   module.directive('wfsOverlay', function (indexPatterns, Private, $http) {
@@ -13,8 +15,8 @@ define(function (require) {
       },
       template: require('./wfsOverlay.html'),
       link: function (scope, element, attrs) {
-
         scope.layer.wfsCapabilitiesSwitch = false;
+        if (!scope.layer.id) scope.layer.id = uuid.v1();
 
         function wfsRequest(url) {
           getWFSLayerList(url).then(wfsLayers => {

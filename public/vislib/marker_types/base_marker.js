@@ -289,10 +289,9 @@ define(function (require) {
       this.layerControl.addOverlay(this._markerGroup, 'Aggregation');
 
       // the uiState takes precedence
-      const presentInUiState = this.uiState.get('Aggregation');
-      if (presentInUiState) {
+      if (this.uiState.get('Aggregation') === true) {
         this.isVisible = true;
-      } else if (presentInUiState === false) {
+      } else if (this.uiState.get('Aggregation') === false) {
         this.isVisible = false;
       }
 
