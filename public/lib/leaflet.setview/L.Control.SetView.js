@@ -10,13 +10,13 @@ L.Control.SetView = L.Control.extend({
     container.appendChild(this._toolbar.addToolbar(map));
     return container;
   },
-  onRemove: function (map) {
+  onRemove: function () {
     this._toolbar.removeToolbar();
   }
 });
 
 L.SetViewToolbar = L.Class.extend({
-  initialize: function (options) {
+  initialize: function () {
     this._decimalDegrees = true;
   },
   addToolbar: function (map) {
@@ -31,7 +31,7 @@ L.SetViewToolbar = L.Class.extend({
     this._tools = [];
 
     this._tools.push(this._createButton({
-      title: "Fit Data Bounds",
+      title: 'Fit Data Bounds',
       className: 'fa fa-crop',
       container: this._toolbarContainer,
       callback: function () {
@@ -41,7 +41,7 @@ L.SetViewToolbar = L.Class.extend({
       context: {}
     }));
     this._tools.push(this._createButton({
-      title: "Set View Location",
+      title: 'Set View Location',
       className: 'fa fa-eye',
       container: this._toolbarContainer,
       callback: function () {
@@ -58,7 +58,7 @@ L.SetViewToolbar = L.Class.extend({
       const existingTool = this._toolEventDetails.find(toolEvent => tool.title === toolEvent.title);
       if (existingTool) {
         this._dispose(tool, existingTool.callback, existingTool.context);
-      };
+      }
     });
   },
 
@@ -173,7 +173,7 @@ L.SetViewToolbar = L.Class.extend({
       title: 'Select coordinate units; decimal degrees (dd) or degrees minutes seconds (dms)',
       selectedValue: unitValue,
       choices: [{ display: 'dd', value: 'dd' }, { display: 'dms', value: 'dms' }],
-      callback: function (event) {
+      callback: function () {
         self._decimalDegrees = !self._decimalDegrees;
         self._hideActionsToolbar();
         self._showInputs();
@@ -267,8 +267,8 @@ L.SetViewToolbar = L.Class.extend({
       }
     });
     this._createButton({
-      title: "Click to set map view to provided values.",
-      text: "Set View",
+      title: 'Click to set map view to provided values.',
+      text: 'Set View',
       container: L.DomUtil.create('li', listItemClass, container),
       callback: function () {
         if (!self._decimalDegrees) {
@@ -280,8 +280,8 @@ L.SetViewToolbar = L.Class.extend({
       }
     });
     this._createButton({
-      title: "Click to cancel.",
-      text: "Cancel",
+      title: 'Click to cancel.',
+      text: 'Cancel',
       container: L.DomUtil.create('li', listItemClass, container),
       callback: function () {
         self._hideActionsToolbar();

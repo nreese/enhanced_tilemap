@@ -214,10 +214,8 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(resultingPolygon).to.eql(expectedPolygon);
       });
 
-      it(`should produce correct newFiler for geofilter.js for multipolygon 
-      with one polygon containing donut using polygonVector callback`, () => {
+      it(`should produce correct newFiler for multipolygon with one polygon containing donut using polygonVector callback`, () => {
         const geoFilterSpy = sinon.spy(geoFilter, 'add');
-
         const calledCount = 1;
 
         callbacksFactory.polygonVector(fakeVectorMultiPolygonWithDonutEvent);

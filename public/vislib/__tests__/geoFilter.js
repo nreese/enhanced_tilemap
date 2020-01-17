@@ -1,5 +1,3 @@
-const _ = require('lodash');
-
 const expect = require('expect.js');
 
 const geoFilterHelper = require('./../geoFilterHelper');

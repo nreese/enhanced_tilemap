@@ -13,7 +13,7 @@ define(function (require) {
      * @param params {Object}
      */
     _.class(ScaledCircleMarker).inherits(BaseMarker);
-    function ScaledCircleMarker(leafletMap, geoJson, params) {
+    function ScaledCircleMarker(leafletMap) {
       const self = this;
       ScaledCircleMarker.Super.apply(this, arguments);
 

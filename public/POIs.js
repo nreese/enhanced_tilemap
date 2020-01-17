@@ -56,16 +56,16 @@ define(function (require) {
         }
       });
       return geoFields;
-    };
+    }
 
     const getParentWithClass = function (element, className) {
       let parent = element;
       while (parent != null) {
         if (parent.className && L.DomUtil.hasClass(parent, className)) {
           return parent;
-        };
+        }
         parent = parent.parentNode;
-      };
+      }
       return false;
     };
 
@@ -95,7 +95,7 @@ define(function (require) {
           if (this.draggedState) {
             options.close = true;
             options.color = savedSearch.siren.ui.color;
-          };
+          }
 
           let searchIcon;
           if (this.geoType === 'geo_point') {
@@ -104,7 +104,7 @@ define(function (require) {
           } else {
             //use square icon for geo_shape fields
             searchIcon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
-          };
+          }
 
           function createMapExtentFilter(rect) {
             const bounds = rect.geo_bounding_box.geoBoundingBox;
@@ -175,7 +175,7 @@ define(function (require) {
               if (searchResp.hits.total > this.limit) {
                 options.$legend.innerHTML = tooManyDocsInfo;
                 options.tooManyDocs = poiLimitToDisplay;
-              };
+              }
 
               //Too many documents warning for each specific layer
               options.$legend.tooManyDocsInfo = '';
@@ -183,7 +183,7 @@ define(function (require) {
                 options.$legend.searchIcon = `<i>${options.displayName}</i> ${searchIcon}`;
               } else {
                 options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
-              };
+              }
 
               //Storing this information on the params object for use
               //in ES Response watcher
@@ -195,7 +195,7 @@ define(function (require) {
                 this.params.geoField = this.geoField;
                 this.params.geoType = this.geoType;
                 this.params.displayName = options.displayName;
-              };
+              }
 
               callback(self._createLayer(searchResp.hits.hits, this.geoType, options));
             });
@@ -214,7 +214,7 @@ define(function (require) {
               return _.find(geoFields, function (geoField) {
                 return geoField.name === geoFieldName;
               });
-            };
+            }
 
             const domNode = document.createElement('div');
             document.body.append(domNode);
@@ -284,7 +284,7 @@ define(function (require) {
               modalWithForm(title, form, footer, onClose),
               domNode
             );
-          };
+          }
         };
 
         //handling case where savedSearch is coming from vis params or drag and drop
@@ -293,7 +293,7 @@ define(function (require) {
           processLayer();
         } else if (!this.geoType) {
           geoFieldSelectModal();
-        };
+        }
 
       });
     };
@@ -312,7 +312,7 @@ define(function (require) {
           const geometry = _.get(hit, `_source[${self.geoField}]`);
           if (geometry) {
             geometry.type = capitalizeFirstLetter(geometry.type);
-          };
+          }
 
           let popupContent = false;
           if (self.popupFields.length > 0) {
@@ -337,7 +337,7 @@ define(function (require) {
               }
 
               if (_.get(feature, 'geometry.type') === 'Polygon') {
-                polygon._click = function fireEtmSelectFeature(e) {
+                polygon._click = function fireEtmSelectFeature() {
                   polygon._map.fire('etm:select-feature', {
                     geojson: polygon.toGeoJSON()
                   });
@@ -436,7 +436,7 @@ define(function (require) {
             .setLatLng(e.latlng)
             .setContent(content)
             .openOn(this._map);
-        };
+        }
       };
       return popup;
     };
@@ -455,7 +455,7 @@ define(function (require) {
           }
           L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
           self._map.closePopup();
-        };
+        }
       };
 
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;

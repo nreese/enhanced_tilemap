@@ -20,13 +20,13 @@ function createFilters(polygons, field) {
       donutLocation[field] = { points: polygons[i] };
       geoDonut.geo_polygon = donutLocation;
       donutExclusions.push(geoDonut);
-    };
-  };
+    }
+  }
   return {
     polygonFilters,
     donutExclusions
   };
-};
+}
 
 module.exports = {
 

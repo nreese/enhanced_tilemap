@@ -20,7 +20,7 @@ define(function (require) {
 
     function filterAlias(field, numBoxes) {
       return `${field}: ${numBoxes} ${numBoxes === 1 ? 'shape' : 'shapes'}`;
-    };
+    }
 
     function _createPolygonFilter(polygonsToFilter) {
       return {
@@ -28,7 +28,7 @@ define(function (require) {
           should: polygonsToFilter
         }
       };
-    };
+    }
 
 
     function _applyFilter(newFilter, field, indexPatternId) {
@@ -46,13 +46,13 @@ define(function (require) {
       } else if (newFilter.bool) {
         //currently this in only for multiple geo_distance filters
         numShapes = newFilter.bool.should.length;
-      };
+      }
 
       //add all donuts
       if (_.get(polygonFiltersAndDonuts, 'donutsToExclude.length') >= 1) {
         numShapes += polygonFiltersAndDonuts.donutsToExclude.length;
         newFilter.bool.must_not = polygonFiltersAndDonuts.donutsToExclude;
-      };
+      }
 
       newFilter.meta = {
         numShapes: numShapes,
@@ -64,7 +64,7 @@ define(function (require) {
       };
 
       queryFilter.addFilters(newFilter);
-    };
+    }
 
     function _combineFilters(newFilter, existingFilter, field) {
       let geoFilters = [];
@@ -88,17 +88,17 @@ define(function (require) {
         donutsToExclude = polygonFiltersAndDonuts.donutsToExclude;
       } else {
         geoFilters = _.flatten([newFilter]);
-      };
+      }
 
       //handling existing filters
       if (_.has(existingFilter, 'bool')) {
         if (_.has(existingFilter, 'bool.should')) {
           geoFilters = geoFilters.concat(existingFilter.bool.should);
-        };
+        }
         //including pre-existing donuts
         if (_.has(existingFilter, 'bool.must_not')) {
           donutsToExclude = donutsToExclude.concat(existingFilter.bool.must_not);
-        };
+        }
       } else if (_.has(existingFilter, 'geo_bounding_box')) {
         geoFilters.push({ geo_bounding_box: existingFilter.geo_bounding_box });
       } else if (_.has(existingFilter, 'geo_polygon')) {
@@ -116,7 +116,7 @@ define(function (require) {
       if (donutsToExclude.length !== 0) {
         numShapes += donutsToExclude.length;
         updatedFilter.bool.must_not = donutsToExclude;
-      };
+      }
 
       updatedFilter.meta.numShapes = numShapes;
       updatedFilter.meta.alias = filterAlias(field, numShapes);
@@ -150,15 +150,15 @@ define(function (require) {
               filterVisMeta.panelIndex === newFilterVisMeta.panelIndex) {
               numFiltersFromThisInstance += 1;
               existingFilter = filter;
-            };
+            }
           } else {
             if (isGeoFilter(filter, field)) {
               numFiltersFromThisInstance += 1;
               existingFilter = filter;
-            };
+            }
           }
         });
-      };
+      }
 
 
       if (numFiltersFromThisInstance === 0 || numFiltersFromThisInstance >= 2) {
@@ -220,8 +220,8 @@ define(function (require) {
           modalWithForm(title, form, footer, onClose),
           domNode
         );
-      };
-    };
+      }
+    }
     /**
      * Convert elasticsearch geospatial filter to leaflet vectors
      *
@@ -252,7 +252,7 @@ define(function (require) {
           distance = parseFloat(distanceStr.replace('km', '')) * 1000;
         } else if (typeof distanceStr === 'number') {
           distance = distanceStr;
-        };
+        }
 
         const center = _.get(filter, ['geo_distance', field]);
         if (center) {
@@ -289,7 +289,7 @@ define(function (require) {
           });
           features.push(L.polygon(latLngs));
         } else {
-          console.log('Unexpected geo_shape type: ' + type);
+          console.warn('Unexpected geo_shape type: ' + type);
         }
       }
       return features;

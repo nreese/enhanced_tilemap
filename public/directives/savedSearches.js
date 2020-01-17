@@ -1,10 +1,9 @@
-const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 
 define(function (require) {
   require('plugins/enhanced_tilemap/directives/savedSearch');
 
-  module.directive('savedSearches', function (Private, indexPatterns) {
+  module.directive('savedSearches', function () {
     return {
       restrict: 'E',
       replace: true,
@@ -12,7 +11,7 @@ define(function (require) {
         layers: '='
       },
       template: require('./savedSearches.html'),
-      link: function (scope, element, attrs) {
+      link: function (scope) {
         scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];
           scope.layers.push({

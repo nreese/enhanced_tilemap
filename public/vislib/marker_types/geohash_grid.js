@@ -13,11 +13,11 @@ define(function (require) {
      * @param params {Object}
      */
     _.class(GeohashGridMarker).inherits(BaseMarker);
-    function GeohashGridMarker(leafletMap, geoJson, params) {
+    function GeohashGridMarker() {
       GeohashGridMarker.Super.apply(this, arguments);
 
       this._createMarkerGroup({
-        pointToLayer: function (feature, latlng) {
+        pointToLayer: function (feature) {
           const geohashRect = feature.properties.rectangle;
           // get bounds from northEast[3] and southWest[1]
           // corners in geohash rectangle

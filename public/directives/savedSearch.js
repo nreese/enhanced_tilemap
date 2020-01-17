@@ -17,7 +17,7 @@ define(function (require) {
         layer: '='
       },
       template: require('./savedSearch.html'),
-      link: function (scope, element, attrs) {
+      link: function (scope) {
         backwardsCompatible.updateSavedSearch(scope.layer);
         if (!scope.layer.id) scope.layer.id = uuid.v1();
 
@@ -28,7 +28,7 @@ define(function (require) {
               geoFieldType.type === 'geo_shape') {
               scope.layer.geoShape = true;
               return false;
-            };
+            }
           });
         };
 

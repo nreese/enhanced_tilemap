@@ -4,18 +4,14 @@
 import 'ui/visualize/spy';
 import 'ui/visualize/visualize.less';
 import 'ui/visualize/visualize_legend';
-import $ from 'jquery';
 import _ from 'lodash';
 import { uiModules } from 'ui/modules';
 import visualizeTemplate from 'ui/visualize/visualize.html';
 
-import {
-  isTermSizeZeroError,
-} from 'ui/elasticsearch_errors';
 
 uiModules
   .get('kibana/directive', ['ngSanitize'])
-  .directive('popupVisualize', function (Notifier, SavedVis, indexPatterns, Private, config, $timeout) {
+  .directive('popupVisualize', function (config, $timeout) {
     return {
       restrict: 'E',
       require: '?renderCounter',
@@ -91,7 +87,7 @@ uiModules
             if (shouldHaveFullSpy()) {
               $visEl.addClass('spy-only');
               $spyEl.addClass('only');
-            };
+            }
           }, 0);
         };
 
@@ -162,7 +158,7 @@ uiModules
           if ($scope.renderbot) $scope.renderbot.updateParams();
         }));
 
-        $scope.$watch('esResp', prereq(function (resp, prevResp) {
+        $scope.$watch('esResp', prereq(function (resp) {
           if (!resp) return;
           $scope.renderbot.render(resp);
         }));

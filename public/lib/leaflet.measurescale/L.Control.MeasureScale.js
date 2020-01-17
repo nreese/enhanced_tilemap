@@ -4,7 +4,7 @@ L.Control.MeasureScale = L.Control.Scale.extend({
 
     this._container = container;
 
-    this.context = (e) => {
+    this.context = () => {
       this.startMeasure();
     };
 

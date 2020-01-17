@@ -1,11 +1,10 @@
 const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 import { parseString } from 'xml2js';
-import { backwardsCompatible } from 'plugins/enhanced_tilemap/backwardsCompatible';
 import uuid from 'uuid';
 
 define(function (require) {
-  module.directive('wfsOverlay', function (indexPatterns, Private, $http) {
+  module.directive('wfsOverlay', function (indexPatterns, $http) {
 
     return {
       restrict: 'E',
@@ -14,7 +13,7 @@ define(function (require) {
         layer: '='
       },
       template: require('./wfsOverlay.html'),
-      link: function (scope, element, attrs) {
+      link: function (scope) {
         scope.layer.wfsCapabilitiesSwitch = false;
         if (!scope.layer.id) scope.layer.id = uuid.v1();
 
@@ -39,22 +38,22 @@ define(function (require) {
               //url is not valid on this digest
               if (scope.layer && scope.layer.selected) {
                 scope.layer.layers = scope.layer.selected.name;
-              };
+              }
             }
           });
-        };
+        }
 
         //this is for the initial rendering of the map
         if (scope.layer.url) {
           wfsRequest(scope.layer.url);
-        };
+        }
 
         //Watchers for url and getCapabilitiesSwitch equals to 0 or 1
         //this is for subsequent rendering based on changes to the wfs url
         scope.$watch('layer.url', function (newUrl, oldUrl) {
           if (newUrl !== oldUrl) {
             wfsRequest(newUrl);
-          };
+          }
         });
         //this is for subsequent rendering based on changes to the UiSelect
         scope.$watch('layer.selected', function (newWmsLayer, oldWmsLayer) {
@@ -84,7 +83,7 @@ define(function (require) {
       return _.find(wfsLayers, wfsLayer => {
         return _.isEqual(wfsLayer.name, selectedName);
       });
-    };
+    }
 
     function doWmsToUiSelectFormat(unformattedWmsList) {
       return unformattedWmsList.map(name => {
@@ -124,6 +123,6 @@ define(function (require) {
           console.warn('An issue was encountered returning a layers list from WFS. Verify your ' +
             'WFS url (' + err.config.url + ') is correct, has layers present and WFS is CORs enabled for this domain.');
         });
-    };
+    }
   });
 });

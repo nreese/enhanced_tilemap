@@ -1,6 +1,5 @@
 import 'plugins/enhanced_tilemap/lib/angular-bootstrap/js/accordion-tpls.js';
 
-import _ from 'lodash';
 import { supports } from 'ui/utils/supports';
 import { AggResponseGeoJsonProvider } from 'ui/agg_response/geo_json/geo_json';
 import { VisVisTypeProvider } from 'ui/vis/vis_type';
@@ -25,7 +24,7 @@ define(function (require) {
   require('plugins/enhanced_tilemap/tooltip/popupVisualize.less');
   require('plugins/enhanced_tilemap/visController');
 
-  function EnhancedTileMapVisProvider(Private, getAppState, courier, config, $injector) {
+  function EnhancedTileMapVisProvider(Private, config, $injector) {
     if ($injector.has('actionRegistry')) {
       const actionRegistry = $injector.get('actionRegistry');
       const apiVersion = '1';
@@ -83,7 +82,7 @@ define(function (require) {
         syncMap: false,
         autoFitBoundsToData: false
       },
-      hierarchicalData: function (vis) {
+      hierarchicalData: function () {
         return false;
       },
       responseConverter: geoJsonConverter,

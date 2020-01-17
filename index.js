@@ -1,4 +1,4 @@
-'use strict';
+
 import { resolve, join } from 'path';
 
 module.exports = function (kibana) {

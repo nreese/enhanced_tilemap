@@ -1,5 +1,5 @@
+/* eslint-disable siren/memoryleaks */
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
-import { is } from 'bluebird';
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -10,7 +10,6 @@ define(function (require) {
     const L = require('leaflet');
     require('leaflet-draw');
     const LDrawToolbench = require('./LDrawToolbench');
-    const utils = require('plugins/enhanced_tilemap/utils');
 
     require('leaflet-mouse-position');
     require('leaflet.nontiledlayer');
@@ -517,12 +516,12 @@ define(function (require) {
       });
 
       //stop popups appearing when drawing has started
-      this.leafletMap.on('draw:drawstart', function (e) {
+      this.leafletMap.on('draw:drawstart', function () {
         this.disablePopups = true;
       });
 
       //start popups appearing finished drawing
-      this.leafletMap.on('draw:drawstop', function (e) {
+      this.leafletMap.on('draw:drawstop', function () {
         this.disablePopups = false;
       });
 
@@ -580,7 +579,6 @@ define(function (require) {
 
       this.saturateTiles(this._attr.isDesaturated);
 
-      const options = { groupCheckboxes: true };
       this._layerControl = L.control.groupedLayers();
       this._layerControl.addTo(this.leafletMap);
 

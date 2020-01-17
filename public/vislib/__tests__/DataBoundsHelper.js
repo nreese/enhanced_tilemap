@@ -16,7 +16,7 @@ const fakeVis = {
         }
       }
     },
-    responseConverter: (vis, table) => {
+    responseConverter: () => {
     }
   },
   requesting: () => { },
