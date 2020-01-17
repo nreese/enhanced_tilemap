@@ -99,18 +99,13 @@ gulp.task('sync', function (done) {
   syncPluginTo(kibanaPluginDir, done);
 });
 
-function isFixed(file) {
-  // Has ESLint fixed the file contents?
-  return file.eslint != null && file.eslint.fixed;
-}
-
 gulp.task('lint', function () {
   return gulp.src([
     'public/**/*.js',
     '!**/webpackShims/**'
-  ]).pipe(eslint({ fix: true }))
+  ]).pipe(eslint())
     .pipe(eslint.formatEach())
-    .pipe(eslint.failAfterError());
+    .pipe(eslint.failOnError());
 });
 
 gulp.task('clean', function (done) {
