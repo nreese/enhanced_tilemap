@@ -418,7 +418,7 @@ define(function (require) {
         const options = {
           color: _.get(wfsOverlay, 'color', '#10aded'),
           popupFields: _.get(wfsOverlay, 'popupFields', ''),
-          layerGroup: '<b> WFS Overlays </b>'
+          layerGroup: 'WFS Overlays'
         };
         const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=json`;
 

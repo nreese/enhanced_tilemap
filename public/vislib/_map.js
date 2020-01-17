@@ -295,9 +295,11 @@ define(function (require) {
 
     TileMapMap.prototype.addVectorLayer = function (id, layerName, layer, options) {
 
+      const layerGroup = `<b> ${options.layerGroup}</b>`;
+
       if (_.has(this.vectorOverlays, id)) this.clearLayerById(this.vectorOverlays, id);
-      this._layerControl.addOverlay(layer, layerName, options.layerGroup);
-      if (this.uiState.get(id)) this.leafletMap.addLayer(layer);
+      this._layerControl.addOverlay(layer, layerName, layerGroup);
+      if (this.uiState.get(id) !== false) this.leafletMap.addLayer(layer);
 
       this.vectorOverlays[id] = layer;
       this.vectorOverlays[id].type = options.type;
