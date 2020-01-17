@@ -109,7 +109,7 @@ gulp.task('lint', function () {
     'public/**/*.js',
     '!**/webpackShims/**'
   ]).pipe(eslint({ fix: true }))
-    .pipe(gulpIf(isFixed, gulp.dest('public')))
+    .pipe(eslint.formatEach())
     .pipe(eslint.failAfterError());
 });
 
@@ -145,7 +145,7 @@ gulp.task('dev', gulp.series('sync', function () {
 }));
 
 gulp.task('test', gulp.series('sync', function (done) {
-  spawn('grunt', [ 'test:browser', '--grep=Kibi Enhanced Tilemap'], {
+  spawn('grunt', ['test:browser', '--grep=Kibi Enhanced Tilemap'], {
     cwd: kibanahomepath,
     stdio: 'inherit'
   }).on('close', done);
