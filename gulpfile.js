@@ -102,14 +102,6 @@ gulp.task('sync', function (done) {
   syncPluginTo(kibanaPluginDir, done);
 });
 
-const eslintOptions = {
-  rules: {
-    memoryleaks: 1
-  },
-  rulePaths: [path.resolve(__dirname, kibanahomepath, 'scripts', 'eslintrules')],
-  fix: true
-};
-
 function isFixed(file) {
   // Has ESLint fixed the file contents?
   return file.eslint != null && file.eslint.fixed;
@@ -119,7 +111,7 @@ gulp.task('lint', function (done) {
   return gulp.src([
     'public/**/*.js',
     '!**/webpackShims/**'
-  ]).pipe(eslint(eslintOptions))
+  ]).pipe(eslint())
     .pipe(eslint.formatEach())
     .pipe(eslint.failOnError());
 });

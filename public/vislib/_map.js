@@ -244,15 +244,14 @@ define(function (require) {
       return prevState;
     };
 
-    TileMapMap.prototype.clearLayersByType = function (overlayArray, type) {
-      overlayArray = _.omitBy(overlayArray, overlay => {
-        if (overlay.type && overlay.type === type) {
-          overlay.destroy();
-          this._layerControl.removeLayer(overlay);
-          this.leafletMap.removeLayer(overlay);
-        }
-        return overlay.type && overlay.type === type;
-      });
+    TileMapMap.prototype.clearLayerById = function (overlayArray, id) {
+      if (_.has(overlayArray, id)) {
+        const layer = overlayArray[id];
+        overlayArray[id].destroy();
+        this._layerControl.removeLayer(layer);
+        this.leafletMap.removeLayer(layer);
+        delete overlayArray[id];
+      }
     };
 
     TileMapMap.prototype.addPOILayer = function (id, layer, layerGroup, options) {
@@ -262,12 +261,8 @@ define(function (require) {
       //this is required on page load with the option to have user defined POI user
       //name in edit mode as there are two watchers, i.e. vis.params and esResponse
       if (_.has(this.poiLayers, id)) {
-        const layer = this.poiLayers[id];
-        this.poiLayers[id].destroy();
+        this.clearLayerById(this.poiLayers, id);
         isVisible = this.leafletMap.hasLayer(layer);
-        this._layerControl.removeLayer(layer);
-        this.leafletMap.removeLayer(layer);
-        delete this.poiLayers[id];
       }
 
       // the uiState takes precedence
@@ -301,6 +296,7 @@ define(function (require) {
 
     TileMapMap.prototype.addVectorLayer = function (id, layerName, layer, options) {
 
+      if (_.has(this.vectorOverlays, id)) this.clearLayerById(this.vectorOverlays, id);
       this._layerControl.addOverlay(layer, layerName, options.layerGroup);
       if (this.uiState.get(id)) this.leafletMap.addLayer(layer);
 
@@ -513,7 +509,7 @@ define(function (require) {
       });
 
       this.leafletMap.on('etm:select-feature-vector', function (e) {
-        self._callbacks.polygonVeleafletMapctor({
+        self._callbacks.polygonVector({
           args: e.args,
           params: self._attr,
           points: e.geojson.geometry.coordinates

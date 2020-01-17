@@ -32,6 +32,7 @@
     "babel-eslint": "^7.2.3",
     "bluebird": "^3.0.6",
     "eslint-config-siren": "sirensolutions/eslint-config",
+    "eslint-plugin-siren": "sirensolutions/eslint-plugin-siren",
     "gulp": "^4.0.2",
     "gulp-eslint": "^6.0.0",
     "gulp-if": "^2.0.2",

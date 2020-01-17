@@ -268,7 +268,7 @@ define(function (require) {
       });
     }
 
-    function initVectorLayer(layerName, geoJsonCollection, options) {
+    function initVectorLayer(id, layerName, geoJsonCollection, options) {
 
       let popupFields = [];
       if (_.get(options, 'popupFields') === '' || !_.get(options, 'popupFields')) {
@@ -280,7 +280,7 @@ define(function (require) {
       };
 
       const optionsWithDefaults = {
-        id: options.id,
+        id,
         color: _.get(options, 'color', '#008800'),
         size: _.get(options, 'size', 'm'),
         popupFields,
@@ -295,7 +295,7 @@ define(function (require) {
       };
 
       const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      map.addVectorLayer(optionsWithDefaults.id, layerName, vector, optionsWithDefaults);
+      map.addVectorLayer(id, layerName, vector, optionsWithDefaults);
 
     };
 
@@ -410,9 +410,6 @@ define(function (require) {
     }
 
     function drawWfsOverlays() {
-      //clear all wfs overlays before redrawing
-      //does not happen on ES response watcher
-      map.clearLayersByType(map.vectorOverlays, 'WFS');
 
       if ($scope.vis.params.overlays.wfsOverlays &&
         $scope.vis.params.overlays.wfsOverlays.length === 0) {
@@ -421,17 +418,15 @@ define(function (require) {
       _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
 
         const options = {
-          id: _.get(wfsOverlay, 'id', wfsOverlay.displayName),
           color: _.get(wfsOverlay, 'color', '#10aded'),
           popupFields: _.get(wfsOverlay, 'popupFields', ''),
-          layerGroup: '<b> WFS Overlays </b>',
-          type: 'WFS'
+          layerGroup: '<b> WFS Overlays </b>'
         };
         const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=json`;
 
         return $http.get(getFeatureRequest)
           .then(resp => {
-            initVectorLayer(wfsOverlay.displayName, resp.data, options);
+            initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
           });
       });
     };
@@ -579,8 +574,12 @@ define(function (require) {
       const actionRegistry = $injector.get('actionRegistry');
       const apiVersion = '1';
 
-      actionRegistry.register(apiVersion, $scope.vis.id, 'renderGeoJsonCollection', async (layerName, geoJsonCollection, options) => {
-        return initVectorLayer(layerName, geoJsonCollection, options);
+      actionRegistry.register(apiVersion, $scope.vis.id, 'renderGeoJsonCollection', async (id, layerName, geoJsonCollection, options) => {
+        return initVectorLayer(id, layerName, geoJsonCollection, options);
+      });
+
+      actionRegistry.register(apiVersion, $scope.vis.id, 'removeGeoJsonCollection', async (id) => {
+        return map.clearLayerById(map.vectorOverlays, id);
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
