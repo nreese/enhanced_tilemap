@@ -1,10 +1,9 @@
-const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 
 define(function (require) {
   require('plugins/enhanced_tilemap/directives/wmsOverlay');
 
-  module.directive('wmsOverlays', function (Private) {
+  module.directive('wmsOverlays', function () {
     return {
       restrict: 'E',
       replace: true,
@@ -12,7 +11,7 @@ define(function (require) {
         layers: '='
       },
       template: require('./wmsOverlays.html'),
-      link: function (scope, element, attrs) {
+      link: function (scope) {
 
         scope.addLayer = function () {
           if (!scope.layers) scope.layers = [];

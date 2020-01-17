@@ -44,7 +44,7 @@
           color: '#da291c',
           fillColor: '#fff'
         },
-        offsetFn: function (center, zoom, refMap, targetMap) {
+        offsetFn: function (center) {
           // no transformation at all
           return center;
         }
@@ -138,14 +138,14 @@
       });
     },
 
-    _cursorSyncOut: function (e) {
+    _cursorSyncOut: function () {
       this._cursors.forEach(function (cursor) {
         // TODO: hide cursor in stead of moving to 0, 0
         cursor.setLatLng([0, 0]);
       });
     },
 
-    _selfSetView: function (e) {
+    _selfSetView: function () {
       // reset the map, and let setView synchronize the others.
       this.setView(this.getCenter(), this.getZoom(), NO_ANIMATION);
     },
@@ -163,7 +163,7 @@
       }
     },
 
-    _syncOnDragend: function (e) {
+    _syncOnDragend: function () {
       // It is ugly to have state, but we need it in case of inertia.
       this._syncDragend = true;
     },
@@ -210,7 +210,7 @@
 
           if (!sync) {
             originalMap._syncMaps.forEach(function (toSync) {
-              sandwich(toSync, function (obj) {
+              sandwich(toSync, function () {
                 return toSync.setView(
                   originalMap._syncOffsetFns[L.Util.stamp(toSync)](center, zoom, originalMap, toSync),
                   zoom, options, true);

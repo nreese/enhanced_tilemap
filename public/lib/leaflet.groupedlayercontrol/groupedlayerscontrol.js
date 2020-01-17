@@ -11,8 +11,8 @@
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
 
-const $ = require('jquery');
-const _ = require('lodash');
+import $ from 'jquery';
+import _ from 'lodash';
 
 L.Control.GroupedLayers = L.Control.extend({
 
@@ -147,7 +147,6 @@ L.Control.GroupedLayers = L.Control.extend({
   },
 
   _addLayer: function (layer, name, group, overlay, options) {
-    const id = L.Util.stamp(layer);
 
     const _layer = {
       layer: layer,
@@ -272,7 +271,7 @@ L.Control.GroupedLayers = L.Control.extend({
           }
         }).qtip('show');
       }
-    };
+    }
 
     const label = document.createElement('label');
     let input;
@@ -314,7 +313,7 @@ L.Control.GroupedLayers = L.Control.extend({
       });
 
       label.appendChild(filterPopup);
-    };
+    }
 
     //adding close button
     if (obj.close) {
@@ -326,7 +325,7 @@ L.Control.GroupedLayers = L.Control.extend({
       });
       label.appendChild(closeButton);
 
-    };
+    }
 
     //adding warning icon for too many documents
     if (obj.tooManyDocs) {
@@ -339,7 +338,7 @@ L.Control.GroupedLayers = L.Control.extend({
       warningIcon.innerHTML = ` ${tooManyDocsInfo[0]} ${tooManyDocsInfo[1]}`;
       label.appendChild(warningIcon);
 
-    };
+    }
 
     if (obj.overlay) {
       container = this._overlaysList;

@@ -1,7 +1,7 @@
 import { filterHelper } from 'ui/kibi/components/dashboards360/filter_helper';
 
 define(function (require) {
-  return function CallbacksFactory(Private, courier, config) {
+  return function CallbacksFactory(Private) {
     const _ = require('lodash');
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const utils = require('plugins/enhanced_tilemap/utils');

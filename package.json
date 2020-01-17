@@ -26,12 +26,13 @@
     "leaflet.nontiledlayer": "1.0.7",
     "mgrs": "~1.0.0",
     "xml2js": "^0.4.19",
-    "scripting-interfaces": "sirensolutions/scripting-interfaces"
+    "scripting-interfaces": "sirensolutions/scripting-interfaces#a7008345d13a80e8f43c02f2efed99f45022d4d5"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
     "bluebird": "^3.0.6",
     "eslint-config-siren": "sirensolutions/eslint-config",
+    "eslint-plugin-siren": "sirensolutions/eslint-plugin-siren",
     "gulp": "^4.0.2",
     "gulp-eslint": "^6.0.0",
     "gulp-if": "^2.0.2",

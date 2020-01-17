@@ -6,8 +6,7 @@ import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
 
 define(function () {
-  return function BoundsHelperFactory(
-    Private, savedSearches) {
+  return function BoundsHelperFactory(Private) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -19,7 +18,7 @@ define(function () {
       constructor(searchSource, field) {
         this.searchSource = searchSource;
         this.field = field;
-      };
+      }
 
       getBoundsOfEntireDataSelection(vis) {
         const respProcessor = new RespProcessor(vis, buildChartData, utils);
@@ -69,7 +68,7 @@ define(function () {
               console.warn('Unable to fit bounds as no data were detected');
             }
           });
-      };
+      }
     }
     return BoundsHelper;
   };

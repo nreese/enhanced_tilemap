@@ -1,5 +1,5 @@
+/* eslint-disable siren/memoryleaks */
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
-import { is } from 'bluebird';
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -10,7 +10,6 @@ define(function (require) {
     const L = require('leaflet');
     require('leaflet-draw');
     const LDrawToolbench = require('./LDrawToolbench');
-    const utils = require('plugins/enhanced_tilemap/utils');
 
     require('leaflet-mouse-position');
     require('leaflet.nontiledlayer');
@@ -244,15 +243,14 @@ define(function (require) {
       return prevState;
     };
 
-    TileMapMap.prototype.clearLayersByType = function (overlayArray, type) {
-      overlayArray = _.omitBy(overlayArray, overlay => {
-        if (overlay.type && overlay.type === type) {
-          overlay.destroy();
-          this._layerControl.removeLayer(overlay);
-          this.leafletMap.removeLayer(overlay);
-        }
-        return overlay.type && overlay.type === type;
-      });
+    TileMapMap.prototype.clearLayerById = function (overlayArray, id) {
+      if (_.has(overlayArray, id)) {
+        const layer = overlayArray[id];
+        overlayArray[id].destroy();
+        this._layerControl.removeLayer(layer);
+        this.leafletMap.removeLayer(layer);
+        delete overlayArray[id];
+      }
     };
 
     TileMapMap.prototype.addPOILayer = function (id, layer, layerGroup, options) {
@@ -262,12 +260,8 @@ define(function (require) {
       //this is required on page load with the option to have user defined POI user
       //name in edit mode as there are two watchers, i.e. vis.params and esResponse
       if (_.has(this.poiLayers, id)) {
-        const layer = this.poiLayers[id];
-        this.poiLayers[id].destroy();
+        this.clearLayerById(this.poiLayers, id);
         isVisible = this.leafletMap.hasLayer(layer);
-        this._layerControl.removeLayer(layer);
-        this.leafletMap.removeLayer(layer);
-        delete this.poiLayers[id];
       }
 
       // the uiState takes precedence
@@ -301,8 +295,11 @@ define(function (require) {
 
     TileMapMap.prototype.addVectorLayer = function (id, layerName, layer, options) {
 
-      this._layerControl.addOverlay(layer, layerName, options.layerGroup);
-      if (this.uiState.get(id)) this.leafletMap.addLayer(layer);
+      const layerGroup = `<b> ${options.layerGroup}</b>`;
+
+      if (_.has(this.vectorOverlays, id)) this.clearLayerById(this.vectorOverlays, id);
+      this._layerControl.addOverlay(layer, layerName, layerGroup);
+      if (this.uiState.get(id) !== false) this.leafletMap.addLayer(layer);
 
       this.vectorOverlays[id] = layer;
       this.vectorOverlays[id].type = options.type;
@@ -513,7 +510,7 @@ define(function (require) {
       });
 
       this.leafletMap.on('etm:select-feature-vector', function (e) {
-        self._callbacks.polygonVeleafletMapctor({
+        self._callbacks.polygonVector({
           args: e.args,
           params: self._attr,
           points: e.geojson.geometry.coordinates
@@ -521,12 +518,12 @@ define(function (require) {
       });
 
       //stop popups appearing when drawing has started
-      this.leafletMap.on('draw:drawstart', function (e) {
+      this.leafletMap.on('draw:drawstart', function () {
         this.disablePopups = true;
       });
 
       //start popups appearing finished drawing
-      this.leafletMap.on('draw:drawstop', function (e) {
+      this.leafletMap.on('draw:drawstop', function () {
         this.disablePopups = false;
       });
 
@@ -584,7 +581,6 @@ define(function (require) {
 
       this.saturateTiles(this._attr.isDesaturated);
 
-      const options = { groupCheckboxes: true };
       this._layerControl = L.control.groupedLayers();
       this._layerControl.addTo(this.leafletMap);
 

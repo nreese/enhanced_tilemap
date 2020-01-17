@@ -78,7 +78,7 @@ define(function (require) {
           options: {
             floor: _.get(self.geoJson, 'properties.allmin', 0),
             ceil: _.get(self.geoJson, 'properties.allmax', 1),
-            onEnd: function (sliderId, modelValue, highValue, pointerType) {
+            onEnd: function (sliderId, modelValue, highValue) {
               self.threshold.min = modelValue;
               self.threshold.max = highValue;
               self.destroy();
@@ -90,7 +90,7 @@ define(function (require) {
         const $sliderEl = linkFn(self.$sliderScope);
         $div.append($sliderEl);
 
-        _.each(self._legendColors, function (color, i) {
+        _.each(self._legendColors, function (color) {
           const labelText = self._legendQuantizer
             .invertExtent(color)
             .map(self._valueFormatter)
@@ -186,9 +186,9 @@ define(function (require) {
         while (parent != null) {
           if (parent.className && L.DomUtil.hasClass(parent, className)) {
             return parent;
-          };
+          }
           parent = parent.parentNode;
-        };
+        }
         return false;
       };
 
@@ -201,7 +201,7 @@ define(function (require) {
           }
           if (!e.target._map.disablePopups) {
             self._showTooltip(feature);
-          };
+          }
         },
         mouseout: function (e) {
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
@@ -353,7 +353,7 @@ define(function (require) {
         }
       } else {
         this._markerGroup = L.geoJson();
-      };
+      }
       this._addToMap();
     };
     /**
@@ -414,12 +414,12 @@ define(function (require) {
         options: {
           position: 'topright'
         },
-        onAdd: function (map) {
+        onAdd: function () {
           const container = L.DomUtil.create('div', 'leaflet-control leaflet-spin-control');
           container.innerHTML = '<a class="fa fa-spinner fa-pulse fa-2x fa-fw" href="#" title="Loading Geohash Grids"></a>';
           return container;
         },
-        onRemove: function (map) {
+        onRemove: function () {
         }
       });
 
@@ -497,7 +497,7 @@ define(function (require) {
             if (index <= featureLength - 1) {
               ranges.push(features[index].properties.value);
             }
-          };
+          }
           if (ranges.length < bands) {
             ranges.push(max);
           }

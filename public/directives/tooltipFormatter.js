@@ -5,7 +5,7 @@ import { uiModules } from 'ui/modules';
 const module = uiModules.get('kibana');
 
 define(function (require) {
-  module.directive('tooltipFormatter', function (Private, indexPatterns, savedVisualizations) {
+  module.directive('tooltipFormatter', function (Private) {
     const visService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.visualizations;
     const searchService = Private(SavedObjectRegistryProvider).byLoaderPropertiesName.searches;
 
@@ -19,7 +19,7 @@ define(function (require) {
         indexPatternId: '@'
       },
       template: require('./tooltipFormatter.html'),
-      link: (scope, element, attrs) => {
+      link: (scope) => {
         if (!scope.tooltipFormat) {
           scope.tooltipFormat = {
             closeOnMouseout: true,
@@ -60,7 +60,7 @@ define(function (require) {
                 //hence it is possible to use vis's from the same index
                 if (hit.id && linkedSearchIndex === scope.indexPatternId) {
                   return {};
-                };
+                }
               })
                 .map(search => {
                   return {
@@ -70,7 +70,7 @@ define(function (require) {
                 });
 
             });
-        };
+        }
 
         function matchIndex(hitSavedSearchId) {
           return _.find(scope.searchList, compare => compare.id === hitSavedSearchId);

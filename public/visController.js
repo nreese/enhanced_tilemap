@@ -1,6 +1,5 @@
-import d3 from 'd3';
+/* eslint-disable siren/memoryleaks */
 import _ from 'lodash';
-import $ from 'jquery';
 import uuid from 'uuid';
 import chrome from 'ui/chrome';
 import { Binder } from 'ui/binder';
@@ -37,7 +36,6 @@ define(function (require) {
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(ResizeCheckerProvider);
-    const SearchTooltip = Private(require('plugins/enhanced_tilemap/tooltip/searchTooltip'));
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
     const BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
     let map = null;
@@ -123,7 +121,7 @@ define(function (require) {
 
           if (!savedSearchId) {
             return;
-          };
+          }
 
           const dragAndDropPoiLayer = await kibiState.getState(dashboardId);
           const index = await indexPatterns.get(dragAndDropPoiLayer.index);
@@ -147,15 +145,15 @@ define(function (require) {
           createDragAndDropPoiLayers();
           $scope.vis.params.overlays.dragAndDropPoiLayers.push(dragAndDropPoiLayer);
 
-        };
+        }
       }
-    };
+    }
 
     function createDragAndDropPoiLayers() {
       if (!$scope.vis.params.overlays.dragAndDropPoiLayers) {
         $scope.vis.params.overlays.dragAndDropPoiLayers = [];
       }
-    };
+    }
 
     function modifyToDsl() {
       $scope.vis.aggs.origToDsl = $scope.vis.aggs.toDsl;
@@ -200,7 +198,7 @@ define(function (require) {
         storedTime = _.cloneDeep(newTime);
         storedState = _.cloneDeep(newState);
         return true;
-      };
+      }
     }
 
     function _doFitMapBoundsToData() {
@@ -212,7 +210,7 @@ define(function (require) {
               map.leafletMap.fitBounds(entireBounds);
               //update uiState zoom so correct geohash precision will be used
               $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
-            };
+            }
           });
       }
     }
@@ -226,7 +224,7 @@ define(function (require) {
       return filter;
     }
 
-    $scope.$watch('vis.aggs', function (resp) {
+    $scope.$watch('vis.aggs', function () {
       //'apply changes' creates new vis.aggs object - ensure toDsl is overwritten again
       if (!_.has($scope.vis.aggs, 'origToDsl')) {
         modifyToDsl();
@@ -236,7 +234,7 @@ define(function (require) {
     function getGeoBoundingBox() {
       const geoBoundingBox = utils.scaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
       return { geoBoundingBox };
-    };
+    }
 
     function initPOILayer(layerParams) {
       const poi = new POIsProvider(layerParams);
@@ -268,7 +266,7 @@ define(function (require) {
       });
     }
 
-    function initVectorLayer(layerName, geoJsonCollection, options) {
+    function initVectorLayer(id, layerName, geoJsonCollection, options) {
 
       let popupFields = [];
       if (_.get(options, 'popupFields') === '' || !_.get(options, 'popupFields')) {
@@ -277,10 +275,10 @@ define(function (require) {
         popupFields = _.get(options, 'popupFields').split(',');
       } else {
         popupFields = [_.get(options, 'popupFields', [])];
-      };
+      }
 
       const optionsWithDefaults = {
-        id: options.id,
+        id,
         color: _.get(options, 'color', '#008800'),
         size: _.get(options, 'size', 'm'),
         popupFields,
@@ -295,9 +293,9 @@ define(function (require) {
       };
 
       const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      map.addVectorLayer(optionsWithDefaults.id, layerName, vector, optionsWithDefaults);
+      map.addVectorLayer(id, layerName, vector, optionsWithDefaults);
 
-    };
+    }
 
 
     $scope.$watch('vis.params', function (visParams, oldParams) {
@@ -337,7 +335,7 @@ define(function (require) {
         chartData.searchSource = $scope.searchSource;
         if (_shouldAutoFitMapBoundsToData()) _doFitMapBoundsToData();
         draw();
-      };
+      }
 
       //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
@@ -361,7 +359,7 @@ define(function (require) {
     function destroyKibiStateEvents() {
       kibiState.off('drop_on_graph');
       kibiState.off('drag_on_graph');
-    };
+    }
 
     function draw() {
       if (!chartData) {
@@ -410,31 +408,26 @@ define(function (require) {
     }
 
     function drawWfsOverlays() {
-      //clear all wfs overlays before redrawing
-      //does not happen on ES response watcher
-      map.clearLayersByType(map.vectorOverlays, 'WFS');
 
       if ($scope.vis.params.overlays.wfsOverlays &&
         $scope.vis.params.overlays.wfsOverlays.length === 0) {
         return;
-      };
+      }
       _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
 
         const options = {
-          id: _.get(wfsOverlay, 'id', wfsOverlay.displayName),
           color: _.get(wfsOverlay, 'color', '#10aded'),
           popupFields: _.get(wfsOverlay, 'popupFields', ''),
-          layerGroup: '<b> WFS Overlays </b>',
-          type: 'WFS'
+          layerGroup: 'WFS Overlays'
         };
         const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=json`;
 
         return $http.get(getFeatureRequest)
           .then(resp => {
-            initVectorLayer(wfsOverlay.displayName, resp.data, options);
+            initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
           });
       });
-    };
+    }
 
     function drawWmsOverlays() {
 
@@ -528,7 +521,7 @@ define(function (require) {
                 isVisible = prevState[name];
               } else {
                 isVisible = layerParams.isVisible;
-              };
+              }
 
               const presentInUiState = $scope.vis.getUiState().get(name);
               if (presentInUiState) {
@@ -549,7 +542,7 @@ define(function (require) {
         });
       });
 
-    };
+    }
 
     function appendMap() {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
@@ -579,14 +572,18 @@ define(function (require) {
       const actionRegistry = $injector.get('actionRegistry');
       const apiVersion = '1';
 
-      actionRegistry.register(apiVersion, $scope.vis.id, 'renderGeoJsonCollection', async (layerName, geoJsonCollection, options) => {
-        return initVectorLayer(layerName, geoJsonCollection, options);
+      actionRegistry.register(apiVersion, $scope.vis.id, 'renderGeoJsonCollection', async (id, layerName, geoJsonCollection, options) => {
+        return initVectorLayer(id, layerName, geoJsonCollection, options);
+      });
+
+      actionRegistry.register(apiVersion, $scope.vis.id, 'removeGeoJsonCollection', async (id) => {
+        return map.clearLayerById(map.vectorOverlays, id);
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
         return getGeoBoundingBox();
       });
-    };
+    }
 
     // ============================
     // ==POI drag and drop events==
@@ -626,7 +623,7 @@ define(function (require) {
       map.saturateWMSTiles();
       if (map._markers && e.name === 'Aggregation') {
         map._markers.show();
-      };
+      }
       const uiStatekey = e.layer.id || e.name;
       $scope.vis.getUiState().set(uiStatekey, !!uiStatekey);
     });
@@ -639,7 +636,7 @@ define(function (require) {
       $scope.vis.getUiState().set(uiStatekey, false);
     });
 
-    map.leafletMap.on('moveend', _.debounce(function setZoomCenter(ev) {
+    map.leafletMap.on('moveend', _.debounce(function setZoomCenter() {
       if (!map.leafletMap) return;
       if (map._hasSameLocation()) return;
 
@@ -670,7 +667,7 @@ define(function (require) {
       });
     }, 150, false));
 
-    map.leafletMap.on('setview:fitBounds', function (e) {
+    map.leafletMap.on('setview:fitBounds', function () {
       _doFitMapBoundsToData();
     });
 
@@ -718,7 +715,7 @@ define(function (require) {
           });
           break;
         default:
-          console.log('draw:created, unexpected layerType: ' + e.layerType);
+          console.warn('draw:created, unexpected layerType: ' + e.layerType);
       }
     });
 

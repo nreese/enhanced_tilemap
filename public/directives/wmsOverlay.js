@@ -1,11 +1,9 @@
-const _ = require('lodash');
 const module = require('ui/modules').get('kibana');
 import { parseString } from 'xml2js';
-import { backwardsCompatible } from 'plugins/enhanced_tilemap/backwardsCompatible';
 import uuid from 'uuid';
 
 define(function (require) {
-  module.directive('wmsOverlay', function (indexPatterns, Private, $http) {
+  module.directive('wmsOverlay', function (indexPatterns, $http) {
 
     return {
       restrict: 'E',
@@ -14,7 +12,7 @@ define(function (require) {
         layer: '='
       },
       template: require('./wmsOverlay.html'),
-      link: function (scope, element, attrs) {
+      link: function (scope) {
 
         scope.layer.wmsCapabilitiesSwitch = 0;
         if (!scope.layer.id) scope.layer.id = uuid.v1();
@@ -40,22 +38,22 @@ define(function (require) {
               //url is not valid on this digest
               if (scope.layer && scope.layer.wmsLayers && scope.layer.wmsLayers.selected) {
                 scope.layer.layers = doUiSelectFormatToLayer(scope.layer.wmsLayers.selected);
-              };
+              }
             }
           });
-        };
+        }
 
         //this is for the initial rendering of the map
         if (scope.layer.url) {
           wmsRequest(scope.layer.url);
-        };
+        }
 
         //Watchers for url and getCapabilitiesSwitch equals to 0 or 1
         //this is for subsequent rendering based on changes to the wms url
         scope.$watch('layer.url', function (newUrl, oldUrl) {
           if (newUrl !== oldUrl) {
             wmsRequest(newUrl);
-          };
+          }
         });
         //this is for subsequent rendering based on changes to the UiSelect
         scope.$watch('layer.wmsLayers.selected', function (newWmsLayers, oldWmsLayers) {
@@ -88,7 +86,7 @@ define(function (require) {
           commaSeparatedLayers += layer.name;
         } else {
           commaSeparatedLayers += ',' + layer.name;
-        };
+        }
       });
       return commaSeparatedLayers;
     }
@@ -139,6 +137,6 @@ define(function (require) {
           console.warn('An issue was encountered returning a layers list from WMS. Verify your ' +
             'WMS url (' + err.config.url + ') is correct, has layers present and WMS is CORs enabled for this domain.');
         });
-    };
+    }
   });
 });

@@ -14,8 +14,7 @@ define(function (require) {
      * @param params {Object}
      */
     _.class(HeatmapMarker).inherits(BaseMarker);
-    function HeatmapMarker(leafletMap, geoJson, params) {
-      const self = this;
+    function HeatmapMarker(geoJson) {
       this._disableTooltips = false;
       HeatmapMarker.Super.apply(this, arguments);
 
@@ -176,9 +175,6 @@ define(function (require) {
         showTip = true;
       }
 
-      const testScale = d3.scale.pow().exponent(0.2)
-        .domain([1, 18])
-        .range([1500000, 50]);
       return showTip;
     };
 
@@ -194,7 +190,6 @@ define(function (require) {
      */
     HeatmapMarker.prototype._dataToHeatArray = function (max) {
       const self = this;
-      const mapData = this.geoJson;
 
       return this.geoJson.features.map(function (feature) {
         const lat = feature.geometry.coordinates[1];

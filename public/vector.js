@@ -2,27 +2,21 @@ const _ = require('lodash');
 const L = require('leaflet');
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
-import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
-import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
 
-define(function (require) {
-  return function VectorFactory(Private, savedSearches) {
-
-    const SearchSource = Private(SearchSourceProvider);
-    const queryFilter = Private(FilterBarQueryFilterProvider);
-    const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
+define(function () {
+  return function VectorFactory() {
 
     /**
-     * Points of Interest
+     * Vector overlay
      *
-     * Turns saved search results into easily consumible data for leaflet.
+     * Turns geoJson into easily consumable layer for leaflet.
      */
     function Vector(geoJsonCollection) {
       //remain backwards compatible
       if (!_.isEqual(this._geoJsonCollection, geoJsonCollection)) {
         this._geoJsonCollection = geoJsonCollection;
-      };
+      }
     }
 
     const getParentWithClass = function (element, className) {
@@ -30,9 +24,9 @@ define(function (require) {
       while (parent != null) {
         if (parent.className && L.DomUtil.hasClass(parent, className)) {
           return parent;
-        };
+        }
         parent = parent.parentNode;
-      };
+      }
       return false;
     };
 
@@ -106,7 +100,7 @@ define(function (require) {
 
               if (_.get(feature, 'geometry.type') === 'Polygon' ||
                 _.get(feature, 'geometry.type') === 'MultiPolygon') {
-                polygon._click = function fireEtmSelectFeature(e) {
+                polygon._click = function fireEtmSelectFeature() {
                   polygon._map.fire('etm:select-feature-vector', {
                     args: {
                       _siren: options._siren,
@@ -145,7 +139,7 @@ define(function (require) {
     Vector.prototype.addMouseOverPolygon = function (e) {
       if (!e.target._map.disablePopups) {
         this.openPopup();
-      };
+      }
     };
 
     Vector.prototype.addMouseOutPolygon = function (e) {
@@ -191,7 +185,7 @@ define(function (require) {
             .setLatLng(e.latlng)
             .setContent(content)
             .openOn(this._map);
-        };
+        }
       };
       return popup;
     };

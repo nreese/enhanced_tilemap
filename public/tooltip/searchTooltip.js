@@ -42,16 +42,16 @@ define(function (require) {
           self.$tooltipScope.title = savedSearch.title;
           self.$tooltipScope.description = savedSearch.description;
           self.$tooltipScope.setSortOrder = () => {
-            console.log('setSortOrder no supported');
+            console.warn('setSortOrder no supported');
           };
           self.$tooltipScope.addColumn = () => {
-            console.log('addColumn no supported');
+            console.warn('addColumn no supported');
           };
           self.$tooltipScope.removeColumn = () => {
-            console.log('removeColumn no supported');
+            console.warn('removeColumn no supported');
           };
           self.$tooltipScope.moveColumn = () => {
-            console.log('moveColumn no supported');
+            console.warn('moveColumn no supported');
           };
           self.$visEl = linkFn(self.$tooltipScope);
         });

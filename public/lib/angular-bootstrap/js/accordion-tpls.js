@@ -5,10 +5,10 @@
  * Version: 2.3.0 - 2016-11-26
  * License: MIT
  */
-angular.module("etm-ui.bootstrap",
-  ["etm-ui.bootstrap.tpls","etm-ui.bootstrap.accordion","etm-ui.bootstrap.collapse","etm-ui.bootstrap.tabindex"]);
-angular.module("etm-ui.bootstrap.tpls",
-  ["uib/template/accordion/accordion-group.html","uib/template/accordion/accordion.html"]);
+angular.module('etm-ui.bootstrap',
+  ['etm-ui.bootstrap.tpls','etm-ui.bootstrap.accordion','etm-ui.bootstrap.collapse','etm-ui.bootstrap.tabindex']);
+angular.module('etm-ui.bootstrap.tpls',
+  ['uib/template/accordion/accordion-group.html','uib/template/accordion/accordion.html']);
 angular.module('etm-ui.bootstrap.accordion',
   ['etm-ui.bootstrap.collapse', 'etm-ui.bootstrap.tabindex'])
 
@@ -38,7 +38,7 @@ angular.module('etm-ui.bootstrap.accordion',
       const that = this;
       this.groups.push(groupScope);
 
-      groupScope.$on('$destroy', function (event) {
+      groupScope.$on('$destroy', function () {
         that.removeGroup(groupScope);
       });
     };
@@ -59,7 +59,7 @@ angular.module('etm-ui.bootstrap.accordion',
       controller: 'UibAccordionController',
       controllerAs: 'accordion',
       transclude: true,
-      template: "<div role=\"tablist\" class=\"panel-group\" ng-transclude></div>"
+      template: '<div role="tablist" class="panel-group" ng-transclude></div>'
     };
   })
 
@@ -69,19 +69,19 @@ angular.module('etm-ui.bootstrap.accordion',
       require: '^uibAccordion',         // We need this directive to be inside an accordion
       transclude: true,              // It transcludes the contents of the directive into the template
       restrict: 'A',
-      template: "<div role=\"tab\" id=\"{{::headingId}}\" aria-selected=\"{{isOpen}}\"" +
-      " class=\"panel-heading\" ng-keypress=\"toggleOpen($event)\">\n" +
-    "  <h4 class=\"panel-title\">\n" +
-    "    <a role=\"button\" data-toggle=\"collapse\" href aria-expanded=\"{{isOpen}}\"" +
-      " aria-controls=\"{{::panelId}}\" tabindex=\"0\" class=\"accordion-toggle\" ng-click=\"toggleOpen()\"" +
-      " uib-accordion-transclude=\"heading\" ng-disabled=\"isDisabled\" uib-tabindex-toggle>" +
-      "<span uib-accordion-header ng-class=\"{'text-muted': isDisabled}\">{{heading}}</span></a>\n" +
-    "  </h4>\n" +
-    "</div>\n" +
-    "<div id=\"{{::panelId}}\" aria-labelledby=\"{{::headingId}}\" aria-hidden=\"{{!isOpen}}\"" +
-      " role=\"tabpanel\" class=\"panel-collapse collapse\" uib-collapse=\"!isOpen\">\n" +
-    "  <div class=\"panel-body\" ng-transclude></div>\n" +
-    "</div>\n",
+      template: '<div role="tab" id="{{::headingId}}" aria-selected="{{isOpen}}"' +
+      ' class="panel-heading" ng-keypress="toggleOpen($event)">\n' +
+    '  <h4 class="panel-title">\n' +
+    '    <a role="button" data-toggle="collapse" href aria-expanded="{{isOpen}}"' +
+      ' aria-controls="{{::panelId}}" tabindex="0" class="accordion-toggle" ng-click="toggleOpen()"' +
+      ' uib-accordion-transclude="heading" ng-disabled="isDisabled" uib-tabindex-toggle>' +
+      '<span uib-accordion-header ng-class="{\'text-muted\': isDisabled}">{{heading}}</span></a>\n' +
+    '  </h4>\n' +
+    '</div>\n' +
+    '<div id="{{::panelId}}" aria-labelledby="{{::headingId}}" aria-hidden="{{!isOpen}}"' +
+      ' role="tabpanel" class="panel-collapse collapse" uib-collapse="!isOpen">\n' +
+    '  <div class="panel-body" ng-transclude></div>\n' +
+    '</div>\n',
       scope: {
         heading: '@',               // Interpolate the heading attribute onto this scope
         panelClass: '@?',           // Ditto with panelClass

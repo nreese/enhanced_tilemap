@@ -1,3 +1,5 @@
+
+
 define(function (require) {
   return function ShadedCircleMarkerFactory(Private) {
     const _ = require('lodash');
@@ -13,7 +15,7 @@ define(function (require) {
      * @return {Leaflet object} featureLayer
      */
     _.class(ShadedCircleMarker).inherits(BaseMarker);
-    function ShadedCircleMarker(map, geoJson, params) {
+    function ShadedCircleMarker() {
       const self = this;
       ShadedCircleMarker.Super.apply(this, arguments);
 

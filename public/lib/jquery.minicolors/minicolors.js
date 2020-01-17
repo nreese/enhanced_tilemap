@@ -45,7 +45,7 @@ module.provider('minicolors', function () {
     return this;
   };
 });
-module.directive('minicolors', ["minicolors", "$timeout", function (minicolors, $timeout) {
+module.directive('minicolors', ['minicolors', '$timeout', function (minicolors, $timeout) {
   return {
     require: '?ngModel',
     restrict: 'A',
