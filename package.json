@@ -12,8 +12,9 @@
     "test:dev": "gulp testdev",
     "start": "gulp dev",
     "sync": "gulp sync",
-    "precommit": "gulp lint",
-    "lint": "gulp lint",
+    "precommit": "eslint public server index.js gulp.js",
+    "lint": "eslint public server index.js gulp.js",
+    "lintfix": "eslint --fix public server index.js gulp.js",
     "build": "gulp build"
   },
   "dependencies": {
@@ -26,7 +27,7 @@
     "leaflet.nontiledlayer": "1.0.7",
     "mgrs": "~1.0.0",
     "xml2js": "^0.4.19",
-    "scripting-interfaces": "sirensolutions/scripting-interfaces#a7008345d13a80e8f43c02f2efed99f45022d4d5"
+    "scripting-interfaces": "sirensolutions/scripting-interfaces"
   },
   "devDependencies": {
     "babel-eslint": "^7.2.3",
