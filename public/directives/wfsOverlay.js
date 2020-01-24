@@ -4,7 +4,11 @@ import { parseString } from 'xml2js';
 import uuid from 'uuid';
 
 define(function (require) {
-  module.directive('wfsOverlay', function (indexPatterns, $http) {
+  module.directive('wfsOverlay', function (indexPatterns, $http, createNotifier) {
+
+    const notify = createNotifier({
+      location: 'Enhanced Coordinate Map'
+    });
 
     return {
       restrict: 'E',
@@ -120,7 +124,7 @@ define(function (require) {
           }
         })
         .catch(err => {
-          console.warn('An issue was encountered returning a layers list from WFS. Verify your ' +
+          notify.warning('An issue was encountered returning a layers list from WFS. Verify your ' +
             'WFS url (' + err.config.url + ') is correct, has layers present and WFS is CORs enabled for this domain.');
         });
     }

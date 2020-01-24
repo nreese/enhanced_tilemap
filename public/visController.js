@@ -25,7 +25,7 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timefilter) {
+    timefilter, createNotifier) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -51,6 +51,10 @@ define(function (require) {
     };
 
     $scope.flags = {};
+
+    const notify = createNotifier({
+      location: 'Enhanced Coordinate Map'
+    });
 
     backwardsCompatible.updateParams($scope.vis.params);
     createDragAndDropPoiLayers();
@@ -414,18 +418,31 @@ define(function (require) {
         return;
       }
       _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
-
+        const formatOption = wfsOverlay.formatOptions ? wfsOverlay.formatOptions : 'json';
         const options = {
           color: _.get(wfsOverlay, 'color', '#10aded'),
           popupFields: _.get(wfsOverlay, 'popupFields', ''),
           layerGroup: 'WFS Overlays'
         };
-        const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=json`;
 
-        return $http.get(getFeatureRequest)
-          .then(resp => {
-            initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
-          });
+        if (['geojson', 'json'].includes(formatOption)) {
+          const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=${formatOption}`;
+
+          return $http.get(getFeatureRequest)
+            .then(resp => {
+              initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
+            })
+            .catch(() => {
+              notify.error(`An issue was encountered returning ${wfsOverlay.layers} from WFS request. Please ensure: 
+              - url ( ${wfsOverlay.url} ) is correct and has layers present, 
+              - ${formatOption} is an allowed output format
+              - WFS is CORs enabled for this domain`);
+              map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
+            });
+        } else {
+          notify.error(`Unsupported Output Format: ${formatOption}`);
+          map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
+        }
       });
     }
 
