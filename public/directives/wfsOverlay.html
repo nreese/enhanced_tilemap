@@ -37,10 +37,11 @@
   <div class="vis-option-item form-group">
     <label>
       Output Format <kbn-info
-        info="The format your server should respond with, e.g. geojson for ArcGis Server. Note - json is the default">
+        info="The format your server should respond with">
       </kbn-info>
     </label>
-    <input type="text" class="form-control" ng-model="layer.formatOptions" name="layer.formatOptions" />
+    <select class="form-control" placeholder="Click to select WFS layer(s)..." ng-model="layer.formatOptions"
+    ng-options="outputFormatType for outputFormatType in ['json', 'geojson']"></select>
   </div>
   <div class="form-group">
     <label>Popup Content <kbn-info

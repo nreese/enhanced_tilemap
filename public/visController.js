@@ -418,31 +418,26 @@ define(function (require) {
         return;
       }
       _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
-        const formatOption = wfsOverlay.formatOptions ? wfsOverlay.formatOptions : 'json';
         const options = {
           color: _.get(wfsOverlay, 'color', '#10aded'),
           popupFields: _.get(wfsOverlay, 'popupFields', ''),
           layerGroup: 'WFS Overlays'
         };
 
-        if (['geojson', 'json'].includes(formatOption)) {
-          const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=${wfsOverlay.layers}&outputFormat=${formatOption}`;
+        const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=
+        ${wfsOverlay.layers}&outputFormat=${wfsOverlay.formatOptions}`;
 
-          return $http.get(getFeatureRequest)
-            .then(resp => {
-              initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
-            })
-            .catch(() => {
-              notify.error(`An issue was encountered returning ${wfsOverlay.layers} from WFS request. Please ensure: 
+        return $http.get(getFeatureRequest)
+          .then(resp => {
+            initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
+          })
+          .catch(() => {
+            notify.error(`An issue was encountered returning ${wfsOverlay.layers} from WFS request. Please ensure: 
               - url ( ${wfsOverlay.url} ) is correct and has layers present, 
-              - ${formatOption} is an allowed output format
+              - ${wfsOverlay.formatOptions} is an allowed output format
               - WFS is CORs enabled for this domain`);
-              map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
-            });
-        } else {
-          notify.error(`Unsupported Output Format: ${formatOption}`);
-          map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
-        }
+            map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
+          });
       });
     }
 
