@@ -581,7 +581,7 @@ define(function (require) {
 
       this.saturateTiles(this._attr.isDesaturated);
 
-      this._layerControl = L.control.groupedLayers();
+      this._layerControl = L.control.groupedLayers(null, null, { groupCheckboxes: true });
       this._layerControl.addTo(this.leafletMap);
 
       this._addSetViewControl();
