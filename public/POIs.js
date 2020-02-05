@@ -5,6 +5,7 @@ import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
+//import { translateToQuery } from './lib/translate_to_query';
 
 //react modal
 import React from 'react';
@@ -19,7 +20,7 @@ import {
 } from '@elastic/eui';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches, joinExplanation) {
+  return function POIsFactory(Private, savedSearches, joinExplanation, $http, chrome) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -57,18 +58,6 @@ define(function (require) {
       });
       return geoFields;
     }
-
-    const getParentWithClass = function (element, className) {
-      let parent = element;
-      while (parent != null) {
-        if (parent.className && L.DomUtil.hasClass(parent, className)) {
-          return parent;
-        }
-        parent = parent.parentNode;
-      }
-      return false;
-    };
-
 
     /**
      * @param {options} options: styling options
@@ -398,7 +387,7 @@ define(function (require) {
           // get the element that the mouse hovered onto
           const target = e.toElement || e.relatedTarget;
           // check to see if the element is a popup
-          if (getParentWithClass(target, 'leaflet-popup')) {
+          if (utils.getParent(target, ['leaflet-popup'])) {
             return true;
           }
           L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
@@ -409,7 +398,7 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getParentWithClass(target, 'leaflet-popup')) {
+      if (utils.getParent(target, ['leaflet-popup'])) {
         L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }
@@ -450,7 +439,7 @@ define(function (require) {
           // get the element that the mouse hovered onto
           const target = e.toElement || e.relatedTarget;
           // check to see if the element is a popup
-          if (getParentWithClass(target, 'leaflet-popup')) {
+          if (utils.getParent(target, ['leaflet-popup'])) {
             return true;
           }
           L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
@@ -461,7 +450,7 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getParentWithClass(target, 'leaflet-popup')) {
+      if (utils.getParent(target, ['leaflet-popup'])) {
         L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }

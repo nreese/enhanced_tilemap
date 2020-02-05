@@ -162,24 +162,12 @@ define(function (require) {
     BaseMarker.prototype.bindPopup = function (feature, layer) {
       const self = this;
       const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
-      self._getParent = function (element, classNames) {
-
-        let parent = element;
-        while (parent != null) {
-          if (parent.className &&
-            (L.DomUtil.hasClass(parent, classNames[0]) || L.DomUtil.hasClass(parent, classNames[1]))) {
-            return parent;
-          }
-          parent = parent.parentNode;
-        }
-        return false;
-      };
 
       self._popupMouseOut = function (e) {
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
         // check to see if the element is a popup
-        if (this._getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+        if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
           return true;
         }
         if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
@@ -204,7 +192,7 @@ define(function (require) {
         mouseout: function (e) {
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
           // check to see if the element is a popup
-          if (self._getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+          if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
             L.DomEvent.on(self.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
             return true;
           }
