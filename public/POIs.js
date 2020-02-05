@@ -5,7 +5,6 @@ import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import utils from 'plugins/enhanced_tilemap/utils';
-//import { translateToQuery } from './lib/translate_to_query';
 
 //react modal
 import React from 'react';
@@ -20,7 +19,7 @@ import {
 } from '@elastic/eui';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches, joinExplanation, $http, chrome) {
+  return function POIsFactory(Private, savedSearches, joinExplanation) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
