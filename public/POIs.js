@@ -19,7 +19,8 @@ import {
 } from '@elastic/eui';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches, joinExplanation) {
+  return function POIsFactory(Private, savedSearches, joinExplanation,
+    kibiState, $routeParams) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -73,7 +74,7 @@ define(function (require) {
           this.geoType = geoFields[0].type;
         }
 
-        const processLayer = () => {
+        const processLayer = async () => {
           //creating icon and title from search for map and layerControl
           options.displayName = options.displayName || savedSearch.title;
 
@@ -129,18 +130,28 @@ define(function (require) {
               searchSource.filter(allFilters);
               options.filterPopupContent = this.params.filterPopupContent; //adding filter popup content from drop
             }
-            //for vis params overlays
-          } else if (this.syncFilters) {
-            searchSource.inherits(savedSearch.searchSource);
-            const allFilters = queryFilter.getFilters();
-            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-            searchSource.filter(allFilters);
           } else {
-            //Do not filter POIs by time so can not inherit from rootSearchSource
-            searchSource.inherits(false);
-            searchSource.index(savedSearch.searchSource._state.index);
-            searchSource.query(savedSearch.searchSource.get('query'));
-            searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
+            //For non drag and drop overlays
+            if (this.syncFilters) {
+              let allFilters = [];
+              searchSource.inherits(savedSearch.searchSource);
+              if ($routeParams.id.includes('dashboard')) {
+                // use kibistate if on dashboard
+                const state = await kibiState.getState($routeParams.id);
+                allFilters = state.filters;
+              } else {
+                //use queryFilter if in vis edit mode
+                allFilters = queryFilter.getFilters();
+              }
+              allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+              searchSource.filter(allFilters);
+            } else {
+              //Do not filter POIs by time so can not inherit from rootSearchSource
+              searchSource.inherits(false);
+              searchSource.index(savedSearch.searchSource._state.index);
+              searchSource.query(savedSearch.searchSource.get('query'));
+              searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
+            }
           }
           searchSource.size(this.limit);
           searchSource.source({

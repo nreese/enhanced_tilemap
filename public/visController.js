@@ -127,14 +127,15 @@ define(function (require) {
             return;
           }
 
-          const dragAndDropPoiLayer = await kibiState.getState(dashboardId);
-          const index = await indexPatterns.get(dragAndDropPoiLayer.index);
-
-          dragAndDropPoiLayer.savedSearchId = savedSearchId;
+          const dragAndDropPoiLayer = {
+            savedSearchId
+          };
+          const state = await kibiState.getState(dashboardId);
+          const index = await indexPatterns.get(state.index);
 
           dragAndDropPoiLayer.draggedState = {
-            filters: dragAndDropPoiLayer.filters,
-            query: dragAndDropPoiLayer.queries,
+            filters: state.filters,
+            query: state.queries,
             index,
             savedSearchId: savedSearchId
           };
