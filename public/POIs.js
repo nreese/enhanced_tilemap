@@ -19,7 +19,8 @@ import {
 } from '@elastic/eui';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches, joinExplanation) {
+  return function POIsFactory(Private, savedSearches, joinExplanation,
+    kibiState, $routeParams) {
 
     const SearchSource = Private(SearchSourceProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -58,18 +59,6 @@ define(function (require) {
       return geoFields;
     }
 
-    const getParentWithClass = function (element, className) {
-      let parent = element;
-      while (parent != null) {
-        if (parent.className && L.DomUtil.hasClass(parent, className)) {
-          return parent;
-        }
-        parent = parent.parentNode;
-      }
-      return false;
-    };
-
-
     /**
      * @param {options} options: styling options
      * @param {Function} callback(layer)
@@ -85,7 +74,7 @@ define(function (require) {
           this.geoType = geoFields[0].type;
         }
 
-        const processLayer = () => {
+        const processLayer = async () => {
           //creating icon and title from search for map and layerControl
           options.displayName = options.displayName || savedSearch.title;
 
@@ -141,18 +130,22 @@ define(function (require) {
               searchSource.filter(allFilters);
               options.filterPopupContent = this.params.filterPopupContent; //adding filter popup content from drop
             }
-            //for vis params overlays
-          } else if (this.syncFilters) {
-            searchSource.inherits(savedSearch.searchSource);
-            const allFilters = queryFilter.getFilters();
-            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-            searchSource.filter(allFilters);
           } else {
-            //Do not filter POIs by time so can not inherit from rootSearchSource
-            searchSource.inherits(false);
-            searchSource.index(savedSearch.searchSource._state.index);
-            searchSource.query(savedSearch.searchSource.get('query'));
-            searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
+            //For non drag and drop overlays
+            if (this.syncFilters) {
+              searchSource.inherits(options.searchSource);
+              const allFilters = [
+                ...searchSource.filter(),
+                createMapExtentFilter(options.mapExtentFilter)
+              ];
+              searchSource.filter(allFilters);
+            } else {
+              //Do not filter POIs by time so can not inherit from rootSearchSource
+              searchSource.inherits(false);
+              searchSource.index(savedSearch.searchSource._state.index);
+              searchSource.query(savedSearch.searchSource.get('query'));
+              searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
+            }
           }
           searchSource.size(this.limit);
           searchSource.source({
@@ -398,7 +391,7 @@ define(function (require) {
           // get the element that the mouse hovered onto
           const target = e.toElement || e.relatedTarget;
           // check to see if the element is a popup
-          if (getParentWithClass(target, 'leaflet-popup')) {
+          if (utils.getParent(target, ['leaflet-popup'])) {
             return true;
           }
           L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
@@ -409,7 +402,7 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getParentWithClass(target, 'leaflet-popup')) {
+      if (utils.getParent(target, ['leaflet-popup'])) {
         L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }
@@ -450,7 +443,7 @@ define(function (require) {
           // get the element that the mouse hovered onto
           const target = e.toElement || e.relatedTarget;
           // check to see if the element is a popup
-          if (getParentWithClass(target, 'leaflet-popup')) {
+          if (utils.getParent(target, ['leaflet-popup'])) {
             return true;
           }
           L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
@@ -461,7 +454,7 @@ define(function (require) {
       const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
 
       // check to see if the element is a popup
-      if (getParentWithClass(target, 'leaflet-popup')) {
+      if (utils.getParent(target, ['leaflet-popup'])) {
         L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
         return true;
       }

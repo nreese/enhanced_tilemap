@@ -85,9 +85,10 @@ define(function (require) {
               self.sirenMeta.vis.panelIndex
             );
 
-            //if vis is not assigned in coat tree, assign popup to main node
-            if (!etmVisNode) {
-              const mainNode = findMainCoatNode(sirenMetaTooltip.coat.items);
+            const mainNode = findMainCoatNode(sirenMetaTooltip.coat.items);
+            //if vis is not assigned in coat tree AND
+            //there is an search assigned to dashboard (i.e. main node)
+            if (!etmVisNode && mainNode) {
               mainNode.d.widgets.push({
                 id: self.visId,
                 panelIndex

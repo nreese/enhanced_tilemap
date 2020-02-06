@@ -161,35 +161,20 @@ define(function (require) {
      */
     BaseMarker.prototype.bindPopup = function (feature, layer) {
       const self = this;
+      const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
 
       self._popupMouseOut = function (e) {
-        // detach the event
-        L.DomEvent.off(self.leafletMap._popup, 'mouseout', self._popupMouseOut, self);
-
         // get the element that the mouse hovered onto
         const target = e.toElement || e.relatedTarget;
-
         // check to see if the element is a popup
-        if (this._getParent(target, 'leaflet-popup')) {
+        if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
           return true;
         }
-
         if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
+          // detach the event
+          L.DomEvent.off(self.leafletMap._popup, 'mouseout', self._popupMouseOut, self);
           self._hidePopup();
         }
-
-      };
-
-      self._getParent = function (element, className) {
-
-        let parent = element;
-        while (parent != null) {
-          if (parent.className && L.DomUtil.hasClass(parent, className)) {
-            return parent;
-          }
-          parent = parent.parentNode;
-        }
-        return false;
       };
 
       const popup = layer.on({
@@ -203,15 +188,14 @@ define(function (require) {
             self._showTooltip(feature);
           }
         },
+
         mouseout: function (e) {
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-
           // check to see if the element is a popup
-          if (self._getParent(target, 'leaflet-popup')) {
+          if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
             L.DomEvent.on(self.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
             return true;
           }
-
           if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
             self._hidePopup();
           }

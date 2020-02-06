@@ -265,7 +265,7 @@ define(function (require) {
       }
 
       // the uiState takes precedence
-      if (this.uiState.get(id)) isVisible = true;
+      if (this.uiState.get(id) || this.uiState.get(id) === undefined) isVisible = true;
 
       if (isVisible) {
         this.leafletMap.addLayer(layer);
