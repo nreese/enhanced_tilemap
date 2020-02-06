@@ -133,17 +133,11 @@ define(function (require) {
           } else {
             //For non drag and drop overlays
             if (this.syncFilters) {
-              let allFilters = [];
-              searchSource.inherits(savedSearch.searchSource);
-              if ($routeParams.id.includes('dashboard')) {
-                // use kibistate if on dashboard
-                const state = await kibiState.getState($routeParams.id);
-                allFilters = state.filters;
-              } else {
-                //use queryFilter if in vis edit mode
-                allFilters = queryFilter.getFilters();
-              }
-              allFilters.push(createMapExtentFilter(options.mapExtentFilter));
+              searchSource.inherits(options.searchSource);
+              const allFilters = [
+                ...searchSource.filter(),
+                createMapExtentFilter(options.mapExtentFilter)
+              ];
               searchSource.filter(allFilters);
             } else {
               //Do not filter POIs by time so can not inherit from rootSearchSource

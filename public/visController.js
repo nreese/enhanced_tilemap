@@ -253,7 +253,8 @@ define(function (require) {
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
           geoField: getGeoField()
-        }
+        },
+        searchSource: $scope.searchSource
       };
 
       //Element rendered in Leaflet Library
@@ -345,7 +346,8 @@ define(function (require) {
       //POI overlays - no need to clear all layers for this watcher
       $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
       //Drag and Drop POI Overlays - no need to clear all layers for this watcher
-      if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
+
+      if ($scope.vis.params.overlays.dragAndDropPoiLayers.length >= 1) {
         $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
           dragAndDrop.isInitialDragAndDrop = false;
           initPOILayer(dragAndDrop);
