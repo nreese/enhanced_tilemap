@@ -22,39 +22,36 @@ define(function (require) {
         if (!scope.layer.id) scope.layer.id = uuid.v1();
 
         scope.isGeoShape = function () {
-          scope.layer.geoShape = false;
-          _.each(scope.geoFieldTypes, geoFieldType => {
-            if (scope.layer.geoField === geoFieldType.name &&
-              geoFieldType.type === 'geo_shape') {
-              scope.layer.geoShape = true;
-              return false;
-            }
-          });
+          if (_.findIndex(scope.geoFieldTypes, geoFieldType => {
+            return scope.layer.geoField === geoFieldType.name && geoFieldType.type === 'geo_shape';
+          }) !== -1) {
+            scope.layer.geoShape = true;
+          } else {
+            scope.layer.geoShape = false;
+          }
         };
-
         fetchSavedSearches();
-        scope.isGeoShape();
 
-        scope.updateIndex = function () {
+        scope.updateIndex = async function () {
           scope.warn = '';
           scope.layer.savedSearchId = scope.savedSearch.value;
           scope.layer.savedSearchLabel = scope.savedSearch.label;
           scope.layer.geoField = null;
           scope.layer.popupFields = [];
 
-          refreshIndexFields(scope.savedSearch.indexId, function (geoFields, labelFields) {
-            scope.geoFields = geoFields.geoFieldNames;
-            scope.geoFieldTypes = geoFields.geoFieldTypes;
-            scope.labelFields = labelFields;
+          await refreshIndexFields(scope.savedSearch.indexId)
+            .then(({ geoFields, labelFields }) => {
+              scope.geoFields = geoFields.geoFieldNames;
+              scope.geoFieldTypes = geoFields.geoFieldTypes;
+              scope.labelFields = labelFields;
 
-            if (scope.geoFields.length === 0) {
-              scope.warn = 'Unable to use selected saved search, index does not contain any geospatial fields.';
-            } else if (scope.geoFields.length === 1) {
-              scope.layer.geoField = scope.geoFields[0];
-
-
-            }
-          });
+              if (scope.geoFields.length === 0) {
+                scope.warn = 'Unable to use selected saved search, index does not contain any geospatial fields.';
+              } else if (scope.geoFields.length === 1) {
+                scope.layer.geoField = scope.geoFields[0];
+              }
+            });
+          scope.isGeoShape();
         };
 
         scope.filterSavedSearches = function () {
@@ -64,8 +61,8 @@ define(function (require) {
 
         function fetchSavedSearches() {
           //TODO add filter to find to reduce results
-          service.find(scope.layer.filter)
-            .then(function (hits) {
+          return service.find(scope.layer.filter)
+            .then(async function (hits) {
               scope.items = _.map(hits.hits, function (hit) {
                 return {
                   indexId: getIndexId(hit),
@@ -81,24 +78,25 @@ define(function (require) {
               });
               if (selected.length > 0) {
                 scope.savedSearch = selected[0];
-                refreshIndexFields(selected[0].indexId, function (geoFields, labelFields) {
+                await refreshIndexFields(selected[0].indexId)
+                  .then(({ geoFields, labelFields }) => {
+                    const popupFields = scope.layer.popupFields;
+                    const labelFieldsNew = [];
+                    _.each(labelFields, labelField => {
+                      if (_.findIndex(popupFields, function (popupField) { return popupField.name === labelField.name; }) === -1) {
+                        labelFieldsNew.push(labelField);
+                      }
+                    });
 
-                  const popupFields = scope.layer.popupFields;
-                  const labelFieldsNew = [];
-                  _.each(labelFields, labelField => {
-                    if (_.findIndex(popupFields, function (popupField) { return popupField.name === labelField.name; }) === -1) {
-                      labelFieldsNew.push(labelField);
+                    if (!_.isEqual(labelFieldsNew.length, labelFields.length)) {
+                      labelFields = labelFieldsNew;
                     }
+
+                    scope.geoFields = geoFields.geoFieldNames;
+                    scope.geoFieldTypes = geoFields.geoFieldTypes;
+                    scope.labelFields = labelFields;
                   });
-
-                  if (!_.isEqual(labelFieldsNew.length, labelFields.length)) {
-                    labelFields = labelFieldsNew;
-                  }
-
-                  scope.geoFields = geoFields.geoFieldNames;
-                  scope.geoFieldTypes = geoFields.geoFieldTypes;
-                  scope.labelFields = labelFields;
-                });
+                scope.isGeoShape();
               }
             });
         }
@@ -107,46 +105,47 @@ define(function (require) {
 
 
 
-    function refreshIndexFields(indexId, callback) {
-      indexPatterns.get(indexId).then(function (index) {
-        const geoFieldsRaw = index.fields.filter(function (field) {
-          return field.type === 'geo_point' || field.type === 'geo_shape';
-        });
-
-        const geoFieldNames = [];
-        const geoFieldTypes = [];
-
-        _.each(geoFieldsRaw, individualGeoField => {
-          geoFieldNames.push(individualGeoField.name);
-          geoFieldTypes.push({
-            name: individualGeoField.name,
-            type: individualGeoField.type
+    function refreshIndexFields(indexId) {
+      return indexPatterns.get(indexId)
+        .then(function (index) {
+          const geoFieldsRaw = index.fields.filter(function (field) {
+            return field.type === 'geo_point' || field.type === 'geo_shape';
           });
+
+          const geoFieldNames = [];
+          const geoFieldTypes = [];
+
+          _.each(geoFieldsRaw, individualGeoField => {
+            geoFieldNames.push(individualGeoField.name);
+            geoFieldTypes.push({
+              name: individualGeoField.name,
+              type: individualGeoField.type
+            });
+          });
+
+          const geoFields = { geoFieldNames, geoFieldTypes };
+
+          const labelFields = index.fields.filter(function (field) {
+            let keep = true;
+            if (field.type === 'boolean' || field.type === 'geo_point' || field.type === 'geo_shape') {
+              keep = false;
+            } else if (!field.name || field.name.substring(0, 1) === '_') {
+              keep = false;
+            }
+            return keep;
+          }).sort(function (a, b) {
+            if (a.name < b.name) return -1;
+            if (a.name > b.name) return 1;
+            return 0;
+          }).map(function (field) {
+            return {
+              type: field.type,
+              name: field.name
+            };
+          });
+
+          return { geoFields, labelFields };
         });
-
-        const geoFields = { geoFieldNames, geoFieldTypes };
-
-        const labelFields = index.fields.filter(function (field) {
-          let keep = true;
-          if (field.type === 'boolean' || field.type === 'geo_point' || field.type === 'geo_shape') {
-            keep = false;
-          } else if (!field.name || field.name.substring(0, 1) === '_') {
-            keep = false;
-          }
-          return keep;
-        }).sort(function (a, b) {
-          if (a.name < b.name) return -1;
-          if (a.name > b.name) return 1;
-          return 0;
-        }).map(function (field) {
-          return {
-            type: field.type,
-            name: field.name
-          };
-        });
-
-        callback(geoFields, labelFields);
-      });
     }
 
     function getIndexId(hit) {

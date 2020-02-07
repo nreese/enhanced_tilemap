@@ -22,6 +22,7 @@ define(function (require) {
   return function POIsFactory(Private, savedSearches, joinExplanation) {
 
     const SearchSource = Private(SearchSourceProvider);
+    const queryFilter = Private(FilterBarQueryFilterProvider);
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
 
     /**
@@ -131,7 +132,11 @@ define(function (require) {
           } else {
             //For non drag and drop overlays
             if (this.syncFilters) {
-              searchSource.inherits(options.searchSource);
+              // POI layers can be based on any search so searchSource
+              // inherits from the savedSearch search source instead of main
+              searchSource.inherits(savedSearch.searchSource);
+              //_siren from main searchSource is used
+              searchSource._siren = options.searchSource._siren;
               const allFilters = [
                 ...searchSource.filter(),
                 createMapExtentFilter(options.mapExtentFilter)
