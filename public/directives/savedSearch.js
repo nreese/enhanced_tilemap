@@ -75,23 +75,13 @@ define(function (require) {
                 }
               });
               if (selected.length > 0) {
-                scope.savedSearch = selected[0];
                 const fields = await refreshIndexFields(selected[0].indexId);
-                const geoFields = fields.geoFields;
-                let labelFields = fields.labelFields;
-                const popupFields = scope.layer.popupFields;
-                const labelFieldsNew = [];
-                _.each(labelFields, labelField => {
-                  if (_.findIndex(popupFields, function (popupField) { return popupField.name === labelField.name; }) === -1) {
-                    labelFieldsNew.push(labelField);
-                  }
+                scope.savedSearch = selected[0];
+                scope.labelFields = fields.labelFields.filter(field => {
+                  return _.findIndex(scope.layer.popupFields, popupField => popupField.name === field.name);
                 });
-
-                if (labelFieldsNew.length === labelFields.length) labelFields = labelFieldsNew;
-
-                scope.geoFields = geoFields.geoFieldNames;
-                scope.geoFieldTypes = geoFields.geoFieldTypes;
-                scope.labelFields = labelFields;
+                scope.geoFields = fields.geoFields.geoFieldNames;
+                scope.geoFieldTypes = fields.geoFields.geoFieldTypes;
                 scope.isGeoShape();
               }
             });
