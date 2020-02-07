@@ -19,11 +19,9 @@ import {
 } from '@elastic/eui';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches, joinExplanation,
-    kibiState, $routeParams) {
+  return function POIsFactory(Private, savedSearches, joinExplanation) {
 
     const SearchSource = Private(SearchSourceProvider);
-    const queryFilter = Private(FilterBarQueryFilterProvider);
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
 
     /**
@@ -74,7 +72,7 @@ define(function (require) {
           this.geoType = geoFields[0].type;
         }
 
-        const processLayer = async () => {
+        const processLayer = () => {
           //creating icon and title from search for map and layerControl
           options.displayName = options.displayName || savedSearch.title;
 
@@ -369,7 +367,7 @@ define(function (require) {
       layer.tooManyDocs = options.tooManyDocs;
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
-      layer.displayName = options.displayName;
+      layer.displayName = options.displayName + ' ' + options.$legend.searchIcon;
       layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;
       return layer;
