@@ -22,7 +22,6 @@ define(function (require) {
   return function POIsFactory(Private, savedSearches, joinExplanation) {
 
     const SearchSource = Private(SearchSourceProvider);
-    const queryFilter = Private(FilterBarQueryFilterProvider);
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
 
     /**
