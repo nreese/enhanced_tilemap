@@ -19,7 +19,6 @@ define(function (require) {
         }
         parent = parent.parentNode;
       }
-      return false;
     },
 
     getGeoExtents: function (visData) {
