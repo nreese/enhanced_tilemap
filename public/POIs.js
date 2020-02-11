@@ -4,6 +4,7 @@ import { searchIcon } from 'plugins/enhanced_tilemap/vislib/searchIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+import { onDashboardPage } from 'ui/kibi/utils/on_page';
 import utils from 'plugins/enhanced_tilemap/utils';
 
 //react modal
@@ -138,11 +139,9 @@ define(function (require) {
               //_siren from main searchSource is used
               searchSource._siren = options.searchSource._siren;
               let allFilters = [createMapExtentFilter(options.mapExtentFilter)];
-              if (searchSource._siren) {
-                //on dashboard
+              if (onDashboardPage()) {
                 allFilters = allFilters.concat([...searchSource.filter()]);
               } else {
-                //in vis edit mode
                 allFilters = allFilters.concat(queryFilter.getFilters());
               }
               searchSource.filter(allFilters);
