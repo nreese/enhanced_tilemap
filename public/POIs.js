@@ -172,7 +172,7 @@ define(function (require) {
           searchSource.fetch()
             .then(searchResp => {
 
-              if (searchResp.hits.total > this.limit) {
+              if (searchResp.hits.total.value > this.limit) {
                 options.$legend.innerHTML = tooManyDocsInfo;
                 options.tooManyDocs = poiLimitToDisplay;
               };

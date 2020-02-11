@@ -53,7 +53,7 @@ uiModules
         // Show no results message when isZeroHits is true and it requires search
         $scope.showNoResultsMessage = function () {
           const requiresSearch = _.get($scope, 'vis.type.requiresSearch');
-          const isZeroHits = _.get($scope,'esResp.hits.total') === 0;
+          const isZeroHits = _.get($scope,'esResp.hits.total.value') === 0;
           const shouldShowMessage = !_.get($scope, 'vis.params.handleNoResults');
 
           return Boolean(requiresSearch && isZeroHits && shouldShowMessage);
