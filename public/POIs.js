@@ -23,6 +23,7 @@ define(function (require) {
 
     const SearchSource = Private(SearchSourceProvider);
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
+    const queryFilter = Private(FilterBarQueryFilterProvider);
 
     /**
      * Points of Interest
@@ -136,10 +137,14 @@ define(function (require) {
               searchSource.inherits(savedSearch.searchSource);
               //_siren from main searchSource is used
               searchSource._siren = options.searchSource._siren;
-              const allFilters = [
-                ...searchSource.filter(),
-                createMapExtentFilter(options.mapExtentFilter)
-              ];
+              let allFilters = [createMapExtentFilter(options.mapExtentFilter)];
+              if (searchSource._siren) {
+                //on dashboard
+                allFilters = allFilters.concat([...searchSource.filter()]);
+              } else {
+                //in vis edit mode
+                allFilters = allFilters.concat(queryFilter.getFilters());
+              }
               searchSource.filter(allFilters);
             } else {
               //Do not filter POIs by time so can not inherit from rootSearchSource
@@ -371,7 +376,7 @@ define(function (require) {
       layer.tooManyDocs = options.tooManyDocs;
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
-      layer.displayName = options.displayName + ' ' + options.$legend.searchIcon;
+      layer.displayName = options.$legend.searchIcon;
       layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;
       return layer;
