@@ -4,6 +4,7 @@ import { searchIcon } from 'plugins/enhanced_tilemap/vislib/searchIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
+import { onDashboardPage } from 'ui/kibi/utils/on_page';
 import utils from 'plugins/enhanced_tilemap/utils';
 
 //react modal
@@ -23,6 +24,7 @@ define(function (require) {
 
     const SearchSource = Private(SearchSourceProvider);
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
+    const queryFilter = Private(FilterBarQueryFilterProvider);
 
     /**
      * Points of Interest
@@ -136,10 +138,12 @@ define(function (require) {
               searchSource.inherits(savedSearch.searchSource);
               //_siren from main searchSource is used
               searchSource._siren = options.searchSource._siren;
-              const allFilters = [
-                ...searchSource.filter(),
-                createMapExtentFilter(options.mapExtentFilter)
-              ];
+              let allFilters = [createMapExtentFilter(options.mapExtentFilter)];
+              if (onDashboardPage()) {
+                allFilters = allFilters.concat([...searchSource.filter()]);
+              } else {
+                allFilters = allFilters.concat(queryFilter.getFilters());
+              }
               searchSource.filter(allFilters);
             } else {
               //Do not filter POIs by time so can not inherit from rootSearchSource
@@ -371,7 +375,7 @@ define(function (require) {
       layer.tooManyDocs = options.tooManyDocs;
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
-      layer.displayName = options.displayName + ' ' + options.$legend.searchIcon;
+      layer.displayName = options.$legend.searchIcon;
       layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;
       return layer;
