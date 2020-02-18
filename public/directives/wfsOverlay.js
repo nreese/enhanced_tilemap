@@ -97,7 +97,7 @@ define(function (require) {
 
 
     function getWFSLayerList(url) {
-      const getCapabilitiesRequest = url + 'request=GetCapabilities';
+      const getCapabilitiesRequest = url + '/ows?service=wfs&version=1.1.0&request=GetCapabilities';
 
       return $http.get(getCapabilitiesRequest)
         .then(resp => {

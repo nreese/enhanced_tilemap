@@ -3,7 +3,11 @@ import { parseString } from 'xml2js';
 import uuid from 'uuid';
 
 define(function (require) {
-  module.directive('wmsOverlay', function (indexPatterns, $http) {
+  module.directive('wmsOverlay', function (indexPatterns, $http, createNotifier) {
+
+    const notify = createNotifier({
+      location: 'Enhanced Coordinate Map'
+    });
 
     return {
       restrict: 'E',
@@ -109,7 +113,7 @@ define(function (require) {
 
 
     function getWMSLayerList(url) {
-      const getCapabilitiesRequest = url + 'service=wms&request=GetCapabilities';
+      const getCapabilitiesRequest = url + '/ows?service=wms&version=1.1.1&request=GetCapabilities';
 
       return $http.get(getCapabilitiesRequest)
         .then(resp => {
@@ -123,8 +127,8 @@ define(function (require) {
                 }
 
                 //handles case(s) where there are no layer names returned from the WMS
-                if (result.WMS_Capabilities.Capability[0].Layer[0].Layer) {
-                  const wmsLayerNames = result.WMS_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
+                if (result.WMT_MS_Capabilities.Capability[0].Layer[0].Layer) {
+                  const wmsLayerNames = result.WMT_MS_Capabilities.Capability[0].Layer[0].Layer.map(layer => layer.Name[0]);
                   resolve(wmsLayerNames);
                 } else {
                   resolve([]);
@@ -134,7 +138,7 @@ define(function (require) {
           }
         })
         .catch(err => {
-          console.warn('An issue was encountered returning a layers list from WMS. Verify your ' +
+          notify.warning('An issue was encountered returning a layers list from WMS. Verify your ' +
             'WMS url (' + err.config.url + ') is correct, has layers present and WMS is CORs enabled for this domain.');
         });
     }

@@ -272,7 +272,7 @@ define(function (require) {
       });
     }
 
-    function initVectorLayer(id, layerName, geoJsonCollection, options) {
+    function initVectorLayer(id, displayName, geoJsonCollection, options) {
 
       let popupFields = [];
       if (_.get(options, 'popupFields') === '' || !_.get(options, 'popupFields')) {
@@ -285,6 +285,7 @@ define(function (require) {
 
       const optionsWithDefaults = {
         id,
+        displayName,
         color: _.get(options, 'color', '#008800'),
         size: _.get(options, 'size', 'm'),
         popupFields,
@@ -299,7 +300,7 @@ define(function (require) {
       };
 
       const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      map.addVectorLayer(id, layerName, vector, optionsWithDefaults);
+      map.addVectorLayer(id, vector.displayName, vector, optionsWithDefaults);
 
     }
 
@@ -320,12 +321,14 @@ define(function (require) {
 
         draw();
 
-        map.saturateTiles(visParams.isDesaturated);
+        map.saturateTile(visParams.isDesaturated, map._tileLayer);
 
-        //POI overlays from vis params
+        //clear and re-draw POI overlays
         map.clearLayers(map.poiLayers);
         $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
 
+        //clear and re-draw vector overlays
+        map.clearLayers(map.vectorOverlays);
         drawWfsOverlays();
 
       }
@@ -428,8 +431,10 @@ define(function (require) {
           layerGroup: 'WFS Overlays'
         };
 
-        const getFeatureRequest = `${wfsOverlay.url}request=GetFeature&typeNames=
-        ${wfsOverlay.layers}&outputFormat=${wfsOverlay.formatOptions}`;
+        const url = wfsOverlay.url.substr(wfsOverlay.url.length - 5).toLowerCase() !== '/wfs?' ? wfsOverlay.url + '/wfs?' : wfsOverlay.url;
+        const wfsSpecific = 'service=wfs&version=1.1.0&request=GetFeature&';
+        const type = `typeNames=${wfsOverlay.layers}&outputFormat=${wfsOverlay.formatOptions}`;
+        const getFeatureRequest = `${url}${wfsSpecific}${type}`;
 
         return $http.get(getFeatureRequest)
           .then(resp => {
@@ -553,6 +558,7 @@ define(function (require) {
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
 
+              if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') layerParams.url = layerParams.url + '/wms?';
               return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions, layerParams.id);
             });
         });

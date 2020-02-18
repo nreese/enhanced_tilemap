@@ -190,14 +190,22 @@ define(function (require) {
     /**
      * remove css class for desat filters on map tiles
      *
-     * @method saturateTiles
+     * @method saturateTile
      * @return undefined
      */
-    TileMapMap.prototype.saturateTiles = function (isDesaturated) {
+    TileMapMap.prototype.saturateTile = function (isDesaturated, overlay) {
       if (isDesaturated) {
-        $(this._tileLayer.getContainer()).removeClass('no-filter');
+        if (overlay instanceof L.NonTiledLayer) {
+          $(overlay._div).addClass('no-filter');
+        } else {
+          $(overlay.getContainer()).removeClass('no-filter');
+        }
       } else {
-        $(this._tileLayer.getContainer()).addClass('no-filter');
+        if (overlay instanceof L.NonTiledLayer) {
+          $(overlay._div).removeClass('no-filter');
+        } else {
+          $(overlay.getContainer()).addClass('no-filter');
+        }
       }
     };
 
@@ -392,15 +400,9 @@ define(function (require) {
 
       if (layerOptions.isVisible) this.leafletMap.addLayer(overlay);
 
-
       this._layerControl.addOverlay(overlay, name, '<b> WMS Overlays</b>');
       this.wmsOverlays[id] = overlay;
-
-      if (this._attr.isDesaturated) {
-        $(overlay.getContainer()).removeClass('no-filter');
-      } else {
-        $(overlay.getContainer()).addClass('no-filter');
-      }
+      this.saturateTile(this._attr.isDesaturated, overlay);
     };
 
     TileMapMap.prototype.saturateWMSTiles = function () {
@@ -408,11 +410,7 @@ define(function (require) {
         if (!this.wmsOverlays.hasOwnProperty(key)) {
           continue;
         }
-        if (this._attr.isDesaturated) {
-          $(this.wmsOverlays[key].getContainer()).removeClass('no-filter');
-        } else {
-          $(this.wmsOverlays[key].getContainer()).addClass('no-filter');
-        }
+        this.saturateTile(this._attr.isDesaturated, this.wmsOverlays[key]);
       }
     };
 
@@ -579,7 +577,7 @@ define(function (require) {
       // add base layer based on above logic and decide saturation based on saved settings
       this._tileLayer.addTo(this.leafletMap);
 
-      this.saturateTiles(this._attr.isDesaturated);
+      this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
       this._layerControl = L.control.groupedLayers(null, null, { groupCheckboxes: true });
       this._layerControl.addTo(this.leafletMap);
