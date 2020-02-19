@@ -4,6 +4,7 @@ const _ = require('lodash');
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
+import { onDashboardPage } from 'ui/kibi/utils/on_page';
 
 define(function () {
   return function BoundsHelperFactory(Private) {
@@ -29,9 +30,15 @@ define(function () {
         let minLon = 180;
 
         const searchSource = new SearchSource();
+        // inherits from the savedSearch search source instead of main
         searchSource.inherits(this.searchSource);
-        searchSource.filter(null);
-        searchSource.filter(queryFilter.getFilters());
+        //_siren from main searchSource is used
+        searchSource._siren = this.searchSource._siren;
+        //uses query filter if in vis edit mode
+        if (!onDashboardPage()) {
+          searchSource.filter(queryFilter.getFilters());
+        }
+
         searchSource.aggs(() => {
           vis.requesting();
           const dsl = vis.aggs.toDsl();
