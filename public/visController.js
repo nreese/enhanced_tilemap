@@ -243,7 +243,7 @@ define(function (require) {
 
     function getGeoBoundingBox() {
       const geoBoundingBox = utils.scaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
-      return { geoBoundingBox };
+      return { geo_bounding_box: geoBoundingBox };
     }
 
     function initPOILayer(layerParams) {
