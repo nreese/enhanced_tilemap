@@ -14,7 +14,7 @@ define(function (require) {
      * @param params {Object}
      */
     _.class(HeatmapMarker).inherits(BaseMarker);
-    function HeatmapMarker(geoJson) {
+    function HeatmapMarker() {
       this._disableTooltips = false;
       HeatmapMarker.Super.apply(this, arguments);
 
@@ -79,7 +79,7 @@ define(function (require) {
         // unhighlight all svgs
         d3.selectAll('path.geohash', this.chartEl).classed('geohash-hover', false);
 
-        if (!this.geoJson.features.length || this._disableTooltips) {
+        if (!_.has(this, 'geoJson.features') ||  this._disableTooltips) {
           return;
         }
 
@@ -191,21 +191,25 @@ define(function (require) {
     HeatmapMarker.prototype._dataToHeatArray = function (max) {
       const self = this;
 
-      return this.geoJson.features.map(function (feature) {
-        const lat = feature.geometry.coordinates[1];
-        const lng = feature.geometry.coordinates[0];
-        let heatIntensity;
+      if (this.geoJson && this.geoJson.features && this.geoJson.features.length > 0) {
+        return this.geoJson.features.map(function (feature) {
+          const lat = feature.geometry.coordinates[1];
+          const lng = feature.geometry.coordinates[0];
+          let heatIntensity;
 
-        if (!self._attr.heatNormalizeData) {
-          // show bucket value on heatmap
-          heatIntensity = feature.properties.value;
-        } else {
-          // show bucket value normalized to max value
-          heatIntensity = feature.properties.value / max;
-        }
+          if (!self._attr.heatNormalizeData) {
+            // show bucket value on heatmap
+            heatIntensity = feature.properties.value;
+          } else {
+            // show bucket value normalized to max value
+            heatIntensity = feature.properties.value / max;
+          }
 
-        return [lat, lng, heatIntensity];
-      });
+          return [lat, lng, heatIntensity];
+        });
+      } else {
+        return [];
+      }
     };
 
     return HeatmapMarker;
