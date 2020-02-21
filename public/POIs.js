@@ -96,7 +96,7 @@ define(function (require) {
           }
 
           function createMapExtentFilter(rect) {
-            const bounds = rect.geo_bounding_box.geoBoundingBox;
+            const bounds = rect.geo_bounding_box.geo_bounding_box;
             return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
           }
 
