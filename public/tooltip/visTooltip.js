@@ -52,9 +52,9 @@ define(function (require) {
           });
         });
 
-        function createFilter(rect) {
+        function createFilter(rect, meta) {
           const bounds = utils.getRectBounds(rect);
-          return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right);
+          return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right, meta);
         }
 
         return function (feature, leafletMap) {
@@ -72,11 +72,12 @@ define(function (require) {
           //Flag identifies that this is a record table vis, required for doc_table.js
           self.$tooltipScope.savedObj.searchSource.replaceHits = true;
 
+          let sirenMetaTooltip = null;
           if (self.sirenMeta) {
             const panelIndexObj = {};
             const panelIndex = Math.floor(Math.random() * 10000) + 1000;
             //cloneDeep required as document count on dashboard updates when map popup is created otherwise
-            const sirenMetaTooltip = _.cloneDeep(self.sirenMeta);
+            sirenMetaTooltip = _.cloneDeep(self.sirenMeta);
 
             //retrieving and adding popup vis to coat so that join filters work
             const etmVisNode = findItemByVisIdAndPanelIndex(
@@ -110,7 +111,7 @@ define(function (require) {
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
           self.$tooltipScope.savedObj.searchSource._state.filter = [];
           const filters = queryFilter.getFilters();
-          filters.push(createFilter(feature.properties.rectangle));
+          filters.push(createFilter(feature.properties.rectangle, sirenMetaTooltip));
           self.$tooltipScope.savedObj.searchSource.filter(filters);
 
           self.$tooltipScope.savedObj.searchSource.fetch().then(esResp => {
@@ -131,7 +132,11 @@ define(function (require) {
 
               //query for record table is fired from doc_table.js, fired from here for all other vis
               if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table') {
-                renderbot.render(esResp);
+                try {
+                  renderbot.render(esResp);
+                } catch (err) {
+                  console.warn(err);
+                }
               }
             }
           });

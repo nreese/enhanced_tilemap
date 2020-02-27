@@ -22,11 +22,12 @@ define(function (require) {
       return `${field}: ${numBoxes} ${numBoxes === 1 ? 'shape' : 'shapes'}`;
     }
 
-    function _createPolygonFilter(polygonsToFilter) {
+    function _createPolygonFilter(polygonsToFilter, meta) {
       return {
         bool: {
           should: polygonsToFilter
-        }
+        },
+        meta
       };
     }
 
@@ -38,11 +39,11 @@ define(function (require) {
         const polygons = newFilter.geo_multi_polygon[field].polygons;
         polygonFiltersAndDonuts = geoFilterHelper.analyseMultiPolygon(polygons, field);
         numShapes = polygons.length;
-        newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
+        newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter, newFilter.meta);
       } else if (newFilter.geo_polygon && newFilter.geo_polygon[field].polygons) {
         //Only analyse vector geo polygons, i.e. not drawn ones
         polygonFiltersAndDonuts = geoFilterHelper.analyseSimplePolygon(newFilter, field);
-        newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter);
+        newFilter = _createPolygonFilter(polygonFiltersAndDonuts.polygonsToFilter, newFilter.meta);
       } else if (newFilter.bool) {
         //currently this in only for multiple geo_distance filters
         numShapes = newFilter.bool.should.length;
@@ -356,16 +357,16 @@ define(function (require) {
      * @param bottom_right {Object} bottom right at and lon (decimal degrees)
      * @return {Object} elasticsearch geospatial rectangle filter
      */
-    function rectFilter(fieldname, geotype, topLeft, bottomRight) {
+    function rectFilter(fieldname, geotype, topLeft, bottomRight, meta) {
       let geofilter = null;
       if ('geo_point' === geotype) {
-        geofilter = { geo_bounding_box: {} };
+        geofilter = { geo_bounding_box: {}, meta };
         geofilter.geo_bounding_box[fieldname] = {
           top_left: topLeft,
           bottom_right: bottomRight
         };
       } else if ('geo_shape' === geotype) {
-        geofilter = { geo_shape: {} };
+        geofilter = { geo_shape: {} , meta };
         geofilter.geo_shape[fieldname] = {
           shape: {
             type: 'envelope',
