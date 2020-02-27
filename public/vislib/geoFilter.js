@@ -360,13 +360,13 @@ define(function (require) {
     function rectFilter(fieldname, geotype, topLeft, bottomRight, meta) {
       let geofilter = null;
       if ('geo_point' === geotype) {
-        geofilter = { geo_bounding_box: {}, meta };
+        geofilter = { geo_bounding_box: {} };
         geofilter.geo_bounding_box[fieldname] = {
           top_left: topLeft,
           bottom_right: bottomRight
         };
       } else if ('geo_shape' === geotype) {
-        geofilter = { geo_shape: {} , meta };
+        geofilter = { geo_shape: {} };
         geofilter.geo_shape[fieldname] = {
           shape: {
             type: 'envelope',
@@ -378,6 +378,10 @@ define(function (require) {
         };
       } else {
         console.warn('unexpected geotype: ' + geotype);
+      }
+
+      if (meta) {
+        geofilter.meta = meta;
       }
       return geofilter;
     }
