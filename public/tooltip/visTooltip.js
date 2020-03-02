@@ -52,9 +52,9 @@ define(function (require) {
           });
         });
 
-        function createFilter(rect) {
+        function createFilter(rect, meta) {
           const bounds = utils.getRectBounds(rect);
-          return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right);
+          return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right, meta);
         }
 
         return function (feature, leafletMap) {
@@ -72,20 +72,21 @@ define(function (require) {
           //Flag identifies that this is a record table vis, required for doc_table.js
           self.$tooltipScope.savedObj.searchSource.replaceHits = true;
 
+          let sirenMetaCloned = null;
           if (self.sirenMeta) {
             const panelIndexObj = {};
             const panelIndex = Math.floor(Math.random() * 10000) + 1000;
             //cloneDeep required as document count on dashboard updates when map popup is created otherwise
-            const sirenMetaTooltip = _.cloneDeep(self.sirenMeta);
+            sirenMetaCloned = _.cloneDeep(self.sirenMeta);
 
             //retrieving and adding popup vis to coat so that join filters work
             const etmVisNode = findItemByVisIdAndPanelIndex(
-              sirenMetaTooltip.coat.items,
+              sirenMetaCloned.coat.items,
               self.sirenMeta.vis.id,
               self.sirenMeta.vis.panelIndex
             );
 
-            const mainNode = findMainCoatNode(sirenMetaTooltip.coat.items);
+            const mainNode = findMainCoatNode(sirenMetaCloned.coat.items);
             //if vis is not assigned in coat tree AND
             //there is an search assigned to dashboard (i.e. main node)
             if (!etmVisNode && mainNode) {
@@ -100,17 +101,17 @@ define(function (require) {
               });
             }
 
-            sirenMetaTooltip.vis.id = self.visId;
-            sirenMetaTooltip.vis.panelIndex = panelIndex;
+            sirenMetaCloned.vis.id = self.visId;
+            sirenMetaCloned.vis.panelIndex = panelIndex;
             panelIndexObj.panelIndex = panelIndex;
 
-            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaTooltip, panelIndexObj);
+            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaCloned, panelIndexObj);
           }
 
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
           self.$tooltipScope.savedObj.searchSource._state.filter = [];
           const filters = queryFilter.getFilters();
-          filters.push(createFilter(feature.properties.rectangle));
+          filters.push(createFilter(feature.properties.rectangle, sirenMetaCloned));
           self.$tooltipScope.savedObj.searchSource.filter(filters);
 
           self.$tooltipScope.savedObj.searchSource.fetch().then(esResp => {
@@ -131,7 +132,11 @@ define(function (require) {
 
               //query for record table is fired from doc_table.js, fired from here for all other vis
               if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table') {
-                renderbot.render(esResp);
+                try {
+                  renderbot.render(esResp);
+                } catch (err) {
+                  console.warn(err);
+                }
               }
             }
           });
