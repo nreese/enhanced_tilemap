@@ -13,7 +13,7 @@ define(function (require) {
 
     require('leaflet-mouse-position');
     require('leaflet.nontiledlayer');
-    require('./../lib/leaflet.groupedlayercontrol/groupedlayerscontrol.js');
+    require('./../lib/dragAndDroplayercontrol/groupedlayerscontrol.js');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
