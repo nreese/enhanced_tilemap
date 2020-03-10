@@ -13,12 +13,57 @@
 
 import $ from 'jquery';
 import _ from 'lodash';
+import React from 'react';
+import { render, unmountComponentAtNode } from 'react-dom';
+import { EuiToken } from '@elastic/eui';
+import { layerControlTree } from '../layerControlTree/layerContolTree';
+import { LayerControlDnd } from './layerControlDnd';
+
+let dndItems = [
+  {
+    id: '10',
+    enabled: true,
+    label: 'testing111'
+  },
+  {
+    id: '11',
+    enabled: true,
+    label: 'testing222'
+  },
+  {
+    id: '12',
+    enabled: true,
+    label: 'testing333'
+  },
+];
+
 
 L.Control.GroupedLayers = L.Control.extend({
+
+  layerVisibilityChange: (enabled, layerIndex, layerId) => {
+    dndItems[layerIndex].enabled = enabled;
+
+    // let type;
+    // if (enabled === false) {
+    //   type = 'overlayremove';
+    // } else {
+    //   type = 'overlayadd';
+    // }
+
+    // this._map.fire(type, layerId);
+    // //ToDo add visibility for map
+  },
+
+  listOrderChange: (changedList) => {
+    // e.stopPropagation();
+    console.log('listOrderChangeInGLC', changedList);
+    dndItems = changedList;
+  },
 
   options: {
     collapsed: true,
     position: 'topright',
+    id: 'ReactDom',
     autoZIndex: true,
     exclusiveGroups: [],
     groupCheckboxes: false
@@ -63,6 +108,7 @@ L.Control.GroupedLayers = L.Control.extend({
   },
 
   onRemove: function (map) {
+    unmountComponentAtNode(this.reactElement);
     map
       .off('layeradd', this._onLayerChange, this)
       .off('layerremove', this._onLayerChange, this);
@@ -102,24 +148,37 @@ L.Control.GroupedLayers = L.Control.extend({
   _initLayout: function () {
     const className = 'leaflet-control-layers';
     const container = this._container = L.DomUtil.create('div', className);
+    //Injecting an element to render React component in
+
 
     // Makes this work on IE10 Touch devices by stopping it from firing a mouseout event when the touch is released
     container.setAttribute('aria-haspopup', true);
 
     if (L.Browser.touch) {
       L.DomEvent.on(container, 'click', L.DomEvent.stopPropagation);
+      L.DomEvent.stopPropagation(container);
     } else {
       L.DomEvent.disableClickPropagation(container);
       L.DomEvent.on(container, 'wheel', L.DomEvent.stopPropagation);
     }
 
     const form = this._form = L.DomUtil.create('form', className + '-list');
+    this.reactElement = L.DomUtil.create('div');
+    form.appendChild(this.reactElement);
+
+    const dndComponent = <LayerControlDnd
+      currentListOrder={dndItems}
+      listOrderChange={this.listOrderChange}
+      layerVisibilityChange={this.layerVisibilityChange}
+    >
+    </LayerControlDnd>;
+
+    render(dndComponent, this.reactElement);
 
     if (this.options.collapsed) {
       if (!L.Browser.android) {
-        L.DomEvent
-          .on(container, 'mouseover', this._expand, this)
-          .on(container, 'mouseout', this._collapse, this);
+
+        L.DomEvent.on(container, 'click', this._toggleLayerControl, this);
       }
       const link = this._layersLink = L.DomUtil.create('a', className + '-toggle', container);
       link.href = '#';
@@ -128,15 +187,14 @@ L.Control.GroupedLayers = L.Control.extend({
       if (L.Browser.touch) {
         L.DomEvent
           .on(link, 'click', L.DomEvent.stop)
-          .on(link, 'click', this._expand, this);
+          .on(link, 'click', this._toggleLayerControl, this);
       } else {
-        L.DomEvent.on(link, 'focus', this._expand, this);
+        L.DomEvent.on(link, 'focus', this._toggleLayerControl, this);
       }
 
-      this._map.on('click', this._collapse, this);
       // TODO keyboard accessibility
     } else {
-      this._expand();
+      this._toggleLayerControl();
     }
 
     this._baseLayersList = L.DomUtil.create('div', className + '-base', form);
@@ -436,20 +494,20 @@ L.Control.GroupedLayers = L.Control.extend({
     this._handlingClick = false;
   },
 
-  _expand: function () {
-    L.DomUtil.addClass(this._container, 'leaflet-control-layers-expanded');
-    // permits to have a scrollbar if overlays heighter than the map.
-    const acceptableHeight = this._map._size.y - (this._container.offsetTop * 4);
-    if (acceptableHeight < this._form.clientHeight) {
-      L.DomUtil.addClass(this._form, 'leaflet-control-layers-scrollbar');
-      this._form.style.height = acceptableHeight + 'px';
+  _toggleLayerControl: function () {
+    if (this._form.className.includes('leaflet-control-layers-expanded')) {
+      this._form.className = this._container.className.replace(' leaflet-control-layers-expanded', '');
+    } else {
+      L.DomUtil.addClass(this._container, 'leaflet-control-layers-expanded');
+      // permits to have a scrollbar if overlays heighter than the map.
+      // const acceptableHeight = this._map._size.y - (this._container.offsetTop * 4);
+      // if (acceptableHeight < this._form.clientHeight) {
+      //   L.DomUtil.addClass(this._form, 'leaflet-control-layers-scrollbar');
+      //   this._form.style.height = acceptableHeight + 'px';
+      // }
     }
+    // (!this._container.className.includes('leaflet-control-layers-expanded')
   },
-
-  _collapse: function () {
-    this._container.className = this._container.className.replace(' leaflet-control-layers-expanded', '');
-  },
-
   _indexOf: function (arr, obj) {
     for (let i = 0, j = arr.length; i < j; i++) {
       if (arr[i] === obj) {

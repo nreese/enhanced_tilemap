@@ -26,7 +26,11 @@
     "leaflet-mouse-position": "1.2.0",
     "leaflet.nontiledlayer": "1.0.7",
     "mgrs": "~1.0.0",
-    "scripting-interfaces": "github:sirensolutions/scripting-interfaces#eb8577a",
+    "react-beautiful-dnd": "^12.2.0",
+    "react-bootstrap": "^1.0.0-beta.17",
+    "react-dom": "^16.13.0",
+    "react-ellipsis-with-tooltip": "^1.1.1",
+    "scripting-interfaces": "sirensolutions/scripting-interfaces#v1.0.0",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 @import (reference) "~ui/styles/mixins.less";
-
+@import (reference) 'react-sortable-tree/style.css';
 .etm-vis {
   //padding can't be 0 as causes
   // x_content_parse_exception without applying marging-top
@@ -180,10 +180,10 @@
       }
     }
 
-    .leaflet-control-layers-scrollbar {
-      overflow-y   : scroll;
-      padding-right: 10px;
-    }
+    // .leaflet-control-layers-scrollbar {
+    //   overflow-y   : scroll;
+    //   padding-right: 10px;
+    // }
 
     .leaflet-control-layers-group:not(#leaflet-control-layers-group-0) {	
       border-top: 1px solid rgb(206, 206, 206);	
