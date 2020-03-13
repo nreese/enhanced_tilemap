@@ -3,6 +3,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import L from 'leaflet';
 import utils from 'plugins/enhanced_tilemap/utils';
+import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
 define(function (require) {
   return function MarkerFactory($compile, $rootScope) {
@@ -270,8 +271,6 @@ define(function (require) {
     };
 
     BaseMarker.prototype._addToMap = function () {
-      this.layerControl.addOverlay(this._markerGroup, 'Aggregation');
-
       // the uiState takes precedence
       if (this.uiState.get('Aggregation') === true) {
         this.isVisible = true;
@@ -279,7 +278,12 @@ define(function (require) {
         this.isVisible = false;
       }
 
-      if (this.isVisible) this.leafletMap.addLayer(this._markerGroup);
+      this._markerGroup.label = 'Aggregation';
+      this._markerGroup.id = 'Aggregation';
+      this._markerGroup.type = 'agg';
+      this._markerGroup.enabled = this.isVisible;
+      this.layerControl.addOverlay(this._markerGroup, 'Aggregation', null);
+      if (this._markerGroup.options.enabled) this.leafletMap.addLayer(this._markerGroup);
 
       if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {
         this.addLegend();

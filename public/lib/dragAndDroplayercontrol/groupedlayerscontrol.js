@@ -12,53 +12,91 @@
 // Author: Ishmael Smyrnow
 
 import $ from 'jquery';
-import _ from 'lodash';
+import { findIndex, get, debounce, remove } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { EuiToken } from '@elastic/eui';
 import { layerControlTree } from '../layerControlTree/layerContolTree';
 import { LayerControlDnd } from './layerControlDnd';
+import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
-let dndItems = [
-  {
-    id: '10',
-    enabled: true,
-    label: 'testing111'
-  },
-  {
-    id: '11',
-    enabled: true,
-    label: 'testing222'
-  },
-  {
-    id: '12',
-    enabled: true,
-    label: 'testing333'
-  },
-];
+let _leafletMap;
+let _reactElement;
+const _rendering = false;
+let _addingOverlay = false;
+let _allLayers;
 
+
+function _getIndex(id) {
+  return findIndex(_allLayers, (_dndItem) => {
+    return _dndItem.id === id;
+  });
+};
+function dndLayerVisibilityChange(enabled, layer, index) {
+  _allLayers[index].enabled = enabled;
+  if (_leafletMap.hasLayer(layer)) {
+    _leafletMap.removeLayer(layer);
+  } else {
+    _leafletMap.addLayer(layer);
+  }
+
+
+  // let type;
+  // if (enabled === false) {
+  //   type = 'overlayadd';
+  // } else {
+  //   type = 'layerremove';
+  // }
+  // _leafletMap.fire(type, { layerIndex, layerId });
+  // // //ToDo add visibility for map
+}
+
+function dndListOrderChange(changedList) {
+  // e.stopPropagation();
+  console.log('listOrderChangeInGLC', changedList);
+  _allLayers = changedList;
+  setZindexBaseOnNewOrder();
+}
+
+function setZindexBaseOnNewOrder() {
+  console.log('should use setZindex() to reorder layers');
+}
+
+function dndRemoveLayerFromControl(index, id, layer) {
+  removeLayer(layer.id);
+  _updateLayerControl();
+  _leafletMap.removeLayer(layer);
+  _leafletMap.fire('removelayer', { index, id, layer });
+}
+
+function _updateLayerControl() {
+  if (!_addingOverlay) {
+    render(<LayerControlDnd
+      dndCurrentListOrder={_allLayers}
+      dndListOrderChange={dndListOrderChange}
+      dndLayerVisibilityChange={dndLayerVisibilityChange}
+      dndRemoveLayerFromControl={dndRemoveLayerFromControl}
+    >
+    </LayerControlDnd >, _reactElement);
+  }
+}
+
+function removeLayer(id) {
+  console.log('here123');
+}
+
+function addOverlay(layer) {
+  _addingOverlay = true;
+  layerUtils.addOrReplaceLayer(layer, _allLayers);
+
+  _addingOverlay = false;
+  _updateLayerControl();
+
+  //_leafletMap.fire('layeradd', { index, id });
+  //return _dndItems[index];
+}
 
 L.Control.GroupedLayers = L.Control.extend({
-
-  layerVisibilityChange: (enabled, layerIndex, layerId) => {
-    dndItems[layerIndex].enabled = enabled;
-
-    // let type;
-    // if (enabled === false) {
-    //   type = 'overlayremove';
-    // } else {
-    //   type = 'overlayadd';
-    // }
-
-    // this._map.fire(type, layerId);
-    // //ToDo add visibility for map
-  },
-
-  listOrderChange: (changedList) => {
-    // e.stopPropagation();
-    console.log('listOrderChangeInGLC', changedList);
-    dndItems = changedList;
-  },
 
   options: {
     collapsed: true,
@@ -69,10 +107,11 @@ L.Control.GroupedLayers = L.Control.extend({
     groupCheckboxes: false
   },
 
-  initialize: function (baseLayers, groupedOverlays, options) {
+  initialize: function (baseLayers, groupedOverlays, options, allLayers) {
     let i; let j;
     L.Util.setOptions(this, options);
 
+    _allLayers = allLayers;
     this._layers = [];
     this._lastZIndex = 0;
     this._handlingClick = false;
@@ -96,44 +135,37 @@ L.Control.GroupedLayers = L.Control.extend({
     }
   },
 
-  onAdd: function (map) {
-    this._initLayout();
-    this._update();
 
-    map
-      .on('layeradd', this._onLayerChange, this)
-      .on('layerremove', this._onLayerChange, this);
+
+
+  //todo add comments describing functions
+  _updateLayerControl,
+  _getIndex,
+  addOverlay,
+  removeLayer,
+
+  onAdd: function (map) {
+    _leafletMap = map;
+    this._initLayout();
+    // this._update();
+
+    // map
+    //   .on('layeradd', this._onLayerChange, this)
+    //   .on('layerremove', this._onLayerChange, this);
 
     return this._container;
   },
 
-  onRemove: function (map) {
-    unmountComponentAtNode(this.reactElement);
-    map
-      .off('layeradd', this._onLayerChange, this)
-      .off('layerremove', this._onLayerChange, this);
+  onRemove: function () {
+    unmountComponentAtNode(_reactElement);
+    // map
+    //   .off('layeradd', this._onLayerChange, this)
+    //   .off('layerremove', this._onLayerChange, this);
   },
 
   addBaseLayer: function (layer, name) {
     this._addLayer(layer, name);
-    this._update();
-    return this;
-  },
-
-  addOverlay: function (layer, name, group, options) {
-    this._addLayer(layer, name, group, true, options);
-    this._update();
-    return this;
-  },
-
-  removeLayer: function (layer) {
-    const id = L.Util.stamp(layer);
-    const _layer = this._getLayer(id);
-    if (_layer) {
-      //delete this._layers[this._layers.indexOf(_layer)];
-      this._layers.splice(this._layers.indexOf(_layer), 1);
-    }
-    this._update();
+    // this._update();
     return this;
   },
 
@@ -162,45 +194,18 @@ L.Control.GroupedLayers = L.Control.extend({
       L.DomEvent.on(container, 'wheel', L.DomEvent.stopPropagation);
     }
 
+    const header = this._header = L.DomUtil.create('form', className + '-header');
+    header.innerHTML = '<h4>Layers</h4>';
+
     const form = this._form = L.DomUtil.create('form', className + '-list');
-    this.reactElement = L.DomUtil.create('div');
-    form.appendChild(this.reactElement);
+    _reactElement = L.DomUtil.create('div');
+    form.appendChild(_reactElement);
+    _updateLayerControl();
 
-    const dndComponent = <LayerControlDnd
-      currentListOrder={dndItems}
-      listOrderChange={this.listOrderChange}
-      layerVisibilityChange={this.layerVisibilityChange}
-    >
-    </LayerControlDnd>;
+    L.DomEvent.on(container, 'click', this._toggleLayerControl, this);
+    L.DomUtil.create('a', className + '-toggle', container);
 
-    render(dndComponent, this.reactElement);
-
-    if (this.options.collapsed) {
-      if (!L.Browser.android) {
-
-        L.DomEvent.on(container, 'click', this._toggleLayerControl, this);
-      }
-      const link = this._layersLink = L.DomUtil.create('a', className + '-toggle', container);
-      link.href = '#';
-      link.title = 'Layers';
-
-      if (L.Browser.touch) {
-        L.DomEvent
-          .on(link, 'click', L.DomEvent.stop)
-          .on(link, 'click', this._toggleLayerControl, this);
-      } else {
-        L.DomEvent.on(link, 'focus', this._toggleLayerControl, this);
-      }
-
-      // TODO keyboard accessibility
-    } else {
-      this._toggleLayerControl();
-    }
-
-    this._baseLayersList = L.DomUtil.create('div', className + '-base', form);
-    this._separator = L.DomUtil.create('div', className + '-separator', form);
-    this._overlaysList = L.DomUtil.create('div', className + '-overlays', form);
-
+    container.appendChild(header);
     container.appendChild(form);
   },
 
@@ -210,9 +215,9 @@ L.Control.GroupedLayers = L.Control.extend({
       layer: layer,
       name: name,
       overlay: overlay,
-      filterPopupContent: _.get(options, 'filterPopupContent', undefined),
-      close: _.get(options, 'close', undefined),
-      tooManyDocs: _.get(options, 'tooManyDocs', false)
+      filterPopupContent: get(options, 'filterPopupContent', undefined),
+      close: get(options, 'close', undefined),
+      tooManyDocs: get(options, 'tooManyDocs', false)
     };
     this._layers.push(_layer);
 
@@ -237,51 +242,51 @@ L.Control.GroupedLayers = L.Control.extend({
     }
   },
 
-  _update: function () {
-    if (!this._container) {
-      return;
-    }
+  // _update: function () {
+  //   if (!this._container) {
+  //     return;
+  //   }
 
-    this._baseLayersList.innerHTML = '';
-    this._overlaysList.innerHTML = '';
-    this._domGroups.length = 0;
+  //   this._baseLayersList.innerHTML = '';
+  //   this._overlaysList.innerHTML = '';
+  //   this._domGroups.length = 0;
 
-    let baseLayersPresent = false;
-    let overlaysPresent = false;
-    let obj;
+  //   let baseLayersPresent = false;
+  //   let overlaysPresent = false;
+  //   let obj;
 
-    for (let i = 0; i < this._layers.length; i++) {
-      obj = this._layers[i];
-      this._addItem(obj);
-      overlaysPresent = overlaysPresent || obj.overlay;
-      baseLayersPresent = baseLayersPresent || !obj.overlay;
-    }
+  //   for (let i = 0; i < this._layers.length; i++) {
+  //     obj = this._layers[i];
+  //     this._addItem(obj);
+  //     overlaysPresent = overlaysPresent || obj.overlay;
+  //     baseLayersPresent = baseLayersPresent || !obj.overlay;
+  //   }
 
-    this._separator.style.display = overlaysPresent && baseLayersPresent ? '' : 'none';
-  },
+  //   this._separator.style.display = overlaysPresent && baseLayersPresent ? '' : 'none';
+  // },
 
-  _onLayerChange: function (e) {
-    const obj = this._getLayer(L.Util.stamp(e.layer));
-    let type;
+  // _onLayerChange: function (e) {
+  //   const obj = this._getLayer(L.Util.stamp(e.layer));
+  //   let type;
 
-    if (!obj) {
-      return;
-    }
+  //   if (!obj) {
+  //     return;
+  //   }
 
-    if (!this._handlingClick) {
-      this._update();
-    }
+  //   if (!this._handlingClick) {
+  //     this._update();
+  //   }
 
-    if (obj.overlay) {
-      type = e.type === 'layeradd' ? 'overlayadd' : 'overlayremove';
-    } else {
-      type = e.type === 'layeradd' ? 'baselayerchange' : null;
-    }
+  //   if (obj.overlay) {
+  //     type = e.type === 'layeradd' ? 'overlayadd' : 'overlayremove';
+  //   } else {
+  //     type = e.type === 'layeradd' ? 'baselayerchange' : null;
+  //   }
 
-    if (type) {
-      this._map.fire(type, obj);
-    }
-  },
+  //   if (type) {
+  //     this._map.fire(type, obj);
+  //   }
+  // },
 
   // IE7 bugs out if you create a radio dynamically, so you have to do it this hacky way (see http://bit.ly/PqYLBe)
   _createRadioElement: function (name, checked) {
@@ -297,154 +302,154 @@ L.Control.GroupedLayers = L.Control.extend({
     return radioFragment.firstChild;
   },
 
-  _addItem: function (obj) {
+  // _addItem: function (obj) {
 
-    function addTooltip(event, filterPopupContent) {
-      const tooltipContent = filterPopupContent;
-      const selector = $(event.target);
-      const api = selector.qtip('api');
-      if (api) {
-        // qtip already exists
-        api.show();
-      } else {
-        selector.qtip({
-          content: {
-            text: function () {
-              return tooltipContent;
-            }
-          },
-          position: {
-            my: 'top right',
-            at: 'left bottom',
-            effect: false
-          },
-          show: {
-            solo: true
-          },
-          hide: {
-            event: 'mouseleave'
-          },
-          style: {
-            classes: 'qtip-light qtip-rounded qtip-shadow dashboard-filter-tooltip'
-          }
-        }).qtip('show');
-      }
-    }
+  //   function addTooltip(event, filterPopupContent) {
+  //     const tooltipContent = filterPopupContent;
+  //     const selector = $(event.target);
+  //     const api = selector.qtip('api');
+  //     if (api) {
+  //       // qtip already exists
+  //       api.show();
+  //     } else {
+  //       selector.qtip({
+  //         content: {
+  //           text: function () {
+  //             return tooltipContent;
+  //           }
+  //         },
+  //         position: {
+  //           my: 'top right',
+  //           at: 'left bottom',
+  //           effect: false
+  //         },
+  //         show: {
+  //           solo: true
+  //         },
+  //         hide: {
+  //           event: 'mouseleave'
+  //         },
+  //         style: {
+  //           classes: 'qtip-light qtip-rounded qtip-shadow dashboard-filter-tooltip'
+  //         }
+  //       }).qtip('show');
+  //     }
+  //   }
 
-    const label = document.createElement('label');
-    let input;
-    const checked = this._map.hasLayer(obj.layer);
-    let container;
-    let groupRadioName;
+  //   const label = document.createElement('label');
+  //   let input;
+  //   const checked = this._map.hasLayer(obj.layer);
+  //   let container;
+  //   let groupRadioName;
 
-    if (obj.overlay) {
-      if (obj.group.exclusive) {
-        groupRadioName = 'leaflet-exclusive-group-layer-' + obj.group.id;
-        input = this._createRadioElement(groupRadioName, checked);
-      } else {
-        input = document.createElement('input');
-        input.type = 'checkbox';
-        input.className = 'leaflet-control-layers-selector';
-        input.defaultChecked = checked;
-      }
-    } else {
-      input = this._createRadioElement('leaflet-base-layers', checked);
-    }
+  //   if (obj.overlay) {
+  //     if (obj.group.exclusive) {
+  //       groupRadioName = 'leaflet-exclusive-group-layer-' + obj.group.id;
+  //       input = this._createRadioElement(groupRadioName, checked);
+  //     } else {
+  //       input = document.createElement('input');
+  //       input.type = 'checkbox';
+  //       input.className = 'leaflet-control-layers-selector';
+  //       input.defaultChecked = checked;
+  //     }
+  //   } else {
+  //     input = this._createRadioElement('leaflet-base-layers', checked);
+  //   }
 
-    input.layerId = L.Util.stamp(obj.layer);
-    input.groupID = obj.group.id;
-    L.DomEvent.on(input, 'click', this._onInputClick, this);
+  //   input.layerId = L.Util.stamp(obj.layer);
+  //   input.groupID = obj.group.id;
+  //   L.DomEvent.on(input, 'click', this._onInputClick, this);
 
-    const name = document.createElement('span');
-    name.innerHTML = ' ' + obj.name;
+  //   const name = document.createElement('span');
+  //   name.innerHTML = ' ' + obj.name;
 
-    label.appendChild(input);
-    label.appendChild(name);
+  //   label.appendChild(input);
+  //   label.appendChild(name);
 
-    //adding filters and popup
-    if (obj.filterPopupContent) {
-      const filterPopup = document.createElement('span');
-      filterPopup.innerHTML = `<i class="fa fa-filter"></i>`;
+  //   //adding filters and popup
+  //   if (obj.filterPopupContent) {
+  //     const filterPopup = document.createElement('span');
+  //     filterPopup.innerHTML = `<i class="fa fa-filter"></i>`;
 
-      L.DomEvent.on(filterPopup, 'mouseover', (e) => {
-        addTooltip(e, obj.filterPopupContent);
-      });
+  //     L.DomEvent.on(filterPopup, 'mouseover', (e) => {
+  //       addTooltip(e, obj.filterPopupContent);
+  //     });
 
-      label.appendChild(filterPopup);
-    }
+  //     label.appendChild(filterPopup);
+  //   }
 
-    //adding close button
-    if (obj.close) {
-      const closeButton = document.createElement('BUTTON');
-      closeButton.innerHTML = '<i class="fas fa-times-square"></i>';
-      L.DomEvent.on(closeButton, 'click', () => {
-        this.removeLayer(obj.layer);
-        this._map.fire('groupLayerControl:removeClickedLayer', obj);
-      });
-      label.appendChild(closeButton);
+  //   //adding close button
+  //   if (obj.close) {
+  //     const closeButton = document.createElement('BUTTON');
+  //     closeButton.innerHTML = '<i class="fas fa-times-square"></i>';
+  //     L.DomEvent.on(closeButton, 'click', () => {
+  //       this.removeLayer(obj.layer);
+  //       this._map.fire('groupLayerControl:removeClickedLayer', obj);
+  //     });
+  //     label.appendChild(closeButton);
 
-    }
+  //   }
 
-    //adding warning icon for too many documents
-    if (obj.tooManyDocs) {
-      const warningIcon = document.createElement('span');
-      const tooManyDocsInfo = [
-        `<i class="fa fa-exclamation-triangle"></i>`,
-        `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
-                                        to having reached the limit currently set to: ${obj.tooManyDocs}</b>`
-      ];
-      warningIcon.innerHTML = ` ${tooManyDocsInfo[0]} ${tooManyDocsInfo[1]}`;
-      label.appendChild(warningIcon);
+  //   //adding warning icon for too many documents
+  //   if (obj.tooManyDocs) {
+  //     const warningIcon = document.createElement('span');
+  //     const tooManyDocsInfo = [
+  //       `<i class="fa fa-exclamation-triangle"></i>`,
+  //       `<b><p class="text-color-warning">There are undisplayed POIs for this overlay due <br>
+  //                                       to having reached the limit currently set to: ${obj.tooManyDocs}</b>`
+  //     ];
+  //     warningIcon.innerHTML = ` ${tooManyDocsInfo[0]} ${tooManyDocsInfo[1]}`;
+  //     label.appendChild(warningIcon);
 
-    }
+  //   }
 
-    if (obj.overlay) {
-      container = this._overlaysList;
+  //   if (obj.overlay) {
+  //     container = this._overlaysList;
 
-      let groupContainer = this._domGroups[obj.group.id];
+  //     let groupContainer = this._domGroups[obj.group.id];
 
-      // Create the group container if it doesn't exist
-      if (!groupContainer) {
-        groupContainer = document.createElement('div');
-        groupContainer.className = 'leaflet-control-layers-group';
-        groupContainer.id = 'leaflet-control-layers-group-' + obj.group.id;
+  //     // Create the group container if it doesn't exist
+  //     if (!groupContainer) {
+  //       groupContainer = document.createElement('div');
+  //       groupContainer.className = 'leaflet-control-layers-group';
+  //       groupContainer.id = 'leaflet-control-layers-group-' + obj.group.id;
 
-        const groupLabel = document.createElement('label');
-        groupLabel.className = 'leaflet-control-layers-group-label';
+  //       const groupLabel = document.createElement('label');
+  //       groupLabel.className = 'leaflet-control-layers-group-label';
 
-        if (obj.group.name !== '' && !obj.group.exclusive) {
-          // ------ add a group checkbox with an _onInputClickGroup function
-          if (this.options.groupCheckboxes) {
-            const groupInput = document.createElement('input');
-            groupInput.type = 'checkbox';
-            groupInput.className = 'leaflet-control-layers-group-selector';
-            groupInput.groupID = obj.group.id;
-            groupInput.legend = this;
-            L.DomEvent.on(groupInput, 'click', this._onGroupInputClick, groupInput);
-            groupLabel.appendChild(groupInput);
-          }
-        }
+  //       if (obj.group.name !== '' && !obj.group.exclusive) {
+  //         // ------ add a group checkbox with an _onInputClickGroup function
+  //         if (this.options.groupCheckboxes) {
+  //           const groupInput = document.createElement('input');
+  //           groupInput.type = 'checkbox';
+  //           groupInput.className = 'leaflet-control-layers-group-selector';
+  //           groupInput.groupID = obj.group.id;
+  //           groupInput.legend = this;
+  //           L.DomEvent.on(groupInput, 'click', this._onGroupInputClick, groupInput);
+  //           groupLabel.appendChild(groupInput);
+  //         }
+  //       }
 
-        const groupName = document.createElement('span');
-        groupName.className = 'leaflet-control-layers-group-name';
-        groupName.innerHTML = obj.group.name;
-        groupLabel.appendChild(groupName);
+  //       const groupName = document.createElement('span');
+  //       groupName.className = 'leaflet-control-layers-group-name';
+  //       groupName.innerHTML = obj.group.name;
+  //       groupLabel.appendChild(groupName);
 
-        groupContainer.appendChild(groupLabel);
-        container.appendChild(groupContainer);
+  //       groupContainer.appendChild(groupLabel);
+  //       container.appendChild(groupContainer);
 
-        this._domGroups[obj.group.id] = groupContainer;
-      }
+  //       this._domGroups[obj.group.id] = groupContainer;
+  //     }
 
-      container = groupContainer;
-    } else {
-      container = this._baseLayersList;
-    }
+  //     container = groupContainer;
+  //   } else {
+  //     container = this._baseLayersList;
+  //   }
 
-    container.appendChild(label);
+  //   container.appendChild(label);
 
-    return label;
-  },
+  //   return label;
+  // },
 
   _onGroupInputClick: function () {
     let i; let input; let obj;
@@ -494,17 +499,22 @@ L.Control.GroupedLayers = L.Control.extend({
     this._handlingClick = false;
   },
 
-  _toggleLayerControl: function () {
-    if (this._form.className.includes('leaflet-control-layers-expanded')) {
-      this._form.className = this._container.className.replace(' leaflet-control-layers-expanded', '');
-    } else {
+  _toggleLayerControl: function (e) {
+    const className = get(e, 'toElement.form.className') || get(e, 'toElement.offsetParent.className');
+    if (className.includes('leaflet-control-layers-list')) {
+      return;
+    } else if (!this._container.className.includes('leaflet-control-layers-expanded')) {
       L.DomUtil.addClass(this._container, 'leaflet-control-layers-expanded');
-      // permits to have a scrollbar if overlays heighter than the map.
-      // const acceptableHeight = this._map._size.y - (this._container.offsetTop * 4);
-      // if (acceptableHeight < this._form.clientHeight) {
-      //   L.DomUtil.addClass(this._form, 'leaflet-control-layers-scrollbar');
-      //   this._form.style.height = acceptableHeight + 'px';
-      // }
+      //permits to have a scrollbar if overlays heighter than the map.
+      const acceptableHeight = this._map._size.y - (this._container.offsetTop * 4);
+      if (acceptableHeight < this._form.clientHeight) {
+        L.DomUtil.addClass(this._form, 'leaflet-control-layers-scrollbar');
+        this._form.style.height = acceptableHeight + 'px';
+      } else {
+        this._form.style.height = 'auto';
+      }
+    } else {
+      L.DomUtil.removeClass(this._container, 'leaflet-control-layers-expanded');
     }
     // (!this._container.className.includes('leaflet-control-layers-expanded')
   },
@@ -518,6 +528,6 @@ L.Control.GroupedLayers = L.Control.extend({
   }
 });
 
-L.control.groupedLayers = function (baseLayers, groupedOverlays, options) {
-  return new L.Control.GroupedLayers(baseLayers, groupedOverlays, options);
+L.control.groupedLayers = function (baseLayers, groupedOverlays, options, allLayers) {
+  return new L.Control.GroupedLayers(baseLayers, groupedOverlays, options, allLayers);
 };

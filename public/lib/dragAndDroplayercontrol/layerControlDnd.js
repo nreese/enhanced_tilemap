@@ -18,8 +18,9 @@ import {
 const getItemStyle = (isDragging, draggableStyle) => ({
   // some basic styles to make the items look a bit nicer
   userSelect: 'none',
-  padding: `0 6px 0 2px`,
+  padding: `0 6px 0 10px`,
   borderBottom: '1px solid lightgrey',
+  display: 'flex',
   // change background colour if dragging
   background: isDragging ? '#e6e6e6' : 'none',
   margin: 0,
@@ -53,7 +54,7 @@ export class LayerControlDnd extends React.Component {
     // this.listItems = this.listItems.bind(this);
     this.newCard = this.newCard.bind(this);
     this.state = {
-      currentListOrder: props.currentListOrder
+      dndCurrentListOrder: props.dndCurrentListOrder
     };
   }
 
@@ -65,14 +66,15 @@ export class LayerControlDnd extends React.Component {
 
     console.log('Dragged to:', result.destination);
 
-    this.setState(prevState => {
-      const currentListOrder = reorder(
-        prevState,
+    let newDndCurrentListOrder = {};
+    this.setState(({ dndCurrentListOrder }) => {
+      newDndCurrentListOrder = reorder(
+        dndCurrentListOrder,
         result.source.index,
         result.destination.index
       );
-      this.props.listOrderChange(currentListOrder);
-      return { currentListOrder };
+      this.props.dndListOrderChange(newDndCurrentListOrder);
+      return { dndCurrentListOrder: newDndCurrentListOrder };
     });
 
   }
@@ -83,22 +85,28 @@ export class LayerControlDnd extends React.Component {
     this.props.editCard(scriptId);
   }
 
-  removeListItem(itemId) {
+  removeListItem(index, id, layer) {
     //const currentListOrder = filter(this.props.currentListOrder, item => item.id !== itemId);
-    this.props.removeLayer(itemId);
+    this.setState(prevState => {
+      const newListOrder = [...prevState.dndCurrentListOrder];
+      delete newListOrder[index];
+      this.props.dndRemoveLayerFromControl(index, id, layer);
+      return { dndCurrentListOrder: newListOrder };
+    });
   }
 
-  changeVisibility(e, layerIndex) {
+  changeVisibility(e, layer, index) {
     //const layerIndex = this.props.currentListOrder;
     // const card = find(currentListOrder, { id: itemId });
     console.log(e);
+    e.stopPropagation();
     const target = e.target;
     if (target) {
       this.setState(prevState => {
-        const newListOrder = [...prevState.currentListOrder];
-        newListOrder[layerIndex].enabled = target.checked;
-        this.props.layerVisibilityChange(target.checked, newListOrder);
-        return { currentListOrder: newListOrder };
+        const newListOrder = [...prevState.dndCurrentListOrder];
+        newListOrder[index].enabled = target.checked;
+        this.props.dndLayerVisibilityChange(target.checked, layer, index);
+        return { dndCurrentListOrder: newListOrder };
       });
     }
   }
@@ -114,8 +122,6 @@ export class LayerControlDnd extends React.Component {
     return (
 
       <React.Fragment>
-        <h4>Layer Control</h4>
-
         <DragDropContext onDragEnd={this.onDragEnd}>
           <Droppable droppableId="DROPPABLE_AREA_BARE">
 
@@ -125,7 +131,7 @@ export class LayerControlDnd extends React.Component {
                 ref={provided.innerRef}
                 style={getListStyle(snapshot.isDraggingOver)}
               >
-                {this.state.currentListOrder.map((item, index) => (
+                {this.state.dndCurrentListOrder.map((item, index) => (
                   <Draggable key={item.id} draggableId={item.id} index={index}>
                     {(provided, snapshot) => (
                       <div
@@ -137,31 +143,36 @@ export class LayerControlDnd extends React.Component {
                         )}
                       >
                         <span {...provided.dragHandleProps} className="panel-drag-handler">
-                          <span className={'far fa-grip-lines'} />
+                          <span className={'far fa-grip-lines'}
+                          />
                         </span>
 
                         <span className="panel-checkbox">
                           <EuiCheckbox
                             id={item.id}
                             checked={item.enabled}
-                            onChange={e => this.changeVisibility(e, index)}
+                            onChange={e => this.changeVisibility(e, item, index)}
+                            onClick={e => e.stopPropagation() }
+                            onMouseDown={e => e.stopPropagation() }
+
                           />
                         </span>
 
                         <span className="panel-label">
-                          <EllipsisWithTooltip placement="left">
+                          <EllipsisWithTooltip placement="left"
+                          >
                             {item.label}
                           </EllipsisWithTooltip>
                         </span>
 
-                        <span className="panel-actions">
-                          <button
-                            className="btn panel-remove"
-                            onClick={() => this.removeListItem(item.id)}
-                          >
-                            <i className="far fa-trash" />
-                          </button>
-                        </span>
+                        {/* <span className="panel-actions"> */}
+                        <button
+                          className="btn panel-remove"
+                          onClick={() => this.removeListItem(item)}
+                        >
+                          <i className="far fa-trash" />
+                        </button>
+                        {/* </span> */}
                       </div>
                     )}
                   </Draggable>
@@ -178,9 +189,9 @@ export class LayerControlDnd extends React.Component {
 
 
 LayerControlDnd.propTypes = {
-  currentListOrder: PropTypes.array.isRequired,
-  // removeLayer: PropTypes.func.isRequired,
-  listOrderChange: PropTypes.func.isRequired,
-  layerVisibilityChange: PropTypes.func.isRequired
+  dndCurrentListOrder: PropTypes.array.isRequired,
+  dndRemoveLayerFromControl: PropTypes.func.isRequired,
+  dndListOrderChange: PropTypes.func.isRequired,
+  dndLayerVisibilityChange: PropTypes.func.isRequired
 };
 

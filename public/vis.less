@@ -129,10 +129,62 @@
     color  : rgb(206, 206, 206);
   }
 
+
+
+  // when layer control is toggled off
+  .leaflet-control-layers.leaflet-control {
+    height: 55px;
+
+    a.leaflet-control-layers-toggle {
+      margin-left: 7.5px;
+      margin-top: 3px;
+    }
+    >form.leaflet-control-layers-header {
+      visibility: collapse;
+    }
+  }
+
+  // when layer control is toggled on
+  .leaflet-control-layers.leaflet-control.leaflet-control-layers-expanded {
+    height: auto;
+    width: auto;
+    padding: 10px;
+
+    >form.leaflet-control-layers-header {
+      visibility: visible;
+      width: fit-content;
+      margin-left: 10px;
+      
+    }
+
+    form.leaflet-control-layers-list {
+      width: fit-content;
+    }
+    
+    .panel-checkbox {
+      vertical-align: auto;
+      padding-left: 10px;
+      padding-top: 5px;
+    }
+
+    .panel-label {
+      vertical-align: auto;
+      padding-left: 10px;
+      flex-grow: 1;
+    }
+
+    button.btn.panel-remove {
+      vertical-align: auto;
+      i.far.fa-trash {
+        color: @brand-danger;
+      }
+    }
+    
+  }
+
   .leaflet-control-layers-toggle {
     padding            : 5px;
     padding-left       : 33px;
-    width              : auto;
     background-position: 5px;
     padding-top        : 10px;
     margin             : 2px;
@@ -180,10 +232,10 @@
       }
     }
 
-    // .leaflet-control-layers-scrollbar {
-    //   overflow-y   : scroll;
-    //   padding-right: 10px;
-    // }
+    .leaflet-control-layers-scrollbar {
+      overflow-y   : scroll;
+      padding-right: 10px;
+    }
 
     .leaflet-control-layers-group:not(#leaflet-control-layers-group-0) {	
       border-top: 1px solid rgb(206, 206, 206);	
