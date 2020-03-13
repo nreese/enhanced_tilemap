@@ -1,5 +1,7 @@
+/* eslint-disable siren/memory-leak */
 /* eslint-disable siren/memoryleaks */
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -47,9 +49,7 @@ define(function (require) {
      */
     function TileMapMap(container, params) {
       this._container = container;
-      this.poiLayers = {};
-      this.wmsOverlays = {};
-      this.vectorOverlays = {};
+      this.allLayers = [];
 
       // keep a reference to all of the optional params
       this.uiState = params.uiState;
@@ -77,6 +77,7 @@ define(function (require) {
     TileMapMap.prototype._addDrawControl = function () {
       if (this._drawControl) return;
 
+      const options = {};
       //create Markers feature group and add saved markers
       this._drawnItems = new L.FeatureGroup();
       const self = this;
@@ -91,12 +92,11 @@ define(function (require) {
             { icon: markerIcon(color) }));
       });
 
-      let isVisible = true;
-      if (this.uiState.get('Markers') === false) isVisible = false;
+      options.enabled = false;
+      if (this.uiState.get('Markers') === false) options.enabled = false;
 
-      if (isVisible) this.leafletMap.addLayer(this._drawnItems);
-
-      this._layerControl.addOverlay(this._drawnItems, 'Markers');
+      // if (options.enabled) this.leafletMap.addLayer(this._drawnItems);
+      // this._layerControl.addOverlay('Markers', 'Markers', options);
 
       //https://github.com/Leaflet/Leaflet.draw
       const drawOptions = {
@@ -216,8 +216,8 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
-      this.clearLayers(this.poiLayers);
-      this.clearLayers(this.vectorOverlays);
+      this.clearLayers();
+      // this.clearLayers();
       this._destroyMapEvents();
       if (this._label) this._label.removeFrom(this.leafletMap);
       if (this._fitControl) this._fitControl.removeFrom(this.leafletMap);
@@ -228,54 +228,80 @@ define(function (require) {
       this.leafletMap = undefined;
     };
 
-    TileMapMap.prototype.clearLayers = function (overlayArray) {
-      Object.keys(overlayArray).forEach((key) => {
-        const layer = overlayArray[key];
-        layer.destroy();
-        this._layerControl.removeLayer(layer);
+    TileMapMap.prototype.clearLayers = function () {
+      this.allLayers.forEach((layer, index) => {
+        if (!_.isEmpty(layer._layers)) {
+          layer.destroy();
+        }
+        this._layerControl.removeLayer(index);
         this.leafletMap.removeLayer(layer);
       });
-      overlayArray = {};
+      this.allLayers = {};
+
       if (this._toolbench) this._toolbench.removeTools();
     };
 
-    TileMapMap.prototype.clearLayersAndReturnPrevState = function (overlayArray) {
+    TileMapMap.prototype.clearLayersByTypeAndReturnPrevState = function (type) {
       const prevState = {};
-      Object.keys(overlayArray).forEach(key => {
-        const layer = overlayArray[key];
-        prevState[key] = this.leafletMap.hasLayer(layer);
-        this._layerControl.removeLayer(layer);
-        this.leafletMap.removeLayer(layer);
+      let count = 0;
+      this.allLayers.forEach((layer, index) => {
+        if (layer.type === type) {
+          prevState[count] = this.leafletMap.hasLayer(layer);
+          delete this.allLayers[index];
+          this._layerControl.removeLayer(index);
+          this.leafletMap.removeLayer(layer);
+          count++;
+        }
       });
-      overlayArray = {};
       return prevState;
     };
 
-    TileMapMap.prototype.clearLayerById = function (overlayArray, id) {
-      if (_.has(overlayArray, id)) {
-        const layer = overlayArray[id];
-        overlayArray[id].destroy();
-        this._layerControl.removeLayer(layer);
-        this.leafletMap.removeLayer(layer);
-        delete overlayArray[id];
-      }
+    TileMapMap.prototype.clearLayerByIndex = function (index) {
+      const layer = this.allLayers[index];
+      this.allLayers[index].destroy();
+      this._layerControl.removeLayer(index);
+      this.leafletMap.removeLayer(layer);
+      delete this.allLayers[index];
     };
 
-    TileMapMap.prototype.addPOILayer = function (id, layer, layerGroup, options) {
-      let isVisible = false;
+    TileMapMap.prototype.clearLayerFromMapById = function (id) {
+      this.allLayers.forEach((layer, index) => {
+        if (layer.id = id) {
+          if (layer.destroy) layer.destroy();
+          //this._layerControl.removeLayer(id);
+          this.leafletMap.removeLayer(layer);
+          // delete this.allLayers[index];
+          return true;
+        }
+      });
+    };
+
+    TileMapMap.prototype.clearLayerByType = function (type) {
+      this.allLayers.forEach((layer, index) => {
+        if (layer.type === type) {
+          layer.destroy();
+          this.leafletMap.removeLayer(layer);
+          // delete this.allLayers[index];
+        }
+      });
+    };
+
+
+    TileMapMap.prototype.addPOILayer = function (layer, options) {
+      options.enabled = false;
+      const id = layer.id;
 
       //remove layer if it already exists
       //this is required on page load with the option to have user defined POI user
       //name in edit mode as there are two watchers, i.e. vis.params and esResponse
-      if (_.has(this.poiLayers, id)) {
-        this.clearLayerById(this.poiLayers, id);
-        isVisible = this.leafletMap.hasLayer(layer);
+      if (_.findIndex(this.allLayers, layer => layer.id === id) !== -1) {
+        this.clearLayerFromMapById(id);
+        options.enabled = this.leafletMap.hasLayer(layer);
       }
-
       // the uiState takes precedence
-      if (this.uiState.get(id) || this.uiState.get(id) === undefined) isVisible = true;
+      if (this.uiState.get(id) || this.uiState.get(id) === undefined) options.enabled = true;
 
-      if (isVisible) {
+      if (options.enabled) {
         this.leafletMap.addLayer(layer);
       }
 
@@ -284,36 +310,40 @@ define(function (require) {
         message: layer.$legend.tooManyDocsInfo[1]
       };
 
+      let label = '';
       const toomanydocslayername = layer.displayName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
       if (tooManyDocs.warningIcon) {
-        this._layerControl.addOverlay(layer, toomanydocslayername, layerGroup || '<b> POI Overlays</b>', options);
+        label = toomanydocslayername;
       } else {
-        this._layerControl.addOverlay(layer, layer.displayName, layerGroup || '<b> POI Overlays</b>', options);
+        label = layer.displayName;
       }
 
-      this.poiLayers[id] = layer;
+      layer.type = 'poi';
+      layer.label = label;
+      layer.enabled = options.enabled;
+
+
+      this._layerControl.addOverlay(layer, label, options);
 
       //Add tool to l.draw.toolbar so users can filter by POIs
-      if (Object.keys(this.poiLayers).length === 1) {
+      if (Object.keys(this.allLayers).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
       }
     };
 
-    TileMapMap.prototype.addVectorLayer = function (id, layerName, layer, options) {
-
-      const layerGroup = `<b> ${options.layerGroup}</b>`;
-
-      if (_.has(this.vectorOverlays, id)) this.clearLayerById(this.vectorOverlays, id);
-      this._layerControl.addOverlay(layer, layerName, layerGroup);
+    TileMapMap.prototype.addVectorLayer = function (layer, layerName, options) {
+      const id = layer.id;
+      // const layerGroup = `<b> ${options.layerGroup}</b>`;
+      if (_.has(this.allLayers, id)) this.clearLayerFromMapById(id);
+      layer.id = id;
+      layer.type = 'vector';
+      this._layerControl.addOverlay(layer, layerName, options);
       if (this.uiState.get(id) !== false) this.leafletMap.addLayer(layer);
 
-      this.vectorOverlays[id] = layer;
-      this.vectorOverlays[id].type = options.type;
-
       //Add tool to l.draw.toolbar so users can filter by vector layers
-      if (Object.keys(this.vectorOverlays).length === 1) {
+      if (Object.keys(this.allLayers).length === 1) {
         if (this._toolbench) this._toolbench.removeTools();
         if (!this._toolbench) this._addDrawControl();
         this._toolbench.addTool();
@@ -352,12 +382,12 @@ define(function (require) {
      * users context for all applied filters
      */
     TileMapMap.prototype.addFilters = function (filters) {
-      let isVisible = false;
+      const options = { enabled: false };
       if (this._filters) {
         if (this.leafletMap.hasLayer(this._filters)) {
-          isVisible = true;
+          options.enabled = true;
         }
-        this._layerControl.removeLayer(this._filters);
+        // this._layerControl.removeLayer(this._filters);
         this.leafletMap.removeLayer(this._filters);
       }
 
@@ -374,43 +404,42 @@ define(function (require) {
       // the uiState takes precedence
       const presentInUiState = this.uiState.get('Applied Filters');
       if (presentInUiState) {
-        isVisible = true;
+        options.enabled = true;
       } else if (presentInUiState === false) {
-        isVisible = false;
+        options.enabled = false;
       }
 
-      if (isVisible) {
-        this.leafletMap.addLayer(this._filters);
-      }
-
-
-      this._layerControl.addOverlay(this._filters, 'Applied Filters');
+      // if (options.enabled) {
+      //   this.leafletMap.addLayer(this._filters);
+      // }
+      // this._layerControl.addOverlay(this._filters, options);
     };
 
-    TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, layerOptions, id) {
+    TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, options, id) {
 
       let overlay = null;
-      if (layerOptions.nonTiled) {
+      if (options.nonTiled) {
         overlay = new L.NonTiledLayer.WMS(url, wmsOptions);
       } else {
         overlay = L.tileLayer.wms(url, wmsOptions);
       }
 
-      overlay.layerOptions = layerOptions;
+      overlay.layerOptions = options;
+      overlay.id = id;
+      overlay.type = 'wms';
+      if (options.enabled) this.leafletMap.addLayer(overlay);
 
-      if (layerOptions.isVisible) this.leafletMap.addLayer(overlay);
 
-      this._layerControl.addOverlay(overlay, name, '<b> WMS Overlays</b>');
-      this.wmsOverlays[id] = overlay;
+      this._layerControl.addOverlay(overlay, name, options);
       this.saturateTile(this._attr.isDesaturated, overlay);
     };
 
     TileMapMap.prototype.saturateWMSTiles = function () {
-      for (const key in this.wmsOverlays) {
-        if (!this.wmsOverlays.hasOwnProperty(key)) {
+      for (const key in this.allLayers) {
+        if (!this.allLayers.hasOwnProperty(key) && this.allLayers[key].type !== 'wms') {
           continue;
         }
-        this.saturateTile(this._attr.isDesaturated, this.wmsOverlays[key]);
+        this.saturateTile(this._attr.isDesaturated, this.allLayers[key]);
       }
     };
 
@@ -441,7 +470,7 @@ define(function (require) {
      */
     TileMapMap.prototype._createMarkers = function (options) {
       const MarkerType = markerTypes[this._markerType];
-      return new MarkerType(this.leafletMap, this._geoJson, this._layerControl, options);
+      return new MarkerType(this.leafletMap, this._geoJson, this._layerControl, options, this.allLayers);
     };
 
     TileMapMap.prototype.unfixMapTypeTooltips = function () {
@@ -497,13 +526,13 @@ define(function (require) {
     TileMapMap.prototype._attachEvents = function () {
       const self = this;
 
-      this.leafletMap.on('groupLayerControl:removeClickedLayer', (e) => {
-        const id = e.layer.id;
-        if (_.has(this.poiLayers, id)) {
-          const layer = this.poiLayers[id];
-          this.poiLayers[id].destroy();
+      this.leafletMap.on('removeLayer', (e) => {
+        const id = e.layerId;
+        if (_.has(this.allLayers, id)) {
+          const layer = this.allLayers[id];
+          this.allLayers[id].destroy();
           this.leafletMap.removeLayer(layer);
-          delete this.poiLayers[id];
+          delete this.allLayers[id];
         }
       });
 
@@ -579,7 +608,7 @@ define(function (require) {
 
       this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
-      this._layerControl = L.control.groupedLayers(null, null, { groupCheckboxes: true });
+      this._layerControl = L.control.groupedLayers(null, null, { groupCheckboxes: true }, this.allLayers);
       this._layerControl.addTo(this.leafletMap);
 
       this._addSetViewControl();

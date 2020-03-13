@@ -1,4 +1,5 @@
-/* eslint-disable siren/memoryleaks */
+/* eslint-disable siren/memory-leak */
+
 import _ from 'lodash';
 import uuid from 'uuid';
 import chrome from 'ui/chrome';
@@ -252,7 +253,6 @@ define(function (require) {
       const options = {
         id: layerParams.id,
         displayName,
-        layerGroup: layerParams.layerGroup || '<b> POI Overlays </b> ',
         color: layerParams.color,
         size: _.get(layerParams, 'markerSize', 'm'),
         mapExtentFilter: {
@@ -273,7 +273,7 @@ define(function (require) {
           tooManyDocs: layer.tooManyDocs
         };
 
-        map.addPOILayer(layer.id, layer, layer.layerGroup, options);
+        map.addPOILayer(layer, options);
       });
     }
 
@@ -305,7 +305,8 @@ define(function (require) {
       };
 
       const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      map.addVectorLayer(id, vector.displayName, vector, optionsWithDefaults);
+      vector.id = id;
+      map.addVectorLayer(vector, vector.displayName, optionsWithDefaults);
 
     }
 
@@ -329,11 +330,11 @@ define(function (require) {
         map.saturateTile(visParams.isDesaturated, map._tileLayer);
 
         //clear and re-draw POI overlays
-        map.clearLayers(map.poiLayers);
+        map.clearLayerByType('poi');
         $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
 
         //clear and re-draw vector overlays
-        map.clearLayers(map.vectorOverlays);
+        map.clearLayerByType('vector');
         drawWfsOverlays();
 
       }
@@ -452,14 +453,14 @@ define(function (require) {
               - url ( ${wfsOverlay.url} ) is correct and has layers present, 
               - ${wfsOverlay.formatOptions} is an allowed output format
               - WFS is CORs enabled for this domain`);
-            map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
+            map.clearLayerById(wfsOverlay.id);
           });
       });
     }
 
     function drawWmsOverlays() {
 
-      const prevState = map.clearLayersAndReturnPrevState(map.wmsOverlays);
+      const prevState = map.clearLayersByTypeAndReturnPrevState('wms');
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
@@ -541,32 +542,32 @@ define(function (require) {
                 wmsOptions.format_options = formatOptions;
               }
 
-              let isVisible;
+              let enabled;
               if ($scope.flags.isVisibleSource === 'visParams') {
-                isVisible = layerParams.isVisible;
+                enabled = layerParams.isVisible;
               } else if (prevState[name] ||
                 $scope.flags.isVisibleSource === 'layerControlCheckbox') {
-                isVisible = prevState[name];
+                enabled = prevState[name];
               } else {
-                isVisible = layerParams.isVisible;
+                enabled = layerParams.isVisible;
               }
 
               const presentInUiState = $scope.vis.getUiState().get(name);
               if (presentInUiState) {
-                isVisible = true;
+                enabled = true;
               } else if (presentInUiState === false) {
-                isVisible = false;
+                enabled = false;
               }
 
               $scope.flags.visibleSource = '';
 
-              const layerOptions = {
-                isVisible,
+              const options = {
+                enabled,
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
 
               if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') layerParams.url = layerParams.url + '/wms?';
-              return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions, layerParams.id);
+              return map.addWmsOverlay(layerParams.url, name, wmsOptions, options, layerParams.id);
             });
         });
       });
@@ -606,7 +607,7 @@ define(function (require) {
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'removeGeoJsonCollection', async (id) => {
-        return map.clearLayerById(map.vectorOverlays, id);
+        return map.clearLayerById(id);
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
@@ -640,29 +641,43 @@ define(function (require) {
     // ==       vis object      ==
     // ===========================
 
-    map.leafletMap.on('groupLayerControl:removeClickedLayer', function (e) {
-      $scope.vis.params.overlays.dragAndDropPoiLayers =
-        _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
-          return dragAndDropPoiLayer.currentId !== e.layer.currentId;
-        });
+    map.leafletMap.on('removelayer', function (e) {
+      console.log('removing layer: ', e);
+
+      if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers =
+          _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
+            return dragAndDropPoiLayer.currentId !== e.layer.currentId;
+          });
+      }
+
+
+
+      $scope.vis.getUiState().set(e.layerId, false);
     });
 
     // saving checkbox status to dashboard uiState
     map.leafletMap.on('overlayadd', function (e) {
+      console.log('showing layer: ', e);
       map.saturateWMSTiles();
-      if (map._markers && e.name === 'Aggregation') {
+      if (map._markers && e.layerId === 'Aggregation') {
         map._markers.show();
       }
-      const uiStatekey = e.layer.id || e.name;
-      $scope.vis.getUiState().set(uiStatekey, !!uiStatekey);
+      $scope.vis.getUiState().set(e.layerId, true);
     });
 
     map.leafletMap.on('overlayremove', function (e) {
-      if (map._markers && e.name === 'Aggregation') {
+      console.log('hiding layer: ', e);
+      if (map._markers && e.layerId === 'Aggregation') {
         map._markers.hide();
       }
-      const uiStatekey = e.layer.id || e.name;
-      $scope.vis.getUiState().set(uiStatekey, false);
+      $scope.vis.getUiState().set(e.layerId, false);
+    });
+
+    map.leafletMap.on('removelayer', function (e) {
+
+      // map.clearLayerById(e.layerId);
+
     });
 
     map.leafletMap.on('moveend', _.debounce(function setZoomCenter() {
@@ -758,12 +773,14 @@ define(function (require) {
 
     map.leafletMap.on('toolbench:poiFilter', function (e) {
       const poiLayers = [];
-      Object.keys(map.poiLayers).forEach(function (key) {
-        poiLayers.push(map.poiLayers[key]);
+      map.allLayers.forEach(layer => {
+        if (layer.type === 'poi') {
+          poiLayers.push(layer);
+        }
       });
       map._callbacks.poiFilter({
         chart: map._chartData,
-        poiLayers: poiLayers,
+        poiLayers,
         radius: _.get(e, 'radius', 10),
         indexPatternId: getIndexPatternId(),
         field: getGeoField(),
