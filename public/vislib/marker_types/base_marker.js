@@ -247,10 +247,7 @@ define(function (require) {
 
       // remove marker layer from map
       if (this._markerGroup) {
-        this.layerControl.removeLayer(this._markerGroup);
-        if (this.leafletMap.hasLayer(this._markerGroup)) {
-          this.leafletMap.removeLayer(this._markerGroup);
-        }
+        this.layerControl.removeLayerFromMap(this._markerGroup);
         this._markerGroup = undefined;
       }
 
@@ -278,12 +275,12 @@ define(function (require) {
         this.isVisible = false;
       }
 
-      this._markerGroup.label = 'Aggregation';
       this._markerGroup.id = 'Aggregation';
+      this._markerGroup.label = 'Aggregation';
       this._markerGroup.type = 'agg';
       this._markerGroup.enabled = this.isVisible;
-      this.layerControl.addOverlay(this._markerGroup, 'Aggregation', null);
-      if (this._markerGroup.options.enabled) this.leafletMap.addLayer(this._markerGroup);
+      this.layerControl.addOverlay(this._markerGroup, null);
+      // if (this._markerGroup.enabled) this.leafletMap.addLayer(this._markerGroup);
 
       if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {
         this.addLegend();

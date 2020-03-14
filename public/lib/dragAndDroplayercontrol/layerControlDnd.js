@@ -1,12 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { filter, find, forOwn } from 'lodash';
+// import { filter, find, forOwn } from 'lodash';
 import EllipsisWithTooltip from 'react-ellipsis-with-tooltip';
 
 import {
   EuiCheckbox,
-  EuiComboBox,
-  EuiFormRow
+  // EuiComboBox,
+  // EuiFormRow
 } from '@elastic/eui';
 
 import {
@@ -52,7 +52,6 @@ export class LayerControlDnd extends React.Component {
 
     this.onDragEnd = this.onDragEnd.bind(this);
     // this.listItems = this.listItems.bind(this);
-    this.newCard = this.newCard.bind(this);
     this.state = {
       dndCurrentListOrder: props.dndCurrentListOrder
     };
@@ -79,14 +78,9 @@ export class LayerControlDnd extends React.Component {
 
   }
 
-  newCard(cards) {
-    // Go to the configuration section
-    const scriptId = cards[0].label;
-    this.props.editCard(scriptId);
-  }
-
   removeListItem(index, id, layer) {
     //const currentListOrder = filter(this.props.currentListOrder, item => item.id !== itemId);
+    console.log('remove list item: ', layer.id, layer.label);
     this.setState(prevState => {
       const newListOrder = [...prevState.dndCurrentListOrder];
       delete newListOrder[index];
@@ -112,15 +106,7 @@ export class LayerControlDnd extends React.Component {
   }
 
   render() {
-    const selectCardOptions = [];
-    forOwn(this.props.cardTypes, (value, key) => {
-      selectCardOptions.push({
-        label: key
-      });
-    });
-
     return (
-
       <React.Fragment>
         <DragDropContext onDragEnd={this.onDragEnd}>
           <Droppable droppableId="DROPPABLE_AREA_BARE">
@@ -131,8 +117,8 @@ export class LayerControlDnd extends React.Component {
                 ref={provided.innerRef}
                 style={getListStyle(snapshot.isDraggingOver)}
               >
-                {this.state.dndCurrentListOrder.map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
+                {this.state.dndCurrentListOrder.map((layer, index) => (
+                  <Draggable key={layer.id} draggableId={layer.id} index={index}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
@@ -149,11 +135,11 @@ export class LayerControlDnd extends React.Component {
 
                         <span className="panel-checkbox">
                           <EuiCheckbox
-                            id={item.id}
-                            checked={item.enabled}
-                            onChange={e => this.changeVisibility(e, item, index)}
-                            onClick={e => e.stopPropagation() }
-                            onMouseDown={e => e.stopPropagation() }
+                            id={layer.id}
+                            checked={layer.enabled}
+                            onChange={e => this.changeVisibility(e, layer, index)}
+                            // onClick={e => e.stopPropagation() }
+                            // onMouseDown={e => e.stopPropagation() }
 
                           />
                         </span>
@@ -161,14 +147,14 @@ export class LayerControlDnd extends React.Component {
                         <span className="panel-label">
                           <EllipsisWithTooltip placement="left"
                           >
-                            {item.label}
+                            {layer.label}
                           </EllipsisWithTooltip>
                         </span>
 
                         {/* <span className="panel-actions"> */}
                         <button
                           className="btn panel-remove"
-                          onClick={() => this.removeListItem(item)}
+                          onClick={() => this.removeListItem(layer)}
                         >
                           <i className="far fa-trash" />
                         </button>

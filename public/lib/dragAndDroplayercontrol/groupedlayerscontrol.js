@@ -12,17 +12,16 @@
 // Author: Ishmael Smyrnow
 
 import $ from 'jquery';
-import { findIndex, get, debounce, remove } from 'lodash';
+import { findIndex, get, remove } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-import { EuiToken } from '@elastic/eui';
-import { layerControlTree } from '../layerControlTree/layerContolTree';
+// import { EuiToken } from '@elastic/eui';
+// import { layerControlTree } from '../layerControlTree/layerContolTree';
 import { LayerControlDnd } from './layerControlDnd';
 import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
 let _leafletMap;
 let _reactElement;
-const _rendering = false;
 let _addingOverlay = false;
 let _allLayers;
 
@@ -55,18 +54,36 @@ function dndListOrderChange(changedList) {
   // e.stopPropagation();
   console.log('listOrderChangeInGLC', changedList);
   _allLayers = changedList;
-  setZindexBaseOnNewOrder();
+  _orderlayersOnMap();
 }
 
-function setZindexBaseOnNewOrder() {
-  console.log('should use setZindex() to reorder layers');
+function _orderlayersOnMap() {
+  // only similar approach is to remove and re-add back to the map
+  // use the order in the dataLayers object to define the z-order
+  for (let i = _allLayers.length - 1; i >= 0; i--) {
+    _allLayers[i].setZIndex(i);
+    addOverlay(_allLayers[i]);
+    // // check if the layer has been added to the map, if it hasn't then do nothing
+    // // we only need to sort the layers that have visible data
+    // // Note: this is similar but faster than trying to use map.hasLayer()
+    // if (layer._layers &&
+    //   layer._layers.length > 0 &&
+    //   layer._layers._path &&
+    //   layer._layers._path.parentNode) {
+    //   layer.bringToBack();
+    // }
+  };
 }
 
 function dndRemoveLayerFromControl(index, id, layer) {
-  removeLayer(layer.id);
+  _removeLayer(layer.id);
   _updateLayerControl();
-  _leafletMap.removeLayer(layer);
+  _leafletMap.removeLayerFromMap(layer);
   _leafletMap.fire('removelayer', { index, id, layer });
+}
+
+function _removeLayer(id) {
+  remove(_allLayers, layer => layer.id === id);
 }
 
 function _updateLayerControl() {
@@ -81,19 +98,18 @@ function _updateLayerControl() {
   }
 }
 
-function removeLayer(id) {
-  console.log('here123');
+function removeLayerFromMap(layer) {
+  console.log('removing layer from map: ', layer.label);
+  layerUtils.removeLayerIfPresent(layer, _leafletMap);
+  return layer;
 }
 
 function addOverlay(layer) {
   _addingOverlay = true;
-  layerUtils.addOrReplaceLayer(layer, _allLayers);
-
+  layerUtils.addOrReplaceLayer(layer, _allLayers, _leafletMap);
   _addingOverlay = false;
   _updateLayerControl();
 
-  //_leafletMap.fire('layeradd', { index, id });
-  //return _dndItems[index];
 }
 
 L.Control.GroupedLayers = L.Control.extend({
@@ -107,32 +123,32 @@ L.Control.GroupedLayers = L.Control.extend({
     groupCheckboxes: false
   },
 
-  initialize: function (baseLayers, groupedOverlays, options, allLayers) {
-    let i; let j;
-    L.Util.setOptions(this, options);
+  initialize: function (allLayers) {
+    // let i; let j;
+    // L.Util.setOptions(this, options);
 
     _allLayers = allLayers;
-    this._layers = [];
+    // this._layers = [];
     this._lastZIndex = 0;
-    this._handlingClick = false;
-    this._groupList = [];
-    this._domGroups = [];
+    // this._handlingClick = false;
+    // this._groupList = [];
+    // this._domGroups = [];
 
-    for (i in baseLayers) {
-      if ({}.hasOwnProperty.call(baseLayers, i)) {
-        this._addLayer(baseLayers[i], i);
-      }
-    }
+    // for (i in baseLayers) {
+    //   if ({}.hasOwnProperty.call(baseLayers, i)) {
+    //     this._addLayer(baseLayers[i], i);
+    //   }
+    // }
 
-    for (i in groupedOverlays) {
-      if ({}.hasOwnProperty.call(groupedOverlays, i)) {
-        for (j in groupedOverlays[i]) {
-          if ({}.hasOwnProperty.call(groupedOverlays[i], j)) {
-            this._addLayer(groupedOverlays[i][j], j, i, true);
-          }
-        }
-      }
-    }
+    // for (i in groupedOverlays) {
+    //   if ({}.hasOwnProperty.call(groupedOverlays, i)) {
+    //     for (j in groupedOverlays[i]) {
+    //       if ({}.hasOwnProperty.call(groupedOverlays[i], j)) {
+    //         this._addLayer(groupedOverlays[i][j], j, i, true);
+    //       }
+    //     }
+    //   }
+    // }
   },
 
 
@@ -142,7 +158,7 @@ L.Control.GroupedLayers = L.Control.extend({
   _updateLayerControl,
   _getIndex,
   addOverlay,
-  removeLayer,
+  removeLayerFromMap,
 
   onAdd: function (map) {
     _leafletMap = map;
@@ -528,6 +544,6 @@ L.Control.GroupedLayers = L.Control.extend({
   }
 });
 
-L.control.groupedLayers = function (baseLayers, groupedOverlays, options, allLayers) {
-  return new L.Control.GroupedLayers(baseLayers, groupedOverlays, options, allLayers);
+L.control.groupedLayers = function (allLayers) {
+  return new L.Control.GroupedLayers(allLayers);
 };

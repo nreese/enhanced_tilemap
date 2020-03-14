@@ -14,6 +14,7 @@ import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_toolt
 
 
 
+
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
     'kibana',
@@ -304,9 +305,9 @@ define(function (require) {
         type: _.get(options, 'type', 'noType')
       };
 
-      const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      vector.id = id;
-      map.addVectorLayer(vector, vector.displayName, optionsWithDefaults);
+      const layer = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
+      layer.id = id;
+      map.addVectorLayer(layer, optionsWithDefaults);
 
     }
 
@@ -329,14 +330,10 @@ define(function (require) {
 
         map.saturateTile(visParams.isDesaturated, map._tileLayer);
 
-        //clear and re-draw POI overlays
-        map.clearLayerByType('poi');
+        //re-draw POI overlays
         $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-
-        //clear and re-draw vector overlays
-        map.clearLayerByType('vector');
+        //re-draw vector overlays
         drawWfsOverlays();
-
       }
     });
 
@@ -459,13 +456,12 @@ define(function (require) {
     }
 
     function drawWmsOverlays() {
-
-      const prevState = map.clearLayersByTypeAndReturnPrevState('wms');
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
 
       $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
+        // const prevState = map.clearLayerAndReturnPrevState(layerParams.id);
         const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
         return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
@@ -545,9 +541,9 @@ define(function (require) {
               let enabled;
               if ($scope.flags.isVisibleSource === 'visParams') {
                 enabled = layerParams.isVisible;
-              } else if (prevState[name] ||
-                $scope.flags.isVisibleSource === 'layerControlCheckbox') {
-                enabled = prevState[name];
+              // } else if (prevState.enabled ||
+              //   $scope.flags.isVisibleSource === 'layerControlCheckbox') {
+              //   enabled = prevState.enabled;
               } else {
                 enabled = layerParams.isVisible;
               }
