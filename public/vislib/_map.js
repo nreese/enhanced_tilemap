@@ -78,7 +78,6 @@ define(function (require) {
     TileMapMap.prototype._addDrawControl = function () {
       if (this._drawControl) return;
 
-      const options = {};
       //create Markers feature group and add saved markers
       this._drawnItems = new L.FeatureGroup();
       const self = this;
@@ -93,11 +92,10 @@ define(function (require) {
             { icon: markerIcon(color) }));
       });
 
-      options.enabled = false;
-      if (this.uiState.get('Markers') === false) options.enabled = false;
-
-      // if (options.enabled) this.leafletMap.addLayer(this._drawnItems);
-      // this._layerControl.addOverlay('Markers', 'Markers', options);
+      this._drawnItems.id = 'Markers';
+      this._drawnItems.label = 'Markers';
+      this._drawnItems.enabled = this.uiState.get('Markers') || true;
+      this._layerControl.addOverlay(this._drawnItems);
 
       //https://github.com/Leaflet/Leaflet.draw
       const drawOptions = {
@@ -217,30 +215,31 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
-      this.clearLayers();
+      // this.clearLayers();
       // this.clearLayers();
       this._destroyMapEvents();
       if (this._label) this._label.removeFrom(this.leafletMap);
       if (this._fitControl) this._fitControl.removeFrom(this.leafletMap);
       if (this._drawControl) this._drawControl.remove(this.leafletMap);
       if (this._markers) this._markers.destroy();
+      if (this._layerControl) this._layerControl.destroy();
       syncMaps.remove(this.leafletMap);
       this.leafletMap.remove();
       this.leafletMap = undefined;
     };
 
-    TileMapMap.prototype.clearLayers = function () {
-      console.log('clearlayers');
-      this.allLayers.forEach((layer) => {
-        if (layer.destroy) {
-          layer.destroy();
-        }
-        this._layerControl.removeLayerFromMap(layer);
-      });
-      this.allLayers = undefined;
+    // TileMapMap.prototype.clearLayers = function () {
+    //   console.log('clearlayers');
+    //   this.allLayers.forEach((layer) => {
+    //     if (layer.destroy) {
+    //       layer.destroy();
+    //     }
+    //     this._layerControl.removeLayerFromMap(layer);
+    //   });
+    //   this.allLayers = undefined;
 
-      if (this._toolbench) this._toolbench.removeTools();
-    };
+    //   if (this._toolbench) this._toolbench.removeTools();
+    // };
 
     // TileMapMap.prototype.clearLayerAndReturnPrevState = function (id) {
     //   console.log('clearlayersbytypeand retrun prevstate');
@@ -371,7 +370,6 @@ define(function (require) {
      * users context for all applied filters
      */
     TileMapMap.prototype.addFilters = function (filters) {
-      const options = {};
       if (this._filters) {
         if (this.leafletMap.hasLayer(this._filters)) {
           this._filters.enabled = true;
@@ -393,8 +391,7 @@ define(function (require) {
 
       // the uiState takes precedence
       this._filters.enabled = this.uiState.get(this._filters.id);
-
-      this._layerControl.addOverlay(this._filters, options);
+      this._layerControl.addOverlay(this._filters);
     };
 
     TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, options, id) {
@@ -424,12 +421,11 @@ define(function (require) {
     };
 
     TileMapMap.prototype.saturateWMSTiles = function () {
-      for (const key in this.allLayers) {
-        if (!this.allLayers.hasOwnProperty(key) && this.allLayers[key].type !== 'wms') {
-          continue;
+      this.allLayers.forEach(layer => {
+        if (layer.type === 'wms') {
+          this.saturateTile(this._attr.isDesaturated, layer);
         }
-        this.saturateTile(this._attr.isDesaturated, this.allLayers[key]);
-      }
+      });
     };
 
     TileMapMap.prototype.mapBounds = function () {

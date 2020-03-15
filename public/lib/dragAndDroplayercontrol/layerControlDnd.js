@@ -72,7 +72,7 @@ export class LayerControlDnd extends React.Component {
         result.source.index,
         result.destination.index
       );
-      this.props.dndListOrderChange(newDndCurrentListOrder);
+      this.props.dndListOrderChange(newDndCurrentListOrder, result.source.index, result.destination.index);
       return { dndCurrentListOrder: newDndCurrentListOrder };
     });
 
@@ -138,8 +138,6 @@ export class LayerControlDnd extends React.Component {
                             id={layer.id}
                             checked={layer.enabled}
                             onChange={e => this.changeVisibility(e, layer, index)}
-                            // onClick={e => e.stopPropagation() }
-                            // onMouseDown={e => e.stopPropagation() }
 
                           />
                         </span>
