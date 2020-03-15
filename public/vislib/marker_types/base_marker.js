@@ -25,7 +25,6 @@ define(function (require) {
         min: _.get(geoJson, 'properties.allmin', 0),
         max: _.get(geoJson, 'properties.allmax', 1)
       };
-      this.isVisible = _.get(params, 'prevState.isVisible', true);
 
       if (params.prevState) {
         //Scale threshold to have same shape as previous zoom level
@@ -226,7 +225,6 @@ define(function (require) {
      */
     BaseMarker.prototype.destroy = function () {
       const state = {
-        isVisible: this._markerGroup && this.leafletMap.hasLayer(this._markerGroup),
         threshold: {
           floor: _.get(this.geoJson, 'properties.allmin', 0),
           ceil: _.get(this.geoJson, 'properties.allmax', 1),
@@ -245,9 +243,7 @@ define(function (require) {
 
       this.removeLegend();
 
-      // remove marker layer from map
       if (this._markerGroup) {
-        this.layerControl.removeLayerFromMap(this._markerGroup);
         this._markerGroup = undefined;
       }
 
@@ -270,16 +266,15 @@ define(function (require) {
     BaseMarker.prototype._addToMap = function () {
       // the uiState takes precedence
       if (this.uiState.get('Aggregation') === true) {
-        this.isVisible = true;
-      } else if (this.uiState.get('Aggregation') === false) {
-        this.isVisible = false;
+        this._markerGroup.enabled = true;
+      } else {
+        this._markerGroup.enabled = false;
       }
 
       this._markerGroup.id = 'Aggregation';
       this._markerGroup.label = 'Aggregation';
       this._markerGroup.type = 'agg';
-      this._markerGroup.enabled = this.isVisible;
-      this.layerControl.addOverlay(this._markerGroup, null);
+      this.layerControl.addOverlay(this._markerGroup);
       // if (this._markerGroup.enabled) this.leafletMap.addLayer(this._markerGroup);
 
       if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {

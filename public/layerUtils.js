@@ -9,18 +9,21 @@ define(function () {
      */
     addOrReplaceLayer: (layer, allLayers, leafletMap) => {
       let replaced = false;
+      // replacing
       allLayers.forEach((item, i) => {
         if (item.id === layer.id) {
-          leafletMap.removeLayer(item);
-          leafletMap.addLayer(layer);
-          // drawOnMapIfEnabled(layer, leafletMap);
-          replaced = true;
           allLayers[i] = layer;
+          leafletMap.removeLayer(item);
+          layer.setZIndex(allLayers.length - i);
+          leafletMap.addLayer(layer);
+          replaced = true;
         }
       });
+      // adding new layer
       if (!replaced) {
-        leafletMap.addLayer(layer);
         allLayers.push(layer);
+        layer.setZIndex(0 - allLayers.length);
+        leafletMap.addLayer(layer);
       }
     },
     removeLayerIfPresent: (layer, leafletMap) => {

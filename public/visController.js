@@ -541,9 +541,9 @@ define(function (require) {
               let enabled;
               if ($scope.flags.isVisibleSource === 'visParams') {
                 enabled = layerParams.isVisible;
-              // } else if (prevState.enabled ||
-              //   $scope.flags.isVisibleSource === 'layerControlCheckbox') {
-              //   enabled = prevState.enabled;
+                // } else if (prevState.enabled ||
+                //   $scope.flags.isVisibleSource === 'layerControlCheckbox') {
+                //   enabled = prevState.enabled;
               } else {
                 enabled = layerParams.isVisible;
               }
@@ -653,28 +653,32 @@ define(function (require) {
     });
 
     // saving checkbox status to dashboard uiState
+    map.leafletMap.on('showlayer', function (e) {
+      console.log('showing layer: ', e);
+      map.saturateWMSTiles();
+      if (map._markers && e.id === 'Aggregation') {
+        map._markers.show();
+      }
+      $scope.vis.getUiState().set(e.id, true);
+    });
+
+    map.leafletMap.on('hidelayer', function (e) {
+      console.log('hiding layer: ', e);
+      if (map._markers && e.id === 'Aggregation') {
+        map._markers.hide();
+      }
+      $scope.vis.getUiState().set(e.id, false);
+    });
+
+    // saving checkbox status to dashboard uiState
     map.leafletMap.on('overlayadd', function (e) {
       console.log('showing layer: ', e);
       map.saturateWMSTiles();
-      if (map._markers && e.layerId === 'Aggregation') {
+      if (map._markers && e.id === 'Aggregation') {
         map._markers.show();
       }
-      $scope.vis.getUiState().set(e.layerId, true);
     });
 
-    map.leafletMap.on('overlayremove', function (e) {
-      console.log('hiding layer: ', e);
-      if (map._markers && e.layerId === 'Aggregation') {
-        map._markers.hide();
-      }
-      $scope.vis.getUiState().set(e.layerId, false);
-    });
-
-    map.leafletMap.on('removelayer', function (e) {
-
-      // map.clearLayerById(e.layerId);
-
-    });
 
     map.leafletMap.on('moveend', _.debounce(function setZoomCenter() {
       if (!map.leafletMap) return;

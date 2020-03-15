@@ -39,40 +39,36 @@ function dndLayerVisibilityChange(enabled, layer, index) {
     _leafletMap.addLayer(layer);
   }
 
-
-  // let type;
-  // if (enabled === false) {
-  //   type = 'overlayadd';
-  // } else {
-  //   type = 'layerremove';
-  // }
-  // _leafletMap.fire(type, { layerIndex, layerId });
+  console.log('here in visibility cahnge: ', enabled);
+  let type;
+  if (enabled === false) {
+    type = 'hidelayer';
+  } else {
+    type = 'showlayer';
+  }
+  _leafletMap.fire(type, {
+    id: layer.id,
+    enabled
+  });
   // // //ToDo add visibility for map
 }
 
-function dndListOrderChange(changedList) {
-  // e.stopPropagation();
-  console.log('listOrderChangeInGLC', changedList);
-  _allLayers = changedList;
-  _orderlayersOnMap();
+function dndListOrderChange(newList, startIndex, endIndex) {
+  _allLayers = newList;
+  //redrawing layers based on new ordering
+  if (startIndex > endIndex) {
+    _reDrawOverlays(startIndex, endIndex);
+  } else if (startIndex < endIndex) {
+    _reDrawOverlays(endIndex, startIndex);
+  }
 }
 
-function _orderlayersOnMap() {
-  // only similar approach is to remove and re-add back to the map
-  // use the order in the dataLayers object to define the z-order
-  for (let i = _allLayers.length - 1; i >= 0; i--) {
-    _allLayers[i].setZIndex(i);
-    addOverlay(_allLayers[i]);
-    // // check if the layer has been added to the map, if it hasn't then do nothing
-    // // we only need to sort the layers that have visible data
-    // // Note: this is similar but faster than trying to use map.hasLayer()
-    // if (layer._layers &&
-    //   layer._layers.length > 0 &&
-    //   layer._layers._path &&
-    //   layer._layers._path.parentNode) {
-    //   layer.bringToBack();
-    // }
-  };
+function _reDrawOverlays(higherIndex, lowerIndex) {
+  //redraw layers between dragged and dropped indices
+  for (let i = higherIndex; i >= lowerIndex; i--) {
+    // _allLayers[i].setZIndex(i);
+    layerUtils.addOrReplaceLayer(_allLayers[i], _allLayers, _leafletMap);
+  }
 }
 
 function dndRemoveLayerFromControl(index, id, layer) {
@@ -109,8 +105,11 @@ function addOverlay(layer) {
   layerUtils.addOrReplaceLayer(layer, _allLayers, _leafletMap);
   _addingOverlay = false;
   _updateLayerControl();
-
 }
+
+function destroy() {
+  _allLayers = undefined;
+};
 
 L.Control.GroupedLayers = L.Control.extend({
 
@@ -159,6 +158,7 @@ L.Control.GroupedLayers = L.Control.extend({
   _getIndex,
   addOverlay,
   removeLayerFromMap,
+  destroy,
 
   onAdd: function (map) {
     _leafletMap = map;
