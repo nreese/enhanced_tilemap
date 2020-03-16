@@ -171,17 +171,8 @@ define(function (require) {
           searchSource.fetch()
             .then(searchResp => {
 
-              if (searchResp.hits.total.value > this.limit) {
-                options.$legend.innerHTML = tooManyDocsInfo;
-                options.tooManyDocs = poiLimitToDisplay;
-              }
-
-              //Too many documents warning for each specific layer
-              options.$legend.tooManyDocsInfo = '';
-              if (this.draggedState) {
-                options.$legend.searchIcon = `<i>${options.displayName}</i> ${searchIcon}`;
-              } else {
-                options.$legend.searchIcon = `${options.displayName} ${searchIcon}`;
+              if (searchResp.hits.total > this.limit) {
+                options.warning = { tooManyDocsInfo, poiLimitToDisplay };
               }
 
               //Storing this information on the params object for use
@@ -371,13 +362,21 @@ define(function (require) {
       } else {
         console.warn('Unexpected feature geo type: ' + geoType);
       }
+
       layer.id = options.id;
-      layer.tooManyDocs = options.tooManyDocs;
+      layer.label = options.displayName;
+
+      //layer.tooManyDocs = options.tooManyDocs;
+
+      //layer control functionality
+      layer.icon = options.$legend.searchIcon;
+      layer.warning = options.warning;
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
-      layer.displayName = options.$legend.searchIcon;
-      layer.$legend = options.$legend;
+
+      // layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;
+
       return layer;
     };
 

@@ -32,12 +32,8 @@ function _getIndex(id) {
   });
 };
 function dndLayerVisibilityChange(enabled, layer, index) {
-  _allLayers[index].enabled = enabled;
-  if (_leafletMap.hasLayer(layer)) {
-    _leafletMap.removeLayer(layer);
-  } else {
-    _leafletMap.addLayer(layer);
-  }
+
+  layerUtils.redrawOverlays(_allLayers, _leafletMap);
 
   console.log('here in visibility cahnge: ', enabled);
   let type;
@@ -50,32 +46,26 @@ function dndLayerVisibilityChange(enabled, layer, index) {
     id: layer.id,
     enabled
   });
-  // // //ToDo add visibility for map
 }
 
-function dndListOrderChange(newList, startIndex, endIndex) {
+function dndListOrderChange(newList) {
   _allLayers = newList;
-  //redrawing layers based on new ordering
-  if (startIndex > endIndex) {
-    _reDrawOverlays(startIndex, endIndex);
-  } else if (startIndex < endIndex) {
-    _reDrawOverlays(endIndex, startIndex);
-  }
+  layerUtils.redrawOverlays(_allLayers, _leafletMap);
 }
 
 function _reDrawOverlays(higherIndex, lowerIndex) {
-  //redraw layers between dragged and dropped indices
   for (let i = higherIndex; i >= lowerIndex; i--) {
-    // _allLayers[i].setZIndex(i);
     layerUtils.addOrReplaceLayer(_allLayers[i], _allLayers, _leafletMap);
   }
 }
 
-function dndRemoveLayerFromControl(index, id, layer) {
-  _removeLayer(layer.id);
-  _updateLayerControl();
-  _leafletMap.removeLayerFromMap(layer);
-  _leafletMap.fire('removelayer', { index, id, layer });
+function dndRemoveLayerFromControl(newList, id) {
+
+  console.log(newList);
+  console.log(_allLayers);
+  _allLayers = newList;
+  layerUtils.redrawOverlays(_allLayers, _leafletMap);
+  // _leafletMap.fire('removelayer', { id });
 }
 
 function _removeLayer(id) {
@@ -225,38 +215,38 @@ L.Control.GroupedLayers = L.Control.extend({
     container.appendChild(form);
   },
 
-  _addLayer: function (layer, name, group, overlay, options) {
+  // _addLayer: function (layer, name, group, overlay, options) {
 
-    const _layer = {
-      layer: layer,
-      name: name,
-      overlay: overlay,
-      filterPopupContent: get(options, 'filterPopupContent', undefined),
-      close: get(options, 'close', undefined),
-      tooManyDocs: get(options, 'tooManyDocs', false)
-    };
-    this._layers.push(_layer);
+  //   const _layer = {
+  //     layer: layer,
+  //     name: name,
+  //     overlay: overlay,
+  //     filterPopupContent: get(options, 'filterPopupContent', undefined),
+  //     close: get(options, 'close', undefined),
+  //     tooManyDocs: get(options, 'tooManyDocs', false)
+  //   };
+  //   this._layers.push(_layer);
 
-    group = group || '';
-    let groupId = this._indexOf(this._groupList, group);
+  //   group = group || '';
+  //   let groupId = this._indexOf(this._groupList, group);
 
-    if (groupId === -1) {
-      groupId = this._groupList.push(group) - 1;
-    }
+  //   if (groupId === -1) {
+  //     groupId = this._groupList.push(group) - 1;
+  //   }
 
-    const exclusive = (this._indexOf(this.options.exclusiveGroups, group) !== -1);
+  //   const exclusive = (this._indexOf(this.options.exclusiveGroups, group) !== -1);
 
-    _layer.group = {
-      name: group,
-      id: groupId,
-      exclusive: exclusive
-    };
+  //   _layer.group = {
+  //     name: group,
+  //     id: groupId,
+  //     exclusive: exclusive
+  //   };
 
-    if (this.options.autoZIndex && layer.setZIndex) {
-      this._lastZIndex++;
-      layer.setZIndex(this._lastZIndex);
-    }
-  },
+  //   if (this.options.autoZIndex && layer.setZIndex) {
+  //     this._lastZIndex++;
+  //     layer.setZIndex(this._lastZIndex);
+  //   }
+  // },
 
   // _update: function () {
   //   if (!this._container) {
@@ -467,53 +457,53 @@ L.Control.GroupedLayers = L.Control.extend({
   //   return label;
   // },
 
-  _onGroupInputClick: function () {
-    let i; let input; let obj;
+  // _onGroupInputClick: function () {
+  //   let i; let input; let obj;
 
-    const thisLegend = this.legend;
-    thisLegend._handlingClick = true;
+  //   const thisLegend = this.legend;
+  //   thisLegend._handlingClick = true;
 
-    const inputs = thisLegend._form.getElementsByTagName('input');
-    const inputsLen = inputs.length;
+  //   const inputs = thisLegend._form.getElementsByTagName('input');
+  //   const inputsLen = inputs.length;
 
-    for (i = 0; i < inputsLen; i++) {
-      input = inputs[i];
-      if (input.groupID === this.groupID && input.className === 'leaflet-control-layers-selector') {
-        input.checked = this.checked;
-        obj = thisLegend._getLayer(input.layerId);
-        if (input.checked && !thisLegend._map.hasLayer(obj.layer)) {
-          thisLegend._map.addLayer(obj.layer);
-        } else if (!input.checked && thisLegend._map.hasLayer(obj.layer)) {
-          thisLegend._map.removeLayer(obj.layer);
-        }
-      }
-    }
+  //   for (i = 0; i < inputsLen; i++) {
+  //     input = inputs[i];
+  //     if (input.groupID === this.groupID && input.className === 'leaflet-control-layers-selector') {
+  //       input.checked = this.checked;
+  //       obj = thisLegend._getLayer(input.layerId);
+  //       if (input.checked && !thisLegend._map.hasLayer(obj.layer)) {
+  //         thisLegend._map.addLayer(obj.layer);
+  //       } else if (!input.checked && thisLegend._map.hasLayer(obj.layer)) {
+  //         thisLegend._map.removeLayer(obj.layer);
+  //       }
+  //     }
+  //   }
 
-    thisLegend._handlingClick = false;
-  },
+  //   thisLegend._handlingClick = false;
+  // },
 
-  _onInputClick: function () {
-    let i; let input; let obj;
-    const inputs = this._form.getElementsByTagName('input');
-    const inputsLen = inputs.length;
+  // _onInputClick: function () {
+  //   let i; let input; let obj;
+  //   const inputs = this._form.getElementsByTagName('input');
+  //   const inputsLen = inputs.length;
 
-    this._handlingClick = true;
+  //   this._handlingClick = true;
 
-    for (i = 0; i < inputsLen; i++) {
-      input = inputs[i];
-      if (input.className === 'leaflet-control-layers-selector') {
-        obj = this._getLayer(input.layerId);
+  //   for (i = 0; i < inputsLen; i++) {
+  //     input = inputs[i];
+  //     if (input.className === 'leaflet-control-layers-selector') {
+  //       obj = this._getLayer(input.layerId);
 
-        if (input.checked && !this._map.hasLayer(obj.layer)) {
-          this._map.addLayer(obj.layer);
-        } else if (!input.checked && this._map.hasLayer(obj.layer)) {
-          this._map.removeLayer(obj.layer);
-        }
-      }
-    }
+  //       if (input.checked && !this._map.hasLayer(obj.layer)) {
+  //         this._map.addLayer(obj.layer);
+  //       } else if (!input.checked && this._map.hasLayer(obj.layer)) {
+  //         this._map.removeLayer(obj.layer);
+  //       }
+  //     }
+  //   }
 
-    this._handlingClick = false;
-  },
+  //   this._handlingClick = false;
+  // },
 
   _toggleLayerControl: function (e) {
     const className = get(e, 'toElement.form.className') || get(e, 'toElement.offsetParent.className');

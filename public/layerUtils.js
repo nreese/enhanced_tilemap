@@ -1,5 +1,26 @@
 import { remove } from 'lodash';
 
+function setZIndexOfAnyLayerType(layer, zIndex) {
+  if (layer.type === 'wms') {
+    layer.zIndex = zIndex;
+    // } else if (layer.type === 'marker') {
+    //   layer.setZIndexOffset(zIndex);
+  } else {
+    layer.setZIndex(zIndex);
+  }
+}
+
+function redrawOverlays(allLayers, leafletMap) {
+  for (let i = (allLayers.length - 1); i >= 0; i--) {
+    leafletMap.removeLayer(allLayers[i]);
+    if (allLayers[i].enabled) {
+      const zIndex = i;
+      setZIndexOfAnyLayerType(allLayers[i], zIndex);
+      leafletMap.addLayer(allLayers[i]);
+    }
+  }
+}
+
 define(function () {
   return {
     /*
@@ -9,23 +30,22 @@ define(function () {
      */
     addOrReplaceLayer: (layer, allLayers, leafletMap) => {
       let replaced = false;
-      // replacing
-      allLayers.forEach((item, i) => {
-        if (item.id === layer.id) {
+      // replacing layer
+      for (let i = 0; i <= (allLayers.length - 1); i++) {
+        if (allLayers[i].id === layer.id) {
+          leafletMap.removeLayer(allLayers[i]);
           allLayers[i] = layer;
-          leafletMap.removeLayer(item);
-          layer.setZIndex(allLayers.length - i);
-          leafletMap.addLayer(layer);
           replaced = true;
+          break;
         }
-      });
-      // adding new layer
+      }
+      //adding layer
       if (!replaced) {
         allLayers.push(layer);
-        layer.setZIndex(0 - allLayers.length);
-        leafletMap.addLayer(layer);
       }
+      redrawOverlays(allLayers, leafletMap);
     },
+    redrawOverlays,
     removeLayerIfPresent: (layer, leafletMap) => {
       if (leafletMap.hasLayer(layer)) {
         leafletMap.removeLayer(layer);
@@ -39,6 +59,6 @@ define(function () {
           return true;
         }
       });
-    }
+    },
   };
 });

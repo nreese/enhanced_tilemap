@@ -174,7 +174,8 @@
     }
 
     button.btn.panel-remove {
-      vertical-align: auto;
+      padding-left: 4px;
+      padding-top: 2px;
       i.far.fa-trash {
         color: @brand-danger;
       }
@@ -192,12 +193,17 @@
 
   .leaflet-control-layers {
 
-    .fa {
-      &.fa-filter {
-        padding-left: 4px;
-        color: @kibanaBlue2;
-      }
-    }  
+    // .fa {
+    //   &.fa-filter {
+    //     padding-left: 4px;
+    //     color: @kibanaBlue2;
+    //   }
+    // }  
+
+    .euiToolTipAnchor {
+      padding-left: 4px;
+      color: #006BB4;
+    }
 
     .fas {
       &.fa-times-square {

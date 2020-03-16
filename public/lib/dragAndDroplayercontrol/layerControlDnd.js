@@ -1,10 +1,14 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import $ from 'jquery';
+import Tooltip from 'react-qtip';
 // import { filter, find, forOwn } from 'lodash';
 import EllipsisWithTooltip from 'react-ellipsis-with-tooltip';
 
 import {
   EuiCheckbox,
+  EuiButton,
+  EuiIconTip
   // EuiComboBox,
   // EuiFormRow
 } from '@elastic/eui';
@@ -14,6 +18,8 @@ import {
   Droppable,
   Draggable
 } from 'react-beautiful-dnd';
+
+// import { Item } from 'react-bootstrap/lib/Breadcrumb';
 
 const getItemStyle = (isDragging, draggableStyle) => ({
   // some basic styles to make the items look a bit nicer
@@ -78,13 +84,13 @@ export class LayerControlDnd extends React.Component {
 
   }
 
-  removeListItem(index, id, layer) {
+  removeListItem(index, id) {
     //const currentListOrder = filter(this.props.currentListOrder, item => item.id !== itemId);
-    console.log('remove list item: ', layer.id, layer.label);
+    // console.log('remove list item: ', layer.id, layer.label);
     this.setState(prevState => {
       const newListOrder = [...prevState.dndCurrentListOrder];
       delete newListOrder[index];
-      this.props.dndRemoveLayerFromControl(index, id, layer);
+      this.props.dndRemoveLayerFromControl(newListOrder, id);
       return { dndCurrentListOrder: newListOrder };
     });
   }
@@ -149,13 +155,42 @@ export class LayerControlDnd extends React.Component {
                           </EllipsisWithTooltip>
                         </span>
 
-                        {/* <span className="panel-actions"> */}
-                        <button
+
+                        {layer.icon && <div
+                          dangerouslySetInnerHTML={{
+                            __html: layer.icon + layer.message
+                          }}></div>
+                        }
+
+                        {layer.filterPopupContent && <EuiIconTip
+                          // aria-label="Warning"
+                          size="m"
+                          type="filter"
+                          color="euiColorPrimary"
+                          position="bottom"
+                          onClick={e => e.stopPropagation()}
+                          content={<div
+                            dangerouslySetInnerHTML={{
+                              __html: layer.filterPopupContent
+                            }}>
+                          </div>}
+                        >
+                        </EuiIconTip>
+                        }
+
+                        {layer.warning && <div
+                          dangerouslySetInnerHTML={{
+                            __html: layer.warning.tooManyDocsInfo
+                          }}></div>
+                        }
+
+                        {layer.close && <button
                           className="btn panel-remove"
                           onClick={() => this.removeListItem(layer)}
                         >
                           <i className="far fa-trash" />
                         </button>
+                        }
                         {/* </span> */}
                       </div>
                     )}
