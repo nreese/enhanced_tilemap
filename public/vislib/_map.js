@@ -80,6 +80,7 @@ define(function (require) {
 
       //create Markers feature group and add saved markers
       this._drawnItems = new L.FeatureGroup();
+      this._drawnItems.pane = 'overlayPane';
       const self = this;
       this._attr.markers.forEach(function (point) {
         let color = 'green';
@@ -89,11 +90,15 @@ define(function (require) {
         self._drawnItems.addLayer(
           L.marker(
             point,
-            { icon: markerIcon(color) }));
+            {
+              icon: markerIcon(color)
+            })
+        );
       });
 
       this._drawnItems.id = 'Markers';
       this._drawnItems.label = 'Markers';
+      this._drawnItems.type = 'marker';
       this._drawnItems.enabled = this.uiState.get('Markers') || true;
       this._layerControl.addOverlay(this._drawnItems);
 
@@ -296,25 +301,25 @@ define(function (require) {
     // };
 
 
-    TileMapMap.prototype.addPOILayer = function (layer, options) {
+    TileMapMap.prototype.addPOILayer = function (layer) {
       const id = layer.id;
       if (this.uiState.get(id) || this.uiState.get(id) === undefined) layer.enabled = true;
 
-      const tooManyDocs = {
-        warningIcon: layer.$legend.tooManyDocsInfo[0],
-        message: layer.$legend.tooManyDocsInfo[1]
-      };
+      // const tooManyDocs = {
+      //   warningIcon: layer.$legend.tooManyDocsInfo[0],
+      //   message: layer.$legend.tooManyDocsInfo[1]
+      // };
 
-      const toomanydocslayername = layer.displayName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
-      if (tooManyDocs.warningIcon) {
-        layer.label = toomanydocslayername;
-      } else {
-        layer.label = layer.displayName;
-      }
-
+      // layer.warning = tooManyDocs.warningIcon;
+      // const toomanydocslayername = layer.displayName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
+      // if (tooManyDocs.warningIcon) {
+      //   layer.label = toomanydocslayername;
+      // } else {
+      //   layer.label = layer.displayName;
+      // }
       layer.type = 'poi';
 
-      this._layerControl.addOverlay(layer, options);
+      this._layerControl.addOverlay(layer);
 
       //Add tool to l.draw.toolbar so users can filter by POIs
       if (Object.keys(this.allLayers).length === 1) {
@@ -324,11 +329,11 @@ define(function (require) {
       }
     };
 
-    TileMapMap.prototype.addVectorLayer = function (layer, options) {
+    TileMapMap.prototype.addVectorLayer = function (layer) {
       const id = layer.id;
       layer.type = 'vector';
       layer.enabled = this.uiState.get(id) || true;
-      this._layerControl.addOverlay(layer, options);
+      this._layerControl.addOverlay(layer);
 
       //Add tool to l.draw.toolbar so users can filter by vector layers
       if (Object.keys(this.allLayers).length === 1) {

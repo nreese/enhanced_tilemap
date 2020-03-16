@@ -268,13 +268,7 @@ define(function (require) {
       if ($legend) options.$legend = $legend;
 
       poi.getLayer(options, function (layer) {
-        const options = {
-          filterPopupContent: layer.filterPopupContent,
-          close: layer.close,
-          tooManyDocs: layer.tooManyDocs
-        };
-
-        map.addPOILayer(layer, options);
+        map.addPOILayer(layer);
       });
     }
 
@@ -507,6 +501,7 @@ define(function (require) {
                 minZoom: _.get(layerParams, 'minZoom', 13),
                 transparent: true,
                 version: '1.1.1'
+                // pane: 'overlayPane'
               };
               const viewparams = [];
               if (_.get(layerParams, 'viewparams')) {
@@ -643,13 +638,11 @@ define(function (require) {
       if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
         $scope.vis.params.overlays.dragAndDropPoiLayers =
           _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
-            return dragAndDropPoiLayer.currentId !== e.layer.currentId;
+            return dragAndDropPoiLayer.currentId !== e.id;
           });
       }
-
-
-
-      $scope.vis.getUiState().set(e.layerId, false);
+      //scope for saving dnd poi overlays
+      //$scope.vis.getUiState().set(e.id, false);
     });
 
     // saving checkbox status to dashboard uiState
