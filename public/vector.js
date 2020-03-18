@@ -51,7 +51,9 @@ define(function () {
         });
         layer = new L.FeatureGroup(markers);
         layer.destroy = () => markers.forEach(self._removeMouseEventsPoint);
-        layer.label = `${options.displayName} <i class="fas fa-map-marker" style="color:${options.color};"></i>`;
+        layer.label = options.displayName;
+        layer.type = 'vectorpoint';
+        layer.icon = `<i class="fas fa-map-marker" style="color:${options.color};"></i>`;
       } else if ('Polygon' === geometry.type ||
         'MultiPolygon' === geometry.type) {
         const shapes = _.map(self._geoJsonCollection.features, (feature) => {
@@ -116,7 +118,9 @@ define(function () {
             }
           });
         };
-        layer.label = `${options.displayName} <i class="far fa-stop" style="color:${options.color};"></i>`;
+        layer.type = 'vectoroverlay';
+        layer.label = options.displayName;
+        layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
       } else {
         console.warn('Unexpected feature geo type: ' + geometry.type);
       }

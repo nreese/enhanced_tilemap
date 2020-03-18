@@ -99,6 +99,7 @@ define(function (require) {
       this._drawnItems.id = 'Markers';
       this._drawnItems.label = 'Markers';
       this._drawnItems.type = 'marker';
+      this._drawnItems.icon = '<i class="fas fa-map-marker" style="color:green";"></i>';
       this._drawnItems.enabled = this.uiState.get('Markers') || true;
       this._layerControl.addOverlay(this._drawnItems);
 
@@ -219,6 +220,10 @@ define(function (require) {
       });
     };
 
+    TileMapMap.prototype.removeAllLayersFromMapandControl = function () {
+      this._layerControl.removeAllLayersFromMapandControl();
+    };
+
     TileMapMap.prototype.destroy = function () {
       // this.clearLayers();
       // this.clearLayers();
@@ -317,7 +322,6 @@ define(function (require) {
       // } else {
       //   layer.label = layer.displayName;
       // }
-      layer.type = 'poi';
 
       this._layerControl.addOverlay(layer);
 
@@ -331,7 +335,6 @@ define(function (require) {
 
     TileMapMap.prototype.addVectorLayer = function (layer) {
       const id = layer.id;
-      layer.type = 'vector';
       layer.enabled = this.uiState.get(id) || true;
       this._layerControl.addOverlay(layer);
 
@@ -390,10 +393,10 @@ define(function (require) {
       };
       this._filters = L.featureGroup(filters);
       this._filters.setStyle(style);
-      this._filters.id = 'All Filters';
-      this._filters.label = 'All Filters';
+      this._filters.id = 'Geo Filters';
+      this._filters.label = 'Geo Filters';
       this._filters.type = 'filter';
-
+      this._filters.icon = `<i class="far fa-filter" style="color:${style.color};"></i>`;
       // the uiState takes precedence
       this._filters.enabled = this.uiState.get(this._filters.id);
       this._layerControl.addOverlay(this._filters);
@@ -412,6 +415,7 @@ define(function (require) {
       overlay.id = id;
       overlay.type = 'wms';
       overlay.label = name;
+      overlay.icon = `<i class="fas fa-map" style="color:#000000;"></i>`;
       // if (options.enabled) this.leafletMap.addLayer(overlay);
 
       const presentInUiState = this.uiState.get(id);
@@ -566,7 +570,7 @@ define(function (require) {
       return isSame;
     };
 
-    TileMapMap.prototype._redrawBaseLayer = function (url, options, enabled) {
+    TileMapMap.prototype.redrawBaseLayer = function (url, options, enabled) {
       // Use WMS compliant server, if not enabled, use OSM mapTiles as default
       if (enabled) {
         this._tileLayer.remove();
@@ -575,6 +579,8 @@ define(function (require) {
         this._tileLayer.remove();
         this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
       }
+      this._tileLayer.setZIndex(-10);
+      this._tileLayer.type = 'base';
       this._tileLayer.addTo(this.leafletMap);
     };
 
@@ -587,6 +593,8 @@ define(function (require) {
       } else {
         this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
       }
+      this._tileLayer.type = 'base';
+      this._tileLayer.setZIndex(-10);
 
       mapOptions.center = this._mapCenter;
       mapOptions.zoom = this._mapZoom;

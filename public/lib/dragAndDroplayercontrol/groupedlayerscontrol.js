@@ -25,14 +25,9 @@ let _reactElement;
 let _addingOverlay = false;
 let _allLayers;
 
-
-function _getIndex(id) {
-  return findIndex(_allLayers, (_dndItem) => {
-    return _dndItem.id === id;
-  });
-};
 function dndLayerVisibilityChange(enabled, layer, index) {
 
+  _allLayers[index].enabled = enabled;
   layerUtils.redrawOverlays(_allLayers, _leafletMap);
 
   console.log('here in visibility cahnge: ', enabled);
@@ -53,23 +48,13 @@ function dndListOrderChange(newList) {
   layerUtils.redrawOverlays(_allLayers, _leafletMap);
 }
 
-function _reDrawOverlays(higherIndex, lowerIndex) {
-  for (let i = higherIndex; i >= lowerIndex; i--) {
-    layerUtils.addOrReplaceLayer(_allLayers[i], _allLayers, _leafletMap);
-  }
-}
-
-function dndRemoveLayerFromControl(newList, id) {
+function dndRemoveLayerFromControl(newList) {
 
   console.log(newList);
   console.log(_allLayers);
   _allLayers = newList;
   layerUtils.redrawOverlays(_allLayers, _leafletMap);
   // _leafletMap.fire('removelayer', { id });
-}
-
-function _removeLayer(id) {
-  remove(_allLayers, layer => layer.id === id);
 }
 
 function _updateLayerControl() {
@@ -84,10 +69,11 @@ function _updateLayerControl() {
   }
 }
 
-function removeLayerFromMap(layer) {
-  console.log('removing layer from map: ', layer.label);
-  layerUtils.removeLayerIfPresent(layer, _leafletMap);
-  return layer;
+function removeAllLayersFromMapandControl() {
+  console.log('removing all Layers from map');
+  layerUtils.removeAllLayersFromMapandControl(_allLayers, _leafletMap);
+  _allLayers = [];
+  console.log(_allLayers);
 }
 
 function addOverlay(layer) {
@@ -145,9 +131,8 @@ L.Control.GroupedLayers = L.Control.extend({
 
   //todo add comments describing functions
   _updateLayerControl,
-  _getIndex,
   addOverlay,
-  removeLayerFromMap,
+  removeAllLayersFromMapandControl,
   destroy,
 
   onAdd: function (map) {

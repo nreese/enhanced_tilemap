@@ -83,17 +83,9 @@ define(function (require) {
 
           if (this.draggedState) {
             options.close = true;
-            options.color = savedSearch.siren.ui.color;
           }
 
-          let searchIcon;
-          if (this.geoType === 'geo_point') {
-            options.color = savedSearch.siren.ui.color;
-            searchIcon = `<i class="${options.searchIcon}" style="color:${savedSearch.siren.ui.color};"></i>`;
-          } else {
-            //use square icon for geo_shape fields
-            searchIcon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
-          }
+          options.color = savedSearch.siren.ui.color;
 
           function createMapExtentFilter(rect) {
             const bounds = rect.geo_bounding_box.geo_bounding_box;
@@ -171,6 +163,7 @@ define(function (require) {
           searchSource.fetch()
             .then(searchResp => {
 
+              options.warning = {};
               if (searchResp.hits.total > this.limit) {
                 options.warning = { tooManyDocsInfo, poiLimitToDisplay };
               }
@@ -296,6 +289,8 @@ define(function (require) {
           return self._createMarker(hit, options);
         });
         layer = new L.FeatureGroup(markers);
+        layer.type = 'poipoint';
+        layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
         layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
       } else if ('geo_shape' === geoType) {
         const shapes = _.map(hits, hit => {
@@ -349,6 +344,8 @@ define(function (require) {
             }
           }
         );
+        layer.icon = options.searchIcon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+        layer.type = 'poioverlay';
         layer.destroy = () => {
           _.each(layer._layers, polygon => {
             polygon.off('mouseover', self.addMouseOverGeoShape);
@@ -369,8 +366,9 @@ define(function (require) {
       //layer.tooManyDocs = options.tooManyDocs;
 
       //layer control functionality
-      layer.icon = options.$legend.searchIcon;
       layer.warning = options.warning;
+      layer.warning.message = `There are undisplayed POIs for this overlay due
+      to having reached the limit currently set to ${options.warning.poiLimitToDisplay}`;
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
