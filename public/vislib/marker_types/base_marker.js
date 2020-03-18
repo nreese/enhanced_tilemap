@@ -274,6 +274,7 @@ define(function (require) {
       this._markerGroup.id = 'Aggregation';
       this._markerGroup.label = 'Aggregation';
       this._markerGroup.type = 'agg';
+      this._markerGroup.icon = '<i class="far fa-circle" style="color:#de9847;"></i>';
       this.layerControl.addOverlay(this._markerGroup);
       // if (this._markerGroup.enabled) this.leafletMap.addLayer(this._markerGroup);
 

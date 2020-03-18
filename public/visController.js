@@ -317,13 +317,14 @@ define(function (require) {
           map.unfixMapTypeTooltips();
         }
 
-        map._redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
+        map.removeAllLayersFromMapandControl();
+
+        map.redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
         setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
 
         draw();
 
         map.saturateTile(visParams.isDesaturated, map._tileLayer);
-
         //re-draw POI overlays
         $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
         //re-draw vector overlays
@@ -336,6 +337,7 @@ define(function (require) {
     });
 
     $scope.$watch('esResponse', function (resp) {
+      // map.removeAllLayersFromMapandControl();
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         chartData.searchSource = $scope.searchSource;

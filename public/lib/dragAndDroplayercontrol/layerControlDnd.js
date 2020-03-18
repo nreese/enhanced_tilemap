@@ -1,9 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import $ from 'jquery';
-import Tooltip from 'react-qtip';
 // import { filter, find, forOwn } from 'lodash';
 import EllipsisWithTooltip from 'react-ellipsis-with-tooltip';
+import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
 import {
   EuiCheckbox,
@@ -43,13 +42,12 @@ const getListStyle = () => ({
 
 // a little function to help us with reordering the result
 const reorder = (list, startIndex, endIndex) => {
+  //reordering 'within groups' based on drag and drop
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
-
-  return result;
+  return layerUtils.orderLayersByType(result);
 };
-
 
 export class LayerControlDnd extends React.Component {
 
@@ -148,6 +146,12 @@ export class LayerControlDnd extends React.Component {
                           />
                         </span>
 
+                        {layer.icon && <div
+                          dangerouslySetInnerHTML={{
+                            __html: layer.icon
+                          }}></div>
+                        }
+
                         <span className="panel-label">
                           <EllipsisWithTooltip placement="left"
                           >
@@ -155,20 +159,18 @@ export class LayerControlDnd extends React.Component {
                           </EllipsisWithTooltip>
                         </span>
 
-
-                        {layer.icon && <div
+                        {layer.tooManyDocsInfo && <div
                           dangerouslySetInnerHTML={{
-                            __html: layer.icon + layer.message
+                            __html: layer.tooManyDocsInfo
                           }}></div>
                         }
 
                         {layer.filterPopupContent && <EuiIconTip
-                          // aria-label="Warning"
                           size="m"
                           type="filter"
                           color="euiColorPrimary"
                           position="bottom"
-                          onClick={e => e.stopPropagation()}
+                          // onClick={e => e.stopPropagation()}
                           content={<div
                             dangerouslySetInnerHTML={{
                               __html: layer.filterPopupContent
@@ -178,15 +180,23 @@ export class LayerControlDnd extends React.Component {
                         </EuiIconTip>
                         }
 
-                        {layer.warning && <div
-                          dangerouslySetInnerHTML={{
-                            __html: layer.warning.tooManyDocsInfo
-                          }}></div>
+                        {layer.warning && <EuiIconTip
+                          size="m"
+                          type="alert"
+                          color="warning"
+                          position="bottom"
+                          // onClick={e => e.stopPropagation()}
+                          content={<div
+                            dangerouslySetInnerHTML={{
+                              __html: layer.warning.message
+                            }}></div>}
+                        >
+                        </EuiIconTip>
                         }
 
                         {layer.close && <button
                           className="btn panel-remove"
-                          onClick={() => this.removeListItem(layer)}
+                          onClick={() => this.removeListItem(index, layer.id)}
                         >
                           <i className="far fa-trash" />
                         </button>
