@@ -1,8 +1,6 @@
 /* eslint-disable siren/memory-leak */
 /* eslint-disable siren/memoryleaks */
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
-import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
-
 
 define(function (require) {
   return function MapFactory(Private) {
@@ -16,7 +14,7 @@ define(function (require) {
 
     require('leaflet-mouse-position');
     require('leaflet.nontiledlayer');
-    require('./../lib/dragAndDroplayercontrol/groupedlayerscontrol.js');
+    require('../lib/dragAndDroplayercontrol/DndLayerControl.js');
     require('./../lib/leaflet.setview/L.Control.SetView.css');
     require('./../lib/leaflet.setview/L.Control.SetView');
     require('./../lib/leaflet.measurescale/L.Control.MeasureScale.css');
@@ -80,7 +78,7 @@ define(function (require) {
 
       //create Markers feature group and add saved markers
       this._drawnItems = new L.FeatureGroup();
-      this._drawnItems.pane = 'overlayPane';
+      this._drawnItems.options = { pane: 'overlayPane' };
       const self = this;
       this._attr.markers.forEach(function (point) {
         let color = 'green';
@@ -91,7 +89,8 @@ define(function (require) {
           L.marker(
             point,
             {
-              icon: markerIcon(color)
+              icon: markerIcon(color),
+              pane: 'overlayPane'
             })
         );
       });
@@ -225,8 +224,6 @@ define(function (require) {
     };
 
     TileMapMap.prototype.destroy = function () {
-      // this.clearLayers();
-      // this.clearLayers();
       this._destroyMapEvents();
       if (this._label) this._label.removeFrom(this.leafletMap);
       if (this._fitControl) this._fitControl.removeFrom(this.leafletMap);
@@ -238,91 +235,13 @@ define(function (require) {
       this.leafletMap = undefined;
     };
 
-    // TileMapMap.prototype.clearLayers = function () {
-    //   console.log('clearlayers');
-    //   this.allLayers.forEach((layer) => {
-    //     if (layer.destroy) {
-    //       layer.destroy();
-    //     }
-    //     this._layerControl.removeLayerFromMap(layer);
-    //   });
-    //   this.allLayers = undefined;
-
-    //   if (this._toolbench) this._toolbench.removeTools();
-    // };
-
-    // TileMapMap.prototype.clearLayerAndReturnPrevState = function (id) {
-    //   console.log('clearlayersbytypeand retrun prevstate');
-
-    //   return this.allLayers.forEach((layer) => {
-    //     if (layer.id === id) {
-    //       return layerUtils.removeLayerIfPresent(layer, this.leafletMap);
-    //     }
-    //   });
-    //   Params, this.leafletMap)
-    //   if (layer.type === type) {
-    //     prevState[count] = this.leafletMap.hasLayer(layer);
-    //     delete this.allLayers[index];
-    //     this._layerControl.removeLayer(index);
-    //     this.leafletMap.removeLayer(layer);
-    //     count++;
-    //   }
-    // });
-    // return prevState;
-    // };
-
-    // TileMapMap.prototype.clearLayerByIndex = function (index) {
-    //   console.log('clearlayerbyindex');
-    //   const layer = this.allLayers[index];
-    //   this.allLayers[index].destroy();
-    //   this._layerControl.removeLayer(index);
-    //   this.leafletMap.removeLayer(layer);
-    //   delete this.allLayers[index];
-    // };
-
-    TileMapMap.prototype.clearLayerById = function (id) {
-      console.log('clearlayersfrommapbyid');
-      layerUtils.removeLayerById(id, this.allLayers, this.leafletMap);
-      // this.allLayers.forEach((layer) => {
-      //   if (layer.id = id) {
-      //     if (layer.destroy) layer.destroy();
-      //     //this._layerControl.removeLayer(id);
-      //     this.leafletMap.removeLayer(layer);
-      //     // delete this.allLayers[index];
-      //     return true;
-      //   }
-      // });
+    TileMapMap.prototype.removeLayerFromMapAndControlById = function (id) {
+      this._layerControl.removeLayerFromMapAndControlById(id);
     };
-
-    // TileMapMap.prototype.clearLayerByType = function (type) {
-    //   console.log('clearlayerby type');
-    //   this.allLayers.forEach((layer, index) => {
-    //     if (layer.type === type) {
-    //       layer.destroy();
-    //       this.leafletMap.removeLayer(layer);
-    //       // delete this.allLayers[index];
-    //     }
-    //   });
-    // };
-
 
     TileMapMap.prototype.addPOILayer = function (layer) {
       const id = layer.id;
       if (this.uiState.get(id) || this.uiState.get(id) === undefined) layer.enabled = true;
-
-      // const tooManyDocs = {
-      //   warningIcon: layer.$legend.tooManyDocsInfo[0],
-      //   message: layer.$legend.tooManyDocsInfo[1]
-      // };
-
-      // layer.warning = tooManyDocs.warningIcon;
-      // const toomanydocslayername = layer.displayName + ' ' + tooManyDocs.warningIcon + tooManyDocs.message;
-      // if (tooManyDocs.warningIcon) {
-      //   layer.label = toomanydocslayername;
-      // } else {
-      //   layer.label = layer.displayName;
-      // }
-
       this._layerControl.addOverlay(layer);
 
       //Add tool to l.draw.toolbar so users can filter by POIs
@@ -570,7 +489,7 @@ define(function (require) {
       return isSame;
     };
 
-    TileMapMap.prototype.redrawBaseLayer = function (url, options, enabled) {
+    TileMapMap.prototype.redrawDefaultMapLayers = function (url, options, enabled) {
       // Use WMS compliant server, if not enabled, use OSM mapTiles as default
       if (enabled) {
         this._tileLayer.remove();
@@ -582,6 +501,8 @@ define(function (require) {
       this._tileLayer.setZIndex(-10);
       this._tileLayer.type = 'base';
       this._tileLayer.addTo(this.leafletMap);
+
+      this._layerControl.addOverlay(this._drawnItems);
     };
 
     TileMapMap.prototype._createMap = function (mapOptions) {
@@ -606,7 +527,7 @@ define(function (require) {
 
       this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
-      this._layerControl = L.control.groupedLayers(this.allLayers);
+      this._layerControl = L.control.dndLayerControl(this.allLayers);
       this._layerControl.addTo(this.leafletMap);
 
       this._addSetViewControl();

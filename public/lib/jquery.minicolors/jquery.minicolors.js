@@ -1,3 +1,4 @@
+/* eslint-disable siren/memoryleaks */
 /*
  * jQuery MiniColors: A tiny color picker built on jQuery
  *

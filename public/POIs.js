@@ -85,7 +85,9 @@ define(function (require) {
             options.close = true;
           }
 
-          options.color = savedSearch.siren.ui.color;
+          if (this.geoType === 'geo_point') {
+            options.color = savedSearch.siren.ui.color;
+          }
 
           function createMapExtentFilter(rect) {
             const bounds = rect.geo_bounding_box.geo_bounding_box;
@@ -166,6 +168,7 @@ define(function (require) {
               options.warning = {};
               if (searchResp.hits.total > this.limit) {
                 options.warning = { tooManyDocsInfo, poiLimitToDisplay };
+                options.$legend.innerHTML = tooManyDocsInfo;
               }
 
               //Storing this information on the params object for use
@@ -290,6 +293,7 @@ define(function (require) {
         });
         layer = new L.FeatureGroup(markers);
         layer.type = 'poipoint';
+        layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
         layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
       } else if ('geo_shape' === geoType) {
@@ -363,12 +367,10 @@ define(function (require) {
       layer.id = options.id;
       layer.label = options.displayName;
 
-      //layer.tooManyDocs = options.tooManyDocs;
-
-      //layer control functionality
-      layer.warning = options.warning;
-      layer.warning.message = `There are undisplayed POIs for this overlay due
+      if (options.warning.poiLimitToDisplay && options.warning.tooManyDocsInfo) {
+        layer.warning = `There are undisplayed POIs for this overlay due
       to having reached the limit currently set to ${options.warning.poiLimitToDisplay}`;
+      }
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
@@ -478,7 +480,8 @@ define(function (require) {
       const feature = L.marker(
         toLatLng(_.get(hit, `_source[${this.geoField}]`)),
         {
-          icon: searchIcon(options.searchIcon, options.color, options.size)
+          icon: searchIcon(options.searchIcon, options.color, options.size),
+          pane: 'overlayPane'
         });
 
       if (this.popupFields.length > 0) {

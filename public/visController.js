@@ -1,4 +1,4 @@
-/* eslint-disable siren/memory-leak */
+/* eslint-disable siren/memoryleaks */
 
 import _ from 'lodash';
 import uuid from 'uuid';
@@ -318,8 +318,8 @@ define(function (require) {
         }
 
         map.removeAllLayersFromMapandControl();
+        map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
 
-        map.redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
         setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
 
         draw();
@@ -337,7 +337,6 @@ define(function (require) {
     });
 
     $scope.$watch('esResponse', function (resp) {
-      // map.removeAllLayersFromMapandControl();
       if (_.has(resp, 'aggregations')) {
         chartData = respProcessor.process(resp);
         chartData.searchSource = $scope.searchSource;
@@ -446,7 +445,7 @@ define(function (require) {
               - url ( ${wfsOverlay.url} ) is correct and has layers present, 
               - ${wfsOverlay.formatOptions} is an allowed output format
               - WFS is CORs enabled for this domain`);
-            map.clearLayerById(wfsOverlay.id);
+            map.removeLayerFromMapAndControlById(wfsOverlay.id);
           });
       });
     }
@@ -600,7 +599,7 @@ define(function (require) {
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'removeGeoJsonCollection', async (id) => {
-        return map.clearLayerById(id);
+        return map.removeLayerFromMapAndControlById(id);
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
@@ -635,12 +634,11 @@ define(function (require) {
     // ===========================
 
     map.leafletMap.on('removelayer', function (e) {
-      console.log('removing layer: ', e);
-
-      if (_.has($scope, 'vis.params.overlays.dragAndDropPoiLayers')) {
+      if ($scope.vis.params.overlays.dragAndDropPoiLayers &&
+        $scope.vis.params.overlays.dragAndDropPoiLayers.length >= 1) {
         $scope.vis.params.overlays.dragAndDropPoiLayers =
           _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
-            return dragAndDropPoiLayer.currentId !== e.id;
+            return dragAndDropPoiLayer.id !== e.id;
           });
       }
       //scope for saving dnd poi overlays
@@ -649,7 +647,6 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.leafletMap.on('showlayer', function (e) {
-      console.log('showing layer: ', e);
       map.saturateWMSTiles();
       if (map._markers && e.id === 'Aggregation') {
         map._markers.show();
@@ -658,7 +655,6 @@ define(function (require) {
     });
 
     map.leafletMap.on('hidelayer', function (e) {
-      console.log('hiding layer: ', e);
       if (map._markers && e.id === 'Aggregation') {
         map._markers.hide();
       }
@@ -667,7 +663,6 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.leafletMap.on('overlayadd', function (e) {
-      console.log('showing layer: ', e);
       map.saturateWMSTiles();
       if (map._markers && e.id === 'Aggregation') {
         map._markers.show();
