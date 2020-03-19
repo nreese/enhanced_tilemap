@@ -147,20 +147,40 @@
   // when layer control is toggled on
   .leaflet-control-layers.leaflet-control.leaflet-control-layers-expanded {
     height: auto;
-    width: auto;
+    width: fit-content;
+    max-width: 300px;
     padding: 10px;
 
     >form.leaflet-control-layers-header {
       visibility: visible;
-      width: fit-content;
       margin-left: 10px;
       
     }
 
     form.leaflet-control-layers-list {
-      width: fit-content;
+      div.drag-in-progress {
+        div.layer-control-row {
+         background: #FFFFFF;
+            &:active {
+              background:  @kibanaBlue5
+            }
+          }
+        }
+
+        div.drag-not-in-progress {
+          div.layer-control-row:hover {
+                background: @kibanaBlue5;
+              }
+          }
+        span.panel-drag-handler {
+          span.far.fa-grip-lines {
+            color: #ffffff;
+            &:hover {
+              color: @kibanaGray2;
+          }
+        }
+      }
     }
-    
     .panel-checkbox {
       vertical-align: auto;
       padding-left: 10px;
@@ -168,16 +188,16 @@
       padding-right: 5px;
     }
 
-    .panel-label {
-      vertical-align: auto;
-      padding-left: 5px;
-      flex-grow: 1;
+    .label {
+      padding-right: 5px;
+    }
+
+    .iconDiv {
+      padding-right: 5px;
     }
 
     button.btn.panel-remove {
-      // padding-left: 4px;
-      // padding-top: 2px;
-      flex-grow: 1;
+      padding: 4px;
       i.far.fa-trash {
         color: @brand-danger;
       }
@@ -195,17 +215,9 @@
 
   .leaflet-control-layers {
 
-    // .fa {
-    //   &.fa-filter {
-    //     padding-left: 4px;
-    //     color: @kibanaBlue2;
-    //   }
-    // }  
-
     .euiToolTipAnchor {
-      flex-grow: 1;
-      // padding-left: 4px;
-      color: #006BB4;
+      padding-left: 6px;
+      color: @kibanaBlue1;
     }
 
     .fas {
@@ -215,30 +227,8 @@
       }
     }
 
-    // .fa {
-    //   &.fa-exclamation-triangle {
-    //     padding-left: 4px;
-    //     color: @brand-warning;
-    //   }
-    // }
-
     p {
       margin-bottom: 1px;
-    }
-
-    .leaflet-control-layers-group {
-      margin-bottom: .5em;
-
-      &:first-child label {
-
-        input.leaflet-control-layers-selector {
-          margin-left: 0px;
-        }
-      }
-
-      input.leaflet-control-layers-selector {
-        margin-left: 10px;
-      }
     }
 
     .leaflet-control-layers-scrollbar {

@@ -53,6 +53,7 @@ define(function () {
         layer.destroy = () => markers.forEach(self._removeMouseEventsPoint);
         layer.label = options.displayName;
         layer.type = 'vectorpoint';
+        layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="fas fa-map-marker" style="color:${options.color};"></i>`;
       } else if ('Polygon' === geometry.type ||
         'MultiPolygon' === geometry.type) {

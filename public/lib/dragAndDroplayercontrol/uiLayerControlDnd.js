@@ -2,14 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 // import { filter, find, forOwn } from 'lodash';
 import EllipsisWithTooltip from 'react-ellipsis-with-tooltip';
-import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
 import {
   EuiCheckbox,
-  EuiButton,
   EuiIconTip
-  // EuiComboBox,
-  // EuiFormRow
 } from '@elastic/eui';
 
 import {
@@ -18,7 +14,6 @@ import {
   Draggable
 } from 'react-beautiful-dnd';
 
-// import { Item } from 'react-bootstrap/lib/Breadcrumb';
 
 const getItemStyle = (isDragging, draggableStyle) => ({
   // some basic styles to make the items look a bit nicer
@@ -27,7 +22,7 @@ const getItemStyle = (isDragging, draggableStyle) => ({
   borderBottom: '1px solid lightgrey',
   display: 'flex',
   // change background colour if dragging
-  background: isDragging ? '#e6e6e6' : 'none',
+  // background: isDragging ? '#e6e6e6' : 'none',
   margin: 0,
   height: '28px',
   lineHeight: '28px',
@@ -42,11 +37,10 @@ const getListStyle = () => ({
 
 // a little function to help us with reordering the result
 const reorder = (list, startIndex, endIndex) => {
-  //reordering 'within groups' based on drag and drop
   const result = Array.from(list);
   const [removed] = result.splice(startIndex, 1);
   result.splice(endIndex, 0, removed);
-  return layerUtils.orderLayersByType(result);
+  return result;
 };
 
 export class LayerControlDnd extends React.Component {
@@ -61,13 +55,24 @@ export class LayerControlDnd extends React.Component {
     };
   }
 
+  componentDidUpdate() {
+    const hasDifferentLength = this.props.dndCurrentListOrder.length !== this.state.dndCurrentListOrder.length;
+    let hasDifferentOrder = false;
+    if (!hasDifferentLength) {
+      hasDifferentOrder = this.props.dndCurrentListOrder.some((item, index) => this.state.dndCurrentListOrder[index] !== item);
+    }
+    if (hasDifferentLength || hasDifferentOrder) {
+      this.setState({
+        dndCurrentListOrder: this.props.dndCurrentListOrder
+      });
+    }
+  }
+
   onDragEnd(result) {
     // dropped outside the list
     if (!result.destination) {
       return;
     }
-
-    console.log('Dragged to:', result.destination);
 
     let newDndCurrentListOrder = {};
     this.setState(({ dndCurrentListOrder }) => {
@@ -83,20 +88,15 @@ export class LayerControlDnd extends React.Component {
   }
 
   removeListItem(index, id) {
-    //const currentListOrder = filter(this.props.currentListOrder, item => item.id !== itemId);
-    // console.log('remove list item: ', layer.id, layer.label);
     this.setState(prevState => {
       const newListOrder = [...prevState.dndCurrentListOrder];
-      delete newListOrder[index];
+      newListOrder.splice(index, 1);
       this.props.dndRemoveLayerFromControl(newListOrder, id);
       return { dndCurrentListOrder: newListOrder };
     });
   }
 
   changeVisibility(e, layer, index) {
-    //const layerIndex = this.props.currentListOrder;
-    // const card = find(currentListOrder, { id: itemId });
-    console.log(e);
     e.stopPropagation();
     const target = e.target;
     if (target) {
@@ -119,17 +119,19 @@ export class LayerControlDnd extends React.Component {
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
+                className={snapshot.isDraggingOver ? 'drag-in-progress' : 'drag-not-in-progress'}
                 style={getListStyle(snapshot.isDraggingOver)}
               >
                 {this.state.dndCurrentListOrder.map((layer, index) => (
+
                   <Draggable key={layer.id} draggableId={layer.id} index={index}>
                     {(provided, snapshot) => (
-                      <div
+                      <div className='layer-control-row'
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         style={getItemStyle(
                           snapshot.isDragging,
-                          provided.draggableProps.style
+                          provided.draggableProps.style,
                         )}
                       >
                         <span {...provided.dragHandleProps} className="panel-drag-handler">
@@ -147,17 +149,18 @@ export class LayerControlDnd extends React.Component {
                         </span>
 
                         {layer.icon && <div
+                          className="iconDiv"
                           dangerouslySetInnerHTML={{
                             __html: layer.icon
                           }}></div>
                         }
 
-                        <span className="panel-label">
-                          <EllipsisWithTooltip placement="left"
-                          >
-                            {layer.label}
-                          </EllipsisWithTooltip>
-                        </span>
+                        {/* <span className="panel-label"> */}
+                        <EllipsisWithTooltip className="label" placement="left"
+                        >
+                          {layer.label}
+                        </EllipsisWithTooltip>
+                        {/* </span> */}
 
                         {layer.tooManyDocsInfo && <div
                           dangerouslySetInnerHTML={{
@@ -168,7 +171,7 @@ export class LayerControlDnd extends React.Component {
                         {layer.filterPopupContent && <EuiIconTip
                           size="m"
                           type="filter"
-                          color="euiColorPrimary"
+                          color="#006BB4"
                           position="bottom"
                           // onClick={e => e.stopPropagation()}
                           content={<div
@@ -180,7 +183,7 @@ export class LayerControlDnd extends React.Component {
                         </EuiIconTip>
                         }
 
-                        {layer.warning && <EuiIconTip
+                        {layer.warning && layer.warning && <EuiIconTip
                           size="m"
                           type="alert"
                           color="warning"
@@ -188,7 +191,7 @@ export class LayerControlDnd extends React.Component {
                           // onClick={e => e.stopPropagation()}
                           content={<div
                             dangerouslySetInnerHTML={{
-                              __html: layer.warning.message
+                              __html: layer.warning
                             }}></div>}
                         >
                         </EuiIconTip>
