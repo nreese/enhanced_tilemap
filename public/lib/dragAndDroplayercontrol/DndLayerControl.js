@@ -68,16 +68,16 @@ function _redrawOverlays() {
 
 function _addOrReplaceLayer(layer) {
   let replaced = false;
-  // replacing layer
   for (let i = 0; i <= (_allLayers.length - 1); i++) {
+    // replacing layer
     if (_allLayers[i].id === layer.id) {
       _allLayers[i] = layer;
       replaced = true;
       break;
     }
   }
-  //adding layer
   if (!replaced) {
+    //adding layer
     _allLayers.push(layer);
   }
   _orderLayersByType();

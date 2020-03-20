@@ -78,7 +78,7 @@ define(function (require) {
 
       //create Markers feature group and add saved markers
       this._drawnItems = new L.FeatureGroup();
-      this._drawnItems.options = { pane: 'overlayPane' };
+      // this._drawnItems.options = { pane: 'overlayPane' };
       const self = this;
       this._attr.markers.forEach(function (point) {
         let color = 'green';
@@ -90,7 +90,7 @@ define(function (require) {
             point,
             {
               icon: markerIcon(color),
-              pane: 'overlayPane'
+              // pane: 'overlayPane'
             })
         );
       });
