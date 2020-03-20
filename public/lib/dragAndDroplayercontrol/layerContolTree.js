@@ -9,84 +9,33 @@ import {
   EuiFlexGroup,
   EuiIcon,
   EuiToken,
-  EuiButtonEmpty
+  EuiButtonEmpty,
+  EuiHealth,
+  EuiCallOut,
+  EuiSpacer,
+  EuiCodeBlock,
+  EuiTitle,
+  EuiSwitch,
+  EuiBasicTable,
+  EuiSearchBar,
 } from '@elastic/eui';
 
-import { modalWithForm } from './../../vislib/modals/genericModal.js';
-
-class AddMapLayersModal extends React.Component {
+import { modalWithForm } from './../../vislib/modals/genericModal';
+import { getStoredLayers } from './getStoredLayers';
+export class AddMapLayersModal extends React.Component {
   constructor(props) {
     super(props);
   }
 
 
-  _getLayers = () => {
-    //return [
-    //   {
-    //     label: 'Item One',
-    //     id: 'item_one',
-    //     icon: <EuiIcon type="eyeClosed" />,
-    //     iconWhenExpanded: <EuiIcon type="eyeClosed" />,
-    //     isExpanded: true,
-    //     children: [
-    //       {
-    //         label: 'Item A',
-    //         id: 'item_a',
-    //         icon: <EuiIcon type="document" />,
-    //       },
-    //       {
-    //         label: 'Item B',
-    //         id: 'item_b',
-    //         icon: <EuiIcon type="arrowRight" />,
-    //         iconWhenExpanded: <EuiIcon type="arrowDown" />,
-    //         children: [
-    //           {
-    //             label: 'A Cloud',
-    //             id: 'item_cloud',
-    //             icon: <EuiToken iconType="tokenConstant" />,
-    //           },
-    //           {
-    //             label: 'Im a Bug',
-    //             id: 'item_bug',
-    //             icon: <EuiToken iconType="tokenEnum" />,
-    //             // callback: this.showAlert,
-    //           },
-    //         ],
-    //       },
-    //       {
-    //         label: 'Item C',
-    //         id: 'item_c',
-    //         icon: <EuiIcon type="arrowRight" />,
-    //         iconWhenExpanded: <EuiIcon type="arrowDown" />,
-    //         children: [
-    //           {
-    //             label: 'Another Cloud',
-    //             id: 'item_cloud2',
-    //             icon: <EuiToken iconType="tokenConstant" />,
-    //           },
-    //           {
-    //             label:
-    //               'This one is a really long string that we will check truncates correctly',
-    //             id: 'item_bug2',
-    //             icon: <EuiToken iconType="tokenEnum" />,
-    //             // callback: this.showAlert,
-    //           },
-    //         ],
-    //       },
-    //     ],
-    //   },
-    //   {
-    //     label: 'Item Two',
-    //     id: 'item_two',
-    //   },
-    // ];
 
+  _getLayers = () => {
     return [
       {
         label: 'Item One',
         id: 'item_one',
         icon: <EuiIcon type="eyeClosed" />,
-        iconWhenExpanded: <EuiIcon type="eye" />,
+        iconWhenExpanded: <EuiIcon type="eyeClosed" />,
         isExpanded: true,
         children: [
           {
@@ -106,10 +55,10 @@ class AddMapLayersModal extends React.Component {
                 icon: <EuiToken iconType="tokenConstant" />,
               },
               {
-                label: "I'm a Bug",
+                label: 'Im a Bug',
                 id: 'item_bug',
                 icon: <EuiToken iconType="tokenEnum" />,
-                callback: this.showAlert,
+                // callback: this.showAlert,
               },
             ],
           },
@@ -129,7 +78,7 @@ class AddMapLayersModal extends React.Component {
                   'This one is a really long string that we will check truncates correctly',
                 id: 'item_bug2',
                 icon: <EuiToken iconType="tokenEnum" />,
-                callback: this.showAlert,
+                // callback: this.showAlert,
               },
             ],
           },
@@ -142,7 +91,6 @@ class AddMapLayersModal extends React.Component {
     ];
   }
 
-
   _addLayersNotEnabled = () => {
     console.log('adding Layers Not Enabled');
   }
@@ -151,26 +99,27 @@ class AddMapLayersModal extends React.Component {
     console.log('adding Layers Enabled');
   }
 
+  onClose = function () {
+    this.setState({ isModalVisible: false });
+    if (this.props.container) {
+      ReactDOM.unmountComponentAtNode(this.props.container);
+    }
+  };
   render() {
     const title = 'Add Layers';
-    const form = (
-      // <EuiTreeView
-      //   items={this._getLayers()}
-      //   display="compressed"
-      //   expandByDefault
-      //   showExpansionArrows
-      //   aria-label="Document Outline"
-      // />
-      <div style={{ width: '20rem' }}>
-        <EuiTreeView items={this._getLayers()} aria-label="Sample Folder Tree" />
-      </div>
-    );
-    const onClose = function () {
-      this.setState({ isModalVisible: false });
-      if (this.props.container) {
-        ReactDOM.unmountComponentAtNode(this.props.container);
-      }
-    };
+    const form = 'ui tree component goes here';
+    // (
+    //   <div style={{ width: '20rem' }}>
+    //     <EuiTreeView
+    //       items={this._getLayers()}
+    //       display="compressed"
+    //       expandByDefault
+    //       showExpansionArrows
+    //       aria-label="Document Outline"
+    //     />
+    //   </div>
+    // );
+
 
     const footer = (
       <EuiFlexGroup gutterSize="s" alignItems="center">
@@ -178,7 +127,7 @@ class AddMapLayersModal extends React.Component {
           <EuiButtonEmpty
             size="s"
             onClick={() => {
-              onClose();
+              this.onClose();
             }}
           >
             Cancel
@@ -191,7 +140,7 @@ class AddMapLayersModal extends React.Component {
             iconType="plusInCircle"
             onClick={() => {
               this._addLayersNotEnabled();
-              onClose();
+              this.onClose();
             }}
           >
             Add
@@ -205,7 +154,7 @@ class AddMapLayersModal extends React.Component {
             iconType="plusInCircle"
             onClick={() => {
               this._addLayersEnabled();
-              onClose();
+              this.onClose();
             }}
           >
             Add and Enable
@@ -215,87 +164,22 @@ class AddMapLayersModal extends React.Component {
     );
 
     return (
-      modalWithForm(title, form, footer, onClose)
+      modalWithForm(title, form, footer, this.onClose)
     );
   }
 }
 
 
-function showAddLayerTreeModal() {
+export function showAddLayerTreeModal(esClient) {
+  getStoredLayers(esClient);
+
   const container = document.createElement('div');
   const element = (
-
-    <EuiTreeView items={[
-      {
-        label: 'Item One',
-        id: 'item_one',
-        icon: <EuiIcon type="eyeClosed" />,
-        iconWhenExpanded: <EuiIcon type="eye" />,
-        isExpanded: true,
-        children: [
-          {
-            label: 'Item A',
-            id: 'item_a',
-            icon: <EuiIcon type="document" />,
-          },
-          {
-            label: 'Item B',
-            id: 'item_b',
-            icon: <EuiIcon type="arrowRight" />,
-            iconWhenExpanded: <EuiIcon type="arrowDown" />,
-            children: [
-              {
-                label: 'A Cloud',
-                id: 'item_cloud',
-                icon: <EuiToken iconType="tokenConstant" />,
-              },
-              {
-                label: "I'm a Bug",
-                id: 'item_bug',
-                icon: <EuiToken iconType="tokenEnum" />,
-                // callback: this.showAlert,
-              },
-            ],
-          },
-          {
-            label: 'Item C',
-            id: 'item_c',
-            icon: <EuiIcon type="arrowRight" />,
-            iconWhenExpanded: <EuiIcon type="arrowDown" />,
-            children: [
-              {
-                label: 'Another Cloud',
-                id: 'item_cloud2',
-                icon: <EuiToken iconType="tokenConstant" />,
-              },
-              {
-                label:
-                  'This one is a really long string that we will check truncates correctly',
-                id: 'item_bug2',
-                icon: <EuiToken iconType="tokenEnum" />,
-                // callback: this.showAlert,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        label: 'Item Two',
-        id: 'item_two',
-      },
-    ]
-    } aria-label="Sample Folder Tree" />
-
-
-
-    // <AddMapLayersModal
-    //   container={container}
-    // />
+    <AddMapLayersModal
+      container={container}
+    />
   );
   ReactDOM.render(element, container);
 }
 
-export {
-  showAddLayerTreeModal
-};
 

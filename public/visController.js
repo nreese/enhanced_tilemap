@@ -27,7 +27,7 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timefilter, createNotifier) {
+    timefilter, createNotifier, es) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -571,6 +571,7 @@ define(function (require) {
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
       map = new TileMapMap(container, {
+        es,
         center: initialMapState.center,
         zoom: initialMapState.zoom,
         callbacks: callbacks,
