@@ -14,12 +14,18 @@
 import { get } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
-// import { layerControlTree } from '../layerControlTree/layerContolTree';
+import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 
+import {
+  EuiFlexItem,
+  EuiFlexGroup,
+  EuiButtonEmpty
+} from '@elastic/eui';
 
 let _leafletMap;
-let _reactElement;
+let _dndListElement;
+let _addLayerElement;
 let _allLayers;
 
 function setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
@@ -144,7 +150,16 @@ function _updateLayerControl() {
     dndLayerVisibilityChange={dndLayerVisibilityChange}
     dndRemoveLayerFromControl={dndRemoveLayerFromControl}
   >
-  </LayerControlDnd >, _reactElement);
+  </LayerControlDnd >, _dndListElement);
+}
+
+function _createAddLayersButton() {
+  render(<EuiButtonEmpty
+    size="s"
+    onClick={showAddLayerTreeModal()}
+  >
+    Add Layers
+  </EuiButtonEmpty>, _addLayerElement);
 }
 
 function removeAllLayersFromMapandControl() {
@@ -201,7 +216,8 @@ L.Control.DndLayerControl = L.Control.extend({
   },
 
   onRemove: function () {
-    unmountComponentAtNode(_reactElement);
+    unmountComponentAtNode(_dndListElement);
+    unmountComponentAtNode(_addLayerElement);
   },
 
   addBaseLayer: function (layer, name) {
@@ -237,15 +253,21 @@ L.Control.DndLayerControl = L.Control.extend({
 
     //Injecting an element to render React component in
     const form = this._form = L.DomUtil.create('form', className + '-list');
-    _reactElement = L.DomUtil.create('div');
-    form.appendChild(_reactElement);
+    _dndListElement = L.DomUtil.create('div');
+    form.appendChild(_dndListElement);
     _updateLayerControl();
+
+    const footer = this._footer = L.DomUtil.create('div', className + '-add-layer');
+    _addLayerElement = L.DomUtil.create('div');
+    footer.appendChild(_addLayerElement);
+    _createAddLayersButton();
 
     L.DomEvent.on(container, 'click', this._toggleLayerControl, this);
     L.DomUtil.create('a', className + '-toggle', container);
 
     container.appendChild(header);
     container.appendChild(form);
+    container.appendChild(footer);
   },
 
   // IE7 bugs out if you create a radio dynamically, so you have to do it this hacky way (see http://bit.ly/PqYLBe)
@@ -278,6 +300,7 @@ L.Control.DndLayerControl = L.Control.extend({
       }
     } else {
       L.DomUtil.removeClass(this._container, 'leaflet-control-layers-expanded');
+      L.DomUtil.removeClass(this._container, 'leaflet-control-layers-add-layer');
     }
     // (!this._container.className.includes('leaflet-control-layers-expanded')
   },
