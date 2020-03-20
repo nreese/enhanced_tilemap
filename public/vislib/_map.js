@@ -49,7 +49,7 @@ define(function (require) {
     function TileMapMap(container, params) {
       this._container = container;
       this.allLayers = [];
-
+      this.esClient = params.es;
       // keep a reference to all of the optional params
       this.uiState = params.uiState;
       this._callbacks = _.get(params, 'callbacks');
@@ -527,7 +527,7 @@ define(function (require) {
 
       this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
-      this._layerControl = L.control.dndLayerControl(this.allLayers);
+      this._layerControl = L.control.dndLayerControl(this.allLayers, this.esClient);
       this._layerControl.addTo(this.leafletMap);
 
       this._addSetViewControl();

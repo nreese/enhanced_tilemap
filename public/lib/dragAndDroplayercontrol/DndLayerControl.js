@@ -20,13 +20,14 @@ import { LayerControlDnd } from './uiLayerControlDnd';
 import {
   EuiFlexItem,
   EuiFlexGroup,
-  EuiButtonEmpty
+  EuiButton
 } from '@elastic/eui';
 
 let _leafletMap;
 let _dndListElement;
 let _addLayerElement;
 let _allLayers;
+let esClient;
 
 function setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
   if (layer.type === 'poipoint' || layer.type === 'vectorpoint' || layer.type === 'marker') {
@@ -154,12 +155,12 @@ function _updateLayerControl() {
 }
 
 function _createAddLayersButton() {
-  render(<EuiButtonEmpty
+  render(<EuiButton
     size="s"
-    onClick={showAddLayerTreeModal()}
+    onClick={showAddLayerTreeModal(esClient)}
   >
     Add Layers
-  </EuiButtonEmpty>, _addLayerElement);
+  </EuiButton>, _addLayerElement);
 }
 
 function removeAllLayersFromMapandControl() {
@@ -196,8 +197,9 @@ L.Control.DndLayerControl = L.Control.extend({
     groupCheckboxes: false
   },
 
-  initialize: function (allLayers) {
+  initialize: function (allLayers, es) {
     _allLayers = allLayers;
+    esClient = es;
     this._lastZIndex = 0;
   },
 
@@ -270,20 +272,6 @@ L.Control.DndLayerControl = L.Control.extend({
     container.appendChild(footer);
   },
 
-  // IE7 bugs out if you create a radio dynamically, so you have to do it this hacky way (see http://bit.ly/PqYLBe)
-  _createRadioElement: function (name, checked) {
-    let radioHtml = '<input type="radio" class="leaflet-control-layers-selector" name="' + name + '"';
-    if (checked) {
-      radioHtml += ' checked="checked"';
-    }
-    radioHtml += '/>';
-
-    const radioFragment = document.createElement('div');
-    radioFragment.innerHTML = radioHtml;
-
-    return radioFragment.firstChild;
-  },
-
   _toggleLayerControl: function (e) {
     const className = get(e, 'toElement.form.className') || get(e, 'toElement.offsetParent.className');
     if (className.includes('leaflet-control-layers-list')) {
@@ -300,20 +288,11 @@ L.Control.DndLayerControl = L.Control.extend({
       }
     } else {
       L.DomUtil.removeClass(this._container, 'leaflet-control-layers-expanded');
-      L.DomUtil.removeClass(this._container, 'leaflet-control-layers-add-layer');
     }
     // (!this._container.className.includes('leaflet-control-layers-expanded')
-  },
-  _indexOf: function (arr, obj) {
-    for (let i = 0, j = arr.length; i < j; i++) {
-      if (arr[i] === obj) {
-        return i;
-      }
-    }
-    return -1;
   }
 });
 
-L.control.dndLayerControl = function (allLayers) {
-  return new L.Control.DndLayerControl(allLayers);
+L.control.dndLayerControl = function (allLayers, esClient) {
+  return new L.Control.DndLayerControl(allLayers, esClient);
 };
