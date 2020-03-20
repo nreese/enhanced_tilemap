@@ -3,7 +3,6 @@ import _ from 'lodash';
 import $ from 'jquery';
 import L from 'leaflet';
 import utils from 'plugins/enhanced_tilemap/utils';
-import layerUtils from 'plugins/enhanced_tilemap/layerUtils';
 
 define(function (require) {
   return function MarkerFactory($compile, $rootScope) {
@@ -276,7 +275,6 @@ define(function (require) {
       this._markerGroup.type = 'agg';
       this._markerGroup.icon = '<i class="far fa-circle" style="color:#de9847;"></i>';
       this.layerControl.addOverlay(this._markerGroup);
-      // if (this._markerGroup.enabled) this.leafletMap.addLayer(this._markerGroup);
 
       if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {
         this.addLegend();

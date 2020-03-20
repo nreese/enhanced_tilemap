@@ -97,7 +97,6 @@ export class LayerControlDnd extends React.Component {
   }
 
   changeVisibility(e, layer, index) {
-    e.stopPropagation();
     const target = e.target;
     if (target) {
       this.setState(prevState => {
@@ -173,7 +172,6 @@ export class LayerControlDnd extends React.Component {
                           type="filter"
                           color="#006BB4"
                           position="bottom"
-                          // onClick={e => e.stopPropagation()}
                           content={<div
                             dangerouslySetInnerHTML={{
                               __html: layer.filterPopupContent
@@ -188,7 +186,6 @@ export class LayerControlDnd extends React.Component {
                           type="alert"
                           color="warning"
                           position="bottom"
-                          // onClick={e => e.stopPropagation()}
                           content={<div
                             dangerouslySetInnerHTML={{
                               __html: layer.warning
