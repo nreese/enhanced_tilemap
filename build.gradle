@@ -23,6 +23,10 @@ apply plugin: "base"
 apply from: "$rootDir/gradle/utils/repository.gradle"
 apply from: "$rootDir/gradle/utils/loadPackageJson.gradle"
 
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
 def packageJson = loadPackageJson()
 
 ///////////////////////////////////////////////////
