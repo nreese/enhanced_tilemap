@@ -23,6 +23,9 @@ apply plugin: "base"
 apply from: "$rootDir/gradle/utils/repository.gradle"
 apply from: "$rootDir/gradle/utils/loadPackageJson.gradle"
 
+// This disables publication of gradle metadata to the artifactory
+// The metadata is published as SHA-512 which is unsupported and we don't need it anyway
+// https://docs.gradle.org/6.0.1/userguide/publishing_gradle_module_metadata.html#sub:disabling-gmm-publication
 tasks.withType(GenerateModuleMetadata) {
     enabled = false
 }
