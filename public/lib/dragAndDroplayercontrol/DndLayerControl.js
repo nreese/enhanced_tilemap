@@ -18,8 +18,6 @@ import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 
 import {
-  EuiFlexItem,
-  EuiFlexGroup,
   EuiButton
 } from '@elastic/eui';
 
@@ -157,6 +155,7 @@ function _updateLayerControl() {
 function _createAddLayersButton() {
   render(<EuiButton
     size="s"
+    // onClick={() => showAddLayerTreeModal(esClient)}
     onClick={showAddLayerTreeModal(esClient)}
   >
     Add Layers

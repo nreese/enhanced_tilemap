@@ -1,0 +1,216 @@
+
+import React, { createContext } from 'react';
+import classNames from 'classnames';
+
+import {
+  // classNames,
+  EuiCheckbox,
+  EuiTreeView,
+  EuiI18n,
+  EuiIcon,
+  EuiScreenReaderOnly,
+  EuiText,
+  // keyCodes,
+  // htmlIdGenerator
+} from '@elastic/eui';
+
+const EuiTreeViewContext = createContext('');
+// const treeIdGenerator = ('euiTreeView');
+
+
+const displayToClassNameMap = {
+  default: null,
+  compressed: 'euiTreeView--compressed',
+};
+
+function hasAriaLabel(x) {
+  return x.hasOwnProperty('aria-label');
+}
+
+class EuiTreeViewCheckbox extends EuiTreeView {
+  renderCheckbox(item) {
+    return (
+      <EuiCheckbox
+        id={item.id}
+        // label={item.label}
+        checked={item.checked}
+        onChange={() => {
+          console.log(item.checked);
+        }}
+        style={{ width: '20px' }}
+      />
+    );
+  }
+
+  setCheckbox(node, e) {
+    //   this.setState(prevState => {
+    //     const list = [...prevState.items];
+    //     const item = this._getItem(id, list);
+    //     item.checked = !item.checked;
+    //     console.log('On click change: ', list[0].checked);
+    //     return { items: list };
+    //   });
+  }
+
+  render() {
+    const {
+      children,
+      className,
+      items,
+      display = 'default',
+      expandByDefault,
+      showExpansionArrows,
+      ...rest
+    } = this.props;
+    // Computed classNames
+    const classes = classNames(
+      'euiTreeView',
+      display ? displayToClassNameMap[display] : null,
+      { 'euiTreeView--withArrows': showExpansionArrows },
+      className
+    );
+    const instructionsId = `${this.state.treeID}--instruction`;
+    return (
+      <EuiTreeViewContext.Provider value={this.state.treeID}>
+        <EuiText
+          size={display === 'compressed' ? 's' : 'm'}
+          className="euiTreeView__wrapper">
+          {!this.isNested && (
+            <EuiI18n
+              token="euiTreeView.listNavigationInstructions"
+              default="You can quickly navigate this list using arrow keys.">
+              {(listNavigationInstructions) => (
+                <EuiScreenReaderOnly>
+                  <p id={instructionsId}>{listNavigationInstructions}</p>
+                </EuiScreenReaderOnly>
+              )}
+            </EuiI18n>
+          )}
+          <ul
+            className={classes}
+            id={this.state.treeID}
+            aria-describedby={!this.isNested ? instructionsId : undefined}
+            {...rest}>
+            {items.map((node, index) => {
+              const buttonId = `${this.state.treeID}--${index}--node`;
+              return (
+                <EuiI18n
+                  key={node.label + index}
+                  token="euiTreeView.ariaLabel"
+                  default="{nodeLabel} child of {ariaLabel}"
+                  values={{
+                    nodeLabel: node.label,
+                    ariaLabel: hasAriaLabel(rest) ? rest['aria-label'] : '',
+                  }}>
+                  {(ariaLabel) => {
+                    const label = hasAriaLabel(rest)
+                      ? {
+                        'aria-label': ariaLabel,
+                      }
+                      : {
+                        'aria-labelledby': `${buttonId} ${
+                          rest['aria-labelledby']}`,
+                      };
+                    const nodeClasses = classNames(
+                      'euiTreeView__node',
+                      display ? displayToClassNameMap[display] : null,
+                      { 'euiTreeView__node--expanded': this.isNodeOpen(node) }
+                    );
+                    const nodeButtonClasses = classNames(
+                      'euiTreeView__nodeInner',
+                      showExpansionArrows && node.children
+                        ? 'euiTreeView__nodeInner--withArrows'
+                        : null,
+                      this.state.activeItem === node.id
+                        ? 'euiTreeView__node--active'
+                        : null,
+                      node.className ? node.className : null
+                    );
+                    return (
+                      <React.Fragment>
+                        {!node.filtered && <li className={nodeClasses} style={{ listStyleType: 'none' }}>
+                          {<input type="checkbox"
+                            id={node.id}
+                            name={node.id}
+                            onChange={(e) => {
+                              console.log('here too:', e);
+                              node.checked = !node.checked;
+                            }
+                            }
+                            defaultChecked={node.checked}
+                            style={{ paddingLeft: '10px' }}
+                          ></input>}
+
+                          <button
+                            id={buttonId}
+                            aria-controls={`euiNestedTreeView-${
+                              this.state.treeID}`}
+                            aria-expanded={this.isNodeOpen(node)}
+                            ref={ref => this.setButtonRef(ref, index)}
+                            data-test-subj={`euiTreeViewButton-${
+                              this.state.treeID}`}
+                            onKeyDown={(event) =>
+                              this.onKeyDown(event, node)
+                            }
+                            onClick={() => this.handleNodeClick(node)}
+                            className={nodeButtonClasses}
+                            style={{ paddingLeft: '10px' }}
+                          >
+                            {showExpansionArrows && (node.children && node.children.length >= 1) ? (
+                              <EuiIcon
+                                className="euiTreeView__expansionArrow"
+                                size={display === 'compressed' ? 's' : 'm'}
+                                type={
+                                  this.isNodeOpen(node)
+                                    ? 'arrowDown'
+                                    : 'arrowRight'
+                                }
+                              />
+                            ) : null}
+                            {node.icon && !node.useEmptyIcon ? (
+                              <span className="euiTreeView__iconWrapper">
+                                {this.isNodeOpen(node) && node.iconWhenExpanded
+                                  ? node.iconWhenExpanded
+                                  : node.icon}
+                              </span>
+                            ) : null}
+                            {node.useEmptyIcon && !node.icon ? (
+                              <span className="euiTreeView__iconPlaceholder" />
+                            ) : null}
+                            <span className="euiTreeView__nodeLabel">
+                              {node.label}
+                            </span>
+
+                          </button>
+                          <div
+                            id={`euiNestedTreeView-${this.state.treeID}`}
+                            onKeyDown={(event) =>
+                              this.onChildrenKeydown(event, index)
+                            }>
+                            {node.children && this.isNodeOpen(node) ? (
+                              <EuiTreeViewCheckbox
+                                items={node.children}
+                                display={display}
+                                showExpansionArrows={showExpansionArrows}
+                                expandByDefault={this.state.expandChildNodes}
+                                {...label}
+                              />
+                            ) : null}
+                          </div>
+                        </li>
+                        }
+                      </React.Fragment>
+                    );
+                  }}
+                </EuiI18n>
+              );
+            })}
+          </ul>
+        </EuiText>
+      </EuiTreeViewContext.Provider >
+    );
+  }
+}
+
+export { EuiTreeViewCheckbox };
+
