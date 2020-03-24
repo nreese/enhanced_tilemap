@@ -1,95 +1,117 @@
 import React from 'react';
-// import { ReactDOM } from 'react-dom';
+import { cloneDeep } from 'lodash';
 
 import ReactDOM from 'react-dom';
 import {
-  EuiTreeView,
+  EuiFieldSearch,
   EuiButton,
   EuiFlexItem,
   EuiFlexGroup,
-  EuiIcon,
-  EuiToken,
   EuiButtonEmpty,
-  EuiHealth,
-  EuiCallOut,
-  EuiSpacer,
-  EuiCodeBlock,
-  EuiTitle,
-  EuiSwitch,
-  EuiBasicTable,
-  EuiSearchBar,
-} from '@elastic/eui';
 
+} from '@elastic/eui';
+import { EuiTreeViewCheckbox } from './euiTreeViewCheckbox';
 import { modalWithForm } from './../../vislib/modals/genericModal';
-import { getStoredLayers } from './getStoredLayers';
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 export class AddMapLayersModal extends React.Component {
   constructor(props) {
     super(props);
+    this.state = {
+      items: [],
+      value: ''
+    };
   }
 
-
-
-  _getLayers = () => {
-    return [
-      {
-        label: 'Item One',
-        id: 'item_one',
-        icon: <EuiIcon type="eyeClosed" />,
-        iconWhenExpanded: <EuiIcon type="eyeClosed" />,
-        isExpanded: true,
-        children: [
-          {
-            label: 'Item A',
-            id: 'item_a',
-            icon: <EuiIcon type="document" />,
-          },
-          {
-            label: 'Item B',
-            id: 'item_b',
-            icon: <EuiIcon type="arrowRight" />,
-            iconWhenExpanded: <EuiIcon type="arrowDown" />,
-            children: [
-              {
-                label: 'A Cloud',
-                id: 'item_cloud',
-                icon: <EuiToken iconType="tokenConstant" />,
-              },
-              {
-                label: 'Im a Bug',
-                id: 'item_bug',
-                icon: <EuiToken iconType="tokenEnum" />,
-                // callback: this.showAlert,
-              },
-            ],
-          },
-          {
-            label: 'Item C',
-            id: 'item_c',
-            icon: <EuiIcon type="arrowRight" />,
-            iconWhenExpanded: <EuiIcon type="arrowDown" />,
-            children: [
-              {
-                label: 'Another Cloud',
-                id: 'item_cloud2',
-                icon: <EuiToken iconType="tokenConstant" />,
-              },
-              {
-                label:
-                  'This one is a really long string that we will check truncates correctly',
-                id: 'item_bug2',
-                icon: <EuiToken iconType="tokenEnum" />,
-                // callback: this.showAlert,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        label: 'Item Two',
-        id: 'item_two',
-      },
-    ];
+  componentDidMount() {
+    this.getItems(this.props.esClient);
   }
+
+  _changeCheckboxStatus = (id) => {
+    // const item = this._getItem(id, this.state.items);
+    this.setState(prevState => {
+      const list = [...prevState.items];
+      const item = this._getItem(id, list);
+      item.checked = !item.checked;
+      console.log('On click change: ', list[0].checked);
+      return { items: list };
+    });
+  }
+
+  _getParent = (id, list) => {
+    const parentArray = id.split('/');
+    parentArray.pop();
+    if (parentArray.length === 0) {
+      return false;
+    }
+    const parentPath = parentArray.join('/');
+    return this._getItem(parentPath, list);
+  }
+
+  _getItem = (id, list) => {
+    let parent = list;
+    while (parent != null) {
+      for (let i = 0; i <= parent.length - 1; i++) {
+        if (parent[i].id === id || id === '') {
+          return parent[i];
+        } else if (id.includes(parent[i].id)) {
+          parent = parent[0].children;
+          break;
+        }
+      }
+    }
+  }
+
+  _makeUiTreeStructure = (aggs) => {
+    const storedLayersList = [];
+    aggs.forEach(layer => {
+      const itemTemplate = {
+        label: '',
+        id: '',
+        checked: true,
+        filtered: false,
+        children: []
+      };
+
+      const item = cloneDeep(itemTemplate);
+      item.label = capitalizeFirstLetter(layer.key.split('/')[layer.key.split('/').length - 1]);
+      item.id = layer.key;
+      const parent = this._getParent(item.id, storedLayersList);
+      if (parent) {
+        parent.children.push(item);
+      } else {
+        storedLayersList.push(item);
+      }
+    });
+    return storedLayersList;
+  }
+
+  getItems = async () => {
+    const resp = await this.props.esClient.search({
+      index: '.map__*',
+      body: {
+        query: { 'match_all': {} },
+        aggs: {
+          2: {
+            terms: {
+              field: 'spatial_path',
+              order: { _key: 'asc' }
+            }
+          }
+        },
+        size: 0
+      }
+    });
+
+    const aggs = resp.aggregations[2].buckets;
+    this.setState({
+      items: this._makeUiTreeStructure(aggs)
+    });
+  }
+
 
   _addLayersNotEnabled = () => {
     console.log('adding Layers Not Enabled');
@@ -97,28 +119,69 @@ export class AddMapLayersModal extends React.Component {
 
   _addLayersEnabled = () => {
     console.log('adding Layers Enabled');
+    console.log(this.state.items);
   }
 
-  onClose = function () {
-    this.setState({ isModalVisible: false });
+  onClose = () => {
     if (this.props.container) {
       ReactDOM.unmountComponentAtNode(this.props.container);
     }
   };
+
+  _filterList = (searchEntry) => {
+    function recursivelyFilterList(parent) {
+      parent.forEach(item => {
+        const lowercase = item.label.toLowerCase();
+        if (!lowercase.includes(searchEntry) && item.children.length === 0) {
+          item.filtered = true;
+        } else {
+          item.filtered = false;
+        }
+        if (item.children && item.children.length >= 1) {
+          recursivelyFilterList(item.children);
+        }
+      });
+    }
+    this.setState(prevState => {
+      const list = [...prevState.items];
+      recursivelyFilterList(list);
+      return {
+        value: searchEntry,
+        items: list
+      };
+    });
+  }
+
   render() {
+    if (this.state && this.state.items && this.state.items.length >= 1) {
+      console.log('render: ', this.state.items[0].checked);
+    }
     const title = 'Add Layers';
-    const form = 'ui tree component goes here';
-    // (
-    //   <div style={{ width: '20rem' }}>
-    //     <EuiTreeView
-    //       items={this._getLayers()}
-    //       display="compressed"
-    //       expandByDefault
-    //       showExpansionArrows
-    //       aria-label="Document Outline"
-    //     />
-    //   </div>
-    // );
+    const form = (
+      <div style={{ width: '24rem' }}>
+        <div>
+          <EuiFieldSearch
+            placeholder="Find yo mapzzz..."
+            value={this.state.value}
+            onChange={(e) => this._filterList(e.target.value.toLowerCase())}
+            isClearable={true}
+            aria-label="Use aria labels when no actual label is in use"
+            fullWidth={true}
+          />
+        </div>
+        <div style={{ overflowY: 'scroll', border: '1px solid lightgrey' }}>
+          <EuiTreeViewCheckbox
+            items={this.state.items}
+            display={'default'}
+            expandByDefault={true}
+            showExpansionArrows={true}
+            style={{
+              height: '300px'
+            }}
+          />
+        </div>
+      </div>
+    );
 
 
     const footer = (
@@ -169,13 +232,11 @@ export class AddMapLayersModal extends React.Component {
   }
 }
 
-
 export function showAddLayerTreeModal(esClient) {
-  getStoredLayers(esClient);
-
   const container = document.createElement('div');
   const element = (
     <AddMapLayersModal
+      esClient={esClient}
       container={container}
     />
   );
