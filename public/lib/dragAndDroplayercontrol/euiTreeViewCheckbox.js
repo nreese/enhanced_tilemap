@@ -28,29 +28,6 @@ function hasAriaLabel(x) {
 }
 
 class EuiTreeViewCheckbox extends EuiTreeView {
-  renderCheckbox(item) {
-    return (
-      <EuiCheckbox
-        id={item.id}
-        // label={item.label}
-        checked={item.checked}
-        onChange={() => {
-          console.log(item.checked);
-        }}
-        style={{ width: '20px' }}
-      />
-    );
-  }
-
-  setCheckbox(node, e) {
-    //   this.setState(prevState => {
-    //     const list = [...prevState.items];
-    //     const item = this._getItem(id, list);
-    //     item.checked = !item.checked;
-    //     console.log('On click change: ', list[0].checked);
-    //     return { items: list };
-    //   });
-  }
 
   render() {
     const {
@@ -132,11 +109,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                           {<input type="checkbox"
                             id={node.id}
                             name={node.id}
-                            onChange={(e) => {
-                              console.log('here too:', e);
-                              node.checked = !node.checked;
-                            }
-                            }
+                            onChange={() => node.checked = !node.checked}
                             defaultChecked={node.checked}
                             style={{ paddingLeft: '10px' }}
                           ></input>}
