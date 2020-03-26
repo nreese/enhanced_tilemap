@@ -34,7 +34,7 @@ define(function (require) {
       },
       mapMoveEnd: function (event) {
         //Fetch new data if map bounds are outsize of collar
-        const bounds = utils.scaleBounds(event.mapBounds, 1);
+        const bounds = utils.geoBoundingBoxBounds(event.mapBounds, 1);
         if (_.has(event, 'collar.top_left') && !utils.contains(event.collar, bounds)) {
           event.searchSource.fetch();
         }

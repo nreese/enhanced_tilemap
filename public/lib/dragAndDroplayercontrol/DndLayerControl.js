@@ -1,3 +1,4 @@
+/* eslint-disable siren/memory-leak */
 // ********************************************************************************
 // This file is taken from the link below:
 // https://github.com/ismyrnow/leaflet-groupedlayercontrol/pull/57
@@ -11,24 +12,28 @@
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
 
-import { get } from 'lodash';
+import { get, debounce } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
+import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 
 import {
   EuiButton
 } from '@elastic/eui';
 
+
+const mrisOnMap = [];
 let _leafletMap;
 let _dndListElement;
 let _addLayerElement;
 let _allLayers;
 let esClient;
+let mainSearchDetails;
 
 function setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
-  if (layer.type === 'poipoint' || layer.type === 'vectorpoint' || layer.type === 'marker') {
+  if (layer.type === 'poipoint' || layer.type === 'vectorpoint' || layer.type === 'marker' || layer.type === 'mripoint') {
     layer.eachLayer(marker => {
       //The leaflet overlay pane has a z-index of 200
       //Marker layer types (i.e. poi and vector point layers) have been added to the overlay pane
@@ -92,6 +97,7 @@ function _addOrReplaceLayer(layer) {
 function _clearAllLayersFromMap() {
   _leafletMap.eachLayer(function (layer) {
     if (layer.type !== 'base') {
+      //todo thebelow should be executed, but need to keep events, I think
       // if (layer.destroy) {
       //   layer.destroy();
       // }
@@ -111,6 +117,14 @@ function _clearLayerFromMapById(id) {
   });
 }
 
+function _updateMriVisibility(id, enabled) {
+  mrisOnMap.forEach(item => {
+    if (item.id === id) {
+      item.enabled = enabled;
+    }
+  });
+}
+
 function dndLayerVisibilityChange(enabled, layer, index) {
   _allLayers[index].enabled = enabled;
   let type;
@@ -120,6 +134,10 @@ function dndLayerVisibilityChange(enabled, layer, index) {
   } else {
     _clearLayerFromMapById(layer.id);
     type = 'hidelayer';
+  }
+
+  if (layer.type === 'mripoint' || layer.type === 'mrishape') {
+    _updateMriVisibility(layer.id, enabled);
   }
 
   _leafletMap.fire(type, {
@@ -152,11 +170,69 @@ function _updateLayerControl() {
   </LayerControlDnd >, _dndListElement);
 }
 
+async function getMriLayer(spatialPath, enabled) {
+  const resp = await esClient.search({
+    index: '.map__*',
+    body: {
+      query: {
+        bool: {
+          must: {
+            term: {
+              'spatial_path.raw': spatialPath
+            }
+          },
+          filter: mainSearchDetails.mapExtentFilter()
+        }
+      }
+    }
+  });
+
+  const options = {
+    id: spatialPath,
+    displayName: spatialPath,
+    color: get(resp[0], 'properties.color', 'DA9C0D'),
+    size: get(resp[0], 'properties.size', 'm'),
+    popupFields: get(resp, 'properties.popup', []),
+    indexPattern: mainSearchDetails.indexPattern,
+    _siren: mainSearchDetails._siren,
+  };
+
+  let geo;
+  if (resp.hits.total >= 1) {
+    geo = {
+      type: resp.hits.hits[0]._source.shape.type,
+      field: mainSearchDetails.geoFieldName
+    };
+  }
+
+
+  const layer = new EsLayer().createLayer(resp.hits.hits, geo, 'mri', options);
+  layer.enabled = enabled;
+  layer.close = true;
+  return layer;
+}
+
+function addOverlay(layer) {
+  _addOrReplaceLayer(layer);
+  _updateLayerControl();
+}
+
+
+function _redrawMriLayers() {
+  if (mrisOnMap.length >= 1) {
+    mrisOnMap.forEach(async item => {
+      if (item.enabled) {
+        const layer = await getMriLayer(item.id, item.enabled);
+        addOverlay(layer);
+      }
+    });
+  }
+}
+
 function _createAddLayersButton() {
   render(<EuiButton
     size="s"
-    // onClick={() => showAddLayerTreeModal(esClient)}
-    onClick={showAddLayerTreeModal(esClient)}
+    onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
   >
     Add Layers
   </EuiButton>, _addLayerElement);
@@ -171,10 +247,6 @@ function removeLayerFromMapAndControlById(id) {
   _clearLayerFromMapById(id);
 }
 
-function addOverlay(layer) {
-  _addOrReplaceLayer(layer);
-  _updateLayerControl();
-}
 
 function destroy() {
   _allLayers.forEach(layer => {
@@ -196,9 +268,10 @@ L.Control.DndLayerControl = L.Control.extend({
     groupCheckboxes: false
   },
 
-  initialize: function (allLayers, es) {
+  initialize: function (allLayers, es, mSD) {
     _allLayers = allLayers;
     esClient = es;
+    mainSearchDetails = mSD;
     this._lastZIndex = 0;
   },
 
@@ -212,6 +285,15 @@ L.Control.DndLayerControl = L.Control.extend({
 
   onAdd: function (map) {
     _leafletMap = map;
+
+    _leafletMap.on('moveend', debounce(() => {
+      _redrawMriLayers();
+    }, 150, false));
+
+    _leafletMap.on('zoomend', debounce(() => {
+      _redrawMriLayers();
+    }, 150, false));
+
     this._initLayout();
     return this._container;
   },
@@ -288,10 +370,9 @@ L.Control.DndLayerControl = L.Control.extend({
     } else {
       L.DomUtil.removeClass(this._container, 'leaflet-control-layers-expanded');
     }
-    // (!this._container.className.includes('leaflet-control-layers-expanded')
   }
 });
 
-L.control.dndLayerControl = function (allLayers, esClient) {
-  return new L.Control.DndLayerControl(allLayers, esClient);
+L.control.dndLayerControl = function (allLayers, esClient, mainSearchDetails) {
+  return new L.Control.DndLayerControl(allLayers, esClient, mainSearchDetails);
 };

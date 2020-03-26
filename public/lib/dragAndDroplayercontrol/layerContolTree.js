@@ -1,7 +1,8 @@
 import React from 'react';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, get, findIndex } from 'lodash';
 
 import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 import {
   EuiFieldSearch,
   EuiButton,
@@ -36,7 +37,6 @@ export class AddMapLayersModal extends React.Component {
       const list = [...prevState.items];
       const item = this._getItem(id, list);
       item.checked = !item.checked;
-      console.log('On click change: ', list[0].checked);
       return { items: list };
     });
   }
@@ -112,14 +112,35 @@ export class AddMapLayersModal extends React.Component {
     });
   }
 
+  _recursivelyDrawItems(list, enabled) {
+    list.forEach(async item => {
+      if (item.checked) {
+        const layer = await this.props.getMriLayer(item.id, enabled);
+        this.props.addOverlay(layer);
 
-  _addLayersNotEnabled = () => {
-    console.log('adding Layers Not Enabled');
+        const itemOnMapIndex = findIndex(this.props.mrisOnMap, itemOnMap => itemOnMap.id === item.id);
+
+        item.enabled = enabled;
+        if (itemOnMapIndex !== -1) {
+          this.props.mrisOnMap[itemOnMapIndex] = item;
+        } else {
+          this.props.mrisOnMap.push(item);
+        }
+      }
+      if (item.children && item.children.length >= 1) {
+        this._recursivelyDrawItems(item.children, enabled);
+      }
+    });
+  }
+
+  _addLayersNotEnabled = async () => {
+    const enabled = false;
+    this._recursivelyDrawItems(this.state.items, enabled);
   }
 
   _addLayersEnabled = () => {
-    console.log('adding Layers Enabled');
-    console.log(this.state.items);
+    const enabled = true;
+    this._recursivelyDrawItems(this.state.items, enabled);
   }
 
   onClose = () => {
@@ -153,15 +174,12 @@ export class AddMapLayersModal extends React.Component {
   }
 
   render() {
-    if (this.state && this.state.items && this.state.items.length >= 1) {
-      console.log('render: ', this.state.items[0].checked);
-    }
     const title = 'Add Layers';
     const form = (
       <div style={{ width: '24rem' }}>
         <div>
           <EuiFieldSearch
-            placeholder="Find yo mapzzz..."
+            placeholder="It would be delightful to help with your search..."
             value={this.state.value}
             onChange={(e) => this._filterList(e.target.value.toLowerCase())}
             isClearable={true}
@@ -231,11 +249,21 @@ export class AddMapLayersModal extends React.Component {
     );
   }
 }
+AddMapLayersModal.propTypes = {
+  addOverlay: PropTypes.func.isRequired,
+  mrisOnMap: PropTypes.array.isRequired,
+  getMriLayer: PropTypes.func.isRequired
+  // esClient: PropTypes.func.isRequired,
+  // container: PropTypes.element.isRequired
+};
 
-export function showAddLayerTreeModal(esClient) {
+export function showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer) {
   const container = document.createElement('div');
   const element = (
     <AddMapLayersModal
+      getMriLayer={getMriLayer}
+      mrisOnMap={mrisOnMap}
+      addOverlay={addOverlay}
       esClient={esClient}
       container={container}
     />

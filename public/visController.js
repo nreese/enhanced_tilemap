@@ -12,7 +12,7 @@ import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { ResizeCheckerProvider } from 'ui/vislib/lib/resize_checker';
 import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
-
+import Vector from './vislib/vector_layer_types/vector';
 
 
 
@@ -33,8 +33,7 @@ define(function (require) {
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
-    const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
-    const VectorProvider = Private(require('plugins/enhanced_tilemap/vector'));
+    const POIsProvider = Private(require('plugins/enhanced_tilemap/vislib/vector_layer_types/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
@@ -229,7 +228,7 @@ define(function (require) {
     }
 
     function aggFilter(field) {
-      collar = utils.scaleBounds(
+      collar = utils.geoBoundingBoxBounds(
         map.mapBounds(),
         $scope.vis.params.collarScale);
       const filter = { geo_bounding_box: {} };
@@ -245,8 +244,13 @@ define(function (require) {
     });
 
     function getGeoBoundingBox() {
-      const geoBoundingBox = utils.scaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
+      const geoBoundingBox = utils.geoBoundingBoxBounds(map.mapBounds(), $scope.vis.params.collarScale);
       return { geo_bounding_box: geoBoundingBox };
+    }
+
+    function getGeoShapeBox() {
+      const geoShapeBox = utils.geoShapeScaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
+      return { geo_shape: geoShapeBox };
     }
 
     function initPOILayer(layerParams) {
@@ -300,7 +304,7 @@ define(function (require) {
         type: _.get(options, 'type', 'noType')
       };
 
-      const layer = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
+      const layer = new Vector(geoJsonCollection).getLayer(optionsWithDefaults);
       layer.id = id;
       map.addVectorLayer(layer, optionsWithDefaults);
 
@@ -571,7 +575,14 @@ define(function (require) {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
+      const mainSearchDetails = {
+        indexPattern: $scope.vis.indexPattern.title,
+        geoFieldName: $scope.vis.aggs[1].params.field.name,
+        _siren: $scope.vis._siren,
+        mapExtentFilter: getGeoShapeBox
+      };
       map = new TileMapMap(container, {
+        mainSearchDetails,
         es,
         center: initialMapState.center,
         zoom: initialMapState.zoom,
@@ -735,7 +746,7 @@ define(function (require) {
           break;
         case 'rectangle':
           map._callbacks.rectangle({
-            bounds: utils.scaleBounds(e.layer.getBounds(), 1),
+            bounds: utils.geoBoundingBoxBounds(e.layer.getBounds(), 1),
             indexPatternId,
             field,
             sirenMeta

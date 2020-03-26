@@ -43,7 +43,6 @@ define(function (require) {
             }
           }];
 
-          console.log(result);
           const expectedDonutsToExcludeLength = 0;
           expect(result.polygonsToFilter).to.eql(expectedPolygonFilter);
           expect(result.donutsToExclude.length).to.eql(expectedDonutsToExcludeLength);

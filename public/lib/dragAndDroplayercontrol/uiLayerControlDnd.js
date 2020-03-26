@@ -47,9 +47,7 @@ export class LayerControlDnd extends React.Component {
 
   constructor(props) {
     super(props);
-
     this.onDragEnd = this.onDragEnd.bind(this);
-    // this.listItems = this.listItems.bind(this);
     this.state = {
       dndCurrentListOrder: props.dndCurrentListOrder
     };
