@@ -12,7 +12,7 @@
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
 
-import { get, debounce } from 'lodash';
+import { get, debounce, remove } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
@@ -157,7 +157,12 @@ function dndRemoveLayerFromControl(newList, id) {
   _allLayers = newList;
   _clearLayerFromMapById(id);
   _updateLayerControl();
+  _removeMriFromLayerControlArray(id);
   _leafletMap.fire('removelayer', { id });
+}
+
+function _removeMriFromLayerControlArray(id) {
+  remove(mrisOnMap, (layer) => layer.id === id);
 }
 
 function _updateLayerControl() {
@@ -190,7 +195,7 @@ async function getMriLayer(spatialPath, enabled) {
   const options = {
     id: spatialPath,
     displayName: spatialPath,
-    color: get(resp[0], 'properties.color', 'DA9C0D'),
+    color: get(resp[0], 'properties.color', '#8510d8'),
     size: get(resp[0], 'properties.size', 'm'),
     popupFields: get(resp, 'properties.popup', []),
     indexPattern: mainSearchDetails.indexPattern,
