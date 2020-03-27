@@ -32,7 +32,6 @@ export class AddMapLayersModal extends React.Component {
   }
 
   _changeCheckboxStatus = (id) => {
-    // const item = this._getItem(id, this.state.items);
     this.setState(prevState => {
       const list = [...prevState.items];
       const item = this._getItem(id, list);

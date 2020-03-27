@@ -15,6 +15,7 @@ export default class EsLayer {
     let layer = null;
     const self = this;
     if (geo) {
+      geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         const markers = _.map(hits, hit => {
           return self._createMarker(hit, geo.field, options);
@@ -32,7 +33,9 @@ export default class EsLayer {
           } else {
             geometry = hit._source.shape;
           }
-          if (geometry) {
+          if (geometry.type === 'multipolygon') {
+            geometry.type === 'MultiPolygon';
+          } else {
             geometry.type = self.capitalizeFirstLetter(geometry.type);
           }
 
@@ -58,7 +61,7 @@ export default class EsLayer {
                 polygon.on('mouseout', self.addMouseOutToGeoShape);
               }
 
-              if (_.get(feature, 'geometry.type') === 'Polygon') {
+              if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
                 polygon._click = function fireEtmSelectFeature() {
                   polygon._map.fire('etm:select-feature', {
                     geojson: polygon.toGeoJSON()
@@ -75,9 +78,12 @@ export default class EsLayer {
                 });
             },
             style: {
-              color: options.color,
-              weight: 1.5,
-              opacity: 0.65
+              fillColor: '#8510d8',
+              weight: 2,
+              opacity: 1,
+              color: '#000000',
+              dashArray: '3',
+              fillOpacity: 0.75
             }
           }
         );
