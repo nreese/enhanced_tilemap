@@ -359,8 +359,7 @@ L.Control.DndLayerControl = L.Control.extend({
   },
 
   _toggleLayerControl: function (e) {
-    const className = get(e, 'toElement.form.className') || get(e, 'toElement.offsetParent.className');
-    if (className.includes('leaflet-control-layers-list')) {
+    if (e.target !== this._container && e.target.offsetParent !== this._container) {
       return;
     } else if (!this._container.className.includes('leaflet-control-layers-expanded')) {
       L.DomUtil.addClass(this._container, 'leaflet-control-layers-expanded');
