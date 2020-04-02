@@ -1,5 +1,5 @@
 import React from 'react';
-import { cloneDeep, get, findIndex } from 'lodash';
+import { cloneDeep, findIndex } from 'lodash';
 
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
@@ -9,7 +9,7 @@ import {
   EuiFlexItem,
   EuiFlexGroup,
   EuiButtonEmpty,
-
+  EuiIcon
 } from '@elastic/eui';
 import { EuiTreeViewCheckbox } from './euiTreeViewCheckbox';
 import { modalWithForm } from './../../vislib/modals/genericModal';
@@ -31,15 +31,6 @@ export class AddMapLayersModal extends React.Component {
     this.getItems(this.props.esClient);
   }
 
-  _changeCheckboxStatus = (id) => {
-    this.setState(prevState => {
-      const list = [...prevState.items];
-      const item = this._getItem(id, list);
-      item.checked = !item.checked;
-      return { items: list };
-    });
-  }
-
   _getParent = (id, list) => {
     const parentArray = id.split('/');
     parentArray.pop();
@@ -54,37 +45,76 @@ export class AddMapLayersModal extends React.Component {
     let parent = list;
     while (parent != null) {
       for (let i = 0; i <= parent.length - 1; i++) {
-        if (parent[i].id === id || id === '') {
-          return parent[i];
-        } else if (id.includes(parent[i].id)) {
-          parent = parent[0].children;
+        const currentParent = parent[i];
+        if (currentParent.id === id || id === '') {
+          return currentParent;
+        } else if (currentParent.id === id.substring(3)) {
+          return parent[i].children[0];
+        } else if (id.includes(currentParent.id) && !currentParent.isParentItem) {
+          parent = currentParent.children;
           break;
         }
       }
     }
   }
 
+  _calculateAllTypeCounts(list) {
+    list.forEach(item => {
+      if (item.group) {
+        this._calculateAllTypeCounts(item.children);
+        const allItemsLayer = item.children.find(it => it.isParentItem);
+        allItemsLayer.count = item.count - item.children.reduce((acc, childItem) => childItem.count + acc, 0);
+      }
+    });
+  }
+
   _makeUiTreeStructure = (aggs) => {
     const storedLayersList = [];
-    aggs.forEach(layer => {
+    aggs.forEach(agg => {
       const itemTemplate = {
         label: '',
         id: '',
         checked: true,
         filtered: false,
-        children: []
+        children: [],
+        group: false,
+        count: 0,
+        isParentItem: false,
+        path: ''
       };
 
       const item = cloneDeep(itemTemplate);
-      item.label = capitalizeFirstLetter(layer.key.split('/')[layer.key.split('/').length - 1]);
-      item.id = layer.key;
-      const parent = this._getParent(item.id, storedLayersList);
+      item.id = agg.key;
+      item.label = capitalizeFirstLetter(agg.key.split('/')[agg.key.split('/').length - 1]);
+      item.path = agg.key;
+      item.count = agg.doc_count;
+      item.icon = <EuiIcon type={'visMapRegion'} />;
+      const parent = this._getParent(item.id, storedLayersList, item.isParentItem);
       if (parent) {
+        parent.group = true;
+        parent.itemInGroupChecked = true;
+        parent.icon = <EuiIcon type={'folderClosed'} />;
+        parent.iconWhenExpanded = <EuiIcon type={'folderOpen'} />;
+
+        //adding option to select all layers in group
+        if (!parent.hasLayerSelect) {
+          parent.hasLayerSelect = true;
+          const parentItem = cloneDeep(itemTemplate);
+          parentItem.id = `all${parent.id}`;
+          parentItem.label = `${parent.label}`;
+          parentItem.path = parent.id;
+          parentItem.count = 0;
+          parentItem.icon = <EuiIcon type={'visMapRegion'} />;
+          parentItem.isParentItem = true;
+          parent.children.push(parentItem);
+        }
+
         parent.children.push(item);
       } else {
         storedLayersList.push(item);
       }
     });
+    this._calculateAllTypeCounts(storedLayersList);
     return storedLayersList;
   }
 
@@ -113,8 +143,8 @@ export class AddMapLayersModal extends React.Component {
 
   _recursivelyDrawItems(list, enabled) {
     list.forEach(async item => {
-      if (item.checked) {
-        const layer = await this.props.getMriLayer(item.id, enabled);
+      if (item.checked && !item.group) {
+        const layer = await this.props.getMriLayer(item.path, enabled);
         this.props.addOverlay(layer);
 
         const itemOnMapIndex = findIndex(this.props.mrisOnMap, itemOnMap => itemOnMap.id === item.id);
@@ -126,7 +156,7 @@ export class AddMapLayersModal extends React.Component {
           this.props.mrisOnMap.push(item);
         }
       }
-      if (item.children && item.children.length >= 1) {
+      if (item.group) {
         this._recursivelyDrawItems(item.children, enabled);
       }
     });
@@ -157,7 +187,7 @@ export class AddMapLayersModal extends React.Component {
         } else {
           item.filtered = false;
         }
-        if (item.children && item.children.length >= 1) {
+        if (item.group) {
           recursivelyFilterList(item.children);
         }
       });
@@ -172,13 +202,77 @@ export class AddMapLayersModal extends React.Component {
     });
   }
 
+  _recursivelyToggleItemsInGroup(list, checked) {
+    list.forEach(item => {
+      item.checked = checked;
+      if (item.group) {
+        this._recursivelyToggleItemsInGroup(item.children, checked);
+      }
+    });
+  }
+
+  _checkIfAnyItemInGroupAndSubGroupChecked(items) {
+    let checkedCount = 0;
+    let totalCount = 0;
+
+    function countChecked(items) {
+      items.forEach(item => {
+        if (!item.group) {
+          if (item.checked) {
+            checkedCount += 1;
+          }
+          totalCount += 1;
+        }
+        if (item.group) {
+          countChecked(item.children);
+        }
+
+      });
+    }
+    countChecked(items);
+
+    return {
+      someItemsChecked: checkedCount !== totalCount && checkedCount >= 1,
+      noItemsChecked: checkedCount === 0
+    };
+  }
+
+  _recursivelyToggleIndeterminate(list) {
+    list.forEach(item => {
+      if (item.group) {
+        const check = this._checkIfAnyItemInGroupAndSubGroupChecked(item.children);
+        item.indeterminate = check.someItemsChecked;
+        item.checked = !check.noItemsChecked;
+        this._recursivelyToggleIndeterminate(item.children);
+      }
+    });
+  }
+
+  _toggleItems(event) {
+    if (!event.id) return;
+    this.setState(prevState => {
+      const list = [...prevState.items];
+      const item = this._getItem(event.id, list);
+      item.checked = event.checked;
+      if (event.isGroup) {
+        if (item.group) {
+          this._recursivelyToggleItemsInGroup(item.children, event.checked);
+        }
+      }
+      this._recursivelyToggleIndeterminate(list);
+      return {
+        items: list
+      };
+    });
+
+  }
   render() {
     const title = 'Add Layers';
     const form = (
       <div style={{ width: '24rem' }}>
         <div>
           <EuiFieldSearch
-            placeholder="It would be delightful to help with your search..."
+            placeholder="Search for layers"
             value={this.state.value}
             onChange={(e) => this._filterList(e.target.value.toLowerCase())}
             isClearable={true}
@@ -188,10 +282,11 @@ export class AddMapLayersModal extends React.Component {
         </div>
         <div style={{ overflowY: 'scroll', border: '1px solid lightgrey' }}>
           <EuiTreeViewCheckbox
+            onChange={(e) => this._toggleItems(e)}
             items={this.state.items}
             display={'default'}
             expandByDefault={true}
-            showExpansionArrows={true}
+            showExpansionArrows={false}
             style={{
               height: '300px'
             }}

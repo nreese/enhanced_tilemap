@@ -4,19 +4,14 @@ import classNames from 'classnames';
 
 import {
   // classNames,
-  EuiCheckbox,
   EuiTreeView,
   EuiI18n,
   EuiIcon,
   EuiScreenReaderOnly,
-  EuiText,
-  // keyCodes,
-  // htmlIdGenerator
+  EuiText
 } from '@elastic/eui';
 
 const EuiTreeViewContext = createContext('');
-// const treeIdGenerator = ('euiTreeView');
-
 
 const displayToClassNameMap = {
   default: null,
@@ -105,12 +100,21 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                     );
                     return (
                       <React.Fragment>
-                        {!node.filtered && <li className={nodeClasses} style={{ listStyleType: 'none' }}>
+                        {!node.filtered && <li style={{ listStyleType: 'none' }}>
+
                           {<input type="checkbox"
                             id={node.id}
                             name={node.id}
-                            onChange={() => node.checked = !node.checked}
-                            defaultChecked={node.checked}
+                            onChange={() => {
+                              this.props.onChange({
+                                id: node.id,
+                                checked: !node.checked,
+                                isGroup: node.group,
+                                isParentItem: node.isParentItem
+                              });
+                            }}
+                            ref={el => el && (el.indeterminate = node.indeterminate)}
+                            checked={node.checked}
                             style={{ paddingLeft: '10px' }}
                           ></input>}
 
@@ -151,7 +155,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                               <span className="euiTreeView__iconPlaceholder" />
                             ) : null}
                             <span className="euiTreeView__nodeLabel">
-                              {node.label}
+                              {` ${node.label} (${node.count})`}
                             </span>
 
                           </button>
@@ -162,6 +166,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                             }>
                             {node.children && this.isNodeOpen(node) ? (
                               <EuiTreeViewCheckbox
+                                onChange={this.props.onChange}
                                 items={node.children}
                                 display={display}
                                 showExpansionArrows={showExpansionArrows}

@@ -72,14 +72,12 @@ define(function (require) {
       const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoFields = getGeoFields(savedSearch);
-        const geo = {};
 
+        const geo = geoFields.find(field => {
+          return field.name === this.geoField;
+        });
         geo.field = this.geoField;
 
-        if (geoFields.length === 1) {
-          geo.field = geoFields[0].name;
-          geo.type = geoFields[0].type;
-        }
 
         const processLayer = () => {
 

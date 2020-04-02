@@ -32,8 +32,11 @@ let _allLayers;
 let esClient;
 let mainSearchDetails;
 
-function setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
-  if (layer.type === 'poipoint' || layer.type === 'vectorpoint' || layer.type === 'marker' || layer.type === 'mripoint') {
+function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
+  if (layer.type === 'poipoint' ||
+    layer.type === 'vectorpoint' ||
+    layer.type === 'marker' ||
+    layer.type === 'mripoint') {
     layer.eachLayer(marker => {
       //The leaflet overlay pane has a z-index of 200
       //Marker layer types (i.e. poi and vector point layers) have been added to the overlay pane
@@ -51,17 +54,22 @@ function _orderLayersByType() {
   // ensuring the ordering of markers, then overlays, then tile layers
   const tileLayersTemp = [];
   const overlaysTemp = [];
+  const markerTemp = [];
   const markerLayersTemp = [];
+
+  const pointTypes = ['poipoint', 'vectorpoint', 'mripoint'];
   _allLayers.forEach((layer) => {
     if (layer.type === 'wms') {
       tileLayersTemp.push(layer);
-    } else if (layer.type === 'marker' || layer.type === 'vectorpoint') {
+    } else if (layer.type === 'marker') {
+      markerTemp.push(layer);
+    } else if (pointTypes.includes(layer.type)) {
       markerLayersTemp.push(layer);
     } else {
       overlaysTemp.push(layer);
     }
   });
-  _allLayers = markerLayersTemp.concat(overlaysTemp).concat(tileLayersTemp);
+  _allLayers = markerTemp.concat(markerLayersTemp).concat(overlaysTemp).concat(tileLayersTemp);
 }
 
 function _redrawOverlays() {
@@ -69,10 +77,10 @@ function _redrawOverlays() {
   let zIndex = 0;
   for (let i = (_allLayers.length - 1); i >= 0; i--) {
     if (_allLayers[i].enabled) {
-      setZIndexOfAnyLayerType(_allLayers[i], zIndex, _leafletMap);
+      _setZIndexOfAnyLayerType(_allLayers[i], zIndex, _leafletMap);
       _leafletMap.addLayer(_allLayers[i]);
+      zIndex++;
     }
-    zIndex++;
   }
 }
 
@@ -117,12 +125,13 @@ function _clearLayerFromMapById(id) {
   });
 }
 
-function _updateMriVisibility(id, enabled) {
-  mrisOnMap.forEach(item => {
-    if (item.id === id) {
-      item.enabled = enabled;
+function _updateMriVisibility(path, enabled) {
+  for (let i = 0; mrisOnMap.length - 1; i++) {
+    if (mrisOnMap[i].path === path) {
+      mrisOnMap[i].enabled = enabled;
+      break;
     }
-  });
+  }
 }
 
 function dndLayerVisibilityChange(enabled, layer, index) {
@@ -161,8 +170,8 @@ function dndRemoveLayerFromControl(newList, id) {
   _leafletMap.fire('removelayer', { id });
 }
 
-function _removeMriFromLayerControlArray(id) {
-  remove(mrisOnMap, (layer) => layer.id === id);
+function _removeMriFromLayerControlArray(path) {
+  remove(mrisOnMap, (layer) => layer.path === path);
 }
 
 function _updateLayerControl() {
@@ -227,7 +236,7 @@ function _redrawMriLayers() {
   if (mrisOnMap.length >= 1) {
     mrisOnMap.forEach(async item => {
       if (item.enabled) {
-        const layer = await getMriLayer(item.id, item.enabled);
+        const layer = await getMriLayer(item.path, item.enabled);
         addOverlay(layer);
       }
     });
