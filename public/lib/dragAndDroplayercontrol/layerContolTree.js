@@ -180,16 +180,23 @@ export class AddMapLayersModal extends React.Component {
 
   _filterList = (searchEntry) => {
     function recursivelyFilterList(parent) {
+      // Note: item.filtered = true implies the item is NOT displayed
       parent.forEach(item => {
         const lowercase = item.label.toLowerCase();
-        if (!lowercase.includes(searchEntry) && item.children.length === 0) {
-          item.filtered = true;
-        } else {
+        if (lowercase.includes(searchEntry)) {
           item.filtered = false;
+          // If it has children, make all of them visible
+          const nodes = [...item.children];
+          while (nodes.length) {
+            const node = nodes.shift();
+            node.filtered = false;
+            nodes.push(...node.children);
+          }
+          return;
         }
-        if (item.group) {
-          recursivelyFilterList(item.children);
-        }
+        // Show group node if it has atleast one child which is visible
+        recursivelyFilterList(item.children);
+        item.filtered = item.children ? item.children.every(child => child.filtered) : true;
       });
     }
     this.setState(prevState => {
