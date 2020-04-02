@@ -23,6 +23,16 @@ function hasAriaLabel(x) {
 }
 
 class EuiTreeViewCheckbox extends EuiTreeView {
+  componentWillReceiveProps(newProps) {
+    const { expandByDefault, items } = newProps;
+    if (expandByDefault) {
+      this.setState({
+        openItems: items
+          .map(item => item.children ? item.id : null)
+          .filter(id => id !== null)
+      });
+    }
+  }
 
   render() {
     const {
@@ -170,7 +180,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                                 items={node.children}
                                 display={display}
                                 showExpansionArrows={showExpansionArrows}
-                                expandByDefault={this.state.expandChildNodes}
+                                expandByDefault={this.props.expandByDefault}
                                 {...label}
                               />
                             ) : null}
