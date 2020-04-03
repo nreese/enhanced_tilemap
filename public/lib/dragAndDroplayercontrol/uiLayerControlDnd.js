@@ -138,7 +138,7 @@ export class LayerControlDnd extends React.Component {
 
                         <span className="panel-checkbox">
                           <EuiCheckbox
-                            data-test-subj='layer-control-checkbox'
+                            data-test-subj={layer.id}
                             id={layer.id}
                             checked={layer.enabled}
                             onChange={e => this.changeVisibility(e, layer, index)}

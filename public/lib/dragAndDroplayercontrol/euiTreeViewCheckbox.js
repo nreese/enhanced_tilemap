@@ -113,7 +113,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                         {!node.filtered && <li style={{ listStyleType: 'none' }}>
 
                           {<input type='checkbox'
-                            data-test-subj='layer-tree-checkbox'
+                            data-test-subj={node.id}
                             id={node.id}
                             name={node.id}
                             onChange={() => {
