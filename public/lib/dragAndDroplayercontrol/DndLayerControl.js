@@ -30,6 +30,7 @@ let _dndListElement;
 let _addLayerElement;
 let _allLayers;
 let esClient;
+let $element;
 let mainSearchDetails;
 
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
@@ -43,7 +44,7 @@ function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
       //AND require a 'hard' z-index to be set using setZIndexOffset
       //the default z-index is based on latitude and the below code resets the default
       const pos = leafletMap.latLngToLayerPoint(marker.getLatLng()).round();
-      marker.setZIndexOffset(zIndex - pos.y + 198);
+      marker.setZIndexOffset(zIndex - pos.y + 300);// 198); //for now, we don't need to layer marker types with overlay types
     });
   } else {
     layer.setZIndex(zIndex);
@@ -76,10 +77,15 @@ function _redrawOverlays() {
   _clearAllLayersFromMap();
   let zIndex = 0;
   for (let i = (_allLayers.length - 1); i >= 0; i--) {
-    if (_allLayers[i].enabled) {
-      _setZIndexOfAnyLayerType(_allLayers[i], zIndex, _leafletMap);
-      _leafletMap.addLayer(_allLayers[i]);
+    const layer = _allLayers[i];
+    if (layer.enabled) {
+      _setZIndexOfAnyLayerType(layer, zIndex, _leafletMap);
+      _leafletMap.addLayer(layer);
       zIndex++;
+      _leafletMap.fire('showlayer', {
+        id: layer.id,
+        enabled: layer.enabled
+      });
     }
   }
 }
@@ -125,9 +131,10 @@ function _clearLayerFromMapById(id) {
   });
 }
 
-function _updateMriVisibility(path, enabled) {
+function _updateMriVisibility(id, enabled) {
+  // when stored in layer control, mri path is the id
   for (let i = 0; mrisOnMap.length - 1; i++) {
-    if (mrisOnMap[i].path === path) {
+    if (mrisOnMap[i].id === id || mrisOnMap[i].id.substring(3) === id) {
       mrisOnMap[i].enabled = enabled;
       break;
     }
@@ -136,23 +143,18 @@ function _updateMriVisibility(path, enabled) {
 
 function dndLayerVisibilityChange(enabled, layer, index) {
   _allLayers[index].enabled = enabled;
-  let type;
   if (enabled) {
     _redrawOverlays();
-    type = 'showlayer';
   } else {
     _clearLayerFromMapById(layer.id);
-    type = 'hidelayer';
+    _leafletMap.fire('hidelayer', {
+      id: layer.id,
+      enabled
+    });
   }
-
   if (layer.type === 'mripoint' || layer.type === 'mrishape') {
     _updateMriVisibility(layer.id, enabled);
   }
-
-  _leafletMap.fire(type, {
-    id: layer.id,
-    enabled
-  });
 }
 
 function dndListOrderChange(newList) {
@@ -185,9 +187,11 @@ function _updateLayerControl() {
 }
 
 async function getMriLayer(spatialPath, enabled) {
+  const limit = 250;
   const resp = await esClient.search({
     index: '.map__*',
     body: {
+      size: limit,
       query: {
         bool: {
           must: {
@@ -209,14 +213,20 @@ async function getMriLayer(spatialPath, enabled) {
     popupFields: get(resp, 'properties.popup', []),
     indexPattern: mainSearchDetails.indexPattern,
     _siren: mainSearchDetails._siren,
+    $element
   };
 
   let geo;
-  if (resp.hits.total >= 1) {
+  if (resp.hits.total.value >= 1) {
     geo = {
-      type: resp.hits.hits[0]._source.shape.type,
-      field: mainSearchDetails.geoFieldName
+      type: resp.hits.hits[0]._source.geometry.type,
+      field: 'geometry'
     };
+  }
+
+  options.warning = {};
+  if (resp.hits.total.value >= limit) {
+    options.warning = { limit };
   }
 
 
@@ -282,11 +292,12 @@ L.Control.DndLayerControl = L.Control.extend({
     groupCheckboxes: false
   },
 
-  initialize: function (allLayers, es, mSD) {
+  initialize: function (allLayers, es, mSD, $el) {
     _allLayers = allLayers;
     esClient = es;
     mainSearchDetails = mSD;
     this._lastZIndex = 0;
+    $element = $el;
   },
 
   //todo add comments describing functions
@@ -320,14 +331,6 @@ L.Control.DndLayerControl = L.Control.extend({
   addBaseLayer: function (layer, name) {
     this._addLayer(layer, name);
     return this;
-  },
-
-  _getLayer: function (id) {
-    for (let i = 0; i < this._layers.length; i++) {
-      if (this._layers[i] && L.stamp(this._layers[i].layer) === id) {
-        return this._layers[i];
-      }
-    }
   },
 
   _initLayout: function () {
@@ -386,6 +389,6 @@ L.Control.DndLayerControl = L.Control.extend({
   }
 });
 
-L.control.dndLayerControl = function (allLayers, esClient, mainSearchDetails) {
-  return new L.Control.DndLayerControl(allLayers, esClient, mainSearchDetails);
+L.control.dndLayerControl = function (allLayers, esClient, mainSearchDetails, $element) {
+  return new L.Control.DndLayerControl(allLayers, esClient, mainSearchDetails, $element);
 };

@@ -112,7 +112,8 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                       <React.Fragment>
                         {!node.filtered && <li style={{ listStyleType: 'none' }}>
 
-                          {<input type="checkbox"
+                          {<input type='checkbox'
+                            data-test-subj='layer-tree-checkbox'
                             id={node.id}
                             name={node.id}
                             onChange={() => {

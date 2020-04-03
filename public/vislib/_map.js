@@ -49,6 +49,7 @@ define(function (require) {
     function TileMapMap(container, params) {
       this._container = container;
       this.allLayers = [];
+      this.$element = params.$element;
       this.esClient = params.es;
       // keep a reference to all of the optional params
       this.mainSearchDetails = params.mainSearchDetails;
@@ -528,7 +529,7 @@ define(function (require) {
 
       this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
-      this._layerControl = L.control.dndLayerControl(this.allLayers, this.esClient, this.mainSearchDetails);
+      this._layerControl = L.control.dndLayerControl(this.allLayers, this.esClient, this.mainSearchDetails, this.$element);
       this._layerControl.addTo(this.leafletMap);
 
       this._addSetViewControl();

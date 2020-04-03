@@ -1,12 +1,7 @@
 const _ = require('lodash');
-const L = require('leaflet');
-import { searchIcon } from 'plugins/enhanced_tilemap/vislib/searchIcon';
-import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import { SearchSourceProvider } from 'ui/courier/data_source/search_source';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { onDashboardPage } from 'ui/kibi/utils/on_page';
-import utils from 'plugins/enhanced_tilemap/utils';
-import Vector from './vector';
 
 //react modal
 import React from 'react';
@@ -66,10 +61,9 @@ define(function (require) {
     /**
      * @param {options} options: styling options
      * @param {Function} callback(layer)
-          layer {ILayer}: Leaflet ILayer containing the results of the saved search
+          layer {ILayer}: Leaflet Layer containing the results of the saved search
      */
     POIs.prototype.getLayer = function (options, callback) {
-      const self = this;
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoFields = getGeoFields(savedSearch);
 
@@ -160,22 +154,12 @@ define(function (require) {
             excludes: []
           });
 
-          // assigning the placeholder value of 1000 POIs in the
-          // case where number in the limit field has been replaced with null
-          const poiLimitToDisplay = this.limit || 1000;
-
-          const tooManyDocsInfo = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
-
-          //Removal of previous too many documents warning when map is changed to a new extent
-          options.$legend.innerHTML = '';
-
           searchSource.fetch()
             .then(searchResp => {
 
               options.warning = {};
               if (searchResp.hits.total > this.limit) {
-                options.warning = { tooManyDocsInfo, poiLimitToDisplay };
-                options.$legend.innerHTML = tooManyDocsInfo;
+                options.warning.limit = this.limit || 1000;
               }
 
               //Storing this information on the params object for use

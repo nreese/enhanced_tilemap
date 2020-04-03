@@ -265,12 +265,9 @@ define(function (require) {
           geo_bounding_box: getGeoBoundingBox(),
           geoField: getGeoField()
         },
-        searchSource: $scope.searchSource
+        searchSource: $scope.searchSource,
+        $element
       };
-
-      //Element rendered in Leaflet Library
-      const $legend = $element.find('a.leaflet-control-layers-toggle').get(0);
-      if ($legend) options.$legend = $legend;
 
       poi.getLayer(options, function (layer) {
         map.addPOILayer(layer);
@@ -583,6 +580,7 @@ define(function (require) {
       };
       map = new TileMapMap(container, {
         mainSearchDetails,
+        $element,
         es,
         center: initialMapState.center,
         zoom: initialMapState.zoom,

@@ -82,7 +82,7 @@ define(function (require) {
     geoShapeScaleBounds: function (bounds, scale) {
       const coords = scaleBounds(bounds, scale);
       return {
-        shape: {
+        geometry: {
           shape: {
             type: 'envelope',
             coordinates: [
