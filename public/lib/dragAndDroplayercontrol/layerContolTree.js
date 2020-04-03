@@ -1,5 +1,5 @@
 import React from 'react';
-import { cloneDeep, findIndex } from 'lodash';
+import { cloneDeep, findIndex, remove } from 'lodash';
 
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
@@ -64,6 +64,9 @@ export class AddMapLayersModal extends React.Component {
         this._calculateAllTypeCounts(item.children);
         const allItemsLayer = item.children.find(it => it.isParentItem);
         allItemsLayer.count = item.count - item.children.reduce((acc, childItem) => childItem.count + acc, 0);
+        if(allItemsLayer.count === 0) {
+          remove(item.children, allItemsLayer);
+        }
       }
     });
   }
