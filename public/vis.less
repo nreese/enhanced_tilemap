@@ -153,6 +153,27 @@
     }
   }
 
+  .leaflet-top.leaflet-right {
+    z-index: 1000;
+    height:100%;
+
+    .leaflet-control-layers {
+      max-height: 70%;
+      display: flex;
+      flex-direction: column;
+      .leaflet-control-layers-toggle{
+        padding: 20px;
+      }
+      .leaflet-control-layers-list {
+        overflow: scroll;
+      }
+    }
+  }
+
+  .leaflet-bottom.leaflet-right {
+    z-index: 999;
+  }
+
   // when layer control is toggled on
   .leaflet-control-layers.leaflet-control.leaflet-control-layers-expanded {
     height: auto;
