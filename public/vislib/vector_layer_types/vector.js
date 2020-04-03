@@ -49,7 +49,11 @@ export default class Vector {
         return self._createMarker(feature, options);
       });
       layer = new L.FeatureGroup(markers);
-      layer.destroy = () => markers.forEach(self._removeMouseEventsPoint);
+      layer.destroy = () => markers.forEach(marker => {
+        if (marker.removeEvent) {
+          marker.removeEvent();
+        }
+      });
       layer.id = options.id;
       layer.label = options.displayName;
       layer.type = 'vectorpoint';
@@ -230,6 +234,9 @@ export default class Vector {
 
     if (options.popupFields.length > 0) {
       const content = this._popupContent(hit, options.popupFields);
+      feature.removeEvent = () => {
+        this._removeMouseEventsGeoPoint(feature, content);
+      };
       this._addMouseEventsPoint(feature, content);
     }
     return feature;

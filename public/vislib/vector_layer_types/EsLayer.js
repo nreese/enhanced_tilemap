@@ -34,7 +34,11 @@ export default class EsLayer {
         layer.type = type + 'point';
         layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
-        layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
+        layer.destroy = () => markers.forEach(marker => {
+          if (marker.removeEvent) {
+            marker.removeEvent();
+          }
+        });
       } else if ('geo_shape' === geo.type || 'polygon' === geo.type || 'multipolygon' === geo.type) {
         const shapes = _.map(hits, hit => {
           let geometry;
@@ -227,9 +231,9 @@ export default class EsLayer {
     feature.on('mouseout', this._addMouseOutGeoPoint);
   };
 
-  _removeMouseEventsGeoPoint = function (feature) {
-    feature.off('mouseover');
-    feature.off('mouseout');
+  _removeMouseEventsGeoPoint = function (feature, content) {
+    feature.off('mouseover', this._getMouseOverGeoPoint(content));
+    feature.off('mouseout', this._addMouseOutGeoPoint);
   };
 
   _createMarker = function (hit, geoField, options) {
@@ -249,6 +253,9 @@ export default class EsLayer {
 
     if (options.popupFields.length > 0) {
       const content = this._popupContent(hit, options.popupFields);
+      feature.removeEvent = () => {
+        this._removeMouseEventsGeoPoint(feature, content);
+      };
       this._addMouseEventsGeoPoint(feature, content);
     }
     return feature;
