@@ -1,5 +1,5 @@
 @import (reference) "~ui/styles/mixins.less";
-
+@import (reference) 'react-sortable-tree/style.css';
 .etm-vis {
   //padding can't be 0 as causes
   // x_content_parse_exception without applying marging-top
@@ -129,10 +129,119 @@
     color  : rgb(206, 206, 206);
   }
 
+
+
+  // when layer control is toggled off
+  .leaflet-control-layers.leaflet-control {
+    height: 55px;
+   
+    >div.leaflet-control-layers-add-layer {
+      visibility: collapse;
+      width: 0px;
+      .euiButton {
+        transition: none;
+      }
+    }
+
+    a.leaflet-control-layers-toggle {
+      margin-left: 7.5px;
+      margin-top: 3px;
+    }
+
+    >form.leaflet-control-layers-header {
+      visibility: collapse;
+    }
+  }
+
+  .leaflet-top.leaflet-right {
+    z-index: 1000;
+    height:100%;
+
+    .leaflet-control-layers {
+      max-height: 70%;
+      display: flex;
+      flex-direction: column;
+      .leaflet-control-layers-toggle{
+        padding: 20px;
+      }
+      .leaflet-control-layers-list {
+        overflow: scroll;
+      }
+    }
+  }
+
+  .leaflet-bottom.leaflet-right {
+    z-index: 999;
+  }
+
+  // when layer control is toggled on
+  .leaflet-control-layers.leaflet-control.leaflet-control-layers-expanded {
+    height: auto;
+    width: fit-content;
+    max-width: 300px;
+    padding: 10px;
+
+    >form.leaflet-control-layers-header {
+      visibility: visible;
+      margin-left: 10px;
+    }
+
+    >div.leaflet-control-layers-add-layer {
+      visibility: visible;
+      margin-left: 10px;
+    }
+
+    form.leaflet-control-layers-list {
+      div.drag-in-progress {
+        div.layer-control-row {
+         background: #FFFFFF;
+            &:active {
+              background:  @kibanaBlue5
+            }
+          }
+        }
+
+        div.drag-not-in-progress {
+          div.layer-control-row:hover {
+                background: @kibanaBlue5;
+              }
+          }
+        span.panel-drag-handler {
+          span.far.fa-grip-lines {
+            color: #ffffff;
+            &:hover {
+              color: @kibanaGray2;
+          }
+        }
+      }
+    }
+    .panel-checkbox {
+      vertical-align: auto;
+      padding-left: 10px;
+      padding-top: 5px;
+      padding-right: 5px;
+    }
+
+    .label {
+      padding-right: 5px;
+    }
+
+    .iconDiv {
+      padding-right: 5px;
+    }
+
+    button.btn.panel-remove {
+      padding: 4px;
+      i.far.fa-trash {
+        color: @brand-danger;
+      }
+    }
+    
+  }
+
   .leaflet-control-layers-toggle {
     padding            : 5px;
     padding-left       : 33px;
-    width              : auto;
     background-position: 5px;
     padding-top        : 10px;
     margin             : 2px;
@@ -140,12 +249,10 @@
 
   .leaflet-control-layers {
 
-    .fa {
-      &.fa-filter {
-        padding-left: 4px;
-        color: @kibanaBlue2;
-      }
-    }  
+    .euiToolTipAnchor {
+      padding-left: 6px;
+      color: @kibanaBlue1;
+    }
 
     .fas {
       &.fa-times-square {
@@ -154,30 +261,8 @@
       }
     }
 
-    .fa {
-      &.fa-exclamation-triangle {
-        padding-left: 4px;
-        color: @brand-warning;
-      }
-    }
-
     p {
       margin-bottom: 1px;
-    }
-
-    .leaflet-control-layers-group {
-      margin-bottom: .5em;
-
-      &:first-child label {
-
-        input.leaflet-control-layers-selector {
-          margin-left: 0px;
-        }
-      }
-
-      input.leaflet-control-layers-selector {
-        margin-left: 10px;
-      }
     }
 
     .leaflet-control-layers-scrollbar {
@@ -371,4 +456,9 @@
       padding-left: 2px;
     }
   }
+}
+
+// User agent overrides
+.euiTreeView {
+  padding-inline-start: 0;
 }

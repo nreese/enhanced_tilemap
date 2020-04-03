@@ -2,6 +2,38 @@ import _ from 'lodash';
 
 define(function (require) {
   const L = require('leaflet');
+
+  function scaleBounds(bounds, scale) {
+    let safeScale = scale;
+    if (safeScale < 1) scale = 1;
+    if (safeScale > 5) scale = 5;
+    safeScale = safeScale - 1;
+
+    const topLeft = bounds.getNorthWest();
+    const bottomRight = bounds.getSouthEast();
+    let latDiff = _.round(Math.abs(topLeft.lat - bottomRight.lat), 5);
+    const lonDiff = _.round(Math.abs(bottomRight.lng - topLeft.lng), 5);
+    //map height can be zero when vis is first created
+    if (latDiff === 0) latDiff = lonDiff;
+
+    const latDelta = latDiff * safeScale;
+    let topLeftLat = _.round(topLeft.lat, 5) + latDelta;
+    if (topLeftLat > 90) topLeftLat = 90;
+    let bottomRightLat = _.round(bottomRight.lat, 5) - latDelta;
+    if (bottomRightLat < -90) bottomRightLat = -90;
+    const lonDelta = lonDiff * safeScale;
+    let topLeftLon = _.round(topLeft.lng, 5) - lonDelta;
+    if (topLeftLon < -180) topLeftLon = -180;
+    let bottomRightLon = _.round(bottomRight.lng, 5) + lonDelta;
+    if (bottomRightLon > 180) bottomRightLon = 180;
+    return {
+      topLeftLat,
+      topLeftLon,
+      bottomRightLat,
+      bottomRightLon
+    };
+  }
+
   return {
     /*
      * @param element {html element} The child element to check if there is a parent for
@@ -27,35 +59,14 @@ define(function (require) {
         max: visData.geoJson.properties.max
       };
     },
+
     /*
      * @param bounds {LatLngBounds}
      * @param scale {number}
      * @return {object}
      */
-    scaleBounds: function (bounds, scale) {
-      let safeScale = scale;
-      if (safeScale < 1) scale = 1;
-      if (safeScale > 5) scale = 5;
-      safeScale = safeScale - 1;
-
-      const topLeft = bounds.getNorthWest();
-      const bottomRight = bounds.getSouthEast();
-      let latDiff = _.round(Math.abs(topLeft.lat - bottomRight.lat), 5);
-      const lonDiff = _.round(Math.abs(bottomRight.lng - topLeft.lng), 5);
-      //map height can be zero when vis is first created
-      if (latDiff === 0) latDiff = lonDiff;
-
-      const latDelta = latDiff * safeScale;
-      let topLeftLat = _.round(topLeft.lat, 5) + latDelta;
-      if (topLeftLat > 90) topLeftLat = 90;
-      let bottomRightLat = _.round(bottomRight.lat, 5) - latDelta;
-      if (bottomRightLat < -90) bottomRightLat = -90;
-      const lonDelta = lonDiff * safeScale;
-      let topLeftLon = _.round(topLeft.lng, 5) - lonDelta;
-      if (topLeftLon < -180) topLeftLon = -180;
-      let bottomRightLon = _.round(bottomRight.lng, 5) + lonDelta;
-      if (bottomRightLon > 180) bottomRightLon = 180;
-
+    geoBoundingBoxBounds: function (bounds, scale) {
+      const coords = scaleBounds(bounds, scale);
       //console.log("scale:" + safeScale + ", latDelta: " + latDelta + ", lonDelta: " + lonDelta);
       //console.log("top left lat " + _.round(topLeft.lat, 5) + " -> " + topLeftLat);
       //console.log("bottom right lat " + _.round(bottomRight.lat, 5) + " -> " + bottomRightLat);
@@ -63,8 +74,24 @@ define(function (require) {
       //console.log("bottom right lon " + _.round(bottomRight.lng, 5) + " -> " + bottomRightLon);
 
       return {
-        top_left: { lat: topLeftLat, lon: topLeftLon },
-        bottom_right: { lat: bottomRightLat, lon: bottomRightLon }
+        top_left: { lat: coords.topLeftLat, lon: coords.topLeftLon },
+        bottom_right: { lat: coords.bottomRightLat, lon: coords.bottomRightLon }
+      };
+    },
+
+    geoShapeScaleBounds: function (bounds, scale) {
+      const coords = scaleBounds(bounds, scale);
+      return {
+        geometry: {
+          shape: {
+            type: 'envelope',
+            coordinates: [
+              [coords.topLeftLon, coords.topLeftLat],
+              [coords.bottomRightLon, coords.bottomRightLat]
+            ]
+          },
+          relation: 'intersects'
+        }
       };
     },
     contains: function (collar, bounds) {

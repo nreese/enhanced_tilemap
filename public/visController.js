@@ -1,4 +1,6 @@
+/* eslint-disable siren/memory-leak */
 /* eslint-disable siren/memoryleaks */
+
 import _ from 'lodash';
 import uuid from 'uuid';
 import chrome from 'ui/chrome';
@@ -10,6 +12,7 @@ import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { ResizeCheckerProvider } from 'ui/vislib/lib/resize_checker';
 import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
+import Vector from './vislib/vector_layer_types/vector';
 
 
 
@@ -25,13 +28,12 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timefilter, createNotifier) {
+    timefilter, createNotifier, es) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
-    const POIsProvider = Private(require('plugins/enhanced_tilemap/POIs'));
-    const VectorProvider = Private(require('plugins/enhanced_tilemap/vector'));
+    const POIsProvider = Private(require('plugins/enhanced_tilemap/vislib/vector_layer_types/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const TileMapMap = Private(MapProvider);
@@ -226,7 +228,7 @@ define(function (require) {
     }
 
     function aggFilter(field) {
-      collar = utils.scaleBounds(
+      collar = utils.geoBoundingBoxBounds(
         map.mapBounds(),
         $scope.vis.params.collarScale);
       const filter = { geo_bounding_box: {} };
@@ -242,8 +244,13 @@ define(function (require) {
     });
 
     function getGeoBoundingBox() {
-      const geoBoundingBox = utils.scaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
+      const geoBoundingBox = utils.geoBoundingBoxBounds(map.mapBounds(), $scope.vis.params.collarScale);
       return { geo_bounding_box: geoBoundingBox };
+    }
+
+    function getGeoShapeBox() {
+      const geoShapeBox = utils.geoShapeScaleBounds(map.mapBounds(), $scope.vis.params.collarScale);
+      return { geo_shape: geoShapeBox };
     }
 
     function initPOILayer(layerParams) {
@@ -252,28 +259,18 @@ define(function (require) {
       const options = {
         id: layerParams.id,
         displayName,
-        layerGroup: layerParams.layerGroup || '<b> POI Overlays </b> ',
         color: layerParams.color,
         size: _.get(layerParams, 'markerSize', 'm'),
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
           geoField: getGeoField()
         },
-        searchSource: $scope.searchSource
+        searchSource: $scope.searchSource,
+        $element
       };
 
-      //Element rendered in Leaflet Library
-      const $legend = $element.find('a.leaflet-control-layers-toggle').get(0);
-      if ($legend) options.$legend = $legend;
-
       poi.getLayer(options, function (layer) {
-        const options = {
-          filterPopupContent: layer.filterPopupContent,
-          close: layer.close,
-          tooManyDocs: layer.tooManyDocs
-        };
-
-        map.addPOILayer(layer.id, layer, layer.layerGroup, options);
+        map.addPOILayer(layer);
       });
     }
 
@@ -304,8 +301,9 @@ define(function (require) {
         type: _.get(options, 'type', 'noType')
       };
 
-      const vector = new VectorProvider(geoJsonCollection).getLayer(optionsWithDefaults);
-      map.addVectorLayer(id, vector.displayName, vector, optionsWithDefaults);
+      const layer = new Vector(geoJsonCollection).getLayer(optionsWithDefaults);
+      layer.id = id;
+      map.addVectorLayer(layer, optionsWithDefaults);
 
     }
 
@@ -321,21 +319,18 @@ define(function (require) {
           map.unfixMapTypeTooltips();
         }
 
-        map._redrawBaseLayer(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
+        map.removeAllLayersFromMapandControl();
+        map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
+
         setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
 
         draw();
 
         map.saturateTile(visParams.isDesaturated, map._tileLayer);
-
-        //clear and re-draw POI overlays
-        map.clearLayers(map.poiLayers);
+        //re-draw POI overlays
         $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
-
-        //clear and re-draw vector overlays
-        map.clearLayers(map.vectorOverlays);
+        //re-draw vector overlays
         drawWfsOverlays();
-
       }
     });
 
@@ -452,19 +447,18 @@ define(function (require) {
               - url ( ${wfsOverlay.url} ) is correct and has layers present, 
               - ${wfsOverlay.formatOptions} is an allowed output format
               - WFS is CORs enabled for this domain`);
-            map.clearLayerById(map.vectorOverlays, wfsOverlay.id);
+            map.removeLayerFromMapAndControlById(wfsOverlay.id);
           });
       });
     }
 
     function drawWmsOverlays() {
-
-      const prevState = map.clearLayersAndReturnPrevState(map.wmsOverlays);
       if ($scope.vis.params.overlays.wmsOverlays.length === 0) {
         return;
       }
 
       $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
+        // const prevState = map.clearLayerAndReturnPrevState(layerParams.id);
         const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
         return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
@@ -510,6 +504,7 @@ define(function (require) {
                 minZoom: _.get(layerParams, 'minZoom', 13),
                 transparent: true,
                 version: '1.1.1'
+                // pane: 'overlayPane'
               };
               const viewparams = [];
               if (_.get(layerParams, 'viewparams')) {
@@ -541,32 +536,32 @@ define(function (require) {
                 wmsOptions.format_options = formatOptions;
               }
 
-              let isVisible;
+              let enabled;
               if ($scope.flags.isVisibleSource === 'visParams') {
-                isVisible = layerParams.isVisible;
-              } else if (prevState[name] ||
-                $scope.flags.isVisibleSource === 'layerControlCheckbox') {
-                isVisible = prevState[name];
+                enabled = layerParams.isVisible;
+                // } else if (prevState.enabled ||
+                //   $scope.flags.isVisibleSource === 'layerControlCheckbox') {
+                //   enabled = prevState.enabled;
               } else {
-                isVisible = layerParams.isVisible;
+                enabled = layerParams.isVisible;
               }
 
               const presentInUiState = $scope.vis.getUiState().get(name);
               if (presentInUiState) {
-                isVisible = true;
+                enabled = true;
               } else if (presentInUiState === false) {
-                isVisible = false;
+                enabled = false;
               }
 
               $scope.flags.visibleSource = '';
 
-              const layerOptions = {
-                isVisible,
+              const options = {
+                enabled,
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
 
               if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') layerParams.url = layerParams.url + '/wms?';
-              return map.addWmsOverlay(layerParams.url, name, wmsOptions, layerOptions, layerParams.id);
+              return map.addWmsOverlay(layerParams.url, name, wmsOptions, options, layerParams.id);
             });
         });
       });
@@ -577,7 +572,16 @@ define(function (require) {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
+      const mainSearchDetails = {
+        indexPattern: $scope.vis.indexPattern.title,
+        geoFieldName: $scope.vis.aggs[1].params.field.name,
+        _siren: $scope.vis._siren,
+        mapExtentFilter: getGeoShapeBox
+      };
       map = new TileMapMap(container, {
+        mainSearchDetails,
+        $element,
+        es,
         center: initialMapState.center,
         zoom: initialMapState.zoom,
         callbacks: callbacks,
@@ -606,7 +610,7 @@ define(function (require) {
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'removeGeoJsonCollection', async (id) => {
-        return map.clearLayerById(map.vectorOverlays, id);
+        return map.removeLayerFromMapAndControlById(id);
       });
 
       actionRegistry.register(apiVersion, $scope.vis.id, 'getGeoBoundingBox', async () => {
@@ -640,30 +644,42 @@ define(function (require) {
     // ==       vis object      ==
     // ===========================
 
-    map.leafletMap.on('groupLayerControl:removeClickedLayer', function (e) {
-      $scope.vis.params.overlays.dragAndDropPoiLayers =
-        _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
-          return dragAndDropPoiLayer.currentId !== e.layer.currentId;
-        });
+    map.leafletMap.on('removelayer', function (e) {
+      if ($scope.vis.params.overlays.dragAndDropPoiLayers &&
+        $scope.vis.params.overlays.dragAndDropPoiLayers.length >= 1) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers =
+          _.filter($scope.vis.params.overlays.dragAndDropPoiLayers, function (dragAndDropPoiLayer) {
+            return dragAndDropPoiLayer.id !== e.id;
+          });
+      }
+      //scope for saving dnd poi overlays
+      //$scope.vis.getUiState().set(e.id, false);
+    });
+
+    // saving checkbox status to dashboard uiState
+    map.leafletMap.on('showlayer', function (e) {
+      map.saturateWMSTiles();
+      if (map._markers && e.id === 'Aggregation') {
+        map._markers.show();
+      }
+      $scope.vis.getUiState().set(e.id, true);
+    });
+
+    map.leafletMap.on('hidelayer', function (e) {
+      if (map._markers && e.id === 'Aggregation') {
+        map._markers.hide();
+      }
+      $scope.vis.getUiState().set(e.id, false);
     });
 
     // saving checkbox status to dashboard uiState
     map.leafletMap.on('overlayadd', function (e) {
       map.saturateWMSTiles();
-      if (map._markers && e.name === 'Aggregation') {
+      if (map._markers && e.id === 'Aggregation') {
         map._markers.show();
       }
-      const uiStatekey = e.layer.id || e.name;
-      $scope.vis.getUiState().set(uiStatekey, !!uiStatekey);
     });
 
-    map.leafletMap.on('overlayremove', function (e) {
-      if (map._markers && e.name === 'Aggregation') {
-        map._markers.hide();
-      }
-      const uiStatekey = e.layer.id || e.name;
-      $scope.vis.getUiState().set(uiStatekey, false);
-    });
 
     map.leafletMap.on('moveend', _.debounce(function setZoomCenter() {
       if (!map.leafletMap) return;
@@ -728,7 +744,7 @@ define(function (require) {
           break;
         case 'rectangle':
           map._callbacks.rectangle({
-            bounds: utils.scaleBounds(e.layer.getBounds(), 1),
+            bounds: utils.geoBoundingBoxBounds(e.layer.getBounds(), 1),
             indexPatternId,
             field,
             sirenMeta
@@ -758,12 +774,14 @@ define(function (require) {
 
     map.leafletMap.on('toolbench:poiFilter', function (e) {
       const poiLayers = [];
-      Object.keys(map.poiLayers).forEach(function (key) {
-        poiLayers.push(map.poiLayers[key]);
+      map.allLayers.forEach(layer => {
+        if (layer.type === 'poi') {
+          poiLayers.push(layer);
+        }
       });
       map._callbacks.poiFilter({
         chart: map._chartData,
-        poiLayers: poiLayers,
+        poiLayers,
         radius: _.get(e, 'radius', 10),
         indexPatternId: getIndexPatternId(),
         field: getGeoField(),
