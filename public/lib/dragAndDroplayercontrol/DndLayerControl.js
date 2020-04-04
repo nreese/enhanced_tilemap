@@ -188,6 +188,7 @@ function _updateLayerControl() {
 
 async function getMriLayer(spatialPath, enabled) {
   const limit = 250;
+  const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
   const resp = await esClient.search({
     index: '.map__*',
     body: {
@@ -199,7 +200,7 @@ async function getMriLayer(spatialPath, enabled) {
               'spatial_path.raw': spatialPath
             }
           },
-          filter: mainSearchDetails.mapExtentFilter()
+          filter
         }
       }
     }

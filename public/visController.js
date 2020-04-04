@@ -443,8 +443,8 @@ define(function (require) {
             initVectorLayer(wfsOverlay.id, wfsOverlay.displayName, resp.data, options);
           })
           .catch(() => {
-            notify.error(`An issue was encountered returning ${wfsOverlay.layers} from WFS request. Please ensure: 
-              - url ( ${wfsOverlay.url} ) is correct and has layers present, 
+            notify.error(`An issue was encountered returning ${wfsOverlay.layers} from WFS request. Please ensure:
+              - url ( ${wfsOverlay.url} ) is correct and has layers present,
               - ${wfsOverlay.formatOptions} is an allowed output format
               - WFS is CORs enabled for this domain`);
             map.removeLayerFromMapAndControlById(wfsOverlay.id);
@@ -572,12 +572,15 @@ define(function (require) {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
-      const mainSearchDetails = {
-        indexPattern: $scope.vis.indexPattern.title,
-        geoFieldName: $scope.vis.aggs[1].params.field.name,
-        _siren: $scope.vis._siren,
-        mapExtentFilter: getGeoShapeBox
-      };
+      let mainSearchDetails = null;
+      if ($scope.vis.aggs.length > 1) {
+        mainSearchDetails = {
+          indexPattern: $scope.vis.indexPattern.title,
+          geoFieldName: $scope.vis.aggs[1].params.field.name,
+          _siren: $scope.vis._siren,
+          mapExtentFilter: getGeoShapeBox
+        };
+      }
       map = new TileMapMap(container, {
         mainSearchDetails,
         $element,
