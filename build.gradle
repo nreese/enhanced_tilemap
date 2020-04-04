@@ -137,7 +137,7 @@ task gulpPackage(dependsOn: ['gulp_package']) {
 }
 
 // run npm install
-gulp_package.dependsOn 'npmInstall'
+gulp_package.dependsOn 'npmCi'
 
 // run gulp install
 gulp_package.dependsOn 'installGulp'
@@ -151,6 +151,18 @@ gulp_package.dependsOn 'installGulp'
 task installGruntGlobally(type: NpmTask) {
     args = ['install', '-g', 'grunt']
 }
+
+/**
+ * Task to execute `npm ci`
+ */
+task npmCi(type: NpmTask, dependsOn: [installGruntGlobally]) {
+    execOverrides {
+        it.workingDir = projectDir
+    }
+
+    setArgs( ['ci'] )
+}
+
 
 ///////////////////////////////////////////////////
 //                                               //
@@ -170,7 +182,7 @@ task gulpDev(type: GulpTask) {
 }
 
 // run npm install
-gulpDev.dependsOn 'npmInstall'
+gulpDev.dependsOn 'npmCi'
 
 // run gulp install
 gulpDev.dependsOn 'installGulp'
@@ -198,15 +210,7 @@ task gulpTest(type: GulpTask) {
 }
 
 // run npm install
-gulpTest.dependsOn 'npmInstall'
-
-// run gulp install
-gulpTest.dependsOn 'installGulp'
-
-// makes that grunt is installed
-gulpTest.dependsOn 'installGruntGlobally'
-gulpTest.dependsOn 'installGrunt'
-installGrunt.mustRunAfter 'installGruntGlobally'
+gulpTest.dependsOn 'npmCi'
 
 ///////////////////////////////////////////////////
 //                                               //
@@ -254,6 +258,7 @@ clean {
 }
 
 // Executes the Gulp's clean task
+gulp_clean.dependsOn 'npmCi'
 clean.dependsOn 'gulp_clean'
 
 ///////////////////////////////////////////////////
