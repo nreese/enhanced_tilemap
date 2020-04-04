@@ -139,9 +139,6 @@ task gulpPackage(dependsOn: ['gulp_package']) {
 // run npm install
 gulp_package.dependsOn 'npmCi'
 
-// run gulp install
-gulp_package.dependsOn 'installGulp'
-
 ///////////////////////////////////////////////////
 //                                               //
 //           Install Grunt Globally              //
@@ -230,15 +227,8 @@ task gulpTestDev(type: GulpTask) {
 }
 
 // run npm install
-gulpTestDev.dependsOn 'npmInstall'
+gulpTestDev.dependsOn 'npmCi'
 
-// run gulp install
-gulpTestDev.dependsOn 'installGulp'
-
-// makes that grunt is installed
-gulpTestDev.dependsOn 'installGruntGlobally'
-gulpTestDev.dependsOn 'installGrunt'
-installGrunt.mustRunAfter 'installGruntGlobally'
 
 ///////////////////////////////////////////////////
 //                                               //
