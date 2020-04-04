@@ -149,15 +149,22 @@ task installGruntGlobally(type: NpmTask) {
     args = ['install', '-g', 'grunt']
 }
 
-/**
- * Task to execute `npm ci`
- */
-task npmCi(type: NpmTask, dependsOn: [installGruntGlobally]) {
+///////////////////////////////////////////////////
+//                                               //
+//           Install Packages                    //
+//                                               //
+///////////////////////////////////////////////////
+
+task preNpmCi(type: NpmTask, dependsOn: [installGruntGlobally]) {
     execOverrides {
         it.workingDir = projectDir
     }
 
     setArgs( ['ci'] )
+}
+
+task npmCi(type: Delete, dependsOn: [preNpmCi]) {
+    delete "${projectDir}/node_modules/.bin/npm", "${projectDir}/node_modules/npm"
 }
 
 
@@ -228,7 +235,6 @@ task gulpTestDev(type: GulpTask) {
 
 // run npm install
 gulpTestDev.dependsOn 'npmCi'
-
 
 ///////////////////////////////////////////////////
 //                                               //
