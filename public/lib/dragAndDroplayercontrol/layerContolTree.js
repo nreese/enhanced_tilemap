@@ -64,7 +64,7 @@ export class AddMapLayersModal extends React.Component {
         this._calculateAllTypeCounts(item.children);
         const allItemsLayer = item.children.find(it => it.isParentItem);
         allItemsLayer.count = item.count - item.children.reduce((acc, childItem) => childItem.count + acc, 0);
-        if(allItemsLayer.count === 0) {
+        if (allItemsLayer.count === 0) {
           remove(item.children, allItemsLayer);
         }
       }
@@ -310,6 +310,7 @@ export class AddMapLayersModal extends React.Component {
       <EuiFlexGroup gutterSize="s" alignItems="center">
         <EuiFlexItem grow={false}>
           <EuiButtonEmpty
+            data-test-subj={'addLayersModalCancelBtn'}
             size="s"
             onClick={() => {
               this.onClose();
@@ -321,6 +322,7 @@ export class AddMapLayersModal extends React.Component {
 
         <EuiFlexItem grow={false}>
           <EuiButton
+            data-test-subj={'addLayersDisabledBtn'}
             size="s"
             iconType="plusInCircle"
             onClick={() => {
@@ -334,6 +336,7 @@ export class AddMapLayersModal extends React.Component {
 
         <EuiFlexItem grow={false}>
           <EuiButton
+            data-test-subj={'addLayersEnableBtn'}
             fill
             size="s"
             iconType="plusInCircle"
