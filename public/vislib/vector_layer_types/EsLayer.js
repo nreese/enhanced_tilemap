@@ -40,13 +40,13 @@ export default class EsLayer {
           }
         });
       } else if ('geo_shape' === geo.type || 'polygon' === geo.type || 'multipolygon' === geo.type) {
-        const shapes = _.map(hits, hit => {
-          let geometry;
-          if (type === 'poi') {
-            geometry = _.get(hit, `_source[${geo.field}]`);
-          } else {
-            geometry = hit._source.geometry;
-          }
+        const shapesWithGeometry = _.remove(hits, hit => {
+          return _.get(hit, `_source[${geo.field}]`);
+        });
+
+        const shapes = _.map(shapesWithGeometry, hit => {
+          const geometry = _.get(hit, `_source[${geo.field}]`);
+
           geometry.type = capitalizeFirstLetter(geometry.type);
           if (geometry.type === 'Multipolygon') {
             geometry.type === 'MultiPolygon';
@@ -54,7 +54,7 @@ export default class EsLayer {
 
           let popupContent = false;
           if (options.popupFields.length > 0) {
-            popupContent = self._popupContent(hit);
+            popupContent = self._popupContent(hit, options.popupFields);
           }
           return {
             type: 'Feature',
@@ -80,7 +80,7 @@ export default class EsLayer {
                     geojson: polygon.toGeoJSON()
                   });
                 };
-                polygon.on('click', polygon._click);
+                polygon.on('click', polygon._click, this);
               }
             },
             pointToLayer: function pointToLayer(feature, latlng) {
@@ -91,27 +91,31 @@ export default class EsLayer {
                 });
             },
             style: {
-              fillColor: '#8510d8',
+              fillColor: options.color || '#8510d8',
               weight: 2,
               opacity: 1,
-              color: '#000000',
+              color: options.color || '#000000',
               dashArray: '3',
               fillOpacity: 0.75
+            },
+            destroy: function onEachFeature(feature, polygon) {
+              if (feature && options.leafletMap._popup) {
+                if (feature.properties.label) {
+                  polygon.off('mouseover', self.addMouseOverGeoShape);
+                  polygon.off('mouseout', self.addMouseOutToGeoShape);
+                  polygon.unbindPopup();
+                }
+                if (polygon._click) {
+                  polygon.off('click', polygon._click, this);
+                  polygon._click = null;
+                }
+              }
             }
           }
         );
         layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
         layer.type = type + 'shape';
-        layer.destroy = () => {
-          _.each(layer._layers, polygon => {
-            polygon.off('mouseover', self.addMouseOverGeoShape);
-            polygon.off('mouseout', self.addMouseOutToGeoShape);
-            if (polygon._click) {
-              polygon.off('click', polygon._click);
-              polygon._click = null;
-            }
-          });
-        };
+        layer.destroy = () => layer.options.destroy();
       } else {
         console.warn('Unexpected feature geo type: ' + geo.type);
       }
@@ -126,7 +130,6 @@ export default class EsLayer {
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
-      // layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;
 
       return layer;

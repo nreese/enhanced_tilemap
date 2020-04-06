@@ -266,7 +266,8 @@ define(function (require) {
           geoField: getGeoField()
         },
         searchSource: $scope.searchSource,
-        $element
+        $element,
+        leafletMap: map.leafletMap
       };
 
       poi.getLayer(options, function (layer) {

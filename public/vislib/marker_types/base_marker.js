@@ -171,7 +171,7 @@ define(function (require) {
         }
         if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
           // detach the event
-          L.DomEvent.off(self.leafletMap._popup, 'mouseout', self._popupMouseOut, self);
+          L.DomEvent.off(self.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
           self._hidePopup();
         }
       };

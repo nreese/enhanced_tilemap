@@ -110,22 +110,26 @@ export default class Vector {
               };
               polygon.on('click', polygon._click);
             }
+          },
+          destroy: function onEachFeature(feature, polygon) {
+            if (feature && options.leafletMap._popup) {
+              if (feature.properties.label) {
+                polygon.off('mouseover', self.addMouseOverGeoShape);
+                polygon.off('mouseout', self.addMouseOutToGeoShape);
+                polygon.unbindPopup();
+              }
+              if (polygon._click) {
+                polygon.off('click', polygon._click, this);
+                polygon._click = null;
+              }
+            }
           }
         }
       );
-      layer.destroy = () => {
-        _.each(layer._layers, polygon => {
-          polygon.off('mouseover', self.addMouseOverPolygon);
-          polygon.off('mouseout', self.addMouseOutPolygon);
-          if (polygon._click) {
-            polygon.off('click', polygon._click);
-            polygon._click = null;
-          }
-        });
-      };
       layer.type = 'vectoroverlay';
       layer.label = options.displayName;
       layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+      layer.destroy = () => layer.options.destroy();
     } else {
       console.warn('Unexpected feature geo type: ' + geometry.type);
     }
@@ -220,9 +224,9 @@ export default class Vector {
     feature.on('mouseout', this._addMouseOutPoint);
   };
 
-  _removeMouseEventsPoint = function (feature) {
-    feature.off('mouseover');
-    feature.off('mouseout');
+  _removeMouseEventsGeoPoint = function (feature, content) {
+    feature.off('mouseover', this._getMouseOverPoint(content));
+    feature.off('mouseout', this._addMouseOutPoint);
   };
 
   _createMarker = function (hit, options) {
