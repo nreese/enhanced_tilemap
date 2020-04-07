@@ -237,8 +237,7 @@ define(function (require) {
       // remove popups
       this.popups = this.popups.filter((popup) => {
         if (this.leafletMap._popup) {
-          popup.off(this.leafletMap._popup._container, 'mouseover', this._popupMouseOut, this);
-          popup.off(this.leafletMap._popup._container, 'mouseout', this._popupMouseOut, this);
+          popup.off('mouseover').off('mouseout');
         }
       });
 

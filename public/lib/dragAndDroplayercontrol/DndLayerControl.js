@@ -112,9 +112,9 @@ function _clearAllLayersFromMap() {
   _leafletMap.eachLayer(function (layer) {
     if (layer.type !== 'base') {
       //TODO investigate if this is causing memory leak
-      // if (layer.destroy) {
-      //   layer.destroy();
-      // }
+      if (layer.destroy) {
+        layer.destroy();
+      }
       _leafletMap.removeLayer(layer);
     }
   });

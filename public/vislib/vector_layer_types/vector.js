@@ -46,14 +46,17 @@ export default class Vector {
 
     if ('Point' === geometry.type) {
       const markers = _.map(self._geoJsonCollection.features, feature => {
-        return self._createMarker(feature, options);
+        const marker = self._createMarker(feature, options);
+        if (options.popupFields.length) {
+          marker.content = this._popupContent(feature, options.popupFields);
+        }
+        return marker;
       });
       layer = new L.FeatureGroup(markers);
-      layer.destroy = () => markers.forEach(marker => {
-        if (marker.removeEvent) {
-          marker.removeEvent();
-        }
-      });
+      layer.destroy = () => {
+        layer.unbindPopup();
+      };
+      self.bindPopup(layer, options);
       layer.id = options.id;
       layer.label = options.displayName;
       layer.type = 'vectorpoint';
@@ -137,6 +140,71 @@ export default class Vector {
     return layer;
   };
 
+
+
+  /**
+ * Binds popup and events to each feature on map
+ *
+ * @method bindPopup
+ * @param feature {Object}
+ * @param layer {Object}
+ * return {undefined}
+ */
+  bindPopup = function (layer, options) {
+    const self = this;
+    const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
+
+    self._popupMouseOut = function (e) {
+      // get the element that the mouse hovered onto
+      const target = e.toElement || e.relatedTarget;
+      // check to see if the element is a popup
+      if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+        return true;
+      }
+
+      // detach the event
+      L.DomEvent.off(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
+      options.leafletMap.closePopup();
+
+    };
+
+    layer.on({
+      mouseover: function (e) {
+        self._showTooltip(e.layer.content, e.latlng, options.leafletMap);
+      },
+
+      mouseout: function (e) {
+        const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+        // check to see if the element is a popup
+        if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+          L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
+          return true;
+        }
+        options.leafletMap.closePopup();
+      }
+    });
+  };
+
+  _showTooltip = function (content, latLng, leafletMap) {
+    if (!leafletMap) return;
+    if (!content) return;
+
+    const popupDimensions = {
+      height: leafletMap.getSize().y * 0.9,
+      width: Math.min(leafletMap.getSize().x * 0.9, 400)
+    };
+
+    L.popup({
+      autoPan: false,
+      maxHeight: popupDimensions.height,
+      maxWidth: popupDimensions.width,
+      offset: utils.popupOffset(leafletMap, content, latLng, popupDimensions)
+    })
+      .setLatLng(latLng)
+      .setContent(content)
+      .openOn(leafletMap);
+  };
+
   //Mouse event creation for GeoShape
   addMouseOverPolygon = function (e) {
     if (!e.target._map.disablePopups) {
@@ -174,60 +242,8 @@ export default class Vector {
     polygon.on('click', polygon._click);
   };
 
-  //Mouse event creation and closing for Points
-  _getMouseOverPoint = function (content) {
-    const popup = function (e) {
-      if (!e.target._map.disablePopups) {
-        L.popup({
-          autoPan: false,
-          maxHeight: 'auto',
-          maxWidth: 'auto',
-          offset: utils.popupOffset(this._map, content, e.latlng)
-        })
-          .setLatLng(e.latlng)
-          .setContent(content)
-          .openOn(this._map);
-      }
-    };
-    return popup;
-  };
 
-  _addMouseOutPoint = function (e) {
-    const self = this;
 
-    self._popupMouseOut = function (e) {
-      // detach the event, if one exists
-      if (self._map) {
-        // get the element that the mouse hovered onto
-        const target = e.toElement || e.relatedTarget;
-        // check to see if the element is a popup
-        if (utils.getParent(target, ['leaflet-popup'])) {
-          return true;
-        }
-        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-        self._map.closePopup();
-      }
-    };
-
-    const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-
-    // check to see if the element is a popup
-    if (utils.getParent(target, ['leaflet-popup'])) {
-      L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-      return true;
-    }
-    self._map.closePopup();
-  };
-
-  _addMouseEventsPoint = function (feature, content) {
-    feature.on('mouseover', this._getMouseOverPoint(content));
-    feature.on('mouseout', this._addMouseOutPoint);
-  };
-
-  _removeMouseEventsGeoPoint = function (feature, content) {
-    feature.off('mouseover', this._getMouseOverPoint(content));
-    feature.off('mouseout', this._addMouseOutPoint);
-  };
 
   _createMarker = function (hit, options) {
     const feature = L.marker(
@@ -235,14 +251,6 @@ export default class Vector {
       {
         icon: markerIcon(options.color, options.size)
       });
-
-    if (options.popupFields.length > 0) {
-      const content = this._popupContent(hit, options.popupFields);
-      feature.removeEvent = () => {
-        this._removeMouseEventsGeoPoint(feature, content);
-      };
-      this._addMouseEventsPoint(feature, content);
-    }
     return feature;
   };
 

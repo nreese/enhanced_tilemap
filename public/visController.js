@@ -299,7 +299,8 @@ define(function (require) {
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
         },
-        type: _.get(options, 'type', 'noType')
+        type: _.get(options, 'type', 'noType'),
+        leafletMap: map.leafletMap
       };
 
       const layer = new Vector(geoJsonCollection).getLayer(optionsWithDefaults);
