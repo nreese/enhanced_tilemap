@@ -132,12 +132,10 @@ define(function (require) {
               searchSource.inherits(savedSearch.searchSource);
               //_siren from main searchSource is used
               searchSource._siren = options.searchSource._siren;
-              let allFilters = [createMapExtentFilter(options.mapExtentFilter)];
-              if (onDashboardPage()) {
-                allFilters = allFilters.concat([...searchSource.filter()]);
-              } else {
-                allFilters = allFilters.concat(queryFilter.getFilters());
-              }
+              const allFilters = [
+                ...searchSource.filter(),
+                createMapExtentFilter(options.mapExtentFilter)
+              ];
               searchSource.filter(allFilters);
             } else {
               //Do not filter POIs by time so can not inherit from rootSearchSource
