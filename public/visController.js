@@ -266,7 +266,8 @@ define(function (require) {
           geoField: getGeoField()
         },
         searchSource: $scope.searchSource,
-        $element
+        $element,
+        leafletMap: map.leafletMap
       };
 
       poi.getLayer(options, function (layer) {
@@ -298,7 +299,8 @@ define(function (require) {
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
         },
-        type: _.get(options, 'type', 'noType')
+        type: _.get(options, 'type', 'noType'),
+        leafletMap: map.leafletMap
       };
 
       const layer = new Vector(geoJsonCollection).getLayer(optionsWithDefaults);

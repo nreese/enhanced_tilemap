@@ -66,10 +66,13 @@ define(function (require) {
     POIs.prototype.getLayer = function (options, callback) {
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoFields = getGeoFields(savedSearch);
+        const geoField = geoFields.find(geoField => {
+          return geoField.name === this.geoField;
+        });
 
         const geo = {
-          type: geoFields[0].type,
-          field: geoFields[0].name
+          type: geoField.type,
+          field: geoField.name
         };
 
         const processLayer = () => {
@@ -163,7 +166,7 @@ define(function (require) {
               //in ES Response watcher
               if (this.isInitialDragAndDrop) {
                 this.params.filterPopupContent = options.filterPopupContent;
-                this.params.searchIcon = options.$legend.searchIcon;
+                this.params.searchIcon = options.searchIcon;
                 this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
                 this.params.draggedStateInitial = this.params.draggedState;
                 this.params.geoField = geo.field;

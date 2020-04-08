@@ -10,9 +10,6 @@ export default class EsLayer {
 
 
   createLayer = function (hits, geo, type, options) {
-    function capitalizeFirstLetter(string) {
-      return string.charAt(0).toUpperCase() + string.slice(1);
-    }
     let layer = null;
     const self = this;
 
@@ -28,29 +25,36 @@ export default class EsLayer {
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.searchIcon = _.get(options, 'searchIcon', 'fas fa-map-marker-alt');
         const markers = _.map(hits, hit => {
-          return self._createMarker(hit, geo.field, options);
+          const marker = self._createMarker(hit, geo.field, options);
+          if (options.popupFields.length) {
+            marker.content = this._popupContent(hit, options.popupFields);
+          }
+          return marker;
         });
         layer = new L.FeatureGroup(markers);
         layer.type = type + 'point';
         layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
-        layer.destroy = () => markers.forEach(self._removeMouseEventsGeoPoint);
+        layer.destroy = () => {
+          layer.unbindPopup();
+        };
+        self.bindPopup(layer, options);
       } else if ('geo_shape' === geo.type || 'polygon' === geo.type || 'multipolygon' === geo.type) {
-        const shapes = _.map(hits, hit => {
-          let geometry;
-          if (type === 'poi') {
-            geometry = _.get(hit, `_source[${geo.field}]`);
-          } else {
-            geometry = hit._source.geometry;
-          }
-          geometry.type = capitalizeFirstLetter(geometry.type);
+        const shapesWithGeometry = _.remove(hits, hit => {
+          return _.get(hit, `_source[${geo.field}]`);
+        });
+
+        const shapes = _.map(shapesWithGeometry, hit => {
+          const geometry = _.get(hit, `_source[${geo.field}]`);
+
+          geometry.type = self.capitalizeFirstLetter(geometry.type);
           if (geometry.type === 'Multipolygon') {
             geometry.type === 'MultiPolygon';
           }
 
           let popupContent = false;
           if (options.popupFields.length > 0) {
-            popupContent = self._popupContent(hit);
+            popupContent = self._popupContent(hit, options.popupFields);
           }
           return {
             type: 'Feature',
@@ -76,7 +80,7 @@ export default class EsLayer {
                     geojson: polygon.toGeoJSON()
                   });
                 };
-                polygon.on('click', polygon._click);
+                polygon.on('click', polygon._click, this);
               }
             },
             pointToLayer: function pointToLayer(feature, latlng) {
@@ -87,27 +91,31 @@ export default class EsLayer {
                 });
             },
             style: {
-              fillColor: '#8510d8',
+              fillColor: options.color || '#8510d8',
               weight: 2,
               opacity: 1,
-              color: '#000000',
+              color: options.color || '#000000',
               dashArray: '3',
               fillOpacity: 0.75
+            },
+            destroy: function onEachFeature(feature, polygon) {
+              if (feature && options.leafletMap._popup) {
+                if (feature.properties.label) {
+                  polygon.off('mouseover', self.addMouseOverGeoShape);
+                  polygon.off('mouseout', self.addMouseOutToGeoShape);
+                  polygon.unbindPopup();
+                }
+                if (polygon._click) {
+                  polygon.off('click', polygon._click, this);
+                  polygon._click = null;
+                }
+              }
             }
           }
         );
         layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
         layer.type = type + 'shape';
-        layer.destroy = () => {
-          _.each(layer._layers, polygon => {
-            polygon.off('mouseover', self.addMouseOverGeoShape);
-            polygon.off('mouseout', self.addMouseOutToGeoShape);
-            if (polygon._click) {
-              polygon.off('click', polygon._click);
-              polygon._click = null;
-            }
-          });
-        };
+        layer.destroy = () => layer.options.destroy();
       } else {
         console.warn('Unexpected feature geo type: ' + geo.type);
       }
@@ -122,7 +130,6 @@ export default class EsLayer {
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
-      // layer.$legend = options.$legend;
       layer.layerGroup = options.layerGroup;
 
       return layer;
@@ -136,6 +143,68 @@ export default class EsLayer {
       return layer;
     }
   }
+
+
+  /**
+   * Binds popup and events to each feature on map
+   *
+   * @method bindPopup
+   * @param feature {Object}
+   * @param layer {Object}
+   * return {undefined}
+   */
+  bindPopup = function (layer, options) {
+    const self = this;
+    const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
+
+    self._popupMouseOut = function (e) {
+      // get the element that the mouse hovered onto
+      const target = e.toElement || e.relatedTarget;
+      // check to see if the element is a popup
+      if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+        return true;
+      }
+      // detach the event
+      L.DomEvent.off(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
+      options.leafletMap.closePopup();
+    };
+
+    layer.on({
+      mouseover: function (e) {
+        self._showTooltip(e.layer.content, e.latlng, options.leafletMap);
+      },
+
+      mouseout: function (e) {
+        const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+        // check to see if the element is a popup
+        if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+          L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
+          return true;
+        }
+        options.leafletMap.closePopup();
+      }
+    });
+  };
+
+  _showTooltip = function (content, latLng, leafletMap) {
+    if (!leafletMap) return;
+    if (!content) return;
+
+    const popupDimensions = {
+      height: leafletMap.getSize().y * 0.9,
+      width: Math.min(leafletMap.getSize().x * 0.9, 400)
+    };
+
+    L.popup({
+      autoPan: false,
+      maxHeight: popupDimensions.height,
+      maxWidth: popupDimensions.width,
+      offset: utils.popupOffset(leafletMap, content, latLng, popupDimensions)
+    })
+      .setLatLng(latLng)
+      .setContent(content)
+      .openOn(leafletMap);
+  };
 
   //Mouse event creation for GeoShape
   addMouseOverGeoShape = function (e) {
@@ -173,65 +242,6 @@ export default class EsLayer {
     polygon.on('click', polygon._click);
   };
 
-  //Mouse event creation and closing for GeoPoints
-  _getMouseOverGeoPoint = function (content) {
-    const popup = function (e) {
-      if (!e.target._map.disablePopups) {
-        const popupDimensions = {
-          height: this._map.getSize().y * 0.9,
-          width: Math.min(this._map.getSize().x * 0.9, 400)
-        };
-        L.popup({
-          autoPan: false,
-          maxHeight: popupDimensions.height,
-          maxWidth: popupDimensions.width,
-          offset: utils.popupOffset(this._map, content, e.latlng, popupDimensions)
-        })
-          .setLatLng(e.latlng)
-          .setContent(content)
-          .openOn(this._map);
-      }
-    };
-    return popup;
-  };
-
-  _addMouseOutGeoPoint = function (e) {
-    const self = this;
-
-    self._popupMouseOut = function (e) {
-      // detach the event, if one exists
-      if (self._map) {
-        // get the element that the mouse hovered onto
-        const target = e.toElement || e.relatedTarget;
-        // check to see if the element is a popup
-        if (utils.getParent(target, ['leaflet-popup'])) {
-          return true;
-        }
-        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-        self._map.closePopup();
-      }
-    };
-
-    const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-
-    // check to see if the element is a popup
-    if (utils.getParent(target, ['leaflet-popup'])) {
-      L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-      return true;
-    }
-    self._map.closePopup();
-  };
-
-  _addMouseEventsGeoPoint = function (feature, content) {
-    feature.on('mouseover', this._getMouseOverGeoPoint(content));
-    feature.on('mouseout', this._addMouseOutGeoPoint);
-  };
-
-  _removeMouseEventsGeoPoint = function (feature) {
-    feature.off('mouseover');
-    feature.off('mouseout');
-  };
-
   _createMarker = function (hit, geoField, options) {
     let hitCoords;
     if (_.has(hit, '_source.geometry.coordinates') && _.has(hit, '_source.geometry.type')) {
@@ -246,11 +256,6 @@ export default class EsLayer {
         icon: searchIcon(options.searchIcon, options.color, options.size),
         pane: 'overlayPane'
       });
-
-    if (options.popupFields.length > 0) {
-      const content = this._popupContent(hit, options.popupFields);
-      this._addMouseEventsGeoPoint(feature, content);
-    }
     return feature;
   };
 

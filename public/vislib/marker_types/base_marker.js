@@ -171,7 +171,7 @@ define(function (require) {
         }
         if (_.get(self._attr, 'tooltip.closeOnMouseout', true)) {
           // detach the event
-          L.DomEvent.off(self.leafletMap._popup, 'mouseout', self._popupMouseOut, self);
+          L.DomEvent.off(self.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
           self._hidePopup();
         }
       };
@@ -235,10 +235,11 @@ define(function (require) {
       this._stopLoadingGeohash();
 
       // remove popups
-      this.popups = this.popups.filter(function (popup) {
-        popup.off('mouseover').off('mouseout');
+      this.popups = this.popups.filter((popup) => {
+        if (this.leafletMap._popup) {
+          popup.off('mouseover').off('mouseout');
+        }
       });
-      this._hidePopup();
 
       this.removeLegend();
 
