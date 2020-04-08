@@ -1,0 +1,269 @@
+/* eslint-disable import/no-unresolved */
+import expect from 'expect.js';
+import React from 'react';
+import { mount } from 'enzyme';
+import sinon from 'sinon';
+
+import { AddMapLayersModal } from '../layerContolTree';
+
+const fakeAggs = [
+  {
+    key: 'US',
+    doc_count: 1743493
+  },
+  {
+    key: 'US/Private School Locations',
+    doc_count: 22500
+  },
+  {
+    key: 'US/School Office Locations',
+    doc_count: 19499
+  },
+  {
+    key: 'US/counties',
+    doc_count: 1701494
+  },
+  {
+    key: 'US/counties/Trees In Loudoun',
+    doc_count: 1698500
+  }
+];
+
+describe('Map layers modal', () => {
+  let addMapLayersModal;
+
+  const fakeEsClient = {
+    search: sinon.stub().resolves({
+      aggregations: {
+        2: {
+          buckets: []
+        }
+      }
+    })
+  };
+
+  function getMountedComponent({
+    getMriLayer = () => { },
+    mrisOnMap = [],
+    addOverlay = () => { },
+    esClient = fakeEsClient
+  } = {}) {
+    addMapLayersModal = mount(
+      <AddMapLayersModal
+        getMriLayer={getMriLayer}
+        mrisOnMap={mrisOnMap}
+        addOverlay={addOverlay}
+        esClient={esClient}
+      />
+    );
+
+    addMapLayersModal.update();
+
+    return addMapLayersModal;
+  }
+
+
+  afterEach(() => {
+    if (addMapLayersModal) {
+      addMapLayersModal.unmount();
+      addMapLayersModal = undefined;
+    }
+  });
+
+
+
+  it('should call the fake Es Client and create an empty modal', done => {
+    const component = getMountedComponent();
+    expect(fakeEsClient.search.called);
+    expect(component.getElement('ul.euiTreeView'));
+    done();
+  });
+
+
+  it('should populate correct stored layers list with given aggs.' +
+  'This implicitly tests _calculateAllTypeCounts() and _getParent() and _getItems()', () => {
+
+    const fakeStoredLayersList = [
+      {
+        label: 'US',
+        id: 'US',
+        checked: true,
+        filtered: false,
+        group: true,
+        count: 1743493,
+        isParentItem: false,
+        path: 'US',
+        itemInGroupChecked: true,
+        hasLayerSelect: true,
+        children: [
+          {
+            label: 'Private School Locations',
+            id: 'US/Private School Locations',
+            checked: true,
+            filtered: false,
+            children: [],
+            group: false,
+            count: 22500,
+            isParentItem: false,
+            path: 'US/Private School Locations'
+          },
+          {
+            label: 'School Office Locations',
+            id: 'US/School Office Locations',
+            checked: true,
+            filtered: false,
+            children: [],
+            group: false,
+            count: 19499,
+            isParentItem: false,
+            path: 'US/School Office Locations'
+          },
+          {
+            label: 'Counties',
+            id: 'US/counties',
+            checked: true,
+            filtered: false,
+            children: [
+              {
+                label: 'Counties',
+                id: 'allUS/counties',
+                checked: true,
+                filtered: false,
+                children: [],
+                group: false,
+                count: 2994,
+                isParentItem: true,
+                path: 'US/counties'
+              },
+              {
+                label: 'Trees In Loudoun',
+                id: 'US/counties/Trees In Loudoun',
+                checked: true,
+                filtered: false,
+                children: [],
+                group: false,
+                count: 1698500,
+                isParentItem: false,
+                path: 'US/counties/Trees In Loudoun'
+              }
+            ],
+            group: true,
+            count: 1701494,
+            isParentItem: false,
+            path: 'US/counties',
+            itemInGroupChecked: true,
+            hasLayerSelect: true
+          }
+        ]
+      }
+    ];
+    function compareItems(item, fakeItem) {
+      expect(item.checked).to.be(fakeItem.checked);
+      expect(item.count).to.be(fakeItem.count);
+      expect(item.filtered).to.be(fakeItem.filtered);
+      expect(item.id).to.be(fakeItem.id);
+      expect(item.label).to.be(fakeItem.label);
+      expect(item.path).to.be(fakeItem.path);
+      expect(item.isParentItem).to.be(fakeItem.isParentItem);
+      expect(item.group).to.be(fakeItem.group);
+      expect(item.hasLayerSelect).to.be(fakeItem.hasLayerSelect);
+      if (item.group) {
+        expect(item.children.length).to.be(fakeItem.children.length);
+        for (let i = 0; i < item.children.length; i++) {
+          compareItems(item.children[i], fakeItem.children[i]);
+        }
+      }
+    }
+    const componentInstance = getMountedComponent().instance();
+    const storedLayersList = componentInstance._makeUiTreeStructure(fakeAggs);
+    compareItems(storedLayersList[0], fakeStoredLayersList[0]);
+  });
+
+
+  describe('_checkIfAnyItemInGroupAndSubGroupChecked', () => {
+
+    it('should return false for both someItemsChecked and noItemsChecked as all items are checked', () => {
+
+      const someItemsUnchecked = [{
+        checked: true,
+        group: true,
+        children: [
+          {
+            checked: true,
+            children: [],
+            group: false,
+          },
+          {
+            checked: true,
+            children: [],
+            group: false,
+          }
+        ]
+      }];
+
+      const componentInstance = getMountedComponent().instance();
+      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(someItemsUnchecked);
+
+      expect(check.someItemsChecked).to.be(false);
+      expect(check.noItemsChecked).to.be(false);
+    });
+
+    it('should return true for someItemsChecked and false for noitemschecked as only some items are checked', () => {
+
+      const someItemsUnchecked = [{
+        checked: true,
+        group: true,
+        children: [
+          {
+            checked: true,
+            children: [],
+            group: false,
+          },
+          {
+            checked: false,
+            children: [],
+            group: false,
+          }
+        ]
+      }];
+
+      const componentInstance = getMountedComponent().instance();
+      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(someItemsUnchecked);
+
+      expect(check.someItemsChecked).to.be(true);
+      expect(check.noItemsChecked).to.be(false);
+    });
+
+    it('should return false for someItemsChecked and true for noItemsChecked as no items are checked', () => {
+
+      const someItemsUnchecked = [{
+        checked: true,
+        group: true,
+        children: [
+          {
+            checked: false,
+            children: [],
+            group: false,
+          },
+          {
+            checked: false,
+            children: [],
+            group: false,
+          }
+        ]
+      }];
+
+      const componentInstance = getMountedComponent().instance();
+      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(someItemsUnchecked);
+
+      expect(check.someItemsChecked).to.be(false);
+      expect(check.noItemsChecked).to.be(true);
+    });
+  });
+});
+
+
+
+
+
+
