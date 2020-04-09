@@ -122,7 +122,6 @@ export class AddMapLayersModal extends React.Component {
       }
     });
     this._calculateAllTypeCounts(storedLayersList);
-    console.log(JSON.stringify(storedLayersList, null, 2));
     return storedLayersList;
   }
 
