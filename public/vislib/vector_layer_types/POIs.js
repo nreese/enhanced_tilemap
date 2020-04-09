@@ -158,7 +158,7 @@ define(function (require) {
             .then(searchResp => {
 
               options.warning = {};
-              if (searchResp.hits.total > this.limit) {
+              if (searchResp.hits.total.value > this.limit) {
                 options.warning.limit = this.limit || 1000;
               }
 
