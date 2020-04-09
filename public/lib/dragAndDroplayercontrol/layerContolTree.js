@@ -42,20 +42,24 @@ export class AddMapLayersModal extends React.Component {
   }
 
   _getItem = (id, list) => {
-    let parent = list;
-    while (parent != null) {
-      for (let i = 0; i <= parent.length - 1; i++) {
-        const currentParent = parent[i];
-        if (currentParent.id === id || id === '') {
-          return currentParent;
-        } else if (currentParent.id === id.substring(3)) {
-          return parent[i].children[0];
-        } else if (id.includes(currentParent.id) && !currentParent.isParentItem) {
-          parent = currentParent.children;
-          break;
+    let foundItem;
+    function findItem(items) {
+      if (!foundItem) {
+        for (let i = 0; i <= (items.length - 1); i++) {
+          const item = items[i];
+          if (item.id === id || id === '') {
+            foundItem = item;
+          } else if (item.id === id.substring(3)) {
+            foundItem = item.children[0];
+          } else if (item.group && !item.isParentItem) {
+            findItem(item.children);
+            break;
+          }
         }
       }
     }
+    findItem(list);
+    return foundItem;
   }
 
   _calculateAllTypeCounts(list) {
@@ -118,6 +122,7 @@ export class AddMapLayersModal extends React.Component {
       }
     });
     this._calculateAllTypeCounts(storedLayersList);
+    console.log(JSON.stringify(storedLayersList, null, 2));
     return storedLayersList;
   }
 

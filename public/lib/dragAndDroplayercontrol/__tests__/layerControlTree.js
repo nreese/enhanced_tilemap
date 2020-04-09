@@ -8,28 +8,24 @@ import { AddMapLayersModal } from '../layerContolTree';
 
 const fakeAggs = [
   {
-    key: 'US',
-    doc_count: 1743493
+    key: 'universe',
+    doc_count: 34
   },
   {
-    key: 'US/Private School Locations',
-    doc_count: 22500
+    key: 'universe/countries',
+    doc_count: 12
   },
   {
-    key: 'US/School Office Locations',
-    doc_count: 19499
+    key: 'universe/planets',
+    doc_count: 22
   },
   {
-    key: 'US/counties',
-    doc_count: 1701494
-  },
-  {
-    key: 'US/counties/Trees In Loudoun',
-    doc_count: 1698500
+    key: 'universe/planets/countries',
+    doc_count: 12
   }
 ];
 
-describe('Map layers modal', () => {
+describe('Map layer tree modal', () => {
   let addMapLayersModal;
 
   const fakeEsClient = {
@@ -81,82 +77,75 @@ describe('Map layers modal', () => {
 
 
   it('should populate correct stored layers list with given aggs.' +
-  'This implicitly tests _calculateAllTypeCounts() and _getParent() and _getItems()', () => {
+   'This implicitly tests _calculateAllTypeCounts() and _getParent() and _getItems()', () => {
 
-    const expectedStoredLayersList = [
-      {
-        label: 'US',
-        id: 'US',
-        checked: true,
-        filtered: false,
-        group: true,
-        count: 1743493,
-        isParentItem: false,
-        path: 'US',
-        itemInGroupChecked: true,
-        hasLayerSelect: true,
-        children: [
-          {
-            label: 'Private School Locations',
-            id: 'US/Private School Locations',
-            checked: true,
-            filtered: false,
-            children: [],
-            group: false,
-            count: 22500,
-            isParentItem: false,
-            path: 'US/Private School Locations'
-          },
-          {
-            label: 'School Office Locations',
-            id: 'US/School Office Locations',
-            checked: true,
-            filtered: false,
-            children: [],
-            group: false,
-            count: 19499,
-            isParentItem: false,
-            path: 'US/School Office Locations'
-          },
-          {
-            label: 'Counties',
-            id: 'US/counties',
-            checked: true,
-            filtered: false,
-            children: [
-              {
-                label: 'Counties',
-                id: 'allUS/counties',
-                checked: true,
-                filtered: false,
-                children: [],
-                group: false,
-                count: 2994,
-                isParentItem: true,
-                path: 'US/counties'
-              },
-              {
-                label: 'Trees In Loudoun',
-                id: 'US/counties/Trees In Loudoun',
-                checked: true,
-                filtered: false,
-                children: [],
-                group: false,
-                count: 1698500,
-                isParentItem: false,
-                path: 'US/counties/Trees In Loudoun'
-              }
-            ],
-            group: true,
-            count: 1701494,
-            isParentItem: false,
-            path: 'US/counties',
-            itemInGroupChecked: true,
-            hasLayerSelect: true
-          }
-        ]
-      }
-    ];
+    const expectedStoredLayersList = [{
+      label: 'Universe',
+      id: 'universe',
+      checked: true,
+      filtered: false,
+      group: true,
+      count: 34,
+      isParentItem: false,
+      path: 'universe',
+      itemInGroupChecked: true,
+      hasLayerSelect: true,
+      children: [
+        {
+          label: 'Countries',
+          id: 'universe/countries',
+          checked: true,
+          filtered: false,
+          children: [],
+          group: false,
+          count: 12,
+          isParentItem: false,
+          path: 'universe/countries'
+        },
+        {
+          label: 'Planets',
+          id: 'universe/planets',
+          checked: true,
+          filtered: false,
+          children: [
+            {
+              label: 'Planets',
+              id: 'alluniverse/planets',
+              checked: true,
+              filtered: false,
+              children: [],
+              group: false,
+              count: 10,
+              isParentItem: true,
+              path: 'universe/planets'
+            },
+            {
+              label: 'Countries',
+              id: 'universe/planets/countries',
+              checked: true,
+              filtered: false,
+              children: [],
+              group: false,
+              count: 12,
+              isParentItem: false,
+              path: 'universe/planets/countries'
+            }
+          ],
+          group: true,
+          count: 22,
+          isParentItem: false,
+          path: 'universe/planets',
+          itemInGroupChecked: true,
+          hasLayerSelect: true
+        }
+      ]
+    }];
+
+
+
+
+
+
     function compareItems(item, fakeItem) {
       expect(item.checked).to.be(fakeItem.checked);
       expect(item.count).to.be(fakeItem.count);
