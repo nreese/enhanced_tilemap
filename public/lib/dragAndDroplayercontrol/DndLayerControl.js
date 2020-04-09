@@ -20,7 +20,9 @@ import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 
 import {
-  EuiButton
+  EuiButton,
+  EuiFlexGroup,
+  EuiFlexItem
 } from '@elastic/eui';
 
 
@@ -255,12 +257,18 @@ function _redrawMriLayers() {
 }
 
 function _createAddLayersButton() {
-  render(<EuiButton
-    size="s"
-    onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
-  >
-    Add Layers
-  </EuiButton>, _addLayerElement);
+  render(
+    <EuiFlexGroup component="span" justifyContent="center">
+      <EuiFlexItem component="span" grow={false}>
+        <EuiButton
+          size="s"
+          onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
+        >
+          Add Layers</EuiButton>
+      </EuiFlexItem>
+    </EuiFlexGroup>
+
+    , _addLayerElement);
 }
 
 function removeAllLayersFromMapandControl() {
