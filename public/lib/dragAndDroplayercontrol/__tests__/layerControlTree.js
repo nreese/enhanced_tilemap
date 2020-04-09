@@ -83,7 +83,7 @@ describe('Map layers modal', () => {
   it('should populate correct stored layers list with given aggs.' +
   'This implicitly tests _calculateAllTypeCounts() and _getParent() and _getItems()', () => {
 
-    const fakeStoredLayersList = [
+    const expectedStoredLayersList = [
       {
         label: 'US',
         id: 'US',
@@ -176,7 +176,7 @@ describe('Map layers modal', () => {
     }
     const componentInstance = getMountedComponent().instance();
     const storedLayersList = componentInstance._makeUiTreeStructure(fakeAggs);
-    compareItems(storedLayersList[0], fakeStoredLayersList[0]);
+    compareItems(storedLayersList[0], expectedStoredLayersList[0]);
   });
 
 
@@ -184,7 +184,7 @@ describe('Map layers modal', () => {
 
     it('should return false for both someItemsChecked and noItemsChecked as all items are checked', () => {
 
-      const someItemsUnchecked = [{
+      const allItemsChecked = [{
         checked: true,
         group: true,
         children: [
@@ -202,7 +202,7 @@ describe('Map layers modal', () => {
       }];
 
       const componentInstance = getMountedComponent().instance();
-      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(someItemsUnchecked);
+      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(allItemsChecked);
 
       expect(check.someItemsChecked).to.be(false);
       expect(check.noItemsChecked).to.be(false);
@@ -236,7 +236,7 @@ describe('Map layers modal', () => {
 
     it('should return false for someItemsChecked and true for noItemsChecked as no items are checked', () => {
 
-      const someItemsUnchecked = [{
+      const noItemsChecked = [{
         checked: true,
         group: true,
         children: [
@@ -254,16 +254,10 @@ describe('Map layers modal', () => {
       }];
 
       const componentInstance = getMountedComponent().instance();
-      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(someItemsUnchecked);
+      const check = componentInstance._checkIfAnyItemInGroupAndSubGroupChecked(noItemsChecked);
 
       expect(check.someItemsChecked).to.be(false);
       expect(check.noItemsChecked).to.be(true);
     });
   });
 });
-
-
-
-
-
-
