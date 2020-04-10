@@ -265,6 +265,7 @@ define(function (require) {
           geo_bounding_box: getGeoBoundingBox(),
           geoField: getGeoField()
         },
+        geoFieldName: getGeoField().fieldname,
         searchSource: $scope.searchSource,
         $element,
         leafletMap: map.leafletMap
@@ -293,9 +294,9 @@ define(function (require) {
         size: _.get(options, 'size', 'm'),
         popupFields,
         layerGroup: _.get(options, 'layerGroup', '<b> Vector Overlays </b>'),
-        indexPattern: $scope.vis.indexPattern.title,
+        indexPattern: getIndexPatternId(),
         geoFieldName: $scope.vis.aggs[1].params.field.name,
-        _siren: $scope.vis._siren,
+        _siren: getSirenMeta(),
         mapExtentFilter: {
           geo_bounding_box: getGeoBoundingBox(),
         },
@@ -461,7 +462,7 @@ define(function (require) {
 
       $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
         // const prevState = map.clearLayerAndReturnPrevState(layerParams.id);
-        const wmsIndexId = _.get(layerParams, 'indexId', $scope.vis.indexPattern.id);
+        const wmsIndexId = _.get(layerParams, 'indexId', getIndexPatternId());
         return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
           const source = new courier.SearchSource();
           const appState = getAppState();
@@ -577,10 +578,10 @@ define(function (require) {
       let mainSearchDetails = null;
       if ($scope.vis.aggs.length > 1) {
         mainSearchDetails = {
-          indexPattern: $scope.vis.indexPattern.title,
-          geoFieldName: $scope.vis.aggs[1].params.field.name,
-          _siren: $scope.vis._siren,
-          mapExtentFilter: getGeoShapeBox
+          indexPattern: getIndexPatternId(),
+          geoFieldName: getGeoField().fieldname,
+          _siren: getSirenMeta(),
+          mapExtentFilter: getGeoShapeBox,
         };
       }
       map = new TileMapMap(container, {
@@ -772,7 +773,6 @@ define(function (require) {
     map.leafletMap.on('etm:select-feature', function (e) {
       map._callbacks.polygon({
         points: e.geojson.geometry.coordinates[0],
-        field: getGeoField(),
         sirenMeta: getSirenMeta(),
       });
     });
