@@ -165,6 +165,8 @@ describe('Map layer tree modal', () => {
     }
     const componentInstance = getMountedComponent().instance();
     const storedLayersList = componentInstance._makeUiTreeStructure(fakeAggs);
+
+    // to.eql does not work here, that is why the compareItems function is used instead
     compareItems(storedLayersList[0], expectedStoredLayersList[0]);
   });
 
