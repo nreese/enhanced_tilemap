@@ -76,7 +76,13 @@ export default class EsLayer {
 
               if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
                 polygon._click = function fireEtmSelectFeature() {
-                  polygon._map.fire('etm:select-feature', {
+                  polygon._map.fire('etm:select-feature-vector', {
+                    args: {
+                      _siren: options._siren,
+                      geoFieldName: options.geoFieldName,
+                      indexPattern: options.indexPattern,
+                      type: feature.geometry.type
+                    },
                     geojson: polygon.toGeoJSON()
                   });
                 };

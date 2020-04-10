@@ -53,7 +53,6 @@ export class AddMapLayersModal extends React.Component {
             foundItem = item.children[0];
           } else if (item.group && !item.isParentItem) {
             findItem(item.children);
-            break;
           }
         }
       }

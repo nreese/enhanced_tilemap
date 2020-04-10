@@ -216,7 +216,9 @@ async function getMriLayer(spatialPath, enabled) {
     popupFields: get(resp, 'properties.popup', []),
     indexPattern: mainSearchDetails.indexPattern,
     _siren: mainSearchDetails._siren,
-    $element
+    $element,
+    leafletMap: _leafletMap,
+    geoFieldName: mainSearchDetails.geoFieldName
   };
 
   let geo;

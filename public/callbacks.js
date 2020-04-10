@@ -70,8 +70,6 @@ define(function (require) {
         geoFilter.add(boolFilter, event.field.fieldname, event.indexPatternId);
       },
       polygonVector: function (event) {
-        if (!event.args.vector) return;
-
         let newFilter;
         const field = event.args.geoFieldName;
 

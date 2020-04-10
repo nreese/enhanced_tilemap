@@ -105,7 +105,6 @@ export default class Vector {
                     _siren: options._siren,
                     geoFieldName: options.geoFieldName,
                     indexPattern: options.indexPattern,
-                    vector: true,
                     type: feature.geometry.type
                   },
                   geojson: polygon.toGeoJSON()
