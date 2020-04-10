@@ -264,10 +264,9 @@ define(function (require) {
     };
 
     BaseMarker.prototype._addToMap = function () {
+      this._markerGroup.enabled = true;
       // the uiState takes precedence
-      if (this.uiState.get('Aggregation') === true) {
-        this._markerGroup.enabled = true;
-      } else {
+      if (this.uiState.get('Aggregation') === false) {
         this._markerGroup.enabled = false;
       }
 
