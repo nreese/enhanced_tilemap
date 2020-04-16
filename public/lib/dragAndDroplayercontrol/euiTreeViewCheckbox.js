@@ -112,64 +112,66 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                       <React.Fragment>
                         {!node.filtered && <li style={{ listStyleType: 'none' }}>
 
-                          {<input type='checkbox'
-                            data-test-subj={node.id}
-                            id={node.id}
-                            name={node.id}
-                            onChange={() => {
-                              this.props.onChange({
-                                id: node.id,
-                                checked: !node.checked,
-                                isGroup: node.group,
-                                isParentItem: node.isParentItem
-                              });
-                            }}
-                            ref={el => el && (el.indeterminate = node.indeterminate)}
-                            checked={node.checked}
-                            style={{ paddingLeft: '10px' }}
-                          ></input>}
+                          <div className='euiTreeView__nodeInner' >
+                            <input type='checkbox'
+                              data-test-subj={node.id}
+                              id={node.id}
+                              name={node.id}
+                              onChange={() => {
+                                this.props.onChange({
+                                  id: node.id,
+                                  checked: !node.checked,
+                                  isGroup: node.group,
+                                  isParentItem: node.isParentItem
+                                });
+                              }}
+                              ref={el => el && (el.indeterminate = node.indeterminate)}
+                              checked={node.checked}
+                              style={{ paddingLeft: '10px', marginTop: '0px' }}
+                            ></input>
 
-                          <button
-                            id={buttonId}
-                            aria-controls={`euiNestedTreeView-${
-                              this.state.treeID}`}
-                            aria-expanded={this.isNodeOpen(node)}
-                            ref={ref => this.setButtonRef(ref, index)}
-                            data-test-subj={`euiTreeViewButton-${
-                              this.state.treeID}`}
-                            onKeyDown={(event) =>
-                              this.onKeyDown(event, node)
-                            }
-                            onClick={() => this.handleNodeClick(node)}
-                            className={nodeButtonClasses}
-                            style={{ paddingLeft: '10px' }}
-                          >
-                            {showExpansionArrows && (node.children && node.children.length >= 1) ? (
-                              <EuiIcon
-                                className="euiTreeView__expansionArrow"
-                                size={display === 'compressed' ? 's' : 'm'}
-                                type={
-                                  this.isNodeOpen(node)
-                                    ? 'arrowDown'
-                                    : 'arrowRight'
-                                }
-                              />
-                            ) : null}
-                            {node.icon && !node.useEmptyIcon ? (
-                              <span className="euiTreeView__iconWrapper">
-                                {this.isNodeOpen(node) && node.iconWhenExpanded
-                                  ? node.iconWhenExpanded
-                                  : node.icon}
+                            <button
+                              id={buttonId}
+                              aria-controls={`euiNestedTreeView-${
+                                this.state.treeID}`}
+                              aria-expanded={this.isNodeOpen(node)}
+                              ref={ref => this.setButtonRef(ref, index)}
+                              data-test-subj={`euiTreeViewButton-${
+                                this.state.treeID}`}
+                              onKeyDown={(event) =>
+                                this.onKeyDown(event, node)
+                              }
+                              onClick={() => this.handleNodeClick(node)}
+                              className={nodeButtonClasses}
+                              style={{ paddingLeft: '10px' }}
+                            >
+                              {showExpansionArrows && (node.children && node.children.length >= 1) ? (
+                                <EuiIcon
+                                  className="euiTreeView__expansionArrow"
+                                  size={display === 'compressed' ? 's' : 'm'}
+                                  type={
+                                    this.isNodeOpen(node)
+                                      ? 'arrowDown'
+                                      : 'arrowRight'
+                                  }
+                                />
+                              ) : null}
+                              {node.icon && !node.useEmptyIcon ? (
+                                <span className="euiTreeView__iconWrapper">
+                                  {this.isNodeOpen(node) && node.iconWhenExpanded
+                                    ? node.iconWhenExpanded
+                                    : node.icon}
+                                </span>
+                              ) : null}
+                              {node.useEmptyIcon && !node.icon ? (
+                                <span className="euiTreeView__iconPlaceholder" />
+                              ) : null}
+                              <span className="euiTreeView__nodeLabel">
+                                {` ${node.label} (${node.count})`}
                               </span>
-                            ) : null}
-                            {node.useEmptyIcon && !node.icon ? (
-                              <span className="euiTreeView__iconPlaceholder" />
-                            ) : null}
-                            <span className="euiTreeView__nodeLabel">
-                              {` ${node.label} (${node.count})`}
-                            </span>
 
-                          </button>
+                            </button>
+                          </div>
                           <div
                             id={`euiNestedTreeView-${this.state.treeID}`}
                             onKeyDown={(event) =>
