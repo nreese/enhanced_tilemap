@@ -260,16 +260,12 @@ function _redrawMriLayers() {
 
 function _createAddLayersButton() {
   render(
-    <EuiFlexGroup component="span" justifyContent="center">
-      <EuiFlexItem component="span" grow={false}>
-        <EuiButton
-          size="s"
-          onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
-        >
-          Add Layers</EuiButton>
-      </EuiFlexItem>
-    </EuiFlexGroup>
-
+    <EuiButton
+      size="s"
+      onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
+    >
+      Add Layers
+    </EuiButton>
     , _addLayerElement);
 }
 
