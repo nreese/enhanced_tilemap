@@ -141,6 +141,8 @@
       .euiButton {
         height: 20px;
         transition: none;
+        display: block;
+        margin: 0 auto;
       }
     }
 
@@ -166,7 +168,8 @@
         padding: 20px;
       }
       .leaflet-control-layers-list {
-        overflow: scroll;
+        padding: 10px;
+        overflow-y: scroll;
       }
     }
   }
@@ -184,12 +187,12 @@
 
     >form.leaflet-control-layers-header {
       visibility: visible;
-      margin-left: 10px;
+      display: block;
+      margin: 0 auto;
     }
 
     >div.leaflet-control-layers-add-layer {
       visibility: visible;
-      margin-left: 10px;
     }
 
     form.leaflet-control-layers-list {
