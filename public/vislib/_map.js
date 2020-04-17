@@ -100,7 +100,7 @@ define(function (require) {
       this._drawnItems.id = 'Markers';
       this._drawnItems.label = 'Markers';
       this._drawnItems.type = 'marker';
-      this._drawnItems.icon = '<i class="fas fa-map-marker" style="color:green";"></i>';
+      this._drawnItems.icon = '<i class="fas fa-map-marker" style="color:green;"></i>';
       this._drawnItems.enabled = this.uiState.get('Markers') || true;
       this._layerControl.addOverlay(this._drawnItems);
 
