@@ -285,6 +285,8 @@ function destroy() {
       layer.destroy();
     }
   });
+  _leafletMap.off('moveend');
+  _leafletMap.off('zoomend');
   _allLayers = undefined;
 }
 
@@ -316,15 +318,12 @@ L.Control.DndLayerControl = L.Control.extend({
   destroy,
 
   onAdd: function (map) {
+    const debouncedHandler = debounce(() => {
+      _redrawMriLayers();
+    }, 500);
     _leafletMap = map;
-
-    _leafletMap.on('moveend', debounce(() => {
-      _redrawMriLayers();
-    }, 150, false));
-
-    _leafletMap.on('zoomend', debounce(() => {
-      _redrawMriLayers();
-    }, 150, false));
+    _leafletMap.on('moveend', debouncedHandler);
+    _leafletMap.on('zoomend', debouncedHandler);
 
     this._initLayout();
     return this._container;
