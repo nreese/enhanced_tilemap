@@ -285,6 +285,8 @@ function destroy() {
       layer.destroy();
     }
   });
+  _leafletMap.off('moveend');
+  _leafletMap.off('zoomend');
   _allLayers = undefined;
 }
 
