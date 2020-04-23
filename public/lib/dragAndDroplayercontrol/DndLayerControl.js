@@ -77,7 +77,6 @@ function _orderLayersByType() {
 }
 
 function _redrawOverlays() {
-  _clearAllLayersFromMap();
   let zIndex = 0;
   for (let i = (_allLayers.length - 1); i >= 0; i--) {
     const layer = _allLayers[i];
@@ -145,6 +144,7 @@ function _updateMriVisibility(id, enabled) {
 function dndLayerVisibilityChange(enabled, layer, index) {
   _allLayers[index].enabled = enabled;
   if (enabled) {
+    _clearAllLayersFromMap();
     _redrawOverlays();
   } else {
     _clearLayerFromMapById(layer.id);
@@ -161,6 +161,7 @@ function dndLayerVisibilityChange(enabled, layer, index) {
 function dndListOrderChange(newList) {
   _allLayers = newList;
   _orderLayersByType();
+  _clearAllLayersFromMap();
   _redrawOverlays();
   _updateLayerControl();
 }
@@ -250,10 +251,15 @@ async function addLayersFromLayerConrol(list, enabled) {
   addMriLayers(list);
 }
 
+const debouncedRedraw = debounce(()=> {
+  _clearAllLayersFromMap();
+  _redrawOverlays();
+}, 300);
+
 function addOverlays(layers) {
   layers.forEach(_addOrReplaceLayer);
   _orderLayersByType();
-  _redrawOverlays();
+  debouncedRedraw();
   _updateLayerControl();
 }
 

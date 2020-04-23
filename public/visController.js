@@ -687,7 +687,7 @@ define(function (require) {
     });
 
 
-    map.leafletMap.on('moveend', _.debounce(function setZoomCenter() {
+    map.leafletMap.on('dragend', _.debounce(function setZoomCenter() {
       if (!map.leafletMap) return;
       if (map._hasSameLocation()) return;
 
