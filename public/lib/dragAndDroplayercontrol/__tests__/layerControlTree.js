@@ -41,14 +41,14 @@ describe('Map layer tree modal', () => {
   function getMountedComponent({
     getMriLayer = () => { },
     mrisOnMap = [],
-    addOverlay = () => { },
+    addOverlays = () => { },
     esClient = fakeEsClient
   } = {}) {
     addMapLayersModal = mount(
       <AddMapLayersModal
         getMriLayer={getMriLayer}
         mrisOnMap={mrisOnMap}
-        addOverlay={addOverlay}
+        addOverlays={addOverlays}
         esClient={esClient}
       />
     );

@@ -704,7 +704,7 @@ define(function (require) {
         collar: map._collar,
         mapBounds: map.mapBounds()
       });
-    }, 150, false));
+    }, 500, false));
 
     map.leafletMap.on('zoomend', _.debounce(function () {
       if (!map.leafletMap) return;
@@ -716,7 +716,7 @@ define(function (require) {
         searchSource: $scope.searchSource,
         chart: map._chartData
       });
-    }, 150, false));
+    }, 500, false));
 
     map.leafletMap.on('setview:fitBounds', function () {
       _doFitMapBoundsToData();

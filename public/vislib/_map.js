@@ -102,7 +102,7 @@ define(function (require) {
       this._drawnItems.type = 'marker';
       this._drawnItems.icon = '<i class="fas fa-map-marker" style="color:green;"></i>';
       this._drawnItems.enabled = this.uiState.get('Markers') || true;
-      this._layerControl.addOverlay(this._drawnItems);
+      this._layerControl.addOverlays([this._drawnItems]);
 
       //https://github.com/Leaflet/Leaflet.draw
       const drawOptions = {
@@ -244,7 +244,7 @@ define(function (require) {
     TileMapMap.prototype.addPOILayer = function (layer) {
       const id = layer.id;
       if (this.uiState.get(id) || this.uiState.get(id) === undefined) layer.enabled = true;
-      this._layerControl.addOverlay(layer);
+      this._layerControl.addOverlays([layer]);
 
       //Add tool to l.draw.toolbar so users can filter by POIs
       if (Object.keys(this.allLayers).length === 1) {
@@ -257,7 +257,7 @@ define(function (require) {
     TileMapMap.prototype.addVectorLayer = function (layer) {
       const id = layer.id;
       layer.enabled = this.uiState.get(id) || true;
-      this._layerControl.addOverlay(layer);
+      this._layerControl.addOverlays([layer]);
 
       //Add tool to l.draw.toolbar so users can filter by vector layers
       if (Object.keys(this.allLayers).length === 1) {
@@ -320,7 +320,7 @@ define(function (require) {
       this._filters.icon = `<i class="far fa-filter" style="color:${style.color};"></i>`;
       // the uiState takes precedence
       this._filters.enabled = this.uiState.get(this._filters.id);
-      this._layerControl.addOverlay(this._filters);
+      this._layerControl.addOverlays([this._filters]);
     };
 
     TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, options, id) {
@@ -346,7 +346,7 @@ define(function (require) {
         overlay.enabled = false;
       }
 
-      this._layerControl.addOverlay(overlay, options);
+      this._layerControl.addOverlays([overlay], options);
       this.saturateTile(this._attr.isDesaturated, overlay);
     };
 
@@ -504,7 +504,7 @@ define(function (require) {
       this._tileLayer.type = 'base';
       this._tileLayer.addTo(this.leafletMap);
 
-      this._layerControl.addOverlay(this._drawnItems);
+      this._layerControl.addOverlays([this._drawnItems]);
     };
 
     TileMapMap.prototype._createMap = function (mapOptions) {

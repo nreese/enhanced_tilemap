@@ -12,12 +12,13 @@
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
 
-import { get, debounce, remove } from 'lodash';
+import { get, debounce, remove, findIndex } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
+import Chance from 'chance';
 
 import {
   EuiButton,
@@ -106,8 +107,6 @@ function _addOrReplaceLayer(layer) {
     //adding layer
     _allLayers.push(layer);
   }
-  _orderLayersByType();
-  _redrawOverlays();
 }
 
 function _clearAllLayersFromMap() {
@@ -188,7 +187,7 @@ function _updateLayerControl() {
   </LayerControlDnd >, _dndListElement);
 }
 
-async function getMriLayer(spatialPath, enabled) {
+async function getMriLayer(spatialPath, enabled, color) {
   const limit = 250;
   const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
   const resp = await esClient.search({
@@ -211,7 +210,7 @@ async function getMriLayer(spatialPath, enabled) {
   const options = {
     id: spatialPath,
     displayName: spatialPath,
-    color: get(resp[0], 'properties.color', '#8510d8'),
+    color: get(resp[0], 'properties.color', color),
     size: get(resp[0], 'properties.size', 'm'),
     popupFields: get(resp, 'properties.popup', []),
     indexPattern: mainSearchDetails.indexPattern,
@@ -241,20 +240,48 @@ async function getMriLayer(spatialPath, enabled) {
   return layer;
 }
 
-function addOverlay(layer) {
-  _addOrReplaceLayer(layer);
+async function addLayersFromLayerConrol(list, enabled) {
+  const mriLayerList = [];
+  for (const item of list) {
+    item.enabled = enabled;
+    mriLayerList.push(await getMriLayer(item.path, enabled, item.color));
+  }
+  addOverlays(mriLayerList);
+  addMriLayers(list);
+}
+
+function addOverlays(layers) {
+  layers.forEach(_addOrReplaceLayer);
+  _orderLayersByType();
+  _redrawOverlays();
   _updateLayerControl();
 }
 
+function addMriLayers(layers) {
+  for(const layer of layers) {
+    const itemOnMapIndex = findIndex(mrisOnMap, itemOnMap => itemOnMap.id === layer.id);
+    if (itemOnMapIndex !== -1) {
+      mrisOnMap[itemOnMapIndex] = layer;
+    } else {
+      mrisOnMap.push(layer);
+    }
+  }
+}
 
-function _redrawMriLayers() {
+
+async function _redrawMriLayers() {
+  const mriLayers = [];
   if (mrisOnMap.length >= 1) {
-    mrisOnMap.forEach(async item => {
-      if (item.enabled) {
-        const layer = await getMriLayer(item.path, item.enabled);
-        addOverlay(layer);
+    for (const item of mrisOnMap) {
+      if (!item.color) {
+        item.color = (new Chance()).color();
       }
-    });
+      if (item.enabled) {
+        const layer = await getMriLayer(item.path, item.enabled, item.color);
+        mriLayers.push(layer);
+      }
+    }
+    addOverlays(mriLayers);
   }
 }
 
@@ -262,7 +289,7 @@ function _createAddLayersButton() {
   render(
     <EuiButton
       size="s"
-      onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
+      onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol)}
     >
       Add Layers
     </EuiButton>
@@ -312,7 +339,7 @@ L.Control.DndLayerControl = L.Control.extend({
   //todo add comments describing functions
   _addOrReplaceLayer,
   _updateLayerControl,
-  addOverlay,
+  addOverlays,
   removeAllLayersFromMapandControl,
   removeLayerFromMapAndControlById,
   destroy,
