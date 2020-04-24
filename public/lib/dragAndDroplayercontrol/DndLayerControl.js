@@ -20,11 +20,7 @@ import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 import Chance from 'chance';
 
-import {
-  EuiButton,
-  EuiFlexGroup,
-  EuiFlexItem
-} from '@elastic/eui';
+import { EuiButton } from '@elastic/eui';
 
 
 const mrisOnMap = [];
@@ -35,6 +31,8 @@ let _allLayers;
 let esClient;
 let $element;
 let mainSearchDetails;
+
+const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
   if (layer.type === 'poipoint' ||
@@ -76,7 +74,7 @@ function _orderLayersByType() {
   _allLayers = markerTemp.concat(markerLayersTemp).concat(overlaysTemp).concat(tileLayersTemp);
 }
 
-function _redrawOverlays() {
+function _drawOverlays() {
   let zIndex = 0;
   for (let i = (_allLayers.length - 1); i >= 0; i--) {
     const layer = _allLayers[i];
@@ -120,6 +118,11 @@ function _clearAllLayersFromMap() {
   });
 }
 
+function _redrawOverlays() {
+  _clearAllLayersFromMap();
+  _drawOverlays();
+}
+
 function _clearLayerFromMapById(id) {
   _leafletMap.eachLayer(function (layer) {
     if (layer.id === id) {
@@ -145,7 +148,7 @@ function dndLayerVisibilityChange(enabled, layer, index) {
   _allLayers[index].enabled = enabled;
   if (enabled) {
     _clearAllLayersFromMap();
-    _redrawOverlays();
+    _drawOverlays();
   } else {
     _clearLayerFromMapById(layer.id);
     _leafletMap.fire('hidelayer', {
@@ -161,15 +164,13 @@ function dndLayerVisibilityChange(enabled, layer, index) {
 function dndListOrderChange(newList) {
   _allLayers = newList;
   _orderLayersByType();
-  _clearAllLayersFromMap();
   _redrawOverlays();
   _updateLayerControl();
 }
 
 function dndRemoveLayerFromControl(newList, id) {
   _allLayers = newList;
-  _clearLayerFromMapById(id);
-  _updateLayerControl();
+  _redrawOverlays();
   _removeMriFromLayerControlArray(id);
   _leafletMap.fire('removelayer', { id });
 }
@@ -251,16 +252,11 @@ async function addLayersFromLayerConrol(list, enabled) {
   addMriLayers(list);
 }
 
-const debouncedRedraw = debounce(()=> {
-  _clearAllLayersFromMap();
-  _redrawOverlays();
-}, 300);
-
 function addOverlays(layers) {
   layers.forEach(_addOrReplaceLayer);
   _orderLayersByType();
-  debouncedRedraw();
   _updateLayerControl();
+  _debouncedRedrawOverlays();
 }
 
 function addMriLayers(layers) {
@@ -353,7 +349,7 @@ L.Control.DndLayerControl = L.Control.extend({
   onAdd: function (map) {
     const debouncedHandler = debounce(() => {
       _redrawMriLayers();
-    }, 500);
+    }, 200);
     _leafletMap = map;
     _leafletMap.on('moveend', debouncedHandler);
     _leafletMap.on('zoomend', debouncedHandler);
