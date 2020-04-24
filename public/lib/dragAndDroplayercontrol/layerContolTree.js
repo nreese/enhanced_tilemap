@@ -80,7 +80,7 @@ export class AddMapLayersModal extends React.Component {
       const itemTemplate = {
         label: '',
         id: '',
-        checked: true,
+        checked: false,
         filtered: false,
         children: [],
         group: false,
