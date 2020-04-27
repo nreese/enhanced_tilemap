@@ -36,6 +36,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
 
   render() {
     const {
+      toggleoffexpandbydefault,
       children,
       className,
       items,
@@ -141,7 +142,10 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                               onKeyDown={(event) =>
                                 this.onKeyDown(event, node)
                               }
-                              onClick={() => this.handleNodeClick(node)}
+                              onClick={() => {
+                                this.handleNodeClick(node);
+                                this.props.toggleoffexpandbydefault();
+                              }}
                               className={nodeButtonClasses}
                               style={{ paddingLeft: '10px' }}
                             >
@@ -179,6 +183,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                             }>
                             {node.children && this.isNodeOpen(node) ? (
                               <EuiTreeViewCheckbox
+                                toggleoffexpandbydefault={this.props.toggleoffexpandbydefault}
                                 onChange={this.props.onChange}
                                 items={node.children}
                                 display={display}

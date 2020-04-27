@@ -26,7 +26,8 @@ export class AddMapLayersModal extends React.Component {
     this.state = {
       items: [],
       value: '',
-      selectedLayerCount: 0
+      selectedLayerCount: 0,
+      expandByDefault: true
     };
   }
 
@@ -278,8 +279,12 @@ export class AddMapLayersModal extends React.Component {
         selectedLayerCount: this._checkIfAnyItemInGroupAndSubGroupChecked(list).checkedCount
       };
     });
-
   }
+
+  toggleoffexpandbydefault = () => {
+    this.setState({ expandByDefault: false });
+  }
+
   render() {
     const title = 'Add Layers';
     const form = (
@@ -297,9 +302,10 @@ export class AddMapLayersModal extends React.Component {
         <div style={{ overflowY: 'scroll', border: '1px solid lightgrey' }}>
           <EuiTreeViewCheckbox
             onChange={(e) => this._toggleItems(e)}
+            toggleoffexpandbydefault={() => this.toggleoffexpandbydefault()}
             items={this.state.items}
             display={'default'}
-            expandByDefault={true}
+            expandByDefault={this.state.expandByDefault}
             showExpansionArrows={false}
             style={{
               height: '300px'
