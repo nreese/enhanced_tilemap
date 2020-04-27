@@ -311,7 +311,6 @@ function destroy() {
     }
   });
   _leafletMap.off('moveend');
-  _leafletMap.off('zoomend');
   _allLayers = undefined;
 }
 
@@ -353,8 +352,6 @@ L.Control.DndLayerControl = L.Control.extend({
     }, 200);
     _leafletMap = map;
     _leafletMap.on('moveend', debouncedHandler);
-    _leafletMap.on('zoomend', debouncedHandler);
-
     this._initLayout();
     return this._container;
   },

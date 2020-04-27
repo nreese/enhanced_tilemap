@@ -1,6 +1,5 @@
 import React from 'react';
-import { cloneDeep, findIndex, remove } from 'lodash';
-import Chance from 'chance';
+import { cloneDeep, remove } from 'lodash';
 
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
@@ -358,7 +357,6 @@ export class AddMapLayersModal extends React.Component {
 }
 AddMapLayersModal.propTypes = {
   addLayersFromLayerConrol: PropTypes.func.isRequired,
-  // mrisOnMap: PropTypes.array.isRequired,
   // esClient: PropTypes.func.isRequired,
   // container: PropTypes.element.isRequired
 };

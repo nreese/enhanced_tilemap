@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import expect from 'expect.js';
 import React from 'react';
 import { mount } from 'enzyme';
