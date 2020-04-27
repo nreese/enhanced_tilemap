@@ -338,9 +338,14 @@ L.Control.DndLayerControl = L.Control.extend({
   _addOrReplaceLayer,
   _updateLayerControl,
   addOverlays,
+  _orderLayersByType,
   removeAllLayersFromMapandControl,
   removeLayerFromMapAndControlById,
   destroy,
+
+  getAllLayers: () => {
+    return _allLayers;
+  },
 
   onAdd: function (map) {
     const debouncedHandler = debounce(() => {
