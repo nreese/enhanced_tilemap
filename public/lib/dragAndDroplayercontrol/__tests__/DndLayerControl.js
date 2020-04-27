@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import sinon from 'sinon';
 
-const expect = require('expect.js');
+const expect = require('expect');
 
 require('./../DndLayerControl.js');
 
