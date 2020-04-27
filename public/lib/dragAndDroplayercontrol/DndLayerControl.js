@@ -18,7 +18,6 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
-import Chance from 'chance';
 
 import { EuiButton } from '@elastic/eui';
 
@@ -147,8 +146,7 @@ function _updateMriVisibility(id, enabled) {
 function dndLayerVisibilityChange(enabled, layer, index) {
   _allLayers[index].enabled = enabled;
   if (enabled) {
-    _clearAllLayersFromMap();
-    _drawOverlays();
+    _redrawOverlays();
   } else {
     _clearLayerFromMapById(layer.id);
     _leafletMap.fire('hidelayer', {
@@ -171,6 +169,7 @@ function dndListOrderChange(newList) {
 function dndRemoveLayerFromControl(newList, id) {
   _allLayers = newList;
   _redrawOverlays();
+  _updateLayerControl();
   _removeMriFromLayerControlArray(id);
   _leafletMap.fire('removelayer', { id });
 }
@@ -189,7 +188,7 @@ function _updateLayerControl() {
   </LayerControlDnd >, _dndListElement);
 }
 
-async function getMriLayer(spatialPath, enabled, color) {
+async function getMriLayer(spatialPath, enabled) {
   const limit = 250;
   const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
   const resp = await esClient.search({
@@ -212,7 +211,7 @@ async function getMriLayer(spatialPath, enabled, color) {
   const options = {
     id: spatialPath,
     displayName: spatialPath,
-    color: get(resp[0], 'properties.color', color),
+    color: get(resp[0], 'properties.color', '#8510d8'),
     size: get(resp[0], 'properties.size', 'm'),
     popupFields: get(resp, 'properties.popup', []),
     indexPattern: mainSearchDetails.indexPattern,
@@ -246,7 +245,7 @@ async function addLayersFromLayerConrol(list, enabled) {
   const mriLayerList = [];
   for (const item of list) {
     item.enabled = enabled;
-    mriLayerList.push(await getMriLayer(item.path, enabled, item.color));
+    mriLayerList.push(await getMriLayer(item.path, enabled));
   }
   addOverlays(mriLayerList);
   addMriLayers(list);
@@ -275,11 +274,8 @@ async function _redrawMriLayers() {
   const mriLayers = [];
   if (mrisOnMap.length >= 1) {
     for (const item of mrisOnMap) {
-      if (!item.color) {
-        item.color = (new Chance()).color();
-      }
       if (item.enabled) {
-        const layer = await getMriLayer(item.path, item.enabled, item.color);
+        const layer = await getMriLayer(item.path, item.enabled);
         mriLayers.push(layer);
       }
     }

@@ -158,9 +158,6 @@ export class AddMapLayersModal extends React.Component {
         list.push(...item.children);
         continue;
       }
-      if (!item.color) {
-        item.color = (new Chance()).color();
-      }
       if(item.checked) {
         flattenedList.push(item);
       }

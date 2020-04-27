@@ -13,6 +13,7 @@ const _allLayers = [
     id:'Markers',
     label:'Markers',
     options:{},
+    close: true,
     type:'marker'
   },
   {
@@ -21,6 +22,7 @@ const _allLayers = [
     id:'World Countries/US/US States/California/Chinook Abundance',
     label:'World Countries/US/US States/California/Chinook Abundance',
     options:{},
+    close: true,
     type:'mri'
   },
   {
@@ -29,6 +31,7 @@ const _allLayers = [
     id:'World Countries/Irish Counties',
     label:'World Countries/Irish Counties',
     options:{},
+    close: true,
     type:'mrishape'
   },
   {
@@ -88,19 +91,77 @@ describe('Dnd Layer Control', () => {
     sinon.restore();
   });
 
-  it('should contain <Droppable> element', () => {
+  it('should contain Drag and Drop control', () => {
     const component = getMountedComponent();
     expect(component.find('Droppable')).to.have.length(1);
   });
 
   it('should contain rows of checkboxes with which are checked based on property enabled ', () => {
     const component = getMountedComponent({ _allLayers });
+
     expect(component.find('.layer-control-row')).to.have.length(_allLayers.length);
     expect(component
       .find('EuiCheckbox')
       .getElements()
       .filter(checkbox => !checkbox.props.checked)
     ).to.have.length(1);
+  });
+
+  it('should change visibility of layers', () => {
+    const _allLayersClone = [..._allLayers];
+    const component = getMountedComponent({ _allLayers: _allLayersClone });
+    const event = { target: { checked : false } };
+
+    component.instance().changeVisibility(event, _allLayersClone[0], 0);
+    component.update().render();
+
+    expect(component
+      .find('EuiCheckbox')
+      .getElements()
+      .filter(checkbox => !checkbox.props.checked)
+    ).to.have.length(2);
+    sinon.assert.calledOnce(dndLayerVisibilityChangeStub);
+  });
+
+  it('should be able to remove layers', () => {
+    const _allLayersClone = [..._allLayers];
+    const originalLength = _allLayersClone.length;
+    const component = getMountedComponent({ _allLayers: _allLayersClone });
+    dndRemoveLayerFromControlStub
+      .callsFake(newLayers => component.setProps({ dndCurrentListOrder: newLayers }));
+
+    expect(component
+      .find('.panel-remove')
+      .getElements()
+    ).to.have.length(_allLayersClone.filter(item => item.close).length);
+
+    component.instance().removeListItem(0, _allLayers[0].id);
+
+    sinon.assert.calledOnce(dndRemoveLayerFromControlStub);
+    expect(component
+      .update()
+      .find('EuiCheckbox')
+      .getElements()
+    ).to.have.length(originalLength - 1);
+  });
+
+  it('should reorder on drag end', () => {
+    const _allLayersClone = [..._allLayers];
+    const component = getMountedComponent({ _allLayers: _allLayersClone });
+    const event = {
+      source: {
+        index: 1
+      },
+      destination: {
+        index: 3
+      }
+    };
+
+    dndListOrderChangeStub.callsFake(newLayers => component.setProps({ dndCurrentListOrder: newLayers }));
+    component.instance().onDragEnd(event);
+
+    sinon.assert.calledOnce(dndListOrderChangeStub);
+    expect(component.state('dndCurrentListOrder')[3]).to.be(_allLayersClone[1]);
   });
 
 });
