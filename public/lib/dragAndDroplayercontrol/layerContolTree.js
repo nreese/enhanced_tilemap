@@ -26,7 +26,7 @@ export class AddMapLayersModal extends React.Component {
       items: [],
       value: '',
       selectedLayerCount: 0,
-      ADD_LAYERS_ENABLED_THRESHOLD: 35
+      ADD_LAYERS_ENABLED_THRESHOLD: 4
     };
   }
 
@@ -311,6 +311,7 @@ export class AddMapLayersModal extends React.Component {
             }}
           />
         </div>
+        <div style={{ height: '10px' }}></div>
         <div>
           {this.state.selectedLayerCount > this.state.ADD_LAYERS_ENABLED_THRESHOLD &&
             <EuiCallOut title={`Adding many layers at once?`} color="warning" iconType="help">
