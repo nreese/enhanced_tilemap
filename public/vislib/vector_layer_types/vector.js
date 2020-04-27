@@ -59,7 +59,7 @@ export default class Vector {
       self.bindPopup(layer, options);
       layer.id = options.id;
       layer.label = options.displayName;
-      layer.type = 'vectorpoint';
+      layer.type = 'vector_point';
       layer.options = { pane: 'overlayPane' };
       layer.icon = `<i class="fas fa-map-marker" style="color:${options.color};"></i>`;
     } else if ('Polygon' === geometry.type ||

@@ -1,4 +1,3 @@
-/* eslint-disable import/no-unresolved */
 import expect from 'expect.js';
 import React from 'react';
 import { mount } from 'enzyme';
@@ -39,16 +38,12 @@ describe('Map layer tree modal', () => {
   };
 
   function getMountedComponent({
-    getMriLayer = () => { },
-    mrisOnMap = [],
-    addOverlay = () => { },
+    addLayersFromLayerConrol = () => { },
     esClient = fakeEsClient
   } = {}) {
     addMapLayersModal = mount(
       <AddMapLayersModal
-        getMriLayer={getMriLayer}
-        mrisOnMap={mrisOnMap}
-        addOverlay={addOverlay}
+        addLayersFromLayerConrol={addLayersFromLayerConrol}
         esClient={esClient}
       />
     );

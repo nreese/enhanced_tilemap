@@ -1,5 +1,5 @@
 import React from 'react';
-import { cloneDeep, findIndex, remove } from 'lodash';
+import { cloneDeep, remove } from 'lodash';
 
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
@@ -148,25 +148,20 @@ export class AddMapLayersModal extends React.Component {
     });
   }
 
-  _recursivelyDrawItems(list, enabled) {
-    list.forEach(async item => {
-      if (item.checked && !item.group) {
-        const layer = await this.props.getMriLayer(item.path, enabled);
-        this.props.addOverlay(layer);
-
-        const itemOnMapIndex = findIndex(this.props.mrisOnMap, itemOnMap => itemOnMap.id === item.id);
-
-        item.enabled = enabled;
-        if (itemOnMapIndex !== -1) {
-          this.props.mrisOnMap[itemOnMapIndex] = item;
-        } else {
-          this.props.mrisOnMap.push(item);
-        }
-      }
+  _recursivelyDrawItems(treeList, enabled) {
+    const flattenedList = [];
+    const list = [...treeList];
+    while(list.length) {
+      const item = list.shift();
       if (item.group) {
-        this._recursivelyDrawItems(item.children, enabled);
+        list.push(...item.children);
+        continue;
       }
-    });
+      if (item.checked) {
+        flattenedList.push(item);
+      }
+    }
+    this.props.addLayersFromLayerConrol(flattenedList, enabled);
   }
 
   _addLayersNotEnabled = async () => {
@@ -361,20 +356,16 @@ export class AddMapLayersModal extends React.Component {
   }
 }
 AddMapLayersModal.propTypes = {
-  addOverlay: PropTypes.func.isRequired,
-  mrisOnMap: PropTypes.array.isRequired,
-  getMriLayer: PropTypes.func.isRequired
+  addLayersFromLayerConrol: PropTypes.func.isRequired,
   // esClient: PropTypes.func.isRequired,
   // container: PropTypes.element.isRequired
 };
 
-export function showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer) {
+export function showAddLayerTreeModal(esClient, addLayersFromLayerConrol) {
   const container = document.createElement('div');
   const element = (
     <AddMapLayersModal
-      getMriLayer={getMriLayer}
-      mrisOnMap={mrisOnMap}
-      addOverlay={addOverlay}
+      addLayersFromLayerConrol={addLayersFromLayerConrol}
       esClient={esClient}
       container={container}
     />

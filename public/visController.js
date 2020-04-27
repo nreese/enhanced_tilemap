@@ -699,24 +699,13 @@ define(function (require) {
       ]);
       $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
 
-      map._callbacks.mapMoveEnd({
+      map._callbacks.fetchSearchSource({
         searchSource: $scope.searchSource,
         collar: map._collar,
+        chart: map._chartData,
         mapBounds: map.mapBounds()
       });
-    }, 150, false));
-
-    map.leafletMap.on('zoomend', _.debounce(function () {
-      if (!map.leafletMap) return;
-      if (map._hasSameLocation()) return;
-      if (!map._callbacks) return;
-      $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
-
-      map._callbacks.mapZoomEnd({
-        searchSource: $scope.searchSource,
-        chart: map._chartData
-      });
-    }, 150, false));
+    }, 500, false));
 
     map.leafletMap.on('setview:fitBounds', function () {
       _doFitMapBoundsToData();

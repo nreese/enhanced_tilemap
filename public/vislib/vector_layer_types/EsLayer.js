@@ -32,7 +32,7 @@ export default class EsLayer {
           return marker;
         });
         layer = new L.FeatureGroup(markers);
-        layer.type = type + 'point';
+        layer.type = type + '_point';
         layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
         layer.destroy = () => {
@@ -120,7 +120,7 @@ export default class EsLayer {
           }
         );
         layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
-        layer.type = type + 'shape';
+        layer.type = type + '_shape';
         layer.destroy = () => layer.options.destroy();
       } else {
         console.warn('Unexpected feature geo type: ' + geo.type);

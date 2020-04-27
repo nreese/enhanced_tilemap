@@ -274,7 +274,7 @@ define(function (require) {
       this._markerGroup.label = 'Aggregation';
       this._markerGroup.type = 'agg';
       this._markerGroup.icon = '<i class="far fa-circle" style="color:#de9847;"></i>';
-      this.layerControl.addOverlay(this._markerGroup);
+      this.layerControl.addOverlays([this._markerGroup]);
 
       if (_.has(this, 'geoJson.features.length') && this.geoJson.features.length >= 1) {
         this.addLegend();

@@ -12,21 +12,17 @@
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
 
-import { get, debounce, remove } from 'lodash';
+import { get, debounce, remove, findIndex } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 
-import {
-  EuiButton,
-  EuiFlexGroup,
-  EuiFlexItem
-} from '@elastic/eui';
+import { EuiButton } from '@elastic/eui';
 
 
-const mrisOnMap = [];
+const esRefLayersOnMap = [];
 let _leafletMap;
 let _dndListElement;
 let _addLayerElement;
@@ -35,11 +31,13 @@ let esClient;
 let $element;
 let mainSearchDetails;
 
+const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
+
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
-  if (layer.type === 'poipoint' ||
-    layer.type === 'vectorpoint' ||
+  if (layer.type === 'poi_point' ||
+    layer.type === 'vector_point' ||
     layer.type === 'marker' ||
-    layer.type === 'mripoint') {
+    layer.type === 'es_ref_point') {
     layer.eachLayer(marker => {
       //The leaflet overlay pane has a z-index of 200
       //Marker layer types (i.e. poi and vector point layers) have been added to the overlay pane
@@ -60,7 +58,7 @@ function _orderLayersByType() {
   const markerTemp = [];
   const markerLayersTemp = [];
 
-  const pointTypes = ['poipoint', 'vectorpoint', 'mripoint'];
+  const pointTypes = ['poi_point', 'vector_point', 'es_ref_point'];
   _allLayers.forEach((layer) => {
     if (layer.type === 'wms') {
       tileLayersTemp.push(layer);
@@ -75,8 +73,7 @@ function _orderLayersByType() {
   _allLayers = markerTemp.concat(markerLayersTemp).concat(overlaysTemp).concat(tileLayersTemp);
 }
 
-function _redrawOverlays() {
-  _clearAllLayersFromMap();
+function _drawOverlays() {
   let zIndex = 0;
   for (let i = (_allLayers.length - 1); i >= 0; i--) {
     const layer = _allLayers[i];
@@ -106,8 +103,6 @@ function _addOrReplaceLayer(layer) {
     //adding layer
     _allLayers.push(layer);
   }
-  _orderLayersByType();
-  _redrawOverlays();
 }
 
 function _clearAllLayersFromMap() {
@@ -122,6 +117,11 @@ function _clearAllLayersFromMap() {
   });
 }
 
+function _redrawOverlays() {
+  _clearAllLayersFromMap();
+  _drawOverlays();
+}
+
 function _clearLayerFromMapById(id) {
   _leafletMap.eachLayer(function (layer) {
     if (layer.id === id) {
@@ -133,11 +133,11 @@ function _clearLayerFromMapById(id) {
   });
 }
 
-function _updateMriVisibility(id, enabled) {
-  // when stored in layer control, mri path is the id
-  for (let i = 0; mrisOnMap.length - 1; i++) {
-    if (mrisOnMap[i].id === id || mrisOnMap[i].id.substring(3) === id) {
-      mrisOnMap[i].enabled = enabled;
+function _updateEsRefLayerVisibility(id, enabled) {
+  // when stored in layer control, elastic map reference indices path is the id
+  for (let i = 0; esRefLayersOnMap.length - 1; i++) {
+    if (esRefLayersOnMap[i].id === id || esRefLayersOnMap[i].id.substring(3) === id) {
+      esRefLayersOnMap[i].enabled = enabled;
       break;
     }
   }
@@ -154,8 +154,8 @@ function dndLayerVisibilityChange(enabled, layer, index) {
       enabled
     });
   }
-  if (layer.type === 'mripoint' || layer.type === 'mrishape') {
-    _updateMriVisibility(layer.id, enabled);
+  if (layer.type === 'es_ref_point' || layer.type === 'es_ref_shape') {
+    _updateEsRefLayerVisibility(layer.id, enabled);
   }
 }
 
@@ -168,14 +168,14 @@ function dndListOrderChange(newList) {
 
 function dndRemoveLayerFromControl(newList, id) {
   _allLayers = newList;
-  _clearLayerFromMapById(id);
+  _redrawOverlays();
   _updateLayerControl();
-  _removeMriFromLayerControlArray(id);
+  _removeEsRefFromLayerControlArray(id);
   _leafletMap.fire('removelayer', { id });
 }
 
-function _removeMriFromLayerControlArray(path) {
-  remove(mrisOnMap, (layer) => layer.path === path);
+function _removeEsRefFromLayerControlArray(path) {
+  remove(esRefLayersOnMap, (layer) => layer.path === path);
 }
 
 function _updateLayerControl() {
@@ -188,7 +188,7 @@ function _updateLayerControl() {
   </LayerControlDnd >, _dndListElement);
 }
 
-async function getMriLayer(spatialPath, enabled) {
+async function getEsRefLayer(spatialPath, enabled) {
   const limit = 250;
   const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
   const resp = await esClient.search({
@@ -235,26 +235,51 @@ async function getMriLayer(spatialPath, enabled) {
   }
 
 
-  const layer = new EsLayer().createLayer(resp.hits.hits, geo, 'mri', options);
+  const layer = new EsLayer().createLayer(resp.hits.hits, geo, 'es_ref', options);
   layer.enabled = enabled;
   layer.close = true;
   return layer;
 }
 
-function addOverlay(layer) {
-  _addOrReplaceLayer(layer);
+async function addLayersFromLayerConrol(list, enabled) {
+  const esRefLayerList = [];
+  for (const item of list) {
+    item.enabled = enabled;
+    esRefLayerList.push(await getEsRefLayer(item.path, enabled));
+  }
+  addOverlays(esRefLayerList);
+  addEsRefLayers(list);
+}
+
+function addOverlays(layers) {
+  layers.forEach(_addOrReplaceLayer);
+  _orderLayersByType();
   _updateLayerControl();
+  _debouncedRedrawOverlays();
+}
+
+function addEsRefLayers(layers) {
+  for (const layer of layers) {
+    const itemOnMapIndex = findIndex(esRefLayersOnMap, itemOnMap => itemOnMap.id === layer.id);
+    if (itemOnMapIndex !== -1) {
+      esRefLayersOnMap[itemOnMapIndex] = layer;
+    } else {
+      esRefLayersOnMap.push(layer);
+    }
+  }
 }
 
 
-function _redrawMriLayers() {
-  if (mrisOnMap.length >= 1) {
-    mrisOnMap.forEach(async item => {
+async function _redrawEsRefLayers() {
+  const esRefLayers = [];
+  if (esRefLayersOnMap.length >= 1) {
+    for (const item of esRefLayersOnMap) {
       if (item.enabled) {
-        const layer = await getMriLayer(item.path, item.enabled);
-        addOverlay(layer);
+        const layer = await getEsRefLayer(item.path, item.enabled);
+        esRefLayers.push(layer);
       }
-    });
+    }
+    addOverlays(esRefLayers);
   }
 }
 
@@ -262,7 +287,7 @@ function _createAddLayersButton() {
   render(
     <EuiButton
       size="s"
-      onClick={() => showAddLayerTreeModal(esClient, addOverlay, mrisOnMap, getMriLayer)}
+      onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol)}
     >
       Add Layers
     </EuiButton>
@@ -286,7 +311,6 @@ function destroy() {
     }
   });
   _leafletMap.off('moveend');
-  _leafletMap.off('zoomend');
   _allLayers = undefined;
 }
 
@@ -312,19 +336,22 @@ L.Control.DndLayerControl = L.Control.extend({
   //todo add comments describing functions
   _addOrReplaceLayer,
   _updateLayerControl,
-  addOverlay,
+  addOverlays,
+  _orderLayersByType,
   removeAllLayersFromMapandControl,
   removeLayerFromMapAndControlById,
   destroy,
 
+  getAllLayers: () => {
+    return _allLayers;
+  },
+
   onAdd: function (map) {
     const debouncedHandler = debounce(() => {
-      _redrawMriLayers();
-    }, 500);
+      _redrawEsRefLayers();
+    }, 200);
     _leafletMap = map;
     _leafletMap.on('moveend', debouncedHandler);
-    _leafletMap.on('zoomend', debouncedHandler);
-
     this._initLayout();
     return this._container;
   },
