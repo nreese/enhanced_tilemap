@@ -19,14 +19,14 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+const ADD_LAYERS_ENABLED_THRESHOLD = 35;
 export class AddMapLayersModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       items: [],
       value: '',
-      selectedLayerCount: 0,
-      ADD_LAYERS_ENABLED_THRESHOLD: 35
+      selectedLayerCount: 0
     };
   }
 
@@ -313,9 +313,9 @@ export class AddMapLayersModal extends React.Component {
         </div>
         <div style={{ height: '10px' }}></div>
         <div>
-          {this.state.selectedLayerCount > this.state.ADD_LAYERS_ENABLED_THRESHOLD &&
+          {this.state.selectedLayerCount > ADD_LAYERS_ENABLED_THRESHOLD &&
             <EuiCallOut title={`Adding many layers at once?`} color="warning" iconType="help">
-              <p>When there are more than {`${this.state.ADD_LAYERS_ENABLED_THRESHOLD}`} layers selected,
+              <p>When there are more than {`${ADD_LAYERS_ENABLED_THRESHOLD}`} layers selected,
             you may only use the Add option.</p>
               <p>This will add layers to the map without them being visible.
             You can can turn them on individually by checking them from the map layer control.</p>
@@ -351,7 +351,7 @@ export class AddMapLayersModal extends React.Component {
               this._addLayersEnabled();
               this.onClose();
             }}
-            isDisabled={this.state.selectedLayerCount > this.state.ADD_LAYERS_ENABLED_THRESHOLD}
+            isDisabled={this.state.selectedLayerCount > ADD_LAYERS_ENABLED_THRESHOLD}
           >
             Add and Enable
           </EuiButton>
