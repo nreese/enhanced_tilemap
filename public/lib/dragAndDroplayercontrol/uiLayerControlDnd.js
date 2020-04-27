@@ -153,12 +153,10 @@ export class LayerControlDnd extends React.Component {
                           }}></div>
                         }
 
-                        {/* <span className="panel-label"> */}
-                        <EllipsisWithTooltip className="label" placement="left"
+                        <EllipsisWithTooltip placement="left"
                         >
                           {layer.label}
                         </EllipsisWithTooltip>
-                        {/* </span> */}
 
                         {layer.tooManyDocsInfo && <div
                           dangerouslySetInnerHTML={{
