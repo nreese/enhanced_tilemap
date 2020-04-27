@@ -343,21 +343,6 @@ export class AddMapLayersModal extends React.Component {
 
         <EuiFlexItem grow={false}>
           <EuiButton
-            data-test-subj={'addLayersDisabledBtn'}
-            fill
-            size="s"
-            iconType="plusInCircle"
-            onClick={() => {
-              this._addLayersNotEnabled();
-              this.onClose();
-            }}
-          >
-            Add
-          </EuiButton>
-        </EuiFlexItem>
-
-        <EuiFlexItem grow={false}>
-          <EuiButton
             data-test-subj={'addLayersEnableBtn'}
             size="s"
             iconType="plusInCircle"
@@ -368,6 +353,21 @@ export class AddMapLayersModal extends React.Component {
             isDisabled={this.state.selectedLayerCount > this.state.ADD_LAYERS_ENABLED_THRESHOLD}
           >
             Add and Enable
+          </EuiButton>
+        </EuiFlexItem>
+
+        <EuiFlexItem grow={false}>
+          <EuiButton
+            data-test-subj={'addLayersDisabledBtn'}
+            fill
+            size="s"
+            iconType="plusInCircle"
+            onClick={() => {
+              this._addLayersNotEnabled();
+              this.onClose();
+            }}
+          >
+            Add
           </EuiButton>
         </EuiFlexItem>
       </EuiFlexGroup>
