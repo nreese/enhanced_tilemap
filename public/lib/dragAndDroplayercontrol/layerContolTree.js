@@ -26,7 +26,7 @@ export class AddMapLayersModal extends React.Component {
       items: [],
       value: '',
       selectedLayerCount: 0,
-      ADD_LAYERS_ENABLED_THRESHOLD: 4
+      ADD_LAYERS_ENABLED_THRESHOLD: 35
     };
   }
 
