@@ -9,7 +9,8 @@ import {
   EuiFlexItem,
   EuiFlexGroup,
   EuiButtonEmpty,
-  EuiIcon
+  EuiIcon,
+  EuiCallOut
 } from '@elastic/eui';
 import { EuiTreeViewCheckbox } from './euiTreeViewCheckbox';
 import { modalWithForm } from './../../vislib/modals/genericModal';
@@ -24,7 +25,8 @@ export class AddMapLayersModal extends React.Component {
     this.state = {
       items: [],
       value: '',
-      selectedLayerCount: 0
+      selectedLayerCount: 0,
+      ADD_LAYERS_ENABLED_THRESHOLD: 35
     };
   }
 
@@ -309,8 +311,21 @@ export class AddMapLayersModal extends React.Component {
             }}
           />
         </div>
+        <div>
+          {this.state.selectedLayerCount > this.state.ADD_LAYERS_ENABLED_THRESHOLD &&
+            <EuiCallOut title={`Adding many layers at once?`} color="warning" iconType="help">
+              <p>When there are more than {`${this.state.ADD_LAYERS_ENABLED_THRESHOLD}`} layers selected,
+            you may only use the Add option.</p>
+              <p>This will add layers to the map without them being visible.
+            You can can turn them on individually by checking them from the map layer control.</p>
+            </EuiCallOut>
+          }
+        </div>
       </div>
     );
+
+
+
 
     const footer = (
       <EuiFlexGroup gutterSize="s" alignItems="center">
@@ -350,7 +365,7 @@ export class AddMapLayersModal extends React.Component {
               this._addLayersEnabled();
               this.onClose();
             }}
-            isDisabled={this.state.selectedLayerCount >= 35}
+            isDisabled={this.state.selectedLayerCount > this.state.ADD_LAYERS_ENABLED_THRESHOLD}
           >
             Add and Enable
           </EuiButton>
