@@ -157,7 +157,7 @@ export class AddMapLayersModal extends React.Component {
         list.push(...item.children);
         continue;
       }
-      if(item.checked) {
+      if (item.checked) {
         flattenedList.push(item);
       }
     }

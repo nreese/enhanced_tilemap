@@ -19,7 +19,7 @@ const fakeAllLayers = [
     icon: '<i class="fas fa-map-marker-alt" style="color:0x72032d;"></i>',
     id: 'World Countries/US/US States/California/Steelhead Abundance',
     label: 'World Countries/US/US States/California/Steelhead Abundance',
-    type: 'mripoint'
+    type: 'es_ref_point'
   },
   {
     enabled: true,
@@ -41,7 +41,7 @@ const fakeAllLayers = [
     icon: '<i class="far fa-stop" style="color:DarkOliveGreen;"></i>',
     id: 'Should replace this Layer',
     label: '',
-    type: 'mrishape',
+    type: 'es_ref_shape',
   },
   {
     close: true,
@@ -49,7 +49,7 @@ const fakeAllLayers = [
     icon: '<i class="far fa-stop" style="color:#51db03;"></i>',
     id: 'World Countries',
     label: 'World Countries',
-    type: 'mrishape'
+    type: 'es_ref_shape'
   },
   {
     close: true,
@@ -58,7 +58,7 @@ const fakeAllLayers = [
     icon: '<i class="far fa-stop" style="color:#11f;"></i>',
     id: 'World Countries/Irish Counties',
     label: 'World Countries/Irish Counties',
-    type: 'mrishape'
+    type: 'es_ref_shape'
   },
   {
     close: true,
@@ -66,7 +66,7 @@ const fakeAllLayers = [
     icon: '<i class="far fa-stop" style="color:#4f5;"></i>',
     id: 'World Countries/US/US States',
     label: 'World Countries/US/US States',
-    type: 'mrishape'
+    type: 'es_ref_shape'
   },
   {
     close: true,
@@ -74,7 +74,7 @@ const fakeAllLayers = [
     icon: '<i class="far fa-stop" style="color:rgba(101,45,47,0.7613);"></i>',
     id: 'World Countries/US/US States/Texas/City Polygons',
     label: 'World Countries/US/US States/Texas/City Polygons',
-    type: 'mrishape',
+    type: 'es_ref_shape',
   }
 ];
 

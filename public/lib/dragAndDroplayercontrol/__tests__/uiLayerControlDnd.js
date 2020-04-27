@@ -31,7 +31,7 @@ const _allLayers = [
     label: 'World Countries/Irish Counties',
     options: {},
     close: true,
-    type: 'mrishape'
+    type: 'es_ref_shape'
   },
   {
     enabled: true,
