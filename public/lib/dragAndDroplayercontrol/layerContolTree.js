@@ -23,7 +23,8 @@ export class AddMapLayersModal extends React.Component {
     super(props);
     this.state = {
       items: [],
-      value: ''
+      value: '',
+      selectedLayerCount: 0
     };
   }
 
@@ -246,6 +247,7 @@ export class AddMapLayersModal extends React.Component {
     countChecked(items);
 
     return {
+      checkedCount,
       someItemsChecked: checkedCount !== totalCount && checkedCount >= 1,
       noItemsChecked: checkedCount === 0
     };
@@ -275,7 +277,8 @@ export class AddMapLayersModal extends React.Component {
       }
       this._recursivelyToggleIndeterminate(list);
       return {
-        items: list
+        items: list,
+        selectedLayerCount: this._checkIfAnyItemInGroupAndSubGroupChecked(list).checkedCount
       };
     });
 
@@ -309,7 +312,6 @@ export class AddMapLayersModal extends React.Component {
       </div>
     );
 
-
     const footer = (
       <EuiFlexGroup gutterSize="s" alignItems="center">
         <EuiFlexItem grow={false}>
@@ -327,6 +329,7 @@ export class AddMapLayersModal extends React.Component {
         <EuiFlexItem grow={false}>
           <EuiButton
             data-test-subj={'addLayersDisabledBtn'}
+            fill
             size="s"
             iconType="plusInCircle"
             onClick={() => {
@@ -339,9 +342,21 @@ export class AddMapLayersModal extends React.Component {
         </EuiFlexItem>
 
         <EuiFlexItem grow={false}>
-          <EuiButton
+          {this.state.selectedLayerCount > 35 && <EuiButton
             data-test-subj={'addLayersEnableBtn'}
-            fill
+            size="s"
+            iconType="plusInCircle"
+            onClick={() => {
+              this._addLayersEnabled();
+              this.onClose();
+            }}
+            isDisabled
+          >
+            Add and Enable
+          </EuiButton>}
+
+          {this.state.selectedLayerCount <= 35 && <EuiButton
+            data-test-subj={'addLayersEnableBtn'}
             size="s"
             iconType="plusInCircle"
             onClick={() => {
@@ -350,7 +365,7 @@ export class AddMapLayersModal extends React.Component {
             }}
           >
             Add and Enable
-          </EuiButton>
+          </EuiButton>}
         </EuiFlexItem>
       </EuiFlexGroup>
     );
