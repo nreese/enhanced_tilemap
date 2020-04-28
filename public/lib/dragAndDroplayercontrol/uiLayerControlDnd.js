@@ -153,7 +153,19 @@ export class LayerControlDnd extends React.Component {
                           }}></div>
                         }
 
-                        <EllipsisWithTooltip placement="left"
+                        {layer.type.includes('es_ref_') && <EuiIconTip
+                          size="m"
+                          type="database"
+                          position="left"
+                          content={<div
+                            dangerouslySetInnerHTML={{
+                              __html: 'This is a Stored Layer type'
+                            }}></div>}
+                        >
+                        </EuiIconTip>
+                        }
+
+                        <EllipsisWithTooltip placement="bottom" style={{ paddingRight: '3px' }}
                         >
                           {layer.label}
                         </EllipsisWithTooltip>
