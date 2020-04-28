@@ -314,11 +314,11 @@ export class AddMapLayersModal extends React.Component {
         <div style={{ height: '10px' }}></div>
         <div>
           {this.state.selectedLayerCount > ADD_LAYERS_ENABLED_THRESHOLD &&
-            <EuiCallOut title={`Adding many layers at once?`} color="warning" iconType="help">
-              <p>When there are more than {`${ADD_LAYERS_ENABLED_THRESHOLD}`} layers selected,
-            you may only use the Add option.</p>
-              <p>This will add layers to the map without them being visible.
-            You can can turn them on individually by checking them from the map layer control.</p>
+            <EuiCallOut title={`Adding multiple layers?`} color="warning" iconType="help">
+              <p>When more than {`${ADD_LAYERS_ENABLED_THRESHOLD}`} layers are selected,
+              only the Add option is available.</p>
+              <p>To make the layers visible after they are added, select the individual
+                checkbox for each layer in <b>Layer Control</b>.</p>
             </EuiCallOut>
           }
         </div>
@@ -353,7 +353,7 @@ export class AddMapLayersModal extends React.Component {
             }}
             isDisabled={this.state.selectedLayerCount > ADD_LAYERS_ENABLED_THRESHOLD}
           >
-            Add and Enable
+            Add and Display
           </EuiButton>
         </EuiFlexItem>
 
