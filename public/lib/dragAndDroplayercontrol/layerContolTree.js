@@ -9,7 +9,8 @@ import {
   EuiFlexItem,
   EuiFlexGroup,
   EuiButtonEmpty,
-  EuiIcon
+  EuiIcon,
+  EuiCallOut
 } from '@elastic/eui';
 import { EuiTreeViewCheckbox } from './euiTreeViewCheckbox';
 import { modalWithForm } from './../../vislib/modals/genericModal';
@@ -18,12 +19,14 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+const ADD_LAYERS_ENABLED_THRESHOLD = 35;
 export class AddMapLayersModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       items: [],
-      value: ''
+      value: '',
+      selectedLayerCount: 0
     };
   }
 
@@ -241,6 +244,7 @@ export class AddMapLayersModal extends React.Component {
     countChecked(items);
 
     return {
+      checkedCount,
       someItemsChecked: checkedCount !== totalCount && checkedCount >= 1,
       noItemsChecked: checkedCount === 0
     };
@@ -270,7 +274,8 @@ export class AddMapLayersModal extends React.Component {
       }
       this._recursivelyToggleIndeterminate(list);
       return {
-        items: list
+        items: list,
+        selectedLayerCount: this._checkIfAnyItemInGroupAndSubGroupChecked(list).checkedCount
       };
     });
 
@@ -301,8 +306,21 @@ export class AddMapLayersModal extends React.Component {
             }}
           />
         </div>
+        <div style={{ height: '10px' }}></div>
+        <div>
+          {this.state.selectedLayerCount > ADD_LAYERS_ENABLED_THRESHOLD &&
+            <EuiCallOut title={`Adding multiple layers?`} color="warning" iconType="help">
+              <p>When more than {`${ADD_LAYERS_ENABLED_THRESHOLD}`} layers are selected,
+              only the Add option is available.</p>
+              <p>To make the layers visible after they are added, select the individual
+                checkbox for each layer in <b>Layer Control</b>.</p>
+            </EuiCallOut>
+          }
+        </div>
       </div>
     );
+
+
 
 
     const footer = (
@@ -321,7 +339,23 @@ export class AddMapLayersModal extends React.Component {
 
         <EuiFlexItem grow={false}>
           <EuiButton
+            data-test-subj={'addLayersEnableBtn'}
+            size="s"
+            iconType="plusInCircle"
+            onClick={() => {
+              this._addLayersEnabled();
+              this.onClose();
+            }}
+            isDisabled={this.state.selectedLayerCount > ADD_LAYERS_ENABLED_THRESHOLD}
+          >
+            Add and Display
+          </EuiButton>
+        </EuiFlexItem>
+
+        <EuiFlexItem grow={false}>
+          <EuiButton
             data-test-subj={'addLayersDisabledBtn'}
+            fill
             size="s"
             iconType="plusInCircle"
             onClick={() => {
@@ -330,21 +364,6 @@ export class AddMapLayersModal extends React.Component {
             }}
           >
             Add
-          </EuiButton>
-        </EuiFlexItem>
-
-        <EuiFlexItem grow={false}>
-          <EuiButton
-            data-test-subj={'addLayersEnableBtn'}
-            fill
-            size="s"
-            iconType="plusInCircle"
-            onClick={() => {
-              this._addLayersEnabled();
-              this.onClose();
-            }}
-          >
-            Add and Enable
           </EuiButton>
         </EuiFlexItem>
       </EuiFlexGroup>
