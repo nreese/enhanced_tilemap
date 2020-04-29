@@ -291,11 +291,17 @@ async function _redrawEsRefLayers() {
   }
 }
 
+function esRefLayerOnMap(id) {
+  if (findIndex(esRefLayersOnMap, layer => layer.id === id) !== -1) {
+    return true;
+  }
+}
+
 function _createAddLayersButton() {
   render(
     <EuiButton
       size="s"
-      onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol)}
+      onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap)}
     >
       Add Layers
     </EuiButton>
