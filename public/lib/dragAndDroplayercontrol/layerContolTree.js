@@ -82,6 +82,7 @@ export class AddMapLayersModal extends React.Component {
     const storedLayersList = [];
     aggs.forEach(agg => {
       const itemTemplate = {
+        onMap: false,
         label: '',
         id: '',
         checked: false,
@@ -99,6 +100,7 @@ export class AddMapLayersModal extends React.Component {
       item.path = agg.key;
       item.count = agg.doc_count;
       item.icon = <EuiIcon type={'visMapRegion'} />;
+      item.onMap = this.props.esRefLayerOnMap(item.id);
       const parent = this._getParent(item.id, storedLayersList, item.isParentItem);
       if (parent) {
         parent.group = true;
@@ -116,6 +118,7 @@ export class AddMapLayersModal extends React.Component {
           parentItem.count = 0;
           parentItem.icon = <EuiIcon type={'visMapRegion'} />;
           parentItem.isParentItem = true;
+          parentItem.onMap = this.props.esRefLayerOnMap(parentItem.id);
           parent.children.push(parentItem);
         }
 
@@ -217,7 +220,9 @@ export class AddMapLayersModal extends React.Component {
 
   _recursivelyToggleItemsInGroup(list, checked) {
     list.forEach(item => {
-      item.checked = checked;
+      if (!item.onMap) {
+        item.checked = checked;
+      }
       if (item.group) {
         this._recursivelyToggleItemsInGroup(item.children, checked);
       }
@@ -382,14 +387,16 @@ export class AddMapLayersModal extends React.Component {
 }
 AddMapLayersModal.propTypes = {
   addLayersFromLayerConrol: PropTypes.func.isRequired,
+  esRefLayerOnMap: PropTypes.func.isRequired
   // esClient: PropTypes.func.isRequired,
   // container: PropTypes.element.isRequired
 };
 
-export function showAddLayerTreeModal(esClient, addLayersFromLayerConrol) {
+export function showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap) {
   const container = document.createElement('div');
   const element = (
     <AddMapLayersModal
+      esRefLayerOnMap={esRefLayerOnMap}
       addLayersFromLayerConrol={addLayersFromLayerConrol}
       esClient={esClient}
       container={container}
