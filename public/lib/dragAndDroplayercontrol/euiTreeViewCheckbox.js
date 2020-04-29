@@ -111,7 +111,10 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                     );
                     return (
                       <React.Fragment>
-                        {!node.filtered && <li style={{ listStyleType: 'none' }}>
+                        {!node.filtered && <li style={{
+                          listStyleType: 'none',
+                          color: node.onMap ? '#D3DAE6' : '#000000'
+                        }}>
 
                           <div className='euiTreeView__nodeInner' >
                             <input type='checkbox'
@@ -128,6 +131,7 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                               }}
                               ref={el => el && (el.indeterminate = node.indeterminate)}
                               checked={node.checked}
+                              disabled={node.onMap}
                               style={{ paddingLeft: '10px', marginTop: '0px' }}
                             ></input>
 
