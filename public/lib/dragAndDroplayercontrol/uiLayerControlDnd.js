@@ -158,6 +158,7 @@ export class LayerControlDnd extends React.Component {
                           tooltip={layer.type.includes('es_ref_') ? `Stored Layer: ${layer.label}` : layer.label}
                           placement="bottom"
                           tooltipStyle={{ opacity: 0.8 }}
+                          showDelay={1000}
                           hideDelay={0}
                         >
                           {layer.label}
