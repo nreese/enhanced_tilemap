@@ -33,6 +33,10 @@ let mainSearchDetails;
 
 const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
+function _isHeatmapLayer(layer) {
+  return layer.options && layer.options.blur;
+}
+
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
   if (layer.type === 'poi_point' ||
     layer.type === 'vector_point' ||
@@ -47,7 +51,9 @@ function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
       marker.setZIndexOffset(zIndex - pos.y + 300);// 198); //for now, we don't need to layer marker types with overlay types
     });
   } else {
-    layer.setZIndex(zIndex);
+    if (!_isHeatmapLayer(layer)) {
+      layer.setZIndex(zIndex);
+    }
   }
 }
 
@@ -66,6 +72,8 @@ function _orderLayersByType() {
       markerTemp.push(layer);
     } else if (pointTypes.includes(layer.type)) {
       markerLayersTemp.push(layer);
+    } else if (_isHeatmapLayer(layer)) {
+      tileLayersTemp.unshift(layer);
     } else {
       overlaysTemp.push(layer);
     }
