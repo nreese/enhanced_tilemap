@@ -34,12 +34,7 @@ let mainSearchDetails;
 const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
 function _isHeatmapLayer(layer) {
-  if (layer.options && layer.options.blur) {
-    return true;
-  } else {
-    return false;
-  }
-
+  return layer.options && layer.options.blur;
 }
 
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
