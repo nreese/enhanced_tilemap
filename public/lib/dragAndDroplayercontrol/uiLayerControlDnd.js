@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 // import { filter, find, forOwn } from 'lodash';
-import EllipsisWithTooltip from 'react-ellipsis-with-tooltip';
+import Text from 'react-texty';
+import 'react-texty/styles.css';
 
 import {
   EuiCheckbox,
@@ -153,9 +154,14 @@ export class LayerControlDnd extends React.Component {
                           }}></div>
                         }
 
-                        <EllipsisWithTooltip placement="bottom" style={{ paddingRight: '3px' }}>
-                          {layer.type.includes('es_ref_') ? layer.label : `vis | ${layer.label}`}
-                        </EllipsisWithTooltip>
+                        <Text
+                          tooltip={layer.type.includes('es_ref_') ? `Stored Layer: ${layer.label}` : layer.label}
+                          placement="bottom"
+                          tooltipStyle={{ opacity: 0.8 }}
+                          hideDelay={0}
+                        >
+                          {layer.label}
+                        </Text>
 
                         {layer.tooManyDocsInfo && <div
                           dangerouslySetInnerHTML={{
