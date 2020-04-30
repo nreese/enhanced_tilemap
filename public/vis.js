@@ -20,6 +20,7 @@ define(function (require) {
   require('plugins/enhanced_tilemap/directives/tooltipFormatter');
   require('plugins/enhanced_tilemap/directives/wmsOverlays');
   require('plugins/enhanced_tilemap/directives/wfsOverlays');
+  require('plugins/enhanced_tilemap/directives/storedLayerConfig');
   require('plugins/enhanced_tilemap/tooltip/popupVisualize');
   require('plugins/enhanced_tilemap/tooltip/popupVisualize.less');
   require('plugins/enhanced_tilemap/visController');
@@ -73,7 +74,8 @@ define(function (require) {
             wfsOverlays: [],
             dragAndDropPoiLayers: []
           },
-          wms: config.get('visualization:tileMap:WMSdefaults')
+          wms: config.get('visualization:tileMap:WMSdefaults'),
+          storedLayerConfig: []
         },
         mapTypes: ['Scaled Circle Markers', 'Shaded Circle Markers', 'Shaded Geohash Grid', 'Heatmap'],
         scaleTypes: ['Dynamic - Linear', 'Dynamic - Uneven', 'Static'],

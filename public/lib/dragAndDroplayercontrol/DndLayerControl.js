@@ -219,14 +219,14 @@ async function getEsRefLayer(spatialPath, enabled) {
   const options = {
     id: spatialPath,
     displayName: spatialPath,
-    color: get(resp[0], 'properties.color', '#8510d8'),
     size: get(resp[0], 'properties.size', 'm'),
-    popupFields: get(resp, 'properties.popup', []),
+    popupFields: [],
     indexPattern: mainSearchDetails.indexPattern,
     _siren: mainSearchDetails._siren,
     $element,
     leafletMap: _leafletMap,
-    geoFieldName: mainSearchDetails.geoFieldName
+    geoFieldName: mainSearchDetails.geoFieldName,
+    storedLayerConfig: mainSearchDetails.storedLayerConfig()
   };
 
   let geo;

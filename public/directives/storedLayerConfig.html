@@ -1,0 +1,18 @@
+<div class="form-group">
+  <label class="etm-options-section">
+    Stored Layer Config <kbn-info info="Config object for Stored Layers. The last item in the array is a default object, containing all default config parameters. Other configuration items must contain a spatial_path attribute."></kbn-info>
+  </label>
+
+  <textarea class="form-control" ng-model="config" name="config" style="height: 500px;"></textarea>
+
+  <b>Example:</b> <br>
+  [<br>
+  {<br>
+  "icon":"circle",<br>
+  "color":"#7CBFFA",<br>
+  "popupFields":["name", "groupName"],<br>
+  "minZoom":0,<br>
+  "maxZoom":18<br>
+  }<br>
+  ]
+</div>

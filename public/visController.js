@@ -115,6 +115,14 @@ define(function (require) {
 
     function getIndexPatternId() { return $scope.vis.indexPattern.id; }
     function getSirenMeta() { return $scope.vis._siren; }
+    function getStoredLayerConfig() {
+      try {
+        return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path',], ['asc']);
+      } catch (error) {
+        notify.error(`An issue with your Stored Layer Configuration has been detected:
+        ${error}`);
+      }
+    }
 
     async function addPOILayerFromDashboardWithModal(dashboardId) {
       const group = dashboardGroups.getGroup(dashboardId);
@@ -582,6 +590,7 @@ define(function (require) {
           geoFieldName: getGeoField().fieldname,
           _siren: getSirenMeta(),
           mapExtentFilter: getGeoShapeBox,
+          storedLayerConfig: getStoredLayerConfig
         };
       }
       map = new TileMapMap(container, {

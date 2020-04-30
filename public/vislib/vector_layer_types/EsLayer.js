@@ -20,11 +20,23 @@ export default class EsLayer {
       options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
     }
 
+    if (type === 'es_ref') {
+      //configuring stored layers from layer configs
+      self.assignLayerLevelConfigurations(options.storedLayerConfig, options);
+    }
+
     if (geo) {
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.searchIcon = _.get(options, 'searchIcon', 'fas fa-map-marker-alt');
         const markers = _.map(hits, hit => {
+
+
+          if (type === 'es_ref') {
+            //assigning feature level configs
+            self.assignFeatureLevelConfigurations(hit, options);
+          }
+
           const marker = self._createMarker(hit, geo.field, options);
           if (options.popupFields.length) {
             marker.content = this._popupContent(hit, options.popupFields);
@@ -143,13 +155,28 @@ export default class EsLayer {
       layer = L.geoJson();
       layer.id = options.id;
       layer.label = options.displayName;
-      layer.icon = `<i class="far fa-question-square" style="color:${options.color};"></i>`;
+      layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
       layer.options = { pane: 'overlayPane' };
       layer.type = type;
       return layer;
     }
   }
 
+  //stored layer configurations
+  assignLayerLevelConfigurations = function (storedLayerConfig, options) {
+    const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
+    //todo cascading logic for layer level configurations
+    options.color = defaultConfig.color;
+    options.searchIcon = defaultConfig.icon;
+    options.popupFields = defaultConfig.popupFields;
+  }
+
+  assignFeatureLevelConfigurations = function (hit, options) {
+    const properties = hit._source.properties;
+    options.color = properties.color || options.color;
+    options.searchIcon = properties.icon || options.searchIcon;
+    options.popupFields = properties.popupFields || options.popupFields;
+  }
 
   /**
    * Binds popup and events to each feature on map
@@ -268,7 +295,14 @@ export default class EsLayer {
   _popupContent = function (hit, popupFields) {
     let dlContent = '';
     popupFields.forEach(function (field) {
-      dlContent += `<dt>${field}</dt><dd>${hit._source[field]}</dd>`;
+      let popupFieldValue;
+      if (hit._source.properties) {
+        popupFieldValue = hit._source.properties[field] || hit._source[field];
+      } else {
+        popupFieldValue = hit._source[field];
+      }
+
+      dlContent += `<dt>${field}</dt><dd>${popupFieldValue}</dd>`;
     });
     return `<dl>${dlContent}</dl>`;
   };
