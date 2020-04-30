@@ -22,7 +22,7 @@ import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 import { EuiButton } from '@elastic/eui';
 
 
-const esRefLayersOnMap = [];
+let esRefLayersOnMap = [];
 let _leafletMap;
 let _dndListElement;
 let _addLayerElement;
@@ -311,9 +311,11 @@ function _createAddLayersButton() {
 function removeAllLayersFromMapandControl() {
   _clearAllLayersFromMap();
   _allLayers = [];
+  esRefLayersOnMap = [];
 }
 function removeLayerFromMapAndControlById(id) {
   _allLayers.filter(layer => layer.id === id);
+  esRefLayersOnMap.filter(layer => layer.id === id);
   _clearLayerFromMapById(id);
 }
 

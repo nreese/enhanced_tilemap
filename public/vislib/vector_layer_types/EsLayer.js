@@ -21,7 +21,6 @@ export default class EsLayer {
     }
 
     if (type === 'es_ref') {
-      //configuring stored layers from layer configs
       self.assignLayerLevelConfigurations(options.storedLayerConfig, options);
     }
 
@@ -33,7 +32,6 @@ export default class EsLayer {
 
 
           if (type === 'es_ref') {
-            //assigning feature level configs
             self.assignFeatureLevelConfigurations(hit, options);
           }
 
@@ -166,15 +164,15 @@ export default class EsLayer {
   assignLayerLevelConfigurations = function (storedLayerConfig, options) {
     const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
     //todo cascading logic for layer level configurations
-    options.color = defaultConfig.color;
-    options.searchIcon = defaultConfig.icon;
-    options.popupFields = defaultConfig.popupFields;
+    options.color = defaultConfig.color || '#FF0000';
+    options.searchIcon = defaultConfig.icon || 'far fa-question';
+    options.popupFields = defaultConfig.popupFields || [];
   }
 
   assignFeatureLevelConfigurations = function (hit, options) {
     const properties = hit._source.properties;
-    options.color = properties.color || options.color;
-    options.searchIcon = properties.icon || options.searchIcon;
+    // options.color = properties.color || options.color;
+    // options.searchIcon = properties.icon || options.searchIcon;
     options.popupFields = properties.popupFields || options.popupFields;
   }
 

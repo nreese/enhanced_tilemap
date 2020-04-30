@@ -117,7 +117,7 @@ define(function (require) {
     function getSirenMeta() { return $scope.vis._siren; }
     function getStoredLayerConfig() {
       try {
-        return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path',], ['asc']);
+        return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path'], ['asc']);
       } catch (error) {
         notify.error(`An issue with your Stored Layer Configuration has been detected:
         ${error}`);
