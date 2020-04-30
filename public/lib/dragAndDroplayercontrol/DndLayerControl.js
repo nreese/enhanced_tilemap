@@ -221,12 +221,12 @@ async function getEsRefLayer(spatialPath, enabled) {
     displayName: spatialPath,
     size: get(resp[0], 'properties.size', 'm'),
     popupFields: [],
-    indexPattern: mainSearchDetails.indexPattern,
-    _siren: mainSearchDetails._siren,
+    indexPattern: mainSearchDetails.getIndexPatternId(),
+    _siren: mainSearchDetails.getSirenMeta(),
     $element,
     leafletMap: _leafletMap,
-    geoFieldName: mainSearchDetails.geoFieldName,
-    storedLayerConfig: mainSearchDetails.storedLayerConfig()
+    geoFieldName: mainSearchDetails.getGeoField().fieldname,
+    storedLayerConfig: mainSearchDetails.getStoredLayerConfig()
   };
 
   let geo;

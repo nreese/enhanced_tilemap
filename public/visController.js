@@ -117,7 +117,7 @@ define(function (require) {
     function getSirenMeta() { return $scope.vis._siren; }
     function getStoredLayerConfig() {
       try {
-        if ($scope.vis.params.storedLayerConfig === '') {
+        if (_.isEmpty($scope.vis.params.storedLayerConfig)) {
           notify.warning(`Detected an empty Stored Layer Config with Stored Layers present`);
         } else {
           return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path'], ['asc']);
@@ -586,16 +586,14 @@ define(function (require) {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
-      let mainSearchDetails = null;
-      if ($scope.vis.aggs.length > 1) {
-        mainSearchDetails = {
-          indexPattern: getIndexPatternId(),
-          geoFieldName: getGeoField().fieldname,
-          _siren: getSirenMeta(),
-          mapExtentFilter: getGeoShapeBox,
-          storedLayerConfig: getStoredLayerConfig
-        };
-      }
+      const mainSearchDetails = {
+        getIndexPatternId,
+        getGeoField,
+        getSirenMeta,
+        mapExtentFilter: getGeoShapeBox,
+        getStoredLayerConfig
+      };
+
       map = new TileMapMap(container, {
         mainSearchDetails,
         $element,
