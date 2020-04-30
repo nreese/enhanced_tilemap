@@ -117,10 +117,13 @@ define(function (require) {
     function getSirenMeta() { return $scope.vis._siren; }
     function getStoredLayerConfig() {
       try {
-        return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path'], ['asc']);
+        if ($scope.vis.params.storedLayerConfig === '') {
+          notify.warning(`Detected an empty Stored Layer Config with Stored Layers present`);
+        } else {
+          return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path'], ['asc']);
+        }
       } catch (error) {
-        notify.error(`An issue with your Stored Layer Configuration has been detected:
-        ${error}`);
+        notify.error(`An issue with your Stored Layer Configuration has been detected: ${error}`);
       }
     }
 

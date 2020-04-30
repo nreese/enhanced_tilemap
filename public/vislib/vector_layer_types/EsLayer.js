@@ -21,7 +21,9 @@ export default class EsLayer {
     }
 
     if (type === 'es_ref') {
-      self.assignLayerLevelConfigurations(options.storedLayerConfig, options);
+      if (options.storedLayerConfig) {
+        self.assignLayerLevelConfigurations(options.storedLayerConfig, options);
+      }
     }
 
     if (geo) {
