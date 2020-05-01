@@ -102,6 +102,7 @@ define(function (require) {
       this._drawnItems.type = 'marker';
       this._drawnItems.icon = '<i class="fas fa-map-marker" style="color:green;"></i>';
       this._drawnItems.enabled = this.uiState.get('Markers') || true;
+      this._drawnItems.visible = true;
       this._layerControl.addOverlays([this._drawnItems]);
 
       //https://github.com/Leaflet/Leaflet.draw
@@ -320,6 +321,7 @@ define(function (require) {
       this._filters.icon = `<i class="far fa-filter" style="color:${style.color};"></i>`;
       // the uiState takes precedence
       this._filters.enabled = this.uiState.get(this._filters.id);
+      this._filters.visible = true;
       this._layerControl.addOverlays([this._filters]);
     };
 
@@ -337,6 +339,7 @@ define(function (require) {
       overlay.type = 'wms';
       overlay.label = name;
       overlay.icon = `<i class="fas fa-map" style="color:#000000;"></i>`;
+      overlay.visible = true;
       // if (options.enabled) this.leafletMap.addLayer(overlay);
 
       const presentInUiState = this.uiState.get(id);

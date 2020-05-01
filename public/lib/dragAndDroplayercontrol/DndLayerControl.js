@@ -30,11 +30,27 @@ let _allLayers;
 let esClient;
 let $element;
 let mainSearchDetails;
+let storedLayerConfig;
+let _currentZoom;
 
 const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
+function _updateStoredLayerConfigAndCurrentZoom() {
+  storedLayerConfig = mainSearchDetails.storedLayerConfig();
+  _currentZoom = _leafletMap.getZoom();
+}
+
 function _isHeatmapLayer(layer) {
   return layer.options && layer.options.blur;
+}
+
+function _visibleForCurrentMapZoom(path) {
+  const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
+  // const minZoom = defaultConfig.minZoom || 0;
+  // const maxZoom = defaultConfig.maxZoom || 21;
+
+  //todo cascading for layer specific zoom level
+  return _currentZoom >= defaultConfig.minZoom && _currentZoom <= defaultConfig.maxZoom;
 }
 
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
@@ -85,7 +101,7 @@ function _drawOverlays() {
   let zIndex = 0;
   for (let i = (_allLayers.length - 1); i >= 0; i--) {
     const layer = _allLayers[i];
-    if (layer.enabled) {
+    if (layer.enabled && layer.visible) {
       _setZIndexOfAnyLayerType(layer, zIndex, _leafletMap);
       _leafletMap.addLayer(layer);
       zIndex++;
@@ -196,37 +212,49 @@ function _updateLayerControl() {
   </LayerControlDnd >, _dndListElement);
 }
 
-async function getEsRefLayer(spatialPath, enabled) {
+async function getEsRefLayer(spatialPath, enabled, queryEs) {
   const limit = 250;
   const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
-  const resp = await esClient.search({
-    index: '.map__*',
-    body: {
-      size: limit,
-      query: {
-        bool: {
-          must: {
-            term: {
-              'spatial_path.raw': spatialPath
-            }
-          },
-          filter
+  let resp;
+  if (queryEs) {
+    resp = await esClient.search({
+      index: '.map__*',
+      body: {
+        size: limit,
+        query: {
+          bool: {
+            must: {
+              term: {
+                'spatial_path.raw': spatialPath
+              }
+            },
+            filter
+          }
         }
       }
-    }
-  });
+    });
+  } else {
+    resp = {
+      hits: {
+        total: {
+          value: 0
+        },
+        hits: []
+      }
+    };
+  }
 
   const options = {
     id: spatialPath,
     displayName: spatialPath,
-    size: get(resp[0], 'properties.size', 'm'),
     popupFields: [],
     indexPattern: mainSearchDetails.getIndexPatternId(),
     _siren: mainSearchDetails.getSirenMeta(),
     $element,
     leafletMap: _leafletMap,
     geoFieldName: mainSearchDetails.getGeoField().fieldname,
-    storedLayerConfig: mainSearchDetails.getStoredLayerConfig()
+    storedLayerConfig,
+    visible: _visibleForCurrentMapZoom(spatialPath)
   };
 
   let geo;
@@ -251,9 +279,10 @@ async function getEsRefLayer(spatialPath, enabled) {
 
 async function addLayersFromLayerConrol(list, enabled) {
   const esRefLayerList = [];
+  _updateStoredLayerConfigAndCurrentZoom();
   for (const item of list) {
     item.enabled = enabled;
-    esRefLayerList.push(await getEsRefLayer(item.path, enabled));
+    esRefLayerList.push(await getEsRefLayer(item.path, enabled, true));
   }
   addOverlays(esRefLayerList);
   addEsRefLayers(list);
@@ -281,9 +310,10 @@ function addEsRefLayers(layers) {
 async function _redrawEsRefLayers() {
   const esRefLayers = [];
   if (esRefLayersOnMap.length >= 1) {
+    _updateStoredLayerConfigAndCurrentZoom();
     for (const item of esRefLayersOnMap) {
       if (item.enabled) {
-        const layer = await getEsRefLayer(item.path, item.enabled);
+        const layer = await getEsRefLayer(item.path, item.enabled, _visibleForCurrentMapZoom(item.path));
         esRefLayers.push(layer);
       }
     }

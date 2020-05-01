@@ -148,6 +148,13 @@ export default class EsLayer {
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
+
+      if (options.visible === false) {
+        layer.visible = options.visible;
+      } else {
+        layer.visible = true;
+      }
+
       layer.layerGroup = options.layerGroup;
 
       return layer;
@@ -157,7 +164,13 @@ export default class EsLayer {
       layer.label = options.displayName;
       layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
       layer.options = { pane: 'overlayPane' };
-      layer.type = type;
+      if (options.searchIcon) {
+        layer.type = type + '_point';
+      } else {
+        layer.type = type + '_shape';
+      }
+
+      layer.visible = options.visible || true;
       return layer;
     }
   }
@@ -166,6 +179,7 @@ export default class EsLayer {
   assignLayerLevelConfigurations = function (storedLayerConfig, options) {
     const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
     //todo cascading logic for layer level configurations
+    options.size = defaultConfig.size || 'm';
     options.color = defaultConfig.color || '#FF0000';
     options.searchIcon = defaultConfig.icon || 'far fa-question';
     options.popupFields = defaultConfig.popupFields || [];
