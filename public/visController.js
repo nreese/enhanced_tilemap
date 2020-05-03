@@ -13,7 +13,7 @@ import { ResizeCheckerProvider } from 'ui/vislib/lib/resize_checker';
 import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 import Vector from './vislib/vector_layer_types/vector';
-
+import { compareStates } from 'ui/kibi/state_management/compare_states';
 
 
 define(function (require) {
@@ -216,7 +216,7 @@ define(function (require) {
         query: appState.query
       };
 
-      const differentTimeOrState = !kibiState.compareStates(newState, storedState).stateEqual ||
+      const differentTimeOrState = !compareStates(newState, storedState).stateEqual ||
         !kibiState.compareTimes(newTime, storedTime);
 
       if (forceAutoFitToBounds || differentTimeOrState) {
