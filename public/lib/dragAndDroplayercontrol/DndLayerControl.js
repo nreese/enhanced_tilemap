@@ -12,7 +12,7 @@
 // A layer control which provides for layer groupings.
 // Author: Ishmael Smyrnow
 
-import { get, debounce, remove, findIndex } from 'lodash';
+import { debounce, remove, get, findIndex } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
@@ -46,12 +46,42 @@ function _isHeatmapLayer(layer) {
 }
 
 function _visibleForCurrentMapZoom(path) {
-  const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
-  // const minZoom = defaultConfig.minZoom || 0;
-  // const maxZoom = defaultConfig.maxZoom || 21;
+  const foundConfig = {};
+  const pathConstituents = path.split('/');
 
-  //todo cascading for layer specific zoom level
-  return _currentZoom >= defaultConfig.minZoom && _currentZoom <= defaultConfig.maxZoom;
+  function allConfigAssigned() {
+    return foundConfig.minZoom && foundConfig.maxZoom;
+  }
+
+  function setAvailableConfigs(config) {
+    if (!foundConfig.minZoom && typeof config.minZoom === 'number') {
+      foundConfig.minZoom = config.minZoom;
+    }
+    if (!foundConfig.maxZoom && typeof config.maxZoom === 'number') {
+      foundConfig.maxZoom = config.maxZoom;
+    }
+  }
+
+  //looking for sptial path that is most similar to actual path
+  while (pathConstituents.length > 0 && !allConfigAssigned()) {
+    const currentPath = pathConstituents.join('/');
+    const configIndex = findIndex(storedLayerConfig, (con) => {
+      return con.spatial_path === currentPath;
+    });
+
+    if (configIndex !== -1) {
+      setAvailableConfigs(storedLayerConfig[configIndex]);
+    }
+
+    pathConstituents.pop();
+  }
+
+  if (!allConfigAssigned()) {
+    //use default if nothing else is found
+    setAvailableConfigs(storedLayerConfig[storedLayerConfig.length - 1]);
+  }
+
+  return _currentZoom >= foundConfig.minZoom && _currentZoom <= foundConfig.maxZoom;
 }
 
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
