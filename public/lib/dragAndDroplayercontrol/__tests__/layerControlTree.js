@@ -34,6 +34,67 @@ describe('Map layer tree modal', () => {
           buckets: []
         }
       }
+    }),
+    //TODO WRITE TESTS BASED ON THIS MSEARCH RESPONSE FOR _getGeometryTypeOfSpatialPaths FUNCTION
+    msearch: sinon.stub().resolves({
+      responses: [
+        {
+          hits: {
+            hits: [
+              {
+                _source: {
+                  geometry: {
+                    type: 'MultiPolygon'
+                  },
+                  spatial_path: 'universe'
+                }
+              }
+            ]
+          }
+        },
+        {
+          hits: {
+            hits: [
+              {
+                _source: {
+                  geometry: {
+                    type: 'Point'
+                  },
+                  spatial_path: 'universe/planets'
+                }
+              }
+            ]
+          }
+        },
+        {
+          hits: {
+            hits: [
+              {
+                _source: {
+                  geometry: {
+                    type: 'Polygon'
+                  },
+                  spatial_path: 'universe/planets/countries'
+                }
+              }
+            ]
+          }
+        },
+        {
+          hits: {
+            hits: [
+              {
+                _source: {
+                  geometry: {
+                    type: 'MultiPolygon'
+                  },
+                  spatial_path: 'universe/countries'
+                }
+              }
+            ]
+          }
+        }
+      ]
     })
   };
 

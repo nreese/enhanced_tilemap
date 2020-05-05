@@ -26,7 +26,7 @@ export default class EsLayer {
       }
     }
 
-    if (geo) {
+    if (geo.field) {
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.searchIcon = _.get(options, 'searchIcon', 'fas fa-map-marker-alt');
@@ -159,10 +159,17 @@ export default class EsLayer {
 
       return layer;
     } else {
+      //when there is no data present for the current map canvas
       layer = L.geoJson();
       layer.id = options.id;
       layer.label = options.displayName;
-      layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
+
+      if (geo.type === 'point') {
+        layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
+      } else {
+        layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+      }
+
       layer.options = { pane: 'overlayPane' };
       if (options.searchIcon) {
         layer.type = type + '_point';

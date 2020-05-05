@@ -78,6 +78,53 @@ export class AddMapLayersModal extends React.Component {
     });
   }
 
+  _getGeometryTypeOfSpatialPaths = async (aggs) => {
+    const layerTypes = {};
+    const queryBodyTemplate = {
+      query: {
+        match: {
+          'spatial_path.raw': {
+            query: ''
+          }
+        }
+      },
+      _source: ['geometry', 'spatial_path'],
+      size: 1
+    };
+
+    function getQueryBody() {
+      const index = JSON.stringify({ index: '.map__*' }) + '\n';
+
+      let queryBody = '';
+      aggs.forEach(agg => {
+        const individualQueryBody = cloneDeep(queryBodyTemplate);
+        individualQueryBody.query.match['spatial_path.raw'].query = agg.key;
+        queryBody = queryBody.concat(index);
+        queryBody = queryBody.concat(JSON.stringify(individualQueryBody)) + '\n';
+      });
+      return queryBody;
+    }
+
+
+    const resp = await this.props.esClient.msearch({
+      body: getQueryBody()
+    });
+
+    resp.responses.forEach(spatialPathDoc => {
+      if (spatialPathDoc.hits.hits.length === 1) {
+        const spaitalPathSource = spatialPathDoc.hits.hits[0]._source;
+
+        let geometryType = 'point';
+        if (spaitalPathSource.geometry.type.includes('Polygon')) {
+          geometryType = 'polygon';
+        }
+
+        layerTypes[spaitalPathSource.spatial_path] = geometryType;
+      }
+    });
+    return layerTypes;
+  }
+
   _makeUiTreeStructure = (aggs) => {
     const storedLayersList = [];
     aggs.forEach(agg => {
@@ -150,6 +197,8 @@ export class AddMapLayersModal extends React.Component {
     });
 
     const aggs = resp.aggregations[2].buckets;
+
+    this.props.setGeometryTypeOfSpatialPaths(await this._getGeometryTypeOfSpatialPaths(aggs));
     this.setState({
       items: this._makeUiTreeStructure(aggs)
     });
@@ -158,7 +207,7 @@ export class AddMapLayersModal extends React.Component {
   _recursivelyDrawItems(treeList, enabled) {
     const flattenedList = [];
     const list = [...treeList];
-    while(list.length) {
+    while (list.length) {
       const item = list.shift();
       if (item.group) {
         list.push(...item.children);
@@ -387,15 +436,17 @@ export class AddMapLayersModal extends React.Component {
 }
 AddMapLayersModal.propTypes = {
   addLayersFromLayerConrol: PropTypes.func.isRequired,
-  esRefLayerOnMap: PropTypes.func.isRequired
+  esRefLayerOnMap: PropTypes.func.isRequired,
+  setGeometryTypeOfSpatialPaths: PropTypes.func.isRequired
   // esClient: PropTypes.func.isRequired,
   // container: PropTypes.element.isRequired
 };
 
-export function showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap) {
+export function showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap, setGeometryTypeOfSpatialPaths) {
   const container = document.createElement('div');
   const element = (
     <AddMapLayersModal
+      setGeometryTypeOfSpatialPaths={setGeometryTypeOfSpatialPaths}
       esRefLayerOnMap={esRefLayerOnMap}
       addLayersFromLayerConrol={addLayersFromLayerConrol}
       esClient={esClient}

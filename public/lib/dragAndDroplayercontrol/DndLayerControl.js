@@ -32,11 +32,12 @@ let $element;
 let mainSearchDetails;
 let storedLayerConfig;
 let _currentZoom;
+let geometryTypeOfSpatialPaths;
 
 const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
 function _updateStoredLayerConfigAndCurrentZoom() {
-  storedLayerConfig = mainSearchDetails.storedLayerConfig();
+  storedLayerConfig = mainSearchDetails.getStoredLayerConfig();
   _currentZoom = _leafletMap.getZoom();
 }
 
@@ -263,6 +264,10 @@ async function getEsRefLayer(spatialPath, enabled, queryEs) {
       type: resp.hits.hits[0]._source.geometry.type,
       field: 'geometry'
     };
+  } else {
+    geo = {
+      type: geometryTypeOfSpatialPaths[spatialPath]
+    };
   }
 
   options.warning = {};
@@ -327,11 +332,15 @@ function esRefLayerOnMap(id) {
   }
 }
 
+function setGeometryTypeOfSpatialPaths(spatialPathTypes) {
+  geometryTypeOfSpatialPaths = spatialPathTypes;
+}
+
 function _createAddLayersButton() {
   render(
     <EuiButton
       size="s"
-      onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap)}
+      onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap, setGeometryTypeOfSpatialPaths)}
     >
       Add Layers
     </EuiButton>
@@ -386,6 +395,7 @@ L.Control.DndLayerControl = L.Control.extend({
   _orderLayersByType,
   removeAllLayersFromMapandControl,
   removeLayerFromMapAndControlById,
+  setGeometryTypeOfSpatialPaths,
   destroy,
 
   getAllLayers: () => {
