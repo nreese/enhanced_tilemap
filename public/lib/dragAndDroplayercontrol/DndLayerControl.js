@@ -191,7 +191,6 @@ function getExtendedMapControl() {
 
   function _updateLayerControl() {
     render(<LayerControlDnd
-      key={new Date().getTime()}
       dndCurrentListOrder={_allLayers}
       dndListOrderChange={dndListOrderChange}
       dndLayerVisibilityChange={dndLayerVisibilityChange}
@@ -304,7 +303,6 @@ function getExtendedMapControl() {
   function _createAddLayersButton() {
     render(
       <EuiButton
-        key={new Date().getTime()}
         size="s"
         onClick={() => showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap)}
       >
