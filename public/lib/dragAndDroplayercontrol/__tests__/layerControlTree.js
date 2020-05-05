@@ -58,6 +58,20 @@ describe('Map layer tree modal', () => {
               {
                 _source: {
                   geometry: {
+                    type: 'MultiPolygon'
+                  },
+                  spatial_path: 'universe/countries'
+                }
+              }
+            ]
+          }
+        },
+        {
+          hits: {
+            hits: [
+              {
+                _source: {
+                  geometry: {
                     type: 'Point'
                   },
                   spatial_path: 'universe/planets'
@@ -75,20 +89,6 @@ describe('Map layer tree modal', () => {
                     type: 'Polygon'
                   },
                   spatial_path: 'universe/planets/countries'
-                }
-              }
-            ]
-          }
-        },
-        {
-          hits: {
-            hits: [
-              {
-                _source: {
-                  geometry: {
-                    type: 'MultiPolygon'
-                  },
-                  spatial_path: 'universe/countries'
                 }
               }
             ]
@@ -305,6 +305,19 @@ describe('Map layer tree modal', () => {
 
       expect(check.someItemsChecked).to.be(false);
       expect(check.noItemsChecked).to.be(true);
+    });
+  });
+
+  describe('_getGeometryTypeOfSpatialPaths', () => {
+    it('returned object should have the correct types', async () => {
+
+      const componentInstance = getMountedComponent().instance();
+      const layerTypes = await componentInstance._getGeometryTypeOfSpatialPaths(fakeAggs);
+
+      expect(layerTypes.universe).to.be('polygon');
+      expect(layerTypes['universe/countries']).to.be('polygon');
+      expect(layerTypes['universe/planets']).to.be('point');
+      expect(layerTypes['universe/planets/countries']).to.be('polygon');
     });
   });
 });
