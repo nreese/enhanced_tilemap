@@ -116,11 +116,19 @@ define(function (require) {
     function getIndexPatternId() { return $scope.vis.indexPattern.id; }
     function getSirenMeta() { return $scope.vis._siren; }
     function getStoredLayerConfig() {
+      function spatialPathCountCheck(storedLayerConfig) {
+        return _.filter(storedLayerConfig, config => !config.spatial_path).length > 1;
+      }
       try {
         if (_.isEmpty($scope.vis.params.storedLayerConfig)) {
           notify.warning(`Detected an empty Stored Layer Config with Stored Layers present`);
         } else {
-          return _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path'], ['asc']);
+          const storedLayerConfig = _.orderBy(JSON.parse($scope.vis.params.storedLayerConfig), ['spatial_path'], ['asc']);
+          if (spatialPathCountCheck(storedLayerConfig)) {
+            notify.error(`Stored Layer Config permits one default config object (without a spatial_path attribute)`);
+          } else {
+            return storedLayerConfig;
+          }
         }
       } catch (error) {
         notify.error(`An issue with your Stored Layer Configuration has been detected: ${error}`);

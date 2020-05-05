@@ -20,12 +20,6 @@ export default class EsLayer {
       options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
     }
 
-    if (type === 'es_ref') {
-      if (options.storedLayerConfig) {
-        self.assignLayerLevelConfigurations(options.storedLayerConfig, options);
-      }
-    }
-
     if (geo.field) {
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
@@ -182,21 +176,11 @@ export default class EsLayer {
     }
   }
 
-  //stored layer configurations
-  assignLayerLevelConfigurations = function (storedLayerConfig, options) {
-    const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
-    //todo cascading logic for layer level configurations
-    options.size = defaultConfig.size || 'm';
-    options.color = defaultConfig.color || '#FF0000';
-    options.searchIcon = defaultConfig.icon || 'far fa-question';
-    options.popupFields = defaultConfig.popupFields || [];
-  }
-
   assignFeatureLevelConfigurations = function (hit, options) {
     const properties = hit._source.properties;
-    // options.color = properties.color || options.color;
-    // options.searchIcon = properties.icon || options.searchIcon;
-    options.popupFields = properties.popupFields || options.popupFields;
+    options.color = properties.color || options.color || '#FF0000';
+    options.searchIcon = properties.icon || options.searchIcon  || 'far fa-question';
+    options.popupFields = properties.popupFields || options.popupFields || [];
   }
 
   /**

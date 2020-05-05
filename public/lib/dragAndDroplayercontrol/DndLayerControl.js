@@ -45,12 +45,16 @@ function _isHeatmapLayer(layer) {
   return layer.options && layer.options.blur;
 }
 
-function _visibleForCurrentMapZoom(path) {
+function _visibleForCurrentMapZoom(config) {
+  return _currentZoom >= config.minZoom && _currentZoom <= config.maxZoom;
+}
+
+function _getLayerLevelConfig(path) {
   const foundConfig = {};
   const pathConstituents = path.split('/');
 
   function allConfigAssigned() {
-    return foundConfig.minZoom && foundConfig.maxZoom;
+    return foundConfig.minZoom && foundConfig.maxZoom && foundConfig.popupFields && foundConfig.color && foundConfig.icon;
   }
 
   function setAvailableConfigs(config) {
@@ -60,14 +64,21 @@ function _visibleForCurrentMapZoom(path) {
     if (!foundConfig.maxZoom && typeof config.maxZoom === 'number') {
       foundConfig.maxZoom = config.maxZoom;
     }
+    if (!foundConfig.icon && config.icon) {
+      foundConfig.icon = config.icon;
+    }
+    if (!foundConfig.color && config.color) {
+      foundConfig.color = config.color;
+    }
+    if (!foundConfig.popupFields && config.popupFields) {
+      foundConfig.popupFields = config.popupFields;
+    }
   }
 
   //looking for sptial path that is most similar to actual path
   while (pathConstituents.length > 0 && !allConfigAssigned()) {
     const currentPath = pathConstituents.join('/');
-    const configIndex = findIndex(storedLayerConfig, (con) => {
-      return con.spatial_path === currentPath;
-    });
+    const configIndex = findIndex(storedLayerConfig, (currentConfig) => currentConfig.spatial_path === currentPath);
 
     if (configIndex !== -1) {
       setAvailableConfigs(storedLayerConfig[configIndex]);
@@ -81,7 +92,7 @@ function _visibleForCurrentMapZoom(path) {
     setAvailableConfigs(storedLayerConfig[storedLayerConfig.length - 1]);
   }
 
-  return _currentZoom >= foundConfig.minZoom && _currentZoom <= foundConfig.maxZoom;
+  return foundConfig;
 }
 
 function _setZIndexOfAnyLayerType(layer, zIndex, leafletMap) {
@@ -243,11 +254,13 @@ function _updateLayerControl() {
   </LayerControlDnd >, _dndListElement);
 }
 
-async function getEsRefLayer(spatialPath, enabled, queryEs) {
+async function getEsRefLayer(spatialPath, enabled) {
+  const config = _getLayerLevelConfig(spatialPath);
+  const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
   const limit = 250;
   const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
   let resp;
-  if (queryEs) {
+  if (visibleForCurrentMapZoom) {
     resp = await esClient.search({
       index: '.map__*',
       body: {
@@ -276,16 +289,17 @@ async function getEsRefLayer(spatialPath, enabled, queryEs) {
   }
 
   const options = {
+    searchIcon: config.icon,
+    color: config.color,
+    popupFields: config.popupFields,
     id: spatialPath,
     displayName: spatialPath,
-    popupFields: [],
     indexPattern: mainSearchDetails.getIndexPatternId(),
     _siren: mainSearchDetails.getSirenMeta(),
     $element,
     leafletMap: _leafletMap,
     geoFieldName: mainSearchDetails.getGeoField().fieldname,
-    storedLayerConfig,
-    visible: _visibleForCurrentMapZoom(spatialPath)
+    visible: visibleForCurrentMapZoom
   };
 
   let geo;
@@ -317,7 +331,7 @@ async function addLayersFromLayerConrol(list, enabled) {
   _updateStoredLayerConfigAndCurrentZoom();
   for (const item of list) {
     item.enabled = enabled;
-    esRefLayerList.push(await getEsRefLayer(item.path, enabled, true));
+    esRefLayerList.push(await getEsRefLayer(item.path, enabled));
   }
   addOverlays(esRefLayerList);
   addEsRefLayers(list);
@@ -348,7 +362,7 @@ async function _redrawEsRefLayers() {
     _updateStoredLayerConfigAndCurrentZoom();
     for (const item of esRefLayersOnMap) {
       if (item.enabled) {
-        const layer = await getEsRefLayer(item.path, item.enabled, _visibleForCurrentMapZoom(item.path));
+        const layer = await getEsRefLayer(item.path, item.enabled);
         esRefLayers.push(layer);
       }
     }
