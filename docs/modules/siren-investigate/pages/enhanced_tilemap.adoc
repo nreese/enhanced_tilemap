@@ -1,0 +1,537 @@
+== Enhanced Coordinate Map
+:page-partial:
+
+The Enhanced Coordinate Map visualization (beta) displays a geographic
+area overlaid with circles keyed to the data determined by the buckets
+you specify.
+
+NOTE: By default, Siren Investigate uses a demonstration Siren tilemap server
+http://www.openstreetmap.org/[Open Street Maps] service to display map
+tiles. This server has limited features and you should update the
+tilemap settings to another tilemap provider that you have configured,
+especially in a production setting. To use other tile service providers,
+configure the
+ifdef::output-html[xref:setting-up-siren-investigate.adoc#_configuring_siren_investigate[tilemap settings]]
+ifdef::output-pdf[<<modules/siren-investigate/pages/setting-up-siren-investigate.adoc#_configuring_siren_investigate,tilemap settings>>]
+in `+investigate.yml+`.
+
+
+[[UUID-b9e905a6-60f7-bacf-a8cc-92b18c8e234d]]
+=== Configuration
+
+[[UUID-56fe2a7b-dbcb-85a0-5db1-233fef4f7e26]]
+=== Configuring external tilemap providers
+
+You can use existing
+https://wiki.openstreetmap.org/wiki/Tile_servers[free] or
+https://switch2osm.org/providers/[paid] tilemap providers or
+https://switch2osm.org/manually-building-a-tile-server-16-04-2-lts/[build
+and serve your own tilemap tiles].
+
+After you have setup your own tilemap provider, configure these
+link:#UUID-d3a341cd-4152-1d47-a3d0-c95e7a6afb98[settings] in
+`+investigate.yml+` to have map visualizations render these tiles.
+
+For example, to use an OpenStreetMap default provider, the configuration
+YAML settings would look like:
+
+....
+tilemap:
+  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+  options:
+    attribution: '&copy; [OpenStreetMap]("http://www.openstreetmap.org/copyright")'
+    subdomains:
+      - a
+....
+
+[[UUID-91a4cac3-90ea-1d0b-0070-8924195bc829]]
+=== The Data Tab
+
+[[UUID-329d4968-939b-965e-c4dd-5e57fdd0bf80]]
+=== Metrics
+
+The default _metrics_ aggregation for a coordinate map is the *Count*
+aggregation. You can select any of the following aggregations as the
+metrics aggregation:
+
+* Count (total number of documents present in the aggregation)
+* Average
+* Sum
+* Min
+* Max
+* Unique Count (total number of unique values present in the specified
+field within the aggregation)
+
+NOTE: When you select any of the above aggregations _except_ Count, a Field
+dropdown is displayed from which you can select a field that is valid
+for the selected aggregation).
+
+
+For more information, see
+link:#UUID-5982c3be-5f0e-ec1e-4bb1-f4ac8bfd023b_UUID-dee438e9-fbbe-b37c-329a-8ecfe9485e3b[Y-axis
+aggregations].
+
+Enter a string in the *Custom Label* field to change the display label.
+
+Clicking Advanced opens a field where you can enter a viable JSON input
+that acts on the field selected for the metrics aggregation. For
+example, the following JSON multiplies the number of employees by 1,000:
+
+`+{"script" : "doc['number_of_employees'].value * 1000"}+`
+
+[[UUID-77bdeced-b7a2-931e-7d0e-f967009abb8c]]
+=== Buckets
+
+Coordinate maps use the
+https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-bucket-geohashgrid-aggregation.html[_geohash_]
+aggregation. Select a field, typically coordinates, from the box.
+
+* The *Change precision on map zoom* check box is selected by default.
+Clear the check box to switch off this behavior. The _Precision_ slider
+determines the granularity of the results displayed on the map. See the
+documentation for the
+https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-bucket-geohashgrid-aggregation.html#_cell_dimensions_at_the_equator[geohash
+grid] aggregation for details on the area specified by each precision
+level.
+
+NOTE: Higher precision increases memory usage for the browser displaying Siren
+Investigate as well as for the underlying Elasticsearch cluster.
+
+
+* The _place markers off grid (use
+https://www.elastic.co/guide/en/elasticsearch/reference/5.6/search-aggregations-metrics-geocentroid-aggregation.html[geocentroid])_
+box is checked by default. When this box is checked, the markers are
+placed in the center of all the documents in that bucket. When cleared,
+the markers are placed in the center of the geohash grid cell. Leaving
+this checked generally results in a more accurate visualization.
+
+You can customize your visualization. For more information, see
+link:#UUID-5982c3be-5f0e-ec1e-4bb1-f4ac8bfd023b_UUID-c42130c9-4ce1-72b5-08fd-920c53ce4038[Customizing
+aggregations].
+
+[[UUID-81a38cb5-ffb4-5408-5743-15c17f9225b0]]
+=== The Options Tab
+
+Map Collar Scale::
+  A scaling factor for selecting which documents to use for the
+  aggregation. A setting of 1 will select documents within the map
+  extent, 2 will select documents within 2 times the size of the map
+  extent, while a value of 0.9 will scale the selection to be 0.9 times
+  the size of the map extent. The purpose of this feature is to avoid
+  excessive fetches to Elasticsearch or slower performance due to too
+  many results being fetched.
+Map type::
+  Select one of the following options from the box.
+
+  * *Scaled Circle Markers* - Scale the size of the markers based on the
+  metric aggregation’s value.
+  * *Shaded Circle Marker* - Displays the markers with different shades
+  based on the metric aggregation’s value.
+  * *Shaded Geohash Grid* - Displays the rectangular cells of the
+  geohash grid instead of circular markers, with different shades based
+  on the metric aggregation’s value.
+  * *Heatmap* - A heat map applies blurring to the circle markers and
+  applies shading based on the amount of overlap. Heatmaps have the
+  following options:
+  ** *Radius*: Sets the size of the individual heatmap dots.
+  ** *Blur*: Sets the amount of blurring for the heatmap dots.
+  ** *Maximum zoom*: Tilemaps in Siren Investigate support 18 zoom
+  levels. This slider defines the maximum zoom level at which the
+  heatmap dots appear at full intensity.
+  ** *Minimum opacity*: Sets the opacity cutoff for the dots.
+  ** *Show Tooltip*: Check this box to have a tooltip with the values
+  for a given dot when the cursor is on that dot.
+Tooltip Formatter::
+  Select from the following options:
+
+  * *Metric Value* - A tooltip containing the coordinates and the metric
+  value specified on the Data tab
+  * *Visualization* - The option to add a Visualization as a tooltip.
+  The contents of the visualization will be an aggregation based on the
+  aggregation the tool tip is being applied to.
+Close tooltip on mouseout::
+  When mouse is hovered over aggregation a tooltip will appear. When the
+  mouse is moved away from aggregation, the tool tip will disappear if
+  this box is ticked; it will remain if unticked.
+Legend Scale::
+  Configuration settings for how the aggregation is displayed on legend
+  +
+  * *Dynamic - Linear* - Each class in the legend has the same size
+  (e.g. values from 0 to 16 and 4 classes, each class has a size of 4)
+  * *Dynamic - Uneven* - Each class will have the same number of
+  documents inside, useful when data is unevenly distributed between the
+  maximum and minimum ranges
+  * *Static* - Manual specification of colors, values and number of
+  classes for the legend scale
+
+Scroll Wheel Zoom::
+  When ticked, it is possible to use the mouse scroll wheel to toggle
+  map zoom level. (+ and - work toggle zoom regardless of this)
+Desaturate map tiles::
+  Desaturates the map’s color to make the markers stand out more
+  clearly.
+Synchronize map::
+  Synchronize the map canvas of this visualization with all other visualizations present on a dashboard that also have this option selected
+Auto-fit map to data::
+  Automatic zoom to include all Aggregations when filters are altered. This includes time filter. Disabled when panning or zooming.
+*WMS compliant map server*::
+  Check this box to enable the use of a third-party mapping service that
+  complies with the Web Map Service (WMS) standard. Specify the
+  following elements:
+  +
+  * *WMS url*: The URL for the WMS map service.
+  * *WMS layers*: A comma-separated list of the layers to use in this
+  visualization. Each map server provides its own list of layers.
+  * *WMS version*: The WMS version used by this map service.
+  * *WMS format*: The image format used by this map service. The two
+  most common formats are `+image/png+` and `+image/jpeg+`.
+  * *WMS attribution*: An optional, user-defined string that identifies
+  the map source. Maps display the attribution string in the lower right
+  corner.
+  * *WMS styles*: A comma-separated list of the styles to use in this
+  visualization. Each map server provides its own styling options.
+
+NOTE: If you need to display custom layers for the Region Map visualization, a
+geospatial server may provide the solution. See
+<<Getting started with GeoServer>>.
+
+
+Point of Interest layers::
+  Add any elasticsearch index with a geo_point or geo_shape field as a
+  marker or polygons:
+
+  * Geo_point type POI layers can be viewed and can include popups
+  activated and deactivated on mouseover and mouseout.
+  * Geo_shape type POI layers are suitable for viewing, popups and
+  creating geo-filters which are applied to aggregations, other POI
+  layers and other visualizations when on the dashboards (see *Apply
+  filters* below).
++
+[NOTE]
+====
+To render a `geo_shape` field on the map, it is required for an index to also have a `geo_point` field type
+====
++
+image:15d88cecd868e4.png[image]::
+  Configuration options for POI layers:
+
+  * *Saved Search* - Select any elasticsearch index from the dropdown
+  menu. Note - will need a geo point field
+  * *Geospatial Field* -  Select a geo point field within the Saved
+  Search
+  * *Styling*
+  ** For `geo_point` - Set the set the size of the marker to appear for each document
+  ** For `geo_shape` - Set color in Hex value form
+  * *Popup Content* - Selecting fields to appear on popup tooltip
+  * *Limit* - The number of markers that are allowed to appear for this
+  Point of Interest layer. The default is 100
+  * *Apply Filters* - Whether or not to include filters from Selection
+  tools or geo_shape type POI layers, a different visualization on the
+  same Dashboard or filters from other Dashboards applied through
+  relational Navigator
+
++
+[NOTE]
+====
+*Drag and drop POI Layers*
+
+You can also create a POI Layer when in Dashboard view. Simply drag and drop a dashboard that has a main search with a geo_point field. If the main search has multiple spatial fields, a modal will appear prompting you to select one.
+
+The filters from the other dashboard will be applied and can be viewed by hovering over the filter icon in the layer control. Drag and drop layers will not be saved and can be removed at any point by clicking the remove layer button in the layer control
+
+image::drag_and_drop_poi_layer.png[image]
+====
++
+image:15d88cecd8dd9c.png[image]::
+  Configuration options for the use of a third-party mapping service
+  that complies with the Web Map Service standard. Multiple layers (or
+  layer groups) can be loaded. Many third party mapping services are available, and some of these are
+  described in <<Getting started with GeoServer>>.
+
+  * *Layer Name* - A customizable label to appear in the map’s layer
+  view (image:15d88cecd95f92.png[image])
+  * *Url* - The URL for the WMS map service
+  * *WMS Layers* - This is where layers (or layer groups) can be specified
+  from a WMS server. There are two options:
+  ** *If you have added a URL to a CORS-enabled WMS server* -
+  Investigate will internally run a WMS getCapabilities request and will
+  populate a list of layers that can be added by clicking ①. These can
+  be ordered, by clicking and dragging ② as below. The layer at the top
+  of the list is drawn furthest in the background.
++
+image::15d88cecd9d429.png[image]
+
+  ** *If your URL is not a CORS-enabled WMS server* - The UI will remain
+  the same. You can order your layers, separated by a comma. The first
+  layer you specify will be drawn the furthest in the background.
++
+image::15d88cecda4097.png[image]
++
+[NOTE]
+====
+You can still see the available layers for the WMS by running a
+  `+getCapabilities+` request. Below is an example from a local instance
+  of Geoserver:
+
+`+http://localhost:8080/geoserver/wms?SERVICE=WMS&REQUEST=GetCapabilities+`
+====
+
+
+  * *CQL Filter* - Allows you to query your spatial layers as parameters
+  in WMS requests
+  * *Min Zoom Level* - The minimum zoom level that the WMS request will
+  be visible
+  * *Max Features* - The maximum number of features, up to a maximum of
+  10,000, to be rendered per tile from the specified layer(s). Note -
+  Max features can be configured in the WMS, which overrides this
+  setting
+  * *Styles* - A comma-separated list of the styles for your layer. If
+  you have access to the WMS server, you can assign defaults for these
+  and it is possible for this field to be left blank. Otherwise, each
+  map server provides its own styling options
+  * *Output Format* - The image format to be returned by the WMS. The
+  two most common formats are image/png and image/jpeg. Default is
+  image/png
+  * *Non Tiled* - The option to send the WMS request as one complete
+  image to fit the map extent, or to send it in multiple tiles
+  * *Visible On Load* - Check this option to draw the layer when the visualization is loaded. Note - this will be over ridden if a user saves their dashboard state
+  * *Elasticsearch WMS Options* - Configuration options for WMS request
+  ** Aggregation - Allows for the customization of geohash request from
+  WMS using elasticgeo. Example of aggregation WMS request using the
+  company index in Siren’s classic demo (“location” has a Geo_Point
+  field type):
+  `+{ "agg": { "geohash_grid": { "field": "location" } } }+`
+  ** Sync Filters - When ticked, the WMS response includes the filters
+  made using Selection tools, visualizations in the same and
+  visualizations from other dashboards.
+
+
+image::add_wfs_layer_button.png[image]
+This allows for point and polygon (including multipolygon) types to be rendered onto the the Enhanced Coordinate Map. Polygons can be clicked on for geo filter creation
+See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name*, *Url* and *WFS Layers* fields. For details on setting up a WFS server, see the <<Getting started with GeoServer>> guide. Additional fields specific for editing WFS layers:
+
+  * *Styling* - Set color in Hex value form and specify the size of the
+  marker to display on map
+  * *Output Format* - The json format your spatial server is capable of responding with. This is GeoJSON for ArcGis Server, and json for Geoserver
+  * *Popup Content* - Create a comma separated list of fields (in the properties object of your GeoJSON features) to appear on popup tooltip. Note, this is case-sensitive. For example `City_name,Pop_est` would add the city name and estimated population fields to each feature added to the map
+
+After changing options, click *Apply changes* to update your
+visualization, or *Discard changes* to keep your visualization in its
+current state.
+
+*Navigating the map*
+
+After your tilemap visualization is ready, you can explore the map in
+several ways using various tools:
+
+*Panning the map*
+
+* Click and drag anywhere on the map to move the map center
+* Hold Shift to drag a bounding box across the map to zoom in on a
+desired extent
+* Viewing extent
+** Click *Zoom In/Out* (image:15d88cecd67748.png[image]) to change
+the zoom level manually.
+** Click *Fit Data Bounds* (image:15d88cecd6e841.png[image]) to
+automatically crop the map boundaries to the geohash buckets that have
+at least one result.
+* Click Set View Location (image:15d88cecdab0eb.png[image]) to
+manually specify:
+** Whether latitude and longitude are in decimal degrees (dd) or
+degrees/minutes/seconds (dms) ①
+** The latitude ② and longitude ③ of the centroid of the canvas you
+would like to display
+** The desired level of zoom ④
+** Whether changes are applied ⑤ or cancelled ⑥
+
+image:15d88cecdb21a7.png[image]
+
+*Selection tools* - used to create geo filters
+
+* Click Draw a Polygon (image:15d88cecdba90e.png[image]), then
+** Click on the map canvas and add vertices; if you add a vertex that
+you don’t want, click the Delete last point option on the menu that
+opens to the right when you clicked Draw a Polygon tool.
+** When complete, either click on the first vertex or double click and
+the polygon will autocomplete. Elasticsearch documents within the drawn
+polygon will be filtered.
+* Click Latitude/Longitude Filter
+(image:15d88cecd75088.png[image]), then drag a bounding box across
+the map, to create a filter for the box coordinates. Elasticsearch
+documents within the drawn polygon will be filtered.
+* Click Draw a Circle (image:15d88cecdc227a.png[image]), then drag
+a circle and release to select documents. Elasticsearch documents within
+the drawn polygon will be filtered.
+
+NOTE: For all selection tools, a geo filter is created. This will appear above
+the map canvas:
++
+image:15d88cecdca0da.png[image]
+
+*Multiple geo filters*
+
+If exactly one geo filter (i.e. a pill similar to the above image) exists, and you create another geo filter for the same map visualization, you will be prompted by the modal below:
+
+* Overwrite existing filter - Replaces the exising geo filter with the new one you have created
+* Create new filter - Creates a new filter and will keep the existing one, use this option to create an `AND`
+* Combine with existing filters - Merges the new filter with the existing one, use this option to create an `OR`
+
+Note - You can cancel filter creation from this modal by clicking the `X` in the top right
+
+image:filter_creation_modal.png[image]
+
+
+*Marking tools*
+
+* Click Draw a Marker (image:15d88cecdd059b.png[image]), and
+select any point on the map to place a marker. You can add multiple
+markers.
+* After adding at least one marker, the Delete Marker(s) option becomes
+available
+** Point and click to delete individual markers
+** Remove all of them by clicking Clear All
+
+[[UUID-81a38cb5-ffb4-5408-5743-15c17f9225b0_UUID-a29c93c8-f974-54d6-4689-0d11557a7b12]]
+==== Viewing detailed information
+
+For information on displaying the raw data, see
+link:#UUID-5982c3be-5f0e-ec1e-4bb1-f4ac8bfd023b_UUID-6662fce3-3f93-f603-7593-185ccf2c7c3a[Visualization
+Spy].
+
+=== Loading map layers into Elasticsearch
+
+==== Loading methods
+
+There are two methods for loading the  GeoJSON files into Elasticsearch. These are the Folder Structure and the Spatial Path methods. Both will accept files of type `json` or `geojson`. The methods differ in how their <<Spatial path, spatial_path>> is determined. 
+
+*Folder structure*
+
+This method requires all GeoJSONs to be contained in a folder structure, that will determine scope/layer of each GeoJSON file.
+
+image:folder_structure.png[Folder structure]
+
+*Spatial path*
+
+This method requires all GeoJSON features to have a spatial_path property in their properties object. This will determine its scope/layer, <<spatial_path_json_example,example>>.
+
+image:folder_spatial_path.png[Spatial path]
+
+
+==== File validation
+Each file need to meet the following criteria:
+
+* Can not be empty
+* Must be of geometry type Polygon and MultiPolygon OR Point
+NOTE: Polygons and Points must be in a separate file. A spatial path must be either Point OR Polygon, not a mixture of both
+* If using the spatial path loading method, each GeoJSON feature must contain the spatial_path property 
+
+If these requirements are not met, the validation process will fail without loading the GeoJSONs.
+
+==== Spatial path
+Spatial path is the scope/layer of a feature. Documents that have the same Spatial path, will be part of the same layer when used in Investigate.
+
+*Folder structure*
+
+When using the folder structure loading method the spatial path will be constructed based on the folder structure the GeoJSON file is in.
+
+Here is an example of a spatial path for `Continents/Europe/Poland/counties.geojson` => `continents/europe/poland`
+
+The file `.../Poland/counties.geojson` contains 34 counties that make up Poland while .../counties 2.json` contains the other 8 Polish counties. The spatial path of both GeoJSONs when ingested is specified below. They will be loaded as one layer on Enhanced Coordinate Map Visualization, i.e. one 42 county layer: `continents/europe/poland`
+
+
+*Spatial Path*
+
+The spatial path loading method requires each feature to contain a spatial_path property in the properties object of each GeoJSON feature. This is checked for during initial validation. 
+
+[[spatial_path_json_example]]
+....
+{
+  "type": "Feature",
+  "properties": {
+    "county": "Galway",
+    "population": 86000,
+    "spatial_path": "continents/europe/ireland"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": []
+  }
+}
+....
+
+==== Usage
+To load files into Elasticsearch go to `siren-investigate/bin` folder and run `load_map_reference_indices` script with appropriate arguments. 
+
+NOTE: Make sure a user that has Elasticserach write permissions is used for authorization.
+
+*Arguments*
+
+* *-p/--path/--inputdir* specifies a path to the folder containg files
+* *-y/--yml* allows for using a custom investigate.yml. If omitted, the default configuration from `/config/investigate.yml` will be used
+* *--username <username> --password <password>* allows for specification of Elasticsearch authorization credentials. If <username> and <password> are left blank, environmental variables LOAD_LAYERS_ES_USERNAME, LOAD_LAYERS_ES_PASSWORD will be used. If not used at all, credentials specified in `/config/investigate.yml` will be used instead
+* *--dryrun* will run the validation stage of the script, but will not connect to Elasticsearch
+* *--delete* deletes all `.map__` prefixed indices before loading new ones, useful for reloading files
+* *--structure/--spatialpath* determines the loading method
+* *-n* specifies the maximum number of documents per single request - higher number will result in heavier requests (default 500)
+* *-r/--simrequests* specifies the number of simultaneous requests made to Elasticsearch (default 40)
+* *--debug* outputs additional debug information, including Elasticsearch autorization credentials
+
+*Examples*
+
+`./bin/load_map_reference_indices.sh -p "/home/siren/geoJsonFolder" --structure`
+
+`./bin/load_map_reference_indices.sh -p /home/siren/geoJsonFolder -y /home/siren/config.yml --username admin --password password --structure`
+
+`./bin/load_map_reference_indices.sh -p /home/siren/geoJsonFolder --username --password --spatialpath`
+
+The console output below is a successful file load (with --debug) to Elasticsearch
+image:load_map_reference_console_output.png[Console output]
+
+=== Loading Stored Layers from Elasticsearch Onto Enhanced Coordinate Map
+
+In this section we will describe how to load Stored Layers onto the map. 
+
+NOTE: You will need to have layers stored in elasticsearch in indices that have a `.map__` prefix. See <<Loading map layers into Elasticsearch>> for details on our recommended way to load these.
+
+In top right click of an Enhanced Coordinate Map visualization, click on the Layer Control to toggle it open. When the ‘Add Layers’ button is clicked, a modal (below) will appear displaying Stored Layers (e.g. Irish Counties) and the group they are in (i.e. World Countries). 
+
+image:add_layers_modal.png[Add Layers Modal]
+
+It is possible to add a layer type corresponding to a group and we will explain with the aid of an example below, using the US states layer:
+
+* If the US states group checkbox is toggled, all layers and groups in that group will also be toggled
+
+** If the US States layer checkbox is toggled, only the layer will be affected 
+
+** If the California nested group is toggled, only the checkboxes within that group will be toggled
+
+* If either a nested group or a layer box is unticked, the group will become indeterminate indicating that some of the boxes in that group are unchecked
+
+* Finally, if no items in a group a checked, the group checkbox will be unchecked
+
+Clicking the Add button will add the selected layers to the map, while the Add and Enable button will add the layers to the map and also make them visible. The modal can be cancelled by either clicking the cancel button or the x in the top right corner.
+
+==== Stored Layers And The Map
+If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
+
+=== Layer Control
+The Layer Control is located in the top right of any Enhanced Coordinate Map. An example is in the image below showing a case where some Stored Layers are loaded (See the <<Loading stored layers from Elasticsearch>> for more details). 
+
+image:layer_control.png[Layer Control]
+
+==== Layer Ordering
+Layers are drawn on the map in the same order they are in the Layer Control. Layers can be ordered by clicking the drag handle to the left of any checkbox and dragging them to the desired position.
+
+NOTE: Layers will be automatically positioned at the top or bottom of their type in the event that they are dropped out of order. The precedence is: 
+
+* Markers
+* Point Layers
+* Polygon Layers
+* Tile Layers
+
+
+=== Layer Visibility
+Layers can be toggled on and off by clicking the checkboxes
+
+=== Features Omitted Due to Request Limits
+If there are more features present within the current map canvas extent than were retrieved with the set Elasticsearch query size response limit, a warning icon will appear beside the layer. The warning icon has a tooltip indicating this and the set current limit
