@@ -270,7 +270,7 @@ function getExtendedMapControl() {
     const config = _getLayerLevelConfig(spatialPath);
     const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
     const limit = 250;
-    const filter = mainSearchDetails ? mainSearchDetails.mapExtentFilter() : null;
+    const filter = mainSearchDetails.mapExtentFilter();
     let resp;
     if (visibleForCurrentMapZoom) {
       resp = await esClient.search({
