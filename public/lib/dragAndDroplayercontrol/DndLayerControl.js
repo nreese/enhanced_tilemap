@@ -54,7 +54,12 @@ function _getLayerLevelConfig(path) {
   const pathConstituents = path.split('/');
 
   function allConfigAssigned() {
-    return foundConfig.minZoom && foundConfig.maxZoom && foundConfig.popupFields && foundConfig.color && foundConfig.icon;
+    return foundConfig.minZoom &&
+      foundConfig.maxZoom &&
+      foundConfig.popupFields &&
+      foundConfig.color &&
+      foundConfig.icon &&
+      foundConfig.size;
   }
 
   function setAvailableConfigs(config) {
@@ -72,6 +77,9 @@ function _getLayerLevelConfig(path) {
     }
     if (!foundConfig.popupFields && config.popupFields) {
       foundConfig.popupFields = config.popupFields;
+    }
+    if (!foundConfig.size && config.size) {
+      foundConfig.size = config.size;
     }
   }
 
@@ -289,6 +297,7 @@ async function getEsRefLayer(spatialPath, enabled) {
   }
 
   const options = {
+    size: config.size,
     searchIcon: config.icon,
     color: config.color,
     popupFields: config.popupFields,

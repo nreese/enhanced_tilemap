@@ -181,6 +181,7 @@ export default class EsLayer {
     options.color = properties.color || options.color || '#FF0000';
     options.searchIcon = properties.icon || options.searchIcon  || 'far fa-question';
     options.popupFields = properties.popupFields || options.popupFields || [];
+    options.size = properties.size || options.size || 'm';
   }
 
   /**
