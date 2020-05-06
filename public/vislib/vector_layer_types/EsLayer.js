@@ -75,9 +75,7 @@ export default class EsLayer {
           {
             onEachFeature: function onEachFeature(feature, polygon) {
               if (feature.properties.label) {
-                polygon.bindPopup(feature.properties.label);
-                polygon.on('mouseover', self.addMouseOverGeoShape);
-                polygon.on('mouseout', self.addMouseOutToGeoShape);
+                polygon.content = feature.properties.label;
               }
 
               if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
@@ -113,8 +111,6 @@ export default class EsLayer {
             destroy: function onEachFeature(feature, polygon) {
               if (feature && options.leafletMap._popup) {
                 if (feature.properties.label) {
-                  polygon.off('mouseover', self.addMouseOverGeoShape);
-                  polygon.off('mouseout', self.addMouseOutToGeoShape);
                   polygon.unbindPopup();
                 }
                 if (polygon._click) {
@@ -125,6 +121,7 @@ export default class EsLayer {
             }
           }
         );
+        self.bindPopup(layer, options);
         layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
         layer.type = type + '_shape';
         layer.destroy = () => layer.options.destroy();
@@ -245,38 +242,6 @@ export default class EsLayer {
       .openOn(leafletMap);
   };
 
-  //Mouse event creation for GeoShape
-  addMouseOverGeoShape = function (e) {
-    if (!e.target._map.disablePopups) {
-      this.openPopup();
-    }
-  };
-  addMouseOutToGeoShape = function (e) {
-    const self = this;
-
-    self._popupMouseOut = function (e) {
-      // detach the event, if one exists
-      if (self._map) {
-        // get the element that the mouse hovered onto
-        const target = e.toElement || e.relatedTarget;
-        // check to see if the element is a popup
-        if (utils.getParent(target, ['leaflet-popup'])) {
-          return true;
-        }
-        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-        self.closePopup();
-      }
-    };
-
-    const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-
-    // check to see if the element is a popup
-    if (utils.getParent(target, ['leaflet-popup'])) {
-      L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-      return true;
-    }
-    self.closePopup();
-  };
   addClickToGeoShape = function (polygon) {
     polygon.on('click', polygon._click);
   };

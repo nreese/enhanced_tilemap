@@ -84,17 +84,7 @@ export default class Vector {
           style: { color: options.color },
           onEachFeature: function onEachFeature(feature, polygon) {
             if (feature.properties.label) {
-
-              const popupOptions = {
-                autoPan: false
-              };
-
-              const popup = L.popup(popupOptions)
-                .setContent(feature.properties.label);
-
-              polygon.bindPopup(popup);
-              polygon.on('mouseover', self.addMouseOverPolygon);
-              polygon.on('mouseout', self.addMouseOutPolygon);
+              polygon.content = feature.properties.label;
             }
 
             if (_.get(feature, 'geometry.type') === 'Polygon' ||
@@ -116,8 +106,6 @@ export default class Vector {
           destroy: function onEachFeature(feature, polygon) {
             if (feature && options.leafletMap._popup) {
               if (feature.properties.label) {
-                polygon.off('mouseover', self.addMouseOverGeoShape);
-                polygon.off('mouseout', self.addMouseOutToGeoShape);
                 polygon.unbindPopup();
               }
               if (polygon._click) {
@@ -128,6 +116,7 @@ export default class Vector {
           }
         }
       );
+      self.bindPopup(layer, options);
       layer.type = 'vectoroverlay';
       layer.label = options.displayName;
       layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
@@ -136,6 +125,7 @@ export default class Vector {
       console.warn('Unexpected feature geo type: ' + geometry.type);
     }
     layer.$legend = options.$legend;
+    layer.visible = true;
     return layer;
   };
 
@@ -204,45 +194,9 @@ export default class Vector {
       .openOn(leafletMap);
   };
 
-  //Mouse event creation for GeoShape
-  addMouseOverPolygon = function (e) {
-    if (!e.target._map.disablePopups) {
-      this.openPopup();
-    }
-  };
-
-  addMouseOutPolygon = function (e) {
-    const self = this;
-
-    self._popupMouseOut = function (e) {
-      // detach the event, if one exists
-      if (self._map) {
-        // get the element that the mouse hovered onto
-        const target = e.toElement || e.relatedTarget;
-        // check to see if the element is a popup
-        if (utils.getParent(target, ['leaflet-popup'])) {
-          return true;
-        }
-        L.DomEvent.off(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-        self.closePopup();
-      }
-    };
-
-    const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-
-    // check to see if the element is a popup
-    if (utils.getParent(target, ['leaflet-popup'])) {
-      L.DomEvent.on(self._map._popup._container, 'mouseout', self._popupMouseOut, self);
-      return true;
-    }
-    self.closePopup();
-  };
   addClickToGeoShape = function (polygon) {
     polygon.on('click', polygon._click);
   };
-
-
-
 
   _createMarker = function (hit, options) {
     const feature = L.marker(
