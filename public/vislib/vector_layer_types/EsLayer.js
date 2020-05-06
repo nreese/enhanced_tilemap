@@ -20,13 +20,7 @@ export default class EsLayer {
       options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
     }
 
-    if (type === 'es_ref') {
-      if (options.storedLayerConfig) {
-        self.assignLayerLevelConfigurations(options.storedLayerConfig, options);
-      }
-    }
-
-    if (geo) {
+    if (geo.field) {
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.searchIcon = _.get(options, 'searchIcon', 'fas fa-map-marker-alt');
@@ -148,34 +142,46 @@ export default class EsLayer {
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
+
+      if (options.visible === false) {
+        layer.visible = options.visible;
+      } else {
+        layer.visible = true;
+      }
+
       layer.layerGroup = options.layerGroup;
 
       return layer;
     } else {
+      //when there is no data present for the current map canvas
       layer = L.geoJson();
       layer.id = options.id;
       layer.label = options.displayName;
-      layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
+
+      if (geo.type === 'point') {
+        layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
+      } else {
+        layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+      }
+
       layer.options = { pane: 'overlayPane' };
-      layer.type = type;
+      if (geo.type === 'point') {
+        layer.type = type + '_point';
+      } else {
+        layer.type = type + '_shape';
+      }
+
+      layer.visible = options.visible || true;
       return layer;
     }
   }
 
-  //stored layer configurations
-  assignLayerLevelConfigurations = function (storedLayerConfig, options) {
-    const defaultConfig = storedLayerConfig[storedLayerConfig.length - 1];
-    //todo cascading logic for layer level configurations
-    options.color = defaultConfig.color || '#FF0000';
-    options.searchIcon = defaultConfig.icon || 'far fa-question';
-    options.popupFields = defaultConfig.popupFields || [];
-  }
-
   assignFeatureLevelConfigurations = function (hit, options) {
     const properties = hit._source.properties;
-    // options.color = properties.color || options.color;
-    // options.searchIcon = properties.icon || options.searchIcon;
-    options.popupFields = properties.popupFields || options.popupFields;
+    options.color = properties.color || options.color || '#FF0000';
+    options.searchIcon = properties.icon || options.searchIcon  || 'far fa-question';
+    options.popupFields = properties.popupFields || options.popupFields || [];
+    options.size = properties.size || options.size || 'm';
   }
 
   /**
