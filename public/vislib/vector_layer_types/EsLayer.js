@@ -76,9 +76,6 @@ export default class EsLayer {
             onEachFeature: function onEachFeature(feature, polygon) {
               if (feature.properties.label) {
                 polygon.content = feature.properties.label;
-                // polygon.bindPopup(feature.properties.label);
-                // polygon.on('mouseover', self.addMouseOverGeoShape);
-                // polygon.on('mouseout', self.addMouseOutToGeoShape);
               }
 
               if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
