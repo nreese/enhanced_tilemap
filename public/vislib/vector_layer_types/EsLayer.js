@@ -165,7 +165,7 @@ export default class EsLayer {
       }
 
       layer.options = { pane: 'overlayPane' };
-      if (options.searchIcon) {
+      if (geo.type === 'point') {
         layer.type = type + '_point';
       } else {
         layer.type = type + '_shape';
