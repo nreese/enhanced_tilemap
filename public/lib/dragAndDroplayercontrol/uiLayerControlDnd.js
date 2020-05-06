@@ -108,6 +108,7 @@ export class LayerControlDnd extends React.Component {
   }
 
   render() {
+    const { mapContainerId } = this.props;
     return (
       <React.Fragment>
         <DragDropContext onDragEnd={this.onDragEnd}>
@@ -139,8 +140,8 @@ export class LayerControlDnd extends React.Component {
 
                         <span className="panel-checkbox">
                           <EuiCheckbox
-                            data-test-subj={layer.id}
-                            id={layer.id}
+                            data-test-subj={`${mapContainerId}-${layer.id}`}
+                            id={`${mapContainerId}-${layer.id}`}
                             checked={layer.enabled}
                             onChange={e => this.changeVisibility(e, layer, index)}
 
@@ -224,6 +225,7 @@ LayerControlDnd.propTypes = {
   dndCurrentListOrder: PropTypes.array.isRequired,
   dndRemoveLayerFromControl: PropTypes.func.isRequired,
   dndListOrderChange: PropTypes.func.isRequired,
-  dndLayerVisibilityChange: PropTypes.func.isRequired
+  dndLayerVisibilityChange: PropTypes.func.isRequired,
+  mapContainerId: PropTypes.string.isRequired
 };
 
