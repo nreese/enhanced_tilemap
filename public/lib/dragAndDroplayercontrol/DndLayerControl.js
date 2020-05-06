@@ -146,7 +146,7 @@ function getExtendedMapControl() {
 
   function _updateEsRefLayerVisibility(id, enabled) {
   // when stored in layer control, elastic map reference indices path is the id
-    for (let i = 0; esRefLayersOnMap.length - 1; i++) {
+    for (let i = 0; i < esRefLayersOnMap.length - 1; i++) {
       if (esRefLayersOnMap[i].id === id || esRefLayersOnMap[i].id.substring(3) === id) {
         esRefLayersOnMap[i].enabled = enabled;
         break;
@@ -195,6 +195,7 @@ function getExtendedMapControl() {
       dndListOrderChange={dndListOrderChange}
       dndLayerVisibilityChange={dndLayerVisibilityChange}
       dndRemoveLayerFromControl={dndRemoveLayerFromControl}
+      mapContainerId={_leafletMap.getContainer().id}
     >
     </LayerControlDnd >, _dndListElement);
   }

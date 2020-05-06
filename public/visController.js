@@ -586,6 +586,7 @@ define(function (require) {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
+      container.id = `etm-vis-${$scope.vis.panelIndex}`;
       const mainSearchDetails = {
         getIndexPatternId,
         getGeoField,
