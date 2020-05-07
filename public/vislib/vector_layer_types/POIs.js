@@ -67,7 +67,7 @@ define(function (require) {
       savedSearches.get(this.savedSearchId).then(savedSearch => {
         const geoFields = getGeoFields(savedSearch);
         const geoField = geoFields.find(geoField => {
-          return geoField.name === this.geoField;
+          return geoField.name === options.geoFieldName;
         });
 
         const geo = {
