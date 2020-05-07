@@ -82,7 +82,7 @@ define(function (require) {
           options.displayName = options.displayName || savedSearch.title;
 
           // geo_shape color search color used for drag and drop or geo_point types
-          options.searchIcon = savedSearch.siren.ui.icon;
+          options.icon = savedSearch.siren.ui.icon;
 
           if (this.draggedState) {
             options.close = true;
@@ -175,7 +175,7 @@ define(function (require) {
               //in ES Response watcher
               if (this.isInitialDragAndDrop) {
                 this.params.filterPopupContent = options.filterPopupContent;
-                this.params.searchIcon = options.searchIcon;
+                this.params.icon = options.icon;
                 this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
                 this.params.draggedStateInitial = this.params.draggedState;
                 this.params.geoField = geo.field;
