@@ -458,7 +458,7 @@ function getExtendedMapControl() {
 
     //todo add comments describing functions
     _addOrReplaceLayer, // maintains ordering for _allLayers, the master list of vis and stored layers
-    _updateLayerControl, // updates react component when layer editing interactions have taken place
+    _updateLayerControl, // updates react layer list component when layer editing interactions have taken place
     addOverlays,
     _orderLayersByType,
     removeAllLayersFromMapandControl,
