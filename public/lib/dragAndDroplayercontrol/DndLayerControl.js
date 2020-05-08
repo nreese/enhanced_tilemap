@@ -1,16 +1,4 @@
 /* eslint-disable siren/memory-leak */
-// ********************************************************************************
-// This file is taken from the link below:
-// https://github.com/ismyrnow/leaflet-groupedlayercontrol/pull/57
-// It contains a 1 line fix and the npm version
-// hasn't been updated yet. If at any point the npm version is updated,
-// then the npm version of grouped-layerControl can replace this file
-// Npm ink is:
-//https://www.npmjs.com/package/leaflet-groupedlayercontrol
-// ********************************************************************************
-
-// A layer control which provides for layer groupings.
-// Author: Ishmael Smyrnow
 
 import { debounce, remove, get, findIndex } from 'lodash';
 import React from 'react';
@@ -30,14 +18,12 @@ function getExtendedMapControl() {
   let esClient;
   let $element;
   let mainSearchDetails;
-  let storedLayerConfig;
   let _currentZoom;
   let geometryTypeOfSpatialPaths;
 
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
-  function _updateStoredLayerConfigAndCurrentZoom() {
-    storedLayerConfig = mainSearchDetails.getStoredLayerConfig();
+  function _updateCurrentZoom() {
     _currentZoom = _leafletMap.getZoom();
   }
 
@@ -49,7 +35,7 @@ function getExtendedMapControl() {
     return _currentZoom >= config.minZoom && _currentZoom <= config.maxZoom;
   }
 
-  function setAvailableConfigs(config, foundConfig) {
+  function _setAvailableConfigs(config, foundConfig) {
     if ((!foundConfig.minZoom && foundConfig.minZoom !== 0) && (typeof config.minZoom === 'number' || Array.isArray(config.minZoom))) {
       foundConfig.minZoom = config.minZoom;
     }
@@ -70,7 +56,7 @@ function getExtendedMapControl() {
     }
   }
 
-  function allConfigAssigned(foundConfig) {
+  function _allConfigAssigned(foundConfig) {
     return foundConfig.minZoom &&
       foundConfig.maxZoom &&
       foundConfig.popupFields &&
@@ -84,20 +70,20 @@ function getExtendedMapControl() {
     const pathConstituents = path.split('/');
 
     //looking for sptial path that is most similar to actual path
-    while (pathConstituents.length > 0 && !allConfigAssigned(foundConfig)) {
+    while (pathConstituents.length > 0 && !_allConfigAssigned(foundConfig)) {
       const currentPath = pathConstituents.join('/');
       const configIndex = findIndex(storedLayerConfig, (currentConfig) => currentConfig.spatial_path === currentPath);
 
       if (configIndex !== -1) {
-        setAvailableConfigs(storedLayerConfig[configIndex], foundConfig);
+        _setAvailableConfigs(storedLayerConfig[configIndex], foundConfig);
       }
 
       pathConstituents.pop();
     }
 
-    if (!allConfigAssigned(foundConfig)) {
+    if (!_allConfigAssigned(foundConfig)) {
       //use default if nothing else is found
-      setAvailableConfigs(storedLayerConfig[storedLayerConfig.length - 1], foundConfig);
+      _setAvailableConfigs(storedLayerConfig[storedLayerConfig.length - 1], foundConfig);
     }
 
     return foundConfig;
@@ -267,7 +253,7 @@ function getExtendedMapControl() {
   }
 
   async function getEsRefLayer(spatialPath, enabled) {
-    const config = _getLayerLevelConfig(spatialPath, storedLayerConfig);
+    const config = _getLayerLevelConfig(spatialPath, mainSearchDetails.storedLayerConfig);
     const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
     const limit = 250;
     const filter = mainSearchDetails.mapExtentFilter();
@@ -335,7 +321,7 @@ function getExtendedMapControl() {
     });
 
     let geo;
-    if (hits[0] && hits[0]._source && hits[0]._source && hits[0]._source.type) {
+    if (hits[0] && hits[0]._source && hits[0]._source.type) {
       geo = {
         type: hits[0]._source.geometry.type,
         field: 'geometry'
@@ -363,7 +349,7 @@ function getExtendedMapControl() {
 
   async function addLayersFromLayerConrol(list, enabled) {
     const esRefLayerList = [];
-    _updateStoredLayerConfigAndCurrentZoom();
+    _updateCurrentZoom();
     for (const item of list) {
       item.enabled = enabled;
       esRefLayerList.push(await getEsRefLayer(item.path, enabled));
@@ -382,7 +368,7 @@ function getExtendedMapControl() {
   async function _redrawEsRefLayers() {
     const esRefLayers = [];
     if (esRefLayersOnMap.length >= 1) {
-      _updateStoredLayerConfigAndCurrentZoom();
+      _updateCurrentZoom();
       for (const item of esRefLayersOnMap) {
         if (item.enabled) {
           const layer = await getEsRefLayer(item.path, item.enabled);
@@ -437,6 +423,9 @@ function getExtendedMapControl() {
     _clearLayerFromMapById(id);
   }
 
+  function setStoredLayerConfigs(newStoredLayerConfig) {
+    mainSearchDetails.storedLayerConfig = newStoredLayerConfig;
+  }
 
   function destroy() {
     _allLayers.forEach(layer => {
@@ -468,14 +457,16 @@ function getExtendedMapControl() {
     },
 
     //todo add comments describing functions
-    _addOrReplaceLayer,
-    _updateLayerControl,
+    _addOrReplaceLayer, // maintains ordering for _allLayers, the master list of vis and stored layers
+    _updateLayerControl, // updates react component when layer editing interactions have taken place
     addOverlays,
     _orderLayersByType,
     removeAllLayersFromMapandControl,
     removeLayerFromMapAndControlById,
     setGeometryTypeOfSpatialPaths,
     destroy,
+    setStoredLayerConfigs,
+    _getLayerLevelConfig,
 
     getAllLayers: () => {
       return _allLayers;

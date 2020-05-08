@@ -76,8 +76,59 @@ const fakeAllLayers = [
   }
 ];
 
-const fakeEsClient = { };
-const fakeMainSearchDetails = { };
+const nestedStoredLayerConfigSomeMissing = [{
+  spatial_path: 'World Countries',
+  icon: 'from World Countries spatial path', //this one is used
+  maxZoom: 5
+},
+{
+  spatial_path: 'World Countries/US',
+  popupFields: ['from World Countries/US spatial path'] //this one is used
+},
+{
+  spatial_path: 'World Countries/US/US States',
+  size: 'from exact spatial path', //this one is used
+  minZoom: 7, //this one is used
+  maxZoom: 18 //this one is used
+},
+{
+  color: 'from default object', //this one is used
+  icon: 'fas fa-arrow-alt-circle-down',
+  popupFields: ['ENAME', 'ANAME', 'group'],
+  size: 'm',
+  minZoom: 9,
+  maxZoom: 18
+}];
+
+const nestedStoredLayerConfig = [{
+  spatial_path: 'World Countries',
+  icon: 'knock knock',
+  color: '#9E243A',
+  popupFields: ['POP_EST'],
+  size: 'l',
+  minZoom: 1,
+  maxZoom: 5
+},
+{
+  spatial_path: 'World Countries/US/US States',
+  icon: 'who is there',
+  color: '#FFFF00',
+  popupFields: ['Mean'],
+  size: 'xs',
+  minZoom: 7,
+  maxZoom: 7
+},
+{
+  icon: 'fas fa-arrow-alt-circle-down',
+  color: '#7CBFFA',
+  popupFields: ['ENAME', 'ANAME', 'group'],
+  size: 'm',
+  minZoom: 9,
+  maxZoom: 18
+}];
+
+const fakeEsClient = {};
+const fakeMainSearchDetails = {};
 let layerControl;
 
 
@@ -176,6 +227,61 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(_allLayers[2].id).to.eql(geoFiltersLayer.id);
       });
 
+      describe('_getLayerLevelConfig', () => {
+        it(`should assign default values`, () => {
+          const path = 'existing path it is not';
+          layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
+          const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfig);
+          expect(foundConfig).to.eql(nestedStoredLayerConfig[2]);
+        });
+
+        it(`should assign exact spatial_path layer level config values from one object`, () => {
+          const path = 'World Countries/US/US States';
+          layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
+          const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfig);
+          const expectedConfig = {
+            icon: 'who is there',
+            color: '#FFFF00',
+            popupFields: ['Mean'],
+            size: 'xs',
+            minZoom: 7,
+            maxZoom: 7
+          };
+          expect(foundConfig).to.eql(expectedConfig);
+        });
+
+        it(`should cascade through multiple spatial paths and get all layer level configs from one object`, () => {
+          const path = 'World Countries/does/not/matter/should/pick/obj/with/World Countries/spatial_path';
+          layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
+          const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfig);
+          const expectedConfig = {
+            icon: 'knock knock',
+            color: '#9E243A',
+            popupFields: ['POP_EST'],
+            size: 'l',
+            minZoom: 1,
+            maxZoom: 5
+          };
+          expect(foundConfig).to.eql(expectedConfig);
+        });
+
+        it(`should cascade through multiple spatial paths and find a correct layer level config from multiple objects`, () => {
+          const path = 'World Countries/US/US States';
+          layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
+          const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfigSomeMissing);
+          const expectedConfig = {
+            minZoom: 7,
+            maxZoom: 18,
+            size: 'from exact spatial path',
+            popupFields: ['from World Countries/US spatial path'],
+            icon: 'from World Countries spatial path',
+            color: 'from default object'
+          };
+
+          expect(foundConfig).to.eql(expectedConfig);
+        });
+
+      });
     });
   });
 });
