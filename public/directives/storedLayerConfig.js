@@ -1,3 +1,5 @@
+import  { defaultStoredLayerConfig } from '../config/config';
+
 const module = require('ui/modules').get('kibana');
 
 define(function (require) {
@@ -10,16 +12,8 @@ define(function (require) {
       },
       template: require('./storedLayerConfig.html'),
       link: function (scope) {
-        if (!scope.config) {
-          scope.config = JSON.stringify([
-            {
-              icon: 'fas fa-arrow-alt-circle-down',
-              color: '#7CBFFA',
-              popupFields: [],
-              minZoom: 0,
-              maxZoom: 18
-            }
-          ]);
+        if (!scope.config || scope.config.length === 0) {
+          scope.config = defaultStoredLayerConfig();
         }
         //converting object to JSON
         scope.$watch('config', function (newConfig, oldConfig) {
