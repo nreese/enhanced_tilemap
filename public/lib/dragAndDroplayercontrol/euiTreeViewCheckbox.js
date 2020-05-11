@@ -97,11 +97,6 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                         'aria-labelledby': `${buttonId} ${
                           rest['aria-labelledby']}`,
                       };
-                    // const nodeClasses = classNames(
-                    //   'euiTreeView__node',
-                    //   display ? displayToClassNameMap[display] : null,
-                    //   { 'euiTreeView__node--expanded': this.isNodeOpen(node) }
-                    // );
                     const nodeButtonClasses = classNames(
                       'euiTreeView__nodeInner',
                       showExpansionArrows && node.children
