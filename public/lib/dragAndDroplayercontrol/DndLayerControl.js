@@ -429,7 +429,7 @@ function getExtendedMapControl() {
         layer.destroy();
       }
     });
-    _leafletMap.off('moveend');
+    _leafletMap.off('click').off('wheel');
     _allLayers = undefined;
   }
 

@@ -1,5 +1,5 @@
 /* eslint-disable siren/memory-leak */
-/* eslint-disable siren/memoryleaks */
+
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
 
 define(function (require) {

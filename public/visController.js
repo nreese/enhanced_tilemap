@@ -1,5 +1,4 @@
 /* eslint-disable siren/memory-leak */
-/* eslint-disable siren/memoryleaks */
 
 import _ from 'lodash';
 import uuid from 'uuid';

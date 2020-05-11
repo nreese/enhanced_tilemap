@@ -36,11 +36,14 @@ class EuiTreeViewCheckbox extends EuiTreeView {
 
   render() {
     const {
+      // eslint-disable-next-line no-unused-vars
       toggleoffexpandbydefault,
+      // eslint-disable-next-line no-unused-vars
       children,
       className,
       items,
       display = 'default',
+      // eslint-disable-next-line no-unused-vars
       expandByDefault,
       showExpansionArrows,
       ...rest
@@ -94,11 +97,11 @@ class EuiTreeViewCheckbox extends EuiTreeView {
                         'aria-labelledby': `${buttonId} ${
                           rest['aria-labelledby']}`,
                       };
-                    const nodeClasses = classNames(
-                      'euiTreeView__node',
-                      display ? displayToClassNameMap[display] : null,
-                      { 'euiTreeView__node--expanded': this.isNodeOpen(node) }
-                    );
+                    // const nodeClasses = classNames(
+                    //   'euiTreeView__node',
+                    //   display ? displayToClassNameMap[display] : null,
+                    //   { 'euiTreeView__node--expanded': this.isNodeOpen(node) }
+                    // );
                     const nodeButtonClasses = classNames(
                       'euiTreeView__nodeInner',
                       showExpansionArrows && node.children
