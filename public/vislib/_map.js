@@ -395,6 +395,10 @@ define(function (require) {
       this._markers.unfixTooltips();
     };
 
+    TileMapMap.prototype.fixMapTypeTooltips = function () {
+      this._markers.fixTooltips();
+    };
+
     TileMapMap.prototype._setMarkerType = function (markerType) {
       this._markerType = markerTypes[markerType] ? markerType : defaultMarkerType;
     };

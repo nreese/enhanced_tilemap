@@ -113,6 +113,9 @@ define(function (require) {
       };
     }
 
+    function isHeatMap() {
+      return $scope.vis.params.mapType === 'Heatmap' && map._markers;
+    }
     function getIndexPatternId() { return $scope.vis.indexPattern.id; }
     function getSirenMeta() { return $scope.vis._siren; }
     function getStoredLayerConfig() {
@@ -337,9 +340,6 @@ define(function (require) {
         if (_shouldAutoFitMapBoundsToData(true)) _doFitMapBoundsToData();
         $scope.flags.isVisibleSource = 'visParams';
         //remove mouse related heatmap events when moving to a different geohash type
-        if (oldParams && oldParams.mapType === 'Heatmap') {
-          map.unfixMapTypeTooltips();
-        }
 
         map._layerControl.setStoredLayerConfigs(getStoredLayerConfig());
         map.removeAllLayersFromMapandControl();
@@ -369,6 +369,10 @@ define(function (require) {
           _doFitMapBoundsToData();
         }
         draw();
+      }
+
+      if (isHeatMap()) {
+        map.unfixMapTypeTooltips();
       }
 
       //POI overlays - no need to clear all layers for this watcher
@@ -686,6 +690,9 @@ define(function (require) {
     map.leafletMap.on('showlayer', function (e) {
       map.saturateWMSTiles();
       if (map._markers && e.id === 'Aggregation') {
+        if (isHeatMap()) {
+          map.fixMapTypeTooltips();
+        }
         map._markers.show();
       }
       $scope.vis.getUiState().set(e.id, true);
@@ -693,6 +700,9 @@ define(function (require) {
 
     map.leafletMap.on('hidelayer', function (e) {
       if (map._markers && e.id === 'Aggregation') {
+        if (isHeatMap()) {
+          map.unfixMapTypeTooltips();
+        }
         map._markers.hide();
       }
       $scope.vis.getUiState().set(e.id, false);
