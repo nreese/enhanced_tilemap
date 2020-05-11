@@ -13,7 +13,7 @@ define(function (require) {
       template: require('./storedLayerConfig.html'),
       link: function (scope) {
         if (!scope.config || scope.config.length === 0) {
-          scope.config = JSON.stringify([defaultStoredLayerConfig]);
+          scope.config = JSON.stringify([defaultStoredLayerConfig], null, ' ');
         }
         //converting object to JSON
         scope.$watch('config', function (newConfig, oldConfig) {
