@@ -10,7 +10,17 @@ define(function (require) {
       },
       template: require('./storedLayerConfig.html'),
       link: function (scope) {
-
+        if (!scope.config) {
+          scope.config = JSON.stringify([
+            {
+              icon: 'fas fa-arrow-alt-circle-down',
+              color: '#7CBFFA',
+              popupFields: [],
+              minZoom: 0,
+              maxZoom: 18
+            }
+          ]);
+        }
         //converting object to JSON
         scope.$watch('config', function (newConfig, oldConfig) {
           if (newConfig !== oldConfig) {
