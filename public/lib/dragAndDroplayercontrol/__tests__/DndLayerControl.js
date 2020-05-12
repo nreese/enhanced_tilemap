@@ -138,7 +138,7 @@ describe('Kibi Enhanced Tilemap', () => {
 
     describe('_addOrReplaceLayer', () => {
 
-      it(`should add the new layer to the end of the _allLayers array`, () => {
+      it('should add the new layer to the end of the _allLayers array', () => {
         const _allLayers = cloneDeep(fakeAllLayers);
         layerControl = L.control.dndLayerControl(_allLayers, fakeEsClient, fakeMainSearchDetails, null);
 
@@ -150,7 +150,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(_allLayers[_allLayers.length - 1].id).to.eql(newLayer.id);
       });
 
-      it(`should replace layer that is already present in array`, () => {
+      it('should replace layer that is already present in array', () => {
         const _allLayers = cloneDeep(fakeAllLayers);
         layerControl = L.control.dndLayerControl(_allLayers, fakeEsClient, fakeMainSearchDetails, null);
 
@@ -165,7 +165,7 @@ describe('Kibi Enhanced Tilemap', () => {
     });
 
     describe('_orderLayersByType', () => {
-      it(`should move wms layer to end of array`, () => {
+      it('should move wms layer to end of array', () => {
         const fakeAllLayersCloned = cloneDeep(fakeAllLayers);
 
         //adding wms layer to front of array
@@ -183,7 +183,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(_allLayers[0].id).to.eql('Markers');
       });
 
-      it(`should move markers to front of array`, () => {
+      it('should move markers to front of array', () => {
         const fakeAllLayersCloned = cloneDeep(fakeAllLayers);
 
         //moving markers to end of array
@@ -197,7 +197,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(_allLayers[0].id).to.eql('Markers');
       });
 
-      it(`should move point layer to below Markers`, () => {
+      it('should move point layer to below Markers', () => {
         const fakeAllLayersCloned = cloneDeep(fakeAllLayers);
 
         //Moving geoFilters to front of Array
@@ -212,7 +212,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(_allLayers[1].id).to.eql(GeoPointLayer.id);
       });
 
-      it(`should move Geo Filter layer to below Markers and Point type layer`, () => {
+      it('should move Geo Filter layer to below Markers and Point type layer', () => {
         const fakeAllLayersCloned = cloneDeep(fakeAllLayers);
 
         //Moving geoFilters to front of Array
@@ -228,14 +228,14 @@ describe('Kibi Enhanced Tilemap', () => {
       });
     });
     describe('_getLayerLevelConfig', () => {
-      it(`should assign default values`, () => {
+      it('should assign default values', () => {
         const path = 'existing path it is not';
         layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
         const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfig);
         expect(foundConfig).to.eql(nestedStoredLayerConfig[2]);
       });
 
-      it(`should assign exact spatial_path layer level config values from one object`, () => {
+      it('should assign exact spatial_path layer level config values from one object', () => {
         const path = 'World Countries/US/US States';
         layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
         const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfig);
@@ -250,7 +250,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(foundConfig).to.eql(expectedConfig);
       });
 
-      it(`should cascade through multiple spatial paths and get all layer level configs from one object`, () => {
+      it('should cascade through multiple spatial paths and get all layer level configs from one object', () => {
         const path = 'World Countries/does/not/matter/should/pick/obj/with/World Countries/spatial_path';
         layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
         const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfig);
@@ -265,7 +265,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(foundConfig).to.eql(expectedConfig);
       });
 
-      it(`should cascade through multiple spatial paths and find a correct layer level config from multiple objects`, () => {
+      it('should cascade through multiple spatial paths and find a correct layer level config from multiple objects', () => {
         const path = 'World Countries/US/US States';
         layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
         const foundConfig = layerControl._getLayerLevelConfig(path, nestedStoredLayerConfigSomeMissing);
@@ -284,14 +284,14 @@ describe('Kibi Enhanced Tilemap', () => {
 
     describe('_makeExistsForConfigFieldTypes', () => {
 
-      it(`should return exists query component containing configs specified as field types`, () => {
+      it('should return exists query component containing configs specified as field types', () => {
         layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
 
         const fakeConfigObjectForExistsQueryCreation = {
           icon: ['properties.iconsiren'],
           color: ['colorsiren'],
           popupFields: ['ENAME', 'ANAME', 'group'],
-          size: ['mooodium'],
+          size: ['sizesiren'],
           minZoom: 9,
           maxZoom: 18
         };
@@ -300,13 +300,13 @@ describe('Kibi Enhanced Tilemap', () => {
         const expectedexistsQueryComponent = [
           { exists: { field: 'properties.iconsiren' } },
           { exists: { field: 'colorsiren' } },
-          { exists: { field: 'mooodium' } }
+          { exists: { field: 'sizesiren' } }
         ];
 
         expect(existsQueryComponent).to.eql(expectedexistsQueryComponent);
       });
 
-      it(`should return empty array as no config types are specified as field type components`, () => {
+      it('should return empty array as no config types are specified as field type components', () => {
         layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
 
         const fakeConfigObjectForExistsQueryCreation = {
