@@ -281,5 +281,49 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(foundConfig).to.eql(expectedConfig);
       });
     });
+
+    describe('_makeExistsForConfigFieldTypes', () => {
+
+      it(`should return exists query component containing configs specified as field types`, () => {
+        layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
+
+        const fakeConfigObjectForExistsQueryCreation = {
+          icon: ['properties.iconsiren'],
+          color: ['colorsiren'],
+          popupFields: ['ENAME', 'ANAME', 'group'],
+          size: ['mooodium'],
+          minZoom: 9,
+          maxZoom: 18
+        };
+
+        const existsQueryComponent = layerControl._makeExistsForConfigFieldTypes(fakeConfigObjectForExistsQueryCreation);
+        const expectedexistsQueryComponent = [
+          { exists: { field: 'properties.iconsiren' } },
+          { exists: { field: 'colorsiren' } },
+          { exists: { field: 'mooodium' } }
+        ];
+
+        expect(existsQueryComponent).to.eql(expectedexistsQueryComponent);
+      });
+
+      it(`should return empty array as no config types are specified as field type components`, () => {
+        layerControl = L.control.dndLayerControl(fakeAllLayers, fakeEsClient, fakeMainSearchDetails, null);
+
+        const fakeConfigObjectForExistsQueryCreation = {
+          icon: 'notFieldTypeBecauseFieldTypesAreArray',
+          color: 'notFieldTypeBecauseFieldTypesAreArray',
+          popupFields: ['popups', 'not required', 'for layer level configs so does not matter'],
+          size: 'notFieldTypeBecauseFieldTypesAreArray',
+          minZoom: 9,
+          maxZoom: 18
+        };
+
+        const existsQueryComponent = layerControl._makeExistsForConfigFieldTypes(fakeConfigObjectForExistsQueryCreation);
+        const expectedexistsQueryComponent = [];
+
+        expect(existsQueryComponent).to.eql(expectedexistsQueryComponent);
+      });
+
+    });
   });
 });

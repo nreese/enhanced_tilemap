@@ -36,29 +36,19 @@ function getExtendedMapControl() {
   }
 
   function _setAvailableConfigs(config, foundConfig) {
-    if ((!foundConfig.minZoom && foundConfig.minZoom !== 0) && (typeof config.minZoom === 'number' || Array.isArray(config.minZoom))) {
-      foundConfig.minZoom = config.minZoom;
-    }
-    if ((!foundConfig.maxZoom && foundConfig.maxZoom !== 0) && (typeof config.maxZoom === 'number' || Array.isArray(config.maxZoom))) {
-      foundConfig.maxZoom = config.maxZoom;
-    }
-    if (!foundConfig.icon && config.icon) {
-      foundConfig.icon = config.icon;
-    }
-    if (!foundConfig.color && config.color) {
-      foundConfig.color = config.color;
-    }
-    if (!foundConfig.popupFields && config.popupFields) {
-      foundConfig.popupFields = config.popupFields;
-    }
-    if (!foundConfig.size && config.size) {
-      foundConfig.size = config.size;
-    }
+    const configTypes = ['minZoom', 'maxZoom', 'icon', 'size', 'popupFields', 'color'];
+    configTypes.forEach(type => {
+      if ((!foundConfig[type] && foundConfig[type] !== 0) && (typeof config[type] === 'number' || Array.isArray(config[type]))) {
+        foundConfig[type] = config[type];
+      } else if (!foundConfig[type] && config[type]) {
+        foundConfig[type] = config[type];
+      }
+    });
   }
 
   function _allConfigAssigned(foundConfig) {
-    return foundConfig.minZoom &&
-      foundConfig.maxZoom &&
+    return (foundConfig.minZoom || foundConfig.minZoom === 0) &&
+      (foundConfig.maxZoom || foundConfig.maxZoom === 0) &&
       foundConfig.popupFields &&
       foundConfig.color &&
       foundConfig.icon &&
@@ -252,6 +242,17 @@ function getExtendedMapControl() {
     </LayerControlDnd >, _dndListElement);
   }
 
+  function _makeExistsForConfigFieldTypes(config) {
+    //initial attempt to make sure that all feature level config types are retrived from layer with no data present on current map canvas
+    const existsQueryArray = [];
+    Object.keys(config).forEach(configType => {
+      if (Array.isArray(config[configType]) && configType !== 'popupFields' && configType !== 'minZoom' && configType !== 'maxZoom') {
+        existsQueryArray.push({ exists: { field: config[configType].toString() } });
+      }
+    });
+    return existsQueryArray;
+  }
+
   async function getEsRefLayer(spatialPath, enabled) {
     const config = _getLayerLevelConfig(spatialPath, mainSearchDetails.storedLayerConfig);
     const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
@@ -291,7 +292,8 @@ function getExtendedMapControl() {
                 term: {
                   'spatial_path.raw': spatialPath
                 }
-              }
+              },
+              should: _makeExistsForConfigFieldTypes(config)
             }
           }
         }
@@ -467,6 +469,7 @@ function getExtendedMapControl() {
     destroy,
     setStoredLayerConfigs,
     _getLayerLevelConfig,
+    _makeExistsForConfigFieldTypes,
 
     getAllLayers: () => {
       return _allLayers;
