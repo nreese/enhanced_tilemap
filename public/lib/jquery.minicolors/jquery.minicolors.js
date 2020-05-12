@@ -1,4 +1,4 @@
-/* eslint-disable siren/memoryleaks */
+/* eslint-disable siren/memory-leak */
 /*
  * jQuery MiniColors: A tiny color picker built on jQuery
  *
@@ -754,6 +754,7 @@
     const settings = input.data('minicolors-settings');
     const lastChange = input.data('minicolors-lastChange');
     let obj;
+    // eslint-disable-next-line no-unused-vars
     let sel;
     let i;
 
