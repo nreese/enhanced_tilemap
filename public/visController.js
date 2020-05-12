@@ -341,6 +341,7 @@ define(function (require) {
           map.unfixMapTypeTooltips();
         }
 
+        map._layerControl.setStoredLayerConfigs(getStoredLayerConfig());
         map.removeAllLayersFromMapandControl();
         map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
 
@@ -600,7 +601,7 @@ define(function (require) {
         getGeoField,
         getSirenMeta,
         mapExtentFilter: getGeoShapeBox,
-        getStoredLayerConfig
+        storedLayerConfig: getStoredLayerConfig()
       };
 
       map = new TileMapMap(container, {

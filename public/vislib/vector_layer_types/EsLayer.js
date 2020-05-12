@@ -21,16 +21,17 @@ export default class EsLayer {
     }
 
     if (geo.field) {
+      //using layer level config
+      const layerControlIcon = options.icon;
+      const layerControlColor = options.color;
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
-        options.searchIcon = _.get(options, 'searchIcon', 'fas fa-map-marker-alt');
+        options.icon = _.get(options, 'icon', 'fas fa-map-marker-alt');
         const markers = _.map(hits, hit => {
 
-
           if (type === 'es_ref') {
-            self.assignFeatureLevelConfigurations(hit, options);
+            self.assignFeatureLevelConfigurations(hit, geo.type, options);
           }
-
           const marker = self._createMarker(hit, geo.field, options);
           if (options.popupFields.length) {
             marker.content = this._popupContent(hit, options.popupFields);
@@ -40,7 +41,7 @@ export default class EsLayer {
         layer = new L.FeatureGroup(markers);
         layer.type = type + '_point';
         layer.options = { pane: 'overlayPane' };
-        layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
+        layer.icon = `<i class="${layerControlIcon}" style="color:${layerControlColor};"></i>`;
         layer.destroy = () => {
           layer.unbindPopup();
         };
@@ -56,6 +57,10 @@ export default class EsLayer {
           geometry.type = self.capitalizeFirstLetter(geometry.type);
           if (geometry.type === 'Multipolygon') {
             geometry.type === 'MultiPolygon';
+          }
+
+          if (type === 'es_ref') {
+            self.assignFeatureLevelConfigurations(hit, geo.type, options);
           }
 
           let popupContent = false;
@@ -122,7 +127,7 @@ export default class EsLayer {
           }
         );
         self.bindPopup(layer, options);
-        layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+        layer.icon = `<i class="far fa-stop" style="color:${layerControlColor};"></i>`;
         layer.type = type + '_shape';
         layer.destroy = () => layer.options.destroy();
       } else {
@@ -156,7 +161,7 @@ export default class EsLayer {
       layer.label = options.displayName;
 
       if (geo.type === 'point') {
-        layer.icon = `<i class="${options.searchIcon}" style="color:${options.color};"></i>`;
+        layer.icon = `<i class="${options.icon}" style="color:${options.color};"></i>`;
       } else {
         layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
       }
@@ -173,12 +178,14 @@ export default class EsLayer {
     }
   }
 
-  assignFeatureLevelConfigurations = function (hit, options) {
+  assignFeatureLevelConfigurations = function (hit, type, options) {
     const properties = hit._source.properties;
-    options.color = properties.color || options.color || '#FF0000';
-    options.searchIcon = properties.icon || options.searchIcon  || 'far fa-question';
+    if (type === 'point' || type === 'geo_point') {
+      options.size = properties.size || options.size || 'm';
+      options.icon = properties.icon || options.icon || 'far fa-question';
+    }
     options.popupFields = properties.popupFields || options.popupFields || [];
-    options.size = properties.size || options.size || 'm';
+    options.color = properties.color || options.color || '#FF0000';
   }
 
   /**
@@ -257,7 +264,7 @@ export default class EsLayer {
     const feature = L.marker(
       toLatLng(hitCoords),
       {
-        icon: searchIcon(options.searchIcon, options.color, options.size),
+        icon: searchIcon(options.icon, options.color, options.size),
         pane: 'overlayPane'
       });
     return feature;
