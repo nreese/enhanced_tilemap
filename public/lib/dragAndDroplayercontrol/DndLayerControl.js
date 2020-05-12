@@ -1,6 +1,6 @@
 /* eslint-disable siren/memory-leak */
 
-import { debounce, remove, get, findIndex } from 'lodash';
+import { debounce, remove, get, findIndex, pick } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
@@ -37,13 +37,7 @@ function getExtendedMapControl() {
 
   function _setAvailableConfigs(config, foundConfig) {
     const configTypes = ['minZoom', 'maxZoom', 'icon', 'size', 'popupFields', 'color'];
-    configTypes.forEach(type => {
-      if ((!foundConfig[type] && foundConfig[type] !== 0) && (typeof config[type] === 'number' || Array.isArray(config[type]))) {
-        foundConfig[type] = config[type];
-      } else if (!foundConfig[type] && config[type]) {
-        foundConfig[type] = config[type];
-      }
-    });
+    return Object.assign(pick(config, configTypes), foundConfig);
   }
 
   function _allConfigAssigned(foundConfig) {
@@ -56,7 +50,7 @@ function getExtendedMapControl() {
   }
 
   function _getLayerLevelConfig(path, storedLayerConfig) {
-    const foundConfig = {};
+    let foundConfig = {};
     const pathConstituents = path.split('/');
 
     //looking for sptial path that is most similar to actual path
@@ -65,7 +59,7 @@ function getExtendedMapControl() {
       const configIndex = findIndex(storedLayerConfig, (currentConfig) => currentConfig.spatial_path === currentPath);
 
       if (configIndex !== -1) {
-        _setAvailableConfigs(storedLayerConfig[configIndex], foundConfig);
+        foundConfig = _setAvailableConfigs(storedLayerConfig[configIndex], foundConfig);
       }
 
       pathConstituents.pop();
@@ -73,7 +67,7 @@ function getExtendedMapControl() {
 
     if (!_allConfigAssigned(foundConfig)) {
       //use default if nothing else is found
-      _setAvailableConfigs(storedLayerConfig[storedLayerConfig.length - 1], foundConfig);
+      foundConfig = _setAvailableConfigs(storedLayerConfig[storedLayerConfig.length - 1], foundConfig);
     }
 
     return foundConfig;
