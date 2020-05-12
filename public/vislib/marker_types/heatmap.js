@@ -39,7 +39,7 @@ define(function (require) {
       const points = this._dataToHeatArray(max);
 
       this._markerGroup = L.heatLayer(points, options);
-      this._fixTooltips();
+      this.fixTooltips();
       this._addToMap();
     };
 
@@ -50,7 +50,7 @@ define(function (require) {
       this.leafletMap.off('mouseup');
     };
 
-    HeatmapMarker.prototype._fixTooltips = function () {
+    HeatmapMarker.prototype.fixTooltips = function () {
       const self = this;
       const debouncedMouseMoveLocation = _.debounce(mouseMoveLocation.bind(this), 15, {
         'leading': true,
