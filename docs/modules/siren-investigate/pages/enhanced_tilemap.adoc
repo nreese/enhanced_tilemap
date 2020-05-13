@@ -576,7 +576,7 @@ You can configure the stored layers when your visualization is in edit mode. For
 If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
 
 === Layer Control
-The Layer Control is located in the top right of any Enhanced Coordinate Map. An example is in the image below showing a case where some Stored Layers are loaded (See the <<Loading stored layers from Elasticsearch>> for more details). 
+The Layer Control is located in the top right of any Enhanced Coordinate Map. An example is in the image below showing a case where some Stored Layers are loaded (See the <<Loading Stored Layers from Elasticsearch Onto Enhanced Coordinate Map, Loading stored layers from Elasticsearch>> for more details). 
 
 image:layer_control.png[Layer Control]
 
