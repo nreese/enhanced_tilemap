@@ -696,7 +696,7 @@ define(function (require) {
         map._markers.show();
       }
       if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
-        $scope.vis.getUiState().set(e.id, 'se');
+        $scope.vis.getUiState().set(e.id, 'se'); //saved and enabled
       } else {
         $scope.vis.getUiState().set(e.id, true);
       }
@@ -710,9 +710,9 @@ define(function (require) {
         map._markers.hide();
       }
       if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
-        $scope.vis.getUiState().set(e.id, 'sne');
+        $scope.vis.getUiState().set(e.id, 'sne'); //saved but NOT enabled
       } else {
-        $scope.vis.getUiState().set(e.id, true);
+        $scope.vis.getUiState().set(e.id, false);
       }
     });
 
