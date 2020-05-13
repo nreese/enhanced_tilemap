@@ -78,40 +78,16 @@ define(function (require) {
     TileMapMap.prototype._addDrawControl = function () {
       if (this._drawControl) return;
 
-      //create Markers feature group and add saved markers
-      this._drawnItems = new L.FeatureGroup();
-      // this._drawnItems.options = { pane: 'overlayPane' };
-      const self = this;
-      this._attr.markers.forEach(function (point) {
-        let color = 'green';
-        if (point.length === 3) {
-          color = point.pop();
-        }
-        self._drawnItems.addLayer(
-          L.marker(
-            point,
-            {
-              icon: markerIcon(color),
-              // pane: 'overlayPane'
-            })
-        );
-      });
-
-      this._drawnItems.id = 'Markers';
-      this._drawnItems.label = 'Markers';
-      this._drawnItems.type = 'marker';
-      this._drawnItems.icon = '<i class="fas fa-map-marker" style="color:green;"></i>';
-      this._drawnItems.enabled = this.uiState.get('Markers') || true;
-      this._drawnItems.visible = true;
-      this._layerControl.addOverlays([this._drawnItems]);
+      //*********************************************************************** */
+      //  If markers need to be revisited, here is PR that removed them
+      //     https://sirensolutions.atlassian.net/browse/INVE-11323
+      //*********************************************************************** */
 
       //https://github.com/Leaflet/Leaflet.draw
       const drawOptions = {
         draw: {
           circle: true,
-          marker: {
-            icon: markerIcon('green')
-          },
+          marker: false,
           polygon: {},
           polyline: false,
           rectangle: {
@@ -121,17 +97,8 @@ define(function (require) {
             }
           },
           circlemarker: false
-        },
-        edit: {
-          featureGroup: this._drawnItems,
-          edit: false
         }
       };
-      //Do not show marker and remove buttons when visualization is displayed in dashboard, i.e. not editable
-      if (!this._isEditable) {
-        drawOptions.draw.marker = false;
-        drawOptions.edit.remove = false;
-      }
 
       this._drawControl = new L.Control.Draw(drawOptions);
       this.leafletMap.addControl(this._drawControl);
@@ -511,7 +478,8 @@ define(function (require) {
       this._tileLayer.type = 'base';
       this._tileLayer.addTo(this.leafletMap);
 
-      this._layerControl.addOverlays([this._drawnItems]);
+      // see note in _addDrawControl function
+      // this._layerControl.addOverlays([this._drawnItems]);
     };
 
     TileMapMap.prototype._createMap = function (mapOptions) {
