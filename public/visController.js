@@ -604,7 +604,8 @@ define(function (require) {
         getGeoField,
         getSirenMeta,
         mapExtentFilter: getGeoShapeBox,
-        storedLayerConfig: getStoredLayerConfig()
+        storedLayerConfig: getStoredLayerConfig(),
+        uiState: $scope.vis.getUiState()
       };
 
       map = new TileMapMap(container, {
@@ -682,7 +683,7 @@ define(function (require) {
           });
       }
       //scope for saving dnd poi overlays
-      //$scope.vis.getUiState().set(e.id, false);
+      $scope.vis.getUiState().set(e.id, false);
     });
 
     // saving checkbox status to dashboard uiState
@@ -694,7 +695,11 @@ define(function (require) {
         }
         map._markers.show();
       }
-      $scope.vis.getUiState().set(e.id, true);
+      if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
+        $scope.vis.getUiState().set(e.id, 'se');
+      } else {
+        $scope.vis.getUiState().set(e.id, true);
+      }
     });
 
     map.leafletMap.on('hidelayer', function (e) {
@@ -704,7 +709,11 @@ define(function (require) {
         }
         map._markers.hide();
       }
-      $scope.vis.getUiState().set(e.id, false);
+      if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
+        $scope.vis.getUiState().set(e.id, 'sne');
+      } else {
+        $scope.vis.getUiState().set(e.id, true);
+      }
     });
 
     // saving checkbox status to dashboard uiState
