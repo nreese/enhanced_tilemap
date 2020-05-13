@@ -667,3 +667,89 @@ The values for `icon` and `color` for the layer in the <<Layer Control>> are tak
 ===== The properties on the <<Layer Control>> for example 1 will be:
 * *color*: `green` - field type, taken from the configuration and retrieved from a document with the “pois/states/churches” `spatial_path`
 * *Icon*: `cross`  - taken from the configuration with the “Pois/states/churches” spatial_path
+If there are more features present within the current map canvas extent than were retrieved with the set Elasticsearch query size response limit, a warning icon will appear beside the layer. The warning icon has a tooltip indicating this and the set current limit
+
+=== Layer Security
+
+==== Index Security
+
+By default only the `sirenadmin` user has the permissions to view the map layer indices, to make them available for other users you will need to give their roles read permissions.
+You can do that by adding `?map__*` to allowed indices on the Access Control page.
+
+image::ac_map_layers_read_permissions.png[image]
+
+NOTE: This will match all map indices. You can also add each index individualy.
+
+==== Document Level Security (DLS)
+
+Document level security can be done on the map indices, this will only allow documents matching the DLS query to be returned.
+
+WARNING: To maintain good performance you should run the dls map queries on the map indices, separetly of other indices, link:#full_dls_example[example]. More on that link:https://docs.search-guard.com/latest/document-level-security#performance-considerations[ here].
+
+*By spatial path*
+
+This dls query will only allow documents with _"World Lakes"_ in their `spatial_path`.
+[#full_dls_example]
+....
+index_permissions:
+  - index_patterns:
+      - '?siren*'
+      - article
+      - company
+      - investment
+      - investor
+    fls: []
+    masked_fields: []
+    allowed_actions:
+      - READ
+      - VIEW_INDEX_METADATA
+  - index_patterns:
+      - '?map__*'
+    dls: '{ "match": { "spatial_path":"World Lakes" } }'
+    fls: []
+    masked_fields: []
+    allowed_actions:
+      - READ
+      - VIEW_INDEX_METADATA
+....
+
+image::dls_spatialpath_add_layers.png[image]
+
+*By geo-shape*
+
+This dls query will only allow documents within the specified co-ordinates.
+....
+- index_patterns:
+    - '?map__*'
+  dls: >-
+    { "geo_shape": { "geometry": { "shape": { "type": "Polygon",
+    "coordinates": [ [ [ -12.85400390625, 50.680797145321655 ], [
+    -4.306640625, 50.680797145321655 ], [ -4.306640625, 56.42605447604972 ], [
+    -12.85400390625, 56.42605447604972 ], [ -12.85400390625,
+    50.680797145321655 ] ] ] }, "relation": "within" } } }
+  fls: []
+  masked_fields: []
+  allowed_actions:
+    - READ
+    - VIEW_INDEX_METADATA
+....
+
+image::dls_geoshape_coordinates.png[image]
+
+image::dls_geoshape_map_ie.png[image]
+
+*By properties fields*
+
+This dls query will only allow documents that match a specific property.
+....
+- index_patterns:
+    - '?map__*'
+  dls: '{ "term": { "properties.CONTINENT.keyword": "North America" } }'
+  fls: []
+  masked_fields: []
+  allowed_actions:
+    - READ
+    - VIEW_INDEX_METADATA
+....
+
+image::dls_geoshape_map_na.png[image]
