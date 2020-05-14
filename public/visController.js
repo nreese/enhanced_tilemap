@@ -700,14 +700,13 @@ define(function (require) {
       }
       if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
         let refLayerState = 'sne'; //saved but NOT enabled
-
         if (e.enabled) {
           refLayerState = 'se'; //saved and enabled
         }
 
         $scope.vis.getUiState().set(e.id, refLayerState);
       } else {
-        $scope.vis.getUiState().set(e.id, true);
+        $scope.vis.getUiState().set(e.id, e.enabled);
       }
     });
 
