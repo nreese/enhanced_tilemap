@@ -12,9 +12,6 @@ export const backwardsCompatible = {
     params.overlays.savedSearches.forEach(layerParams => {
       this.updateSavedSearch(layerParams);
     });
-    if (!params.storedLayerConfig) {
-      params.storedLayerConfig = [];
-    }
   },
   updateSavedSearch: function (layerParams) {
     if (_.has(layerParams, 'labelField')) {
