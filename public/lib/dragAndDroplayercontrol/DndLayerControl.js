@@ -473,7 +473,7 @@ function getExtendedMapControl() {
     });
   }
 
-  async function _loadSavedStoredLayers() {
+  async function loadSavedStoredLayers() {
     const resp = await getPathList();
     const aggs = resp.aggregations[2].buckets;
     geometryTypeOfSpatialPaths = _getGeometryTypeOfSpatialPaths(aggs);
@@ -534,7 +534,7 @@ function getExtendedMapControl() {
       uiState = mSD.uiState;
       this._lastZIndex = 0;
       $element = $el;
-      _loadSavedStoredLayers();
+      loadSavedStoredLayers();
     },
 
     //todo add comments describing functions
@@ -549,7 +549,7 @@ function getExtendedMapControl() {
     _getLayerLevelConfig,
     _makeExistsForConfigFieldTypes,
     getPathList, // retrieves a list of spatial paths from indices with a .map__ prefix
-    _loadSavedStoredLayers, //checks the uiState for stored layers and draws the ones that are present
+    loadSavedStoredLayers, //checks the uiState for stored layers and draws the ones that are present
 
     getAllLayers: () => {
       return _allLayers;

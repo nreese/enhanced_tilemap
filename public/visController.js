@@ -338,9 +338,12 @@ define(function (require) {
         backwardsCompatible.updateParams($scope.vis.params);
         if (_shouldAutoFitMapBoundsToData(true)) _doFitMapBoundsToData();
         $scope.flags.isVisibleSource = 'visParams';
-        //remove mouse related heatmap events when moving to a different geohash type
 
+        // The stored layer config may have changed, so it is updated
         map._layerControl.setStoredLayerConfigs(getStoredLayerConfig());
+        // The stored layers in the UIState are also loaded when vis.params are applied
+        map._layerControl.loadSavedStoredLayers();
+
         map.removeAllLayersFromMapandControl();
         map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
 
