@@ -282,9 +282,14 @@
   </div>
 
   <div uib-accordion-group class="panel-default" heading="Stored Layer Config">
+    <div class="form-group">
+      <label class="etm-options-section">
+        Stored Layer Config <kbn-info info="Config object for Stored Layers. The last item in the array is a default object, containing all default config parameters. Other configuration items must contain a spatial_path attribute."></kbn-info>
+      </label>
 
     <stored-layer-config config="vis.params.storedLayerConfig"></stored-layer-config>
     
+  </div>
   </div>
 
 </uib-accordion>

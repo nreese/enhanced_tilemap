@@ -7,6 +7,7 @@ import { TemplateVisTypeProvider } from 'ui/template_vis_type/template_vis_type'
 import { VisTypesRegistryProvider } from 'ui/registry/vis_types';
 import { VisSchemasProvider } from 'ui/vis/schemas';
 import scriptingInterfaces from 'scripting-interfaces';
+import  { defaultStoredLayerConfig } from './config/config';
 
 import 'angularjs-slider';
 
@@ -75,7 +76,7 @@ define(function (require) {
             dragAndDropPoiLayers: []
           },
           wms: config.get('visualization:tileMap:WMSdefaults'),
-          storedLayerConfig: []
+          storedLayerConfig: JSON.stringify([defaultStoredLayerConfig], null, 2)
         },
         mapTypes: ['Scaled Circle Markers', 'Shaded Circle Markers', 'Shaded Geohash Grid', 'Heatmap'],
         scaleTypes: ['Dynamic - Linear', 'Dynamic - Uneven', 'Static'],
