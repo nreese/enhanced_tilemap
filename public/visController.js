@@ -338,9 +338,12 @@ define(function (require) {
         backwardsCompatible.updateParams($scope.vis.params);
         if (_shouldAutoFitMapBoundsToData(true)) _doFitMapBoundsToData();
         $scope.flags.isVisibleSource = 'visParams';
-        //remove mouse related heatmap events when moving to a different geohash type
 
+        // The stored layer config may have changed, so it is updated
         map._layerControl.setStoredLayerConfigs(getStoredLayerConfig());
+        // The stored layers in the UIState are also loaded when vis.params are applied
+        map._layerControl.loadSavedStoredLayers();
+
         map.removeAllLayersFromMapandControl();
         map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
 
@@ -604,7 +607,8 @@ define(function (require) {
         getGeoField,
         getSirenMeta,
         mapExtentFilter: getGeoShapeBox,
-        storedLayerConfig: getStoredLayerConfig()
+        storedLayerConfig: getStoredLayerConfig(),
+        uiState: $scope.vis.getUiState()
       };
 
       map = new TileMapMap(container, {
@@ -682,7 +686,7 @@ define(function (require) {
           });
       }
       //scope for saving dnd poi overlays
-      //$scope.vis.getUiState().set(e.id, false);
+      $scope.vis.getUiState().set(e.id, false);
     });
 
     // saving checkbox status to dashboard uiState
@@ -694,7 +698,11 @@ define(function (require) {
         }
         map._markers.show();
       }
-      $scope.vis.getUiState().set(e.id, true);
+      if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
+        $scope.vis.getUiState().set(e.id, 'se'); //saved and enabled
+      } else {
+        $scope.vis.getUiState().set(e.id, true);
+      }
     });
 
     map.leafletMap.on('hidelayer', function (e) {
@@ -704,7 +712,11 @@ define(function (require) {
         }
         map._markers.hide();
       }
-      $scope.vis.getUiState().set(e.id, false);
+      if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
+        $scope.vis.getUiState().set(e.id, 'sne'); //saved but NOT enabled
+      } else {
+        $scope.vis.getUiState().set(e.id, false);
+      }
     });
 
     // saving checkbox status to dashboard uiState

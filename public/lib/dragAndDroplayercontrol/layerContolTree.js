@@ -78,53 +78,6 @@ export class AddMapLayersModal extends React.Component {
     });
   }
 
-  _getGeometryTypeOfSpatialPaths = async (aggs) => {
-    const layerTypes = {};
-    const queryBodyTemplate = {
-      query: {
-        match: {
-          'spatial_path.raw': {
-            query: ''
-          }
-        }
-      },
-      _source: ['geometry', 'spatial_path'],
-      size: 1
-    };
-
-    function getQueryBody() {
-      const index = JSON.stringify({ index: '.map__*' }) + '\n';
-
-      let queryBody = '';
-      aggs.forEach(agg => {
-        const individualQueryBody = cloneDeep(queryBodyTemplate);
-        individualQueryBody.query.match['spatial_path.raw'].query = agg.key;
-        queryBody = queryBody.concat(index);
-        queryBody = queryBody.concat(JSON.stringify(individualQueryBody)) + '\n';
-      });
-      return queryBody;
-    }
-
-
-    const resp = await this.props.esClient.msearch({
-      body: getQueryBody()
-    });
-
-    resp.responses.forEach(spatialPathDoc => {
-      if (spatialPathDoc.hits.hits.length === 1) {
-        const spaitalPathSource = spatialPathDoc.hits.hits[0]._source;
-
-        let geometryType = 'point';
-        if (spaitalPathSource.geometry.type.includes('Polygon')) {
-          geometryType = 'polygon';
-        }
-
-        layerTypes[spaitalPathSource.spatial_path] = geometryType;
-      }
-    });
-    return layerTypes;
-  }
-
   _makeUiTreeStructure = (aggs) => {
     const storedLayersList = [];
     aggs.forEach(agg => {
@@ -179,26 +132,8 @@ export class AddMapLayersModal extends React.Component {
   }
 
   getItems = async () => {
-    const resp = await this.props.esClient.search({
-      index: '.map__*',
-      body: {
-        query: { 'match_all': {} },
-        aggs: {
-          2: {
-            terms: {
-              field: 'spatial_path',
-              order: { _key: 'asc' },
-              size: 9999
-            }
-          }
-        },
-        size: 0
-      }
-    });
-
+    const resp = await this.props.getPathList();
     const aggs = resp.aggregations[2].buckets;
-
-    this.props.setGeometryTypeOfSpatialPaths(await this._getGeometryTypeOfSpatialPaths(aggs));
     this.setState({
       items: this._makeUiTreeStructure(aggs)
     });
@@ -214,10 +149,11 @@ export class AddMapLayersModal extends React.Component {
         continue;
       }
       if (item.checked) {
+        item.enabled = enabled;
         flattenedList.push(item);
       }
     }
-    this.props.addLayersFromLayerConrol(flattenedList, enabled);
+    this.props.addStoredLayers(flattenedList);
   }
 
   _addLayersNotEnabled = async () => {
@@ -435,20 +371,20 @@ export class AddMapLayersModal extends React.Component {
   }
 }
 AddMapLayersModal.propTypes = {
-  addLayersFromLayerConrol: PropTypes.func.isRequired,
+  addStoredLayers: PropTypes.func.isRequired,
   esRefLayerOnMap: PropTypes.func.isRequired,
-  setGeometryTypeOfSpatialPaths: PropTypes.func.isRequired
+  getPathList: PropTypes.func.isRequired
   // esClient: PropTypes.func.isRequired,
   // container: PropTypes.element.isRequired
 };
 
-export function showAddLayerTreeModal(esClient, addLayersFromLayerConrol, esRefLayerOnMap, setGeometryTypeOfSpatialPaths) {
+export function showAddLayerTreeModal(esClient, addStoredLayers, esRefLayerOnMap, getPathList) {
   const container = document.createElement('div');
   const element = (
     <AddMapLayersModal
-      setGeometryTypeOfSpatialPaths={setGeometryTypeOfSpatialPaths}
       esRefLayerOnMap={esRefLayerOnMap}
-      addLayersFromLayerConrol={addLayersFromLayerConrol}
+      addStoredLayers={addStoredLayers}
+      getPathList={getPathList}
       esClient={esClient}
       container={container}
     />

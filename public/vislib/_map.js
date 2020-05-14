@@ -1,7 +1,5 @@
 /* eslint-disable siren/memory-leak */
 
-import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
-
 define(function (require) {
   return function MapFactory(Private) {
     const formatcoords = require('formatcoords');

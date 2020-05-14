@@ -99,12 +99,12 @@ describe('Map layer tree modal', () => {
   };
 
   function getMountedComponent({
-    addLayersFromLayerConrol = () => { },
+    addStoredLayers = () => { },
     esClient = fakeEsClient
   } = {}) {
     addMapLayersModal = mount(
       <AddMapLayersModal
-        addLayersFromLayerConrol={addLayersFromLayerConrol}
+        addStoredLayers={addStoredLayers}
         esClient={esClient}
       />
     );
