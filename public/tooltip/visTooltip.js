@@ -90,6 +90,9 @@ define(function (require) {
             //if vis is not assigned in coat tree AND
             //there is an search assigned to dashboard (i.e. main node)
             if (!etmVisNode && mainNode) {
+              if (!mainNode.d.widgets) {
+                mainNode.d.widgets = [];
+              }
               mainNode.d.widgets.push({
                 id: self.visId,
                 panelIndex
