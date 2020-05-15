@@ -125,18 +125,16 @@ function getExtendedMapControl() {
     let zIndex = 0;
     for (let i = (_allLayers.length - 1); i >= 0; i--) {
       const layer = _allLayers[i];
-      if (layer.enabled) {
-        if (layer.visible) {
-          _setZIndexOfAnyLayerType(layer, zIndex, _leafletMap);
-          _leafletMap.addLayer(layer);
-          zIndex++;
-        }
-        _leafletMap.fire('showlayer', {
-          layerType: layer.type,
-          id: layer.id,
-          enabled: layer.enabled
-        });
+      if (layer.enabled && layer.visible) {
+        _setZIndexOfAnyLayerType(layer, zIndex, _leafletMap);
+        _leafletMap.addLayer(layer);
+        zIndex++;
       }
+      _leafletMap.fire('showlayer', {
+        layerType: layer.type,
+        id: layer.id,
+        enabled: layer.enabled
+      });
     }
   }
 
