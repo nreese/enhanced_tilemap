@@ -27,7 +27,7 @@
     "react-beautiful-dnd": "^12.2.0",
     "react-bootstrap": "^1.0.0-beta.17",
     "react-texty": "^0.6.0",
-    "scripting-interfaces": "sirensolutions/scripting-interfaces#v1.0.0",
+    "scripting-interfaces": "sirensolutions/scripting-interfaces#v1.1.0",
     "xml2js": "^0.4.19"
   },
   "devDependencies": {
