@@ -157,6 +157,15 @@
       visibility: collapse;
     }
   }
+  .leaflet-control-layers.leaflet-control-layers-warning {
+    height: 45px;
+    width: 50px;
+
+    .leaflet-control-layers-toggle {
+      width: 44px;
+      height: 34px;
+    }
+  }
 
   .leaflet-top.leaflet-right {
     z-index: 1000;
@@ -166,8 +175,6 @@
       max-height: 70%;
       display: flex;
       flex-direction: column;
-      .leaflet-control-layers-toggle{
-      }
       .leaflet-control-layers-list {
         padding: 10px;
         overflow-y: scroll;
@@ -211,7 +218,7 @@
               }
           }
         span.panel-drag-handler {
-          span.far.fa-grip-lines {
+          span.fas.fa-grip-horizontal {
             color: @kibanaGray4;
             &:hover {
               color: @kibanaGray2;
