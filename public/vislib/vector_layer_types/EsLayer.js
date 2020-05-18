@@ -10,13 +10,16 @@ export default class EsLayer {
 
 
   createLayer = function (hits, geo, type, options) {
+    const layerControl = options.$element.find('.leaflet-control-layers');
     let layer = null;
     const self = this;
 
     //handling too many documents warnings
     options.$legend = options.$element.find('a.leaflet-control-layers-toggle').get(0);
     options.$legend.innerHTML = '';
+    layerControl.removeClass('leaflet-control-layers-warning');
     if (options.warning && options.warning.limit) {
+      layerControl.addClass('leaflet-control-layers-warning');
       options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
     }
 
