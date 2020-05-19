@@ -655,5 +655,5 @@ The icon, color, size or popupFields can be specified in the properties object o
 * *minZoom*: `0` - taken from the default configuration (the configuration without spatial_path attribute)
 
 ===== The properties on the <<Layer Control>> for example 1 will be:
-* *color*: `green` - field type, taken from the configuration and retrived from a document with the “pois/states/churches” spatial_path
+* *color*: `green` - field type, taken from the configuration and retrieved from a document with the “pois/states/churches” `spatial_path`
 * *Icon*: `cross`  - taken from the configuration with the “Pois/states/churches” spatial_path
