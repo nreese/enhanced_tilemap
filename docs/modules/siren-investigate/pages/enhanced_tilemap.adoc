@@ -640,7 +640,7 @@ The icon, color, size or popupFields can be specified in the properties object o
 * Values for maxZoom, minZoom properties on the map are taken from
 ** Begins at the most specific spatial_path in the configuration
 ** Then from the next spatial_path in the configuration
-** Until we reach the root of the configuration where a default will be assigned
+. Finally, the root of the configuration is reached and a default value is assigned.
 The values for `icon` and `color` for the layer in the <<Layer Control>> are taken in the same order as the `maxZoom` and `minZoom` properties.
 
 
