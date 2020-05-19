@@ -134,7 +134,7 @@ export class LayerControlDnd extends React.Component {
                         )}
                       >
                         <span {...provided.dragHandleProps} className="panel-drag-handler">
-                          <span className={'fas fa-grip-horizontal'}
+                          <span className={'fas fa-grip-vertical'}
                           />
                         </span>
 
