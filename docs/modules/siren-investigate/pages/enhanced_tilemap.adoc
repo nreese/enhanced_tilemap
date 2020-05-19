@@ -642,7 +642,6 @@ The icon, color, size or popupFields can be specified in the properties object o
 ** Then from the next spatial_path in the configuration
 ** Until we reach the root of the configuration where a default will be assigned
 * Values for Icon and color for layer on the <<Layer Control>>
-** Same as for maxZoom, minZoom properties
 
 
 ==== Configurations for example 1
