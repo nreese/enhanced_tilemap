@@ -319,7 +319,7 @@ See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name
 
 This is where configurations for Stored Layers are defined. See <<Loading Stored Layers into Elasticsearch>> for more details on ingesting Stored Layer Data. The following parameters can be configured: 
 
-* *Spatial path* - A path that the configuration usesshould correspond to a layer
+* *Spatial path* - Defines the path that corresponds to a layer, for example, `continents/europe/ireland`.
 
 NOTE: One configuration is allowed to omit a spatial_path attribute. This is the default configuration and values will be taken from it if they are not found within the <<Cascading Configuration Process>>
 
