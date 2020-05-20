@@ -579,7 +579,7 @@ If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
 The *Layers* function is located in the top-right corner of any Enhanced Coordinate Map. It allows you to select which layers that you want to display on the map.
 The following image shows multiple layers that can be selected and displayed as needed. You can load stored layers into the map from Elasticsearch. For more information, see <<Loading stored layers from Elasticsearch into the Enhanced Coordinate Map, Loading stored layers from Elasticsearch>>.
 
-image:layer_control.png[Layer Control]
+image:layer_control.png[The Layers function]
 
 ==== Layer Ordering
 Layers are drawn on the map in the same order they are in the Layer Control. Layers can be ordered by clicking the drag handle to the left of any checkbox and dragging them to the desired position.
