@@ -674,7 +674,7 @@ If there are more features present within the current map canvas extent than wer
 ==== Index security
 
 By default, only the `sirenadmin` user has the permissions to view the map layer indices. To make layers available for other users to configure, you must assign read permissions to their roles.
-You can do that by adding `?map__*` to allowed indices on the Access Control page.
+To configure the permissions, open *Access control*, click the *Roles* tab, and add the prefix `?map__*` to the allowed indices in `index_permissions`.
 
 image::ac_map_layers_read_permissions.png[image]
 
