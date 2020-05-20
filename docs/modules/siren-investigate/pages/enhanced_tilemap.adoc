@@ -691,12 +691,14 @@ You can configure document-level security on the map indices, which allows only 
 [CAUTION]
 ====
 To maintain system performance, run DLS map queries ONLY on the map indices. For more information, see the link:https://docs.search-guard.com/latest/document-level-security#performance-considerations[Search Guard performance considerations].
+====
 
 *Configuring security by spatial path*
 
 The following DLS query retrieves only the documents that contain _"World Lakes"_ in their `spatial_path` parameter:
 [#full_dls_example]
-....
+[source,yml]
+----
 index_permissions:
   - index_patterns:
       - '?siren*'
@@ -717,14 +719,15 @@ index_permissions:
     allowed_actions:
       - READ
       - VIEW_INDEX_METADATA
-....
+----
 
 image::dls_spatialpath_add_layers.png[image]
 
 *Configuring security by geo-shape*
 
 The following DLS query retrieves only the documents that are within the specified coordinates:
-....
+[source,yml]
+----
 - index_patterns:
     - '?map__*'
   dls: >-
@@ -738,7 +741,7 @@ The following DLS query retrieves only the documents that are within the specifi
   allowed_actions:
     - READ
     - VIEW_INDEX_METADATA
-....
+----
 
 image::dls_geoshape_coordinates.png[image]
 
@@ -747,7 +750,8 @@ image::dls_geoshape_map_ie.png[image]
 *Configuring security by properties fields*
 
 The following DLS query retrieves only the documents that match a specific property:
-....
+[source,yml]
+----
 - index_patterns:
     - '?map__*'
   dls: '{ "term": { "properties.CONTINENT.keyword": "North America" } }'
@@ -756,6 +760,6 @@ The following DLS query retrieves only the documents that match a specific prope
   allowed_actions:
     - READ
     - VIEW_INDEX_METADATA
-....
+----
 
 image::dls_geoshape_map_na.png[image]
