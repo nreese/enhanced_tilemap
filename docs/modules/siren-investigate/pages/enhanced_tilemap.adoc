@@ -683,7 +683,7 @@ image::ac_map_layers_read_permissions.png[image]
 This prefix will apply permissions to all map indices. If you want to be more specific, you can add each index to the role individually.
 ====
 
-==== Document Level Security (DLS)
+==== Document-level security (DLS)
 
 You can configure document-level security on the map indices, which allows only the documents that match the DLS query to be returned.
 
