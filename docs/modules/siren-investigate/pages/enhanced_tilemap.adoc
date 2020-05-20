@@ -691,7 +691,7 @@ WARNING: To maintain good performance you should run the dls map queries on the 
 
 *By spatial path*
 
-This dls query will only allow documents with _"World Lakes"_ in their `spatial_path`.
+The following DLS query retrieves only the documents that contain _"World Lakes"_ in their `spatial_path` parameter:
 [#full_dls_example]
 ....
 index_permissions:
