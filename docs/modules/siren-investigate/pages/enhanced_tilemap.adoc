@@ -689,7 +689,7 @@ Document level security can be done on the map indices, this will only allow doc
 
 WARNING: To maintain good performance you should run the dls map queries on the map indices, separetly of other indices, link:#full_dls_example[example]. More on that link:https://docs.search-guard.com/latest/document-level-security#performance-considerations[ here].
 
-*By spatial path*
+*Configuring security by spatial path*
 
 The following DLS query retrieves only the documents that contain _"World Lakes"_ in their `spatial_path` parameter:
 [#full_dls_example]
