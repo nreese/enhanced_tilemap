@@ -312,8 +312,67 @@ See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name
 
   * *Styling* - Set color in Hex value form and specify the size of the
   marker to display on map
-  * *Output Format* - The json format your spatial server is capable of responding with. This is GeoJSON for ArcGis Server, and json for Geoserver
-  * *Popup Content* - Create a comma separated list of fields (in the properties object of your GeoJSON features) to appear on popup tooltip. Note, this is case-sensitive. For example `City_name,Pop_est` would add the city name and estimated population fields to each feature added to the map
+  * *Output Format* - The format that your spatial server is capable of responding with. The format for ArcGis Server is GeoJSON, and the format for Geoserver is JSON.
+  * *Popup Content* - To configure a pop-up tooltip, create a comma-separated list of fields in the properties object of your GeoJSON features. For example, the parameter `City_name,Pop_est` adds the city name and the estimated population fields to each feature that is added to the map. *Note*: This parameter is case-sensitive. 
+
+==== Configuring Stored Layers
+
+Before you begin, ensure that you have ingested the data for stored layers. For more information about ingesting stored layer data, see <<Loading Stored Layers into Elasticsearch>>. 
+You can configure the stored layers by modifying the following parameters: 
+
+* *Spatial path* - Defines the path that corresponds to a layer, for example, `continents/europe/ireland`.
+
+NOTE: The default configuration does not require the spatial_path attribute to be defined. Values will be taken from it if they are not found within the <<Cascading Configuration Process>>.
+
+* *Icon* - Defines the favicon that is displayed for points on a map and layer control.
+* *Color* - Defines the color that is displayed on a map and in the Layer Control dialog.
+* *Size* - Defines the display size of points on a map.
+* *Popup Fields* - Defines the content of the tooltips that appear when the cursor moves over features.
+* *Min Visible Zoom* - The minimum map zoom a layer will be visible on the map
+* *Max Visible Zoom* - The maximum map zoom a layer will be visible on the map
+
+[IMPORTANT] 
+====
+It is important to consider the levels of zoom that you want to configure in your maps. For more information about Zoom levels, see https://leafletjs.com/examples/zoom-levels/[this explanation] on the LeafletJS website.
+====
+
+===== The cascading configuration process
+A cascading process, which is similar to CSS, is used to assign configurations to each layer. Using this process, the most specific `spatial_path` to the given layer is checked for the presence of the configuration parameters first. After this check is complete, the `spatial_path` chain is followed and default values are assigned if a parameter is missing a configuration.  
+
+For more information, see the <<Detailed example of a stored layer configuration>>.
+
+===== Configurations by parameter or field
+You can configure some parameters by using one of the following methods: 
+* The *parameter* method outlines the exact parameter to use on the map. Parameters are configured by a string.
+* The *field* method relies on configuring a field that exists within the documents of each layer. Fields are configured by using a single element array. 
+
+.Example: Values for configuring by parameter or field
+|===
+|Parameter |Parameter examples |Field examples 
+
+|spatial_path|"World Countries"|N/A
+
+|icon|"fas fa-arrow-alt-circle-down"|["properties.icontouse"]
+
+|color|"#7CBFFA", "blue"|["colortouse"]
+
+|size|"xs", "s", "m", "l", "xl",|["properties.size"]
+
+|popupFields|"is constant for all features"|["fields", "mustbein", "afeatures","propertiesobject"]
+
+|minZoom|0|N/A
+
+|maxZoom|18|N/A
+|===
+
+
+[NOTE]
+==== 
+When a new Enhanced Coordinate Map visualization is created, the Stored Layer Configuration will be populated with a default object: image:default_default_stored_layers_config.png[Default stored layers configuration]
+====
+
+===== Feature-level configurations
+If any of the `icon`, `size`, `color`, or `popupField` parameters are specified in a document's `properties` object, this field will take precedence. This can be useful if you want to assign different icons within the same layer.
 
 After changing options, click *Apply changes* to update your
 visualization, or *Discard changes* to keep your visualization in its
@@ -398,7 +457,7 @@ For information on displaying the raw data, see
 link:#UUID-5982c3be-5f0e-ec1e-4bb1-f4ac8bfd023b_UUID-6662fce3-3f93-f603-7593-185ccf2c7c3a[Visualization
 Spy].
 
-=== Loading map layers into Elasticsearch
+=== Loading Stored Layers into Elasticsearch
 
 ==== Loading methods
 
@@ -487,9 +546,9 @@ NOTE: Make sure a user that has Elasticserach write permissions is used for auth
 The console output below is a successful file load (with --debug) to Elasticsearch
 image:load_map_reference_console_output.png[Console output]
 
-=== Loading Stored Layers from Elasticsearch Onto Enhanced Coordinate Map
+=== Loading stored layers from Elasticsearch into the Enhanced Coordinate Map
 
-In this section we will describe how to load Stored Layers onto the map. 
+In this section, you can learn how to load stored layers into the map. 
 
 NOTE: You will need to have layers stored in elasticsearch in indices that have a `.map__` prefix. See <<Loading map layers into Elasticsearch>> for details on our recommended way to load these.
 
@@ -509,9 +568,11 @@ It is possible to add a layer type corresponding to a group and we will explain 
 
 * Finally, if no items in a group a checked, the group checkbox will be unchecked
 
-Clicking the Add button will add the selected layers to the map, while the Add and Enable button will add the layers to the map and also make them visible. The modal can be cancelled by either clicking the cancel button or the x in the top right corner.
+To add the selected layers to the map but keep them hidden for now, click *Add*.  To add the layers to the map and also make them visible, click *Add and Enable*. 
 
-==== Stored Layers And The Map
+You can configure the stored layers when your visualization is in edit mode. For more information, see <<Stored Layer Configurations, when in Visualization edit mode>>.
+
+==== Stored layers and the map
 If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
 
 === Layer Control
@@ -534,4 +595,75 @@ NOTE: Layers will be automatically positioned at the top or bottom of their type
 Layers can be toggled on and off by clicking the checkboxes
 
 === Features Omitted Due to Request Limits
-If there are more features present within the current map canvas extent than were retrieved with the set Elasticsearch query size response limit, a warning icon will appear beside the layer. The warning icon has a tooltip indicating this and the set current limit
+If there are more features in the map canvas than are allowed by the Elasticsearch query size response limit, a warning icon appears beside the layer.
+
+=== Detailed example of a stored layer configuration
+
+The `icon`, `color`, `size`, or `popupFields` can be specified in the properties object of an Elasticsearch document. For example, by using the following code, the church appears as a red heart on the map:
+[source,json]
+----
+ {
+   "spatial_path": "pois/states/churches",
+   "geometry": {
+     "type": "point",
+     "coordinates": [ [ 100.0, 0.0 ] ]
+   },
+   "properties": {  
+     "icon": "heart",
+     "color": "red",
+     "popupfields": ['Label','denomination']
+   },
+   "colorfield": "green"
+ } 
+----
+.Example 1: A document with some configuration fields
+[source,json]
+----
+ [
+   {
+     "spatial_path": "pois/states/churches",
+     "icon": "cross",
+     "color": ["colorfield"],
+     "popupfields" : ['Label','denomination']
+   },
+   {
+     "spatial_path": "pois/states",
+     "icon": "map",
+     "popupfields" : ['Label','statecode’],
+     "maxZoom": 15 
+   },
+   {
+     "color" : "default_color",
+     "icon": "default_icon",
+     "popupfield" : [],
+     "minZoom": 0,
+     "maxZoom": 18  
+   }
+ ]
+----
+.Example 2: The stored layer configuration
+
+The values for the `icon`, `size`, `popupFields`, and `color` properties on the map are taken in the following order:
+. From the feature itself.
+. Then, from the the most specific `spatial_path` parameter in the configuration.
+. Then, from the next most relevant `spatial_path` parameter in the configuration.
+. Finally, the root of the configuration is reached and a default value is assigned.
+The values for the `maxZoom` and `minZoom` properties on the map are taken in the following order:
+. From the most specific `spatial_path` parameter in the configuration.
+. Then, from the next `spatial_path` parameter in the configuration.
+. Finally, the root of the configuration is reached and a default value is assigned.
+The values for `icon` and `color` for the layer in the <<Layer Control>> are taken in the same order as the `maxZoom` and `minZoom` properties.
+
+
+==== Configurations for example 1
+===== For the example document above, the properties on the map will be:
+* *color*: `red` - taken from the feature document
+* *icon*: `heart`  - taken from the feature document
+* *size*: `m` - this is the underlying default
+* *popupField*: `["label", “denomination”]` - taken from the feature document
+* *maxZoom*: `15` - taken from the configuration with the “pois/states” spatial_path
+* *minZoom*: `0` - taken from the default configuration (the configuration without spatial_path attribute)
+
+===== The properties on the <<Layer Control>> for example 1 will be:
+* *color*: `green` - field type, taken from the configuration and retrieved from a document with the “pois/states/churches” `spatial_path`
+* *Icon*: `cross`  - taken from the configuration with the “Pois/states/churches” spatial_path
