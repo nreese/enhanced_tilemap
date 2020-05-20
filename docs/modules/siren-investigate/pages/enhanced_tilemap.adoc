@@ -575,10 +575,11 @@ You can configure the stored layers when your visualization is in edit mode. For
 ==== Stored layers and the map
 If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
 
-=== Layer Control
-The Layer Control is located in the top right of any Enhanced Coordinate Map. An example is in the image below showing a case where some Stored Layers are loaded (See the <<Loading stored layers from Elasticsearch>> for more details). 
+=== Layer control
+The *Layers* function is located in the top-right corner of any Enhanced Coordinate Map. It allows you to select which layers that you want to display on the map.
+The following image shows multiple layers that can be selected and displayed as needed. You can load stored layers into the map from Elasticsearch. For more information, see <<Loading stored layers from Elasticsearch into the Enhanced Coordinate Map, Loading stored layers from Elasticsearch>>.
 
-image:layer_control.png[Layer Control]
+image:layer_control.png[The Layers function]
 
 ==== Layer Ordering
 Layers are drawn on the map in the same order they are in the Layer Control. Layers can be ordered by clicking the drag handle to the left of any checkbox and dragging them to the desired position.
@@ -667,3 +668,98 @@ The values for `icon` and `color` for the layer in the <<Layer Control>> are tak
 ===== The properties on the <<Layer Control>> for example 1 will be:
 * *color*: `green` - field type, taken from the configuration and retrieved from a document with the “pois/states/churches” `spatial_path`
 * *Icon*: `cross`  - taken from the configuration with the “Pois/states/churches” spatial_path
+If there are more features present within the current map canvas extent than were retrieved with the set Elasticsearch query size response limit, a warning icon will appear beside the layer. The warning icon has a tooltip indicating this and the set current limit
+
+=== Configuring layer security
+
+==== Index security
+
+By default, only the `sirenadmin` user has the permissions to view the map layer indices. To make layers available for other users to configure, you must assign read permissions to their roles.
+To configure the permissions, open *Access control*, click the *Roles* tab, and add the prefix `?map__*` to the allowed indices in `index_permissions`.
+
+image::ac_map_layers_read_permissions.png[image]
+
+[NOTE] 
+====
+This prefix will apply permissions to all map indices. If you want to be more specific, you can add each index to the role individually.
+====
+
+==== Document-level security (DLS)
+
+You can configure document-level security on the map indices, which allows only the documents that match the DLS query to be returned.
+
+[CAUTION]
+====
+To maintain system performance, run DLS map queries ONLY on the map indices. For more information, see the link:https://docs.search-guard.com/latest/document-level-security#performance-considerations[Search Guard performance considerations].
+====
+
+*Configuring security by spatial path*
+
+The following DLS query retrieves only the documents that contain _"World Lakes"_ in their `spatial_path` parameter:
+[#full_dls_example]
+[source,yml]
+----
+index_permissions:
+  - index_patterns:
+      - '?siren*'
+      - article
+      - company
+      - investment
+      - investor
+    fls: []
+    masked_fields: []
+    allowed_actions:
+      - READ
+      - VIEW_INDEX_METADATA
+  - index_patterns:
+      - '?map__*'
+    dls: '{ "match": { "spatial_path":"World Lakes" } }'
+    fls: []
+    masked_fields: []
+    allowed_actions:
+      - READ
+      - VIEW_INDEX_METADATA
+----
+
+image::dls_spatialpath_add_layers.png[image]
+
+*Configuring security by geo-shape*
+
+The following DLS query retrieves only the documents that are within the specified coordinates:
+[source,yml]
+----
+- index_patterns:
+    - '?map__*'
+  dls: >-
+    { "geo_shape": { "geometry": { "shape": { "type": "Polygon",
+    "coordinates": [ [ [ -12.85400390625, 50.680797145321655 ], [
+    -4.306640625, 50.680797145321655 ], [ -4.306640625, 56.42605447604972 ], [
+    -12.85400390625, 56.42605447604972 ], [ -12.85400390625,
+    50.680797145321655 ] ] ] }, "relation": "within" } } }
+  fls: []
+  masked_fields: []
+  allowed_actions:
+    - READ
+    - VIEW_INDEX_METADATA
+----
+
+image::dls_geoshape_coordinates.png[image]
+
+image::dls_geoshape_map_ie.png[image]
+
+*Configuring security by properties fields*
+
+The following DLS query retrieves only the documents that match a specific property:
+[source,yml]
+----
+- index_patterns:
+    - '?map__*'
+  dls: '{ "term": { "properties.CONTINENT.keyword": "North America" } }'
+  fls: []
+  masked_fields: []
+  allowed_actions:
+    - READ
+    - VIEW_INDEX_METADATA
+----
+
+image::dls_geoshape_map_na.png[image]
