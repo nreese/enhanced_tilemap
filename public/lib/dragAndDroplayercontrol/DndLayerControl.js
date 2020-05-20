@@ -130,11 +130,6 @@ function getExtendedMapControl() {
         _leafletMap.addLayer(layer);
         zIndex++;
       }
-      _leafletMap.fire('showlayer', {
-        layerType: layer.type,
-        id: layer.id,
-        enabled: layer.enabled
-      });
     }
   }
 
@@ -196,6 +191,11 @@ function getExtendedMapControl() {
     _allLayers[index].enabled = enabled;
     if (enabled) {
       _redrawOverlays();
+      _leafletMap.fire('showlayer', {
+        layerType: layer.type,
+        id: layer.id,
+        enabled: enabled
+      });
     } else {
       _clearLayerFromMapById(layer.id);
       _leafletMap.fire('hidelayer', {
@@ -350,7 +350,15 @@ function getExtendedMapControl() {
     const esRefLayerList = [];
     _updateCurrentZoom();
     for (const item of list) {
-      esRefLayerList.push(await getEsRefLayer(item.path, item.enabled));
+      const layer = await getEsRefLayer(item.path, item.enabled);
+      esRefLayerList.push(layer);
+      if (layer.enabled) {
+        _leafletMap.fire('showlayer', {
+          layerType: layer.type,
+          id: layer.id,
+          enabled: layer.enabled
+        });
+      }
     }
     addOverlays(esRefLayerList);
     addEsRefLayers(list);
