@@ -743,7 +743,7 @@ image::dls_geoshape_map_ie.png[image]
 
 *By properties fields*
 
-This dls query will only allow documents that match a specific property.
+The following DLS query retrieves only the documents that match a specific property:
 ....
 - index_patterns:
     - '?map__*'
