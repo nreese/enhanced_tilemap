@@ -669,7 +669,7 @@ The values for `icon` and `color` for the layer in the <<Layer Control>> are tak
 * *Icon*: `cross`  - taken from the configuration with the “Pois/states/churches” spatial_path
 If there are more features present within the current map canvas extent than were retrieved with the set Elasticsearch query size response limit, a warning icon will appear beside the layer. The warning icon has a tooltip indicating this and the set current limit
 
-=== Layer Security
+=== Configuring layer security
 
 ==== Index Security
 
