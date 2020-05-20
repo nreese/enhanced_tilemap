@@ -101,8 +101,9 @@ export class LayerControlDnd extends React.Component {
       this.setState(prevState => {
         const newListOrder = [...prevState.dndCurrentListOrder];
         newListOrder[index].enabled = target.checked;
-        this.props.dndLayerVisibilityChange(target.checked, layer, index);
         return { dndCurrentListOrder: newListOrder };
+      }, () => {
+        this.props.dndLayerVisibilityChange(target.checked, layer, index);
       });
     }
   }
