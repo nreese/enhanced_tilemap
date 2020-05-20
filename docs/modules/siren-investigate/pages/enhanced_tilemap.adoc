@@ -718,7 +718,7 @@ index_permissions:
 
 image::dls_spatialpath_add_layers.png[image]
 
-*By geo-shape*
+*Configuring security by geo-shape*
 
 The following DLS query retrieves only the documents that are within the specified coordinates:
 ....
