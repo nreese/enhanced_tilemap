@@ -688,7 +688,9 @@ This prefix will apply permissions to all map indices. If you want to be more sp
 
 You can configure document-level security on the map indices, which allows only the documents that match the DLS query to be returned.
 
-WARNING: To maintain good performance you should run the dls map queries on the map indices, separetly of other indices, link:#full_dls_example[example]. More on that link:https://docs.search-guard.com/latest/document-level-security#performance-considerations[ here].
+[CAUTION]
+====
+To maintain system performance, run DLS map queries ONLY on the map indices. For more information, see the link:https://docs.search-guard.com/latest/document-level-security#performance-considerations[Search Guard performance considerations].
 
 *Configuring security by spatial path*
 
