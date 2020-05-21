@@ -275,16 +275,20 @@ export default class EsLayer {
 
   _popupContent = function (hit, popupFields) {
     let dlContent = '';
-    popupFields.forEach(function (field) {
-      let popupFieldValue;
-      if (hit._source.properties) {
-        popupFieldValue = hit._source.properties[field] || hit._source[field];
-      } else {
-        popupFieldValue = hit._source[field];
-      }
+    if(_.isArray(popupFields)) {
+      popupFields.forEach(function (field) {
+        let popupFieldValue;
+        if (hit._source.properties) {
+          popupFieldValue = hit._source.properties[field] || hit._source[field];
+        } else {
+          popupFieldValue = hit._source[field];
+        }
 
-      dlContent += `<dt>${field}</dt><dd>${popupFieldValue}</dd>`;
-    });
+        dlContent += `<dt>${field}</dt><dd>${popupFieldValue}</dd>`;
+      });
+    } else {
+      dlContent = popupFields;
+    }
     return `<dl>${dlContent}</dl>`;
   };
 
