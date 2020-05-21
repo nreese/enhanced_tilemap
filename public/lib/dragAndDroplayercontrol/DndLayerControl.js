@@ -311,7 +311,7 @@ function getExtendedMapControl() {
 
     //assigning configurations to layer options
     Object.keys(config).forEach(configType => {
-      if (Array.isArray(config[configType]) && configType !== 'popupFields') {
+      if (Array.isArray(config[configType])) {
         //checking and assigning config from first hit for field level config types
         options[configType] = get(hits[0]._source, [config[configType]].toString());
       } else {
