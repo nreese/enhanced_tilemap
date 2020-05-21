@@ -35,8 +35,7 @@ define(function (require) {
       fetchSearchSource: function (event) {
         //Fetch new data if map bounds are outsize of collar
         const bounds = utils.geoBoundingBoxBounds(event.mapBounds, 1);
-        const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
-        if (_.has(event, 'collar.top_left') && !utils.contains(event.collar, bounds) || autoPrecision) {
+        if (_.has(event, 'collar.top_left') && !utils.contains(event.collar, bounds)) {
           event.searchSource.fetch();
         }
       },
