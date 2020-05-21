@@ -737,15 +737,17 @@ define(function (require) {
       if (!map.leafletMap) return;
       if (map._hasSameLocation()) return;
 
+      const currentZoom = map.leafletMap.getZoom();
       // update internal center and zoom references
       map._mapCenter = map.leafletMap.getCenter();
       $scope.vis.getUiState().set('mapCenter', [
         _.round(map._mapCenter.lat, 5),
         _.round(map._mapCenter.lng, 5)
       ]);
-      $scope.vis.getUiState().set('mapZoom', map.leafletMap.getZoom());
+      $scope.vis.getUiState().set('mapZoom', currentZoom);
 
       map._callbacks.fetchSearchSource({
+        currentZoom,
         searchSource: $scope.searchSource,
         collar: map._collar,
         chart: map._chartData,
