@@ -36,8 +36,13 @@ define(function (require) {
         //Fetch new data if map bounds are outsize of collar
         const bounds = utils.geoBoundingBoxBounds(event.mapBounds, 1);
         const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
-        if (_.has(event, 'collar.top_left') && !utils.contains(event.collar, bounds) || autoPrecision) {
-          event.searchSource.fetch();
+        const previousZoom = _.get(event, 'chart.geoJson.properties.zoom');
+        if (_.has(event, 'collar.top_left')) {
+          if (autoPrecision && (event.currentZoom !== previousZoom || !utils.contains(event.collar, bounds))) {
+            event.searchSource.fetch();
+          } else if (!autoPrecision && !utils.contains(event.collar, bounds))  {
+            event.searchSource.fetch();
+          }
         }
       },
       poiFilter: function (event) {
