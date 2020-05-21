@@ -453,7 +453,7 @@ function getExtendedMapControl() {
   }
 
   async function getPathList() {
-    return await esClient.search({
+    const resp = await esClient.search({
       index: '.map__*',
       body: {
         query: { 'match_all': {} },
@@ -469,23 +469,30 @@ function getExtendedMapControl() {
         size: 0
       }
     });
+
+    if (resp.aggregations && resp.aggregations[2] && resp.aggregations[2].buckets) {
+      return resp;
+    }
   }
 
   async function loadSavedStoredLayers() {
     const resp = await getPathList();
-    const aggs = resp.aggregations[2].buckets;
-    geometryTypeOfSpatialPaths = _getGeometryTypeOfSpatialPaths(aggs);
-    const savedStoredLayers = [];
+    // a check if there are any stored layers
+    if (resp) {
+      const aggs = resp.aggregations[2].buckets;
+      geometryTypeOfSpatialPaths = _getGeometryTypeOfSpatialPaths(aggs);
+      const savedStoredLayers = [];
 
-    aggs.forEach(agg => {
-      const currentUiState = uiState.get(agg.key);
-      if (currentUiState === 'se') { // saved and enabled on map
-        savedStoredLayers.push({ id: agg.key, path: agg.key, enabled: true });
-      } else if (currentUiState === 'sne') {  // saved but NOT enabled on map
-        savedStoredLayers.push({ id: agg.key, path: agg.key, enabled: false });
-      }
-    });
-    addStoredLayers(savedStoredLayers);
+      aggs.forEach(agg => {
+        const currentUiState = uiState.get(agg.key);
+        if (currentUiState === 'se') { // saved and enabled on map
+          savedStoredLayers.push({ id: agg.key, path: agg.key, enabled: true });
+        } else if (currentUiState === 'sne') {  // saved but NOT enabled on map
+          savedStoredLayers.push({ id: agg.key, path: agg.key, enabled: false });
+        }
+      });
+      addStoredLayers(savedStoredLayers);
+    }
   }
 
   function removeAllLayersFromMapandControl() {

@@ -133,7 +133,12 @@ export class AddMapLayersModal extends React.Component {
 
   getItems = async () => {
     const resp = await this.props.getPathList();
-    const aggs = resp.aggregations[2].buckets;
+    let aggs = [];
+
+    if (resp) {
+      aggs = resp.aggregations[2].buckets;
+    }
+
     this.setState({
       items: this._makeUiTreeStructure(aggs)
     });
