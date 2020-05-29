@@ -20,12 +20,14 @@ function getExtendedMapControl() {
   let $element;
   let mainSearchDetails;
   let currentZoom;
+  let currentMapBounds;
   let geometryTypeOfSpatialPaths;
   let uiState;
 
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
-  function _updateCurrentZoom() {
+  function _updateCurrentZoomAndMapBounds() {
+    currentMapBounds = mainSearchDetails.getMapBounds();
     currentZoom = _leafletMap.getZoom();
   }
 
@@ -207,6 +209,9 @@ function getExtendedMapControl() {
     }
     if (layer.type === 'es_ref_point' || layer.type === 'es_ref_shape') {
       _updateEsRefLayerVisibility(layer.id, enabled);
+      if (layer.visible) {
+        _addStoredLayerOnVisibilityChange(_allLayers[index]);
+      }
     }
   }
 
@@ -330,8 +335,7 @@ function getExtendedMapControl() {
   function aggResponseCheck(resp) {
     return resp.aggregations && resp.aggregations[2] && resp.aggregations[2].buckets && resp.aggregations[2].buckets.length > 0;
   }
-  async function getEsRefLayer(spatialPath, enabled) {
-    const config = _getLayerLevelConfig(spatialPath, mainSearchDetails.storedLayerConfig);
+  async function getEsRefLayer(spatialPath, enabled, config) {
     const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
     const limit = 250;
     const filter = [];
@@ -424,11 +428,77 @@ function getExtendedMapControl() {
     return layer;
   }
 
+  async function _createEsRefLayer(item, config) {
+    const layer = await getEsRefLayer(item.path, item.enabled, config);
+    layer.path = item.path;
+    layer.zoomLevel = currentZoom;
+    layer.mapBounds = currentMapBounds;
+    return layer;
+  }
+
+  function redrawLayerCheck(item, visibleForCurrentMapZoom) {
+    const zoomLevel = item.zoomLevel;
+    const type = item.type;
+
+    const zoomLevelCheck = (
+      // no need to redraw shapes when zooming in
+      currentZoom < zoomLevel && type === 'es_ref_shape') ||
+      //redraw points when zoom has changed as clustering precision is subject to change
+      (currentZoom !== zoomLevel && type === 'es_ref_point');
+
+    const layerHasDataForCurrentBounds = !utils.contains(item.mapBounds, currentMapBounds);
+
+    return visibleForCurrentMapZoom && item.enabled && (zoomLevelCheck || layerHasDataForCurrentBounds);
+  }
+
+  async function _addStoredLayerOnVisibilityChange(item) {
+    const esRefLayerList = [];
+
+    if (item.enabled) {
+      //only fetch layer if zoom level has changed and map not zoomed in
+      //to prevent queries when box is toggled multiple times
+      let layer;
+      const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
+      const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
+      if (redrawLayerCheck(item, visibleForCurrentMapZoom)) {
+        layer = await _createEsRefLayer(item, config);
+      } else {
+        layer = item;
+      }
+
+      if (!visibleForCurrentMapZoom) {
+        _clearLayerFromMapById(layer.id);
+        layer.visible = false;
+      } else {
+        layer.visible = true;
+      }
+      esRefLayerList.push(layer);
+
+      if (layer.enabled) {
+        _leafletMap.fire('showlayer', {
+          layerType: layer.type,
+          id: layer.id,
+          enabled: layer.enabled
+        });
+      }
+    }
+
+    addOverlays(esRefLayerList);
+    addEsRefLayers(esRefLayerList);
+  }
+
   async function addStoredLayers(list) {
     const esRefLayerList = [];
-    _updateCurrentZoom();
+    _updateCurrentZoomAndMapBounds();
     for (const item of list) {
-      const layer = await getEsRefLayer(item.path, item.enabled);
+      const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
+      const layer = await _createEsRefLayer(item, config);
+      if (!_visibleForCurrentMapZoom(config)) {
+        _clearLayerFromMapById(layer.id);
+        layer.visible = false;
+      } else {
+        layer.visible = true;
+      }
       esRefLayerList.push(layer);
       if (layer.enabled) {
         _leafletMap.fire('showlayer', {
@@ -439,7 +509,7 @@ function getExtendedMapControl() {
       }
     }
     addOverlays(esRefLayerList);
-    addEsRefLayers(list);
+    addEsRefLayers(esRefLayerList);
   }
 
   function addOverlays(layers) {
@@ -452,14 +522,27 @@ function getExtendedMapControl() {
   async function _redrawEsRefLayers() {
     const esRefLayers = [];
     if (esRefLayersOnMap.length >= 1) {
-      _updateCurrentZoom();
+      _updateCurrentZoomAndMapBounds();
       for (const item of esRefLayersOnMap) {
-        if (item.enabled) {
-          const layer = await getEsRefLayer(item.path, item.enabled);
-          esRefLayers.push(layer);
+        let layer;
+        const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
+        const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
+        if (redrawLayerCheck(item, visibleForCurrentMapZoom)) {
+          layer = await _createEsRefLayer(item, config);
+        } else {
+          layer = item;
         }
+        if (!visibleForCurrentMapZoom) {
+          _clearLayerFromMapById(layer.id);
+          layer.visible = false;
+        } else {
+          layer.visible = true;
+        }
+
+        esRefLayers.push(layer);
       }
       addOverlays(esRefLayers);
+      addEsRefLayers(esRefLayers);
     }
   }
 
@@ -568,13 +651,20 @@ function getExtendedMapControl() {
       const aggs = resp.aggregations[2].buckets;
       geometryTypeOfSpatialPaths = await _getGeometryTypeOfSpatialPaths(aggs);
       const savedStoredLayers = [];
-
+      _updateCurrentZoomAndMapBounds();
       aggs.forEach(agg => {
         const currentUiState = uiState.get(agg.key);
+        const storedLayerTemplate = {
+          id: agg.key,
+          path: agg.key,
+          zoomLevel: currentZoom,
+          mapBounds: mainSearchDetails.getMapBounds(),
+          onMap: true
+        };
         if (currentUiState === 'se') { // saved and enabled on map
-          savedStoredLayers.push({ id: agg.key, path: agg.key, enabled: true });
+          savedStoredLayers.push({ ...storedLayerTemplate, enabled: true });
         } else if (currentUiState === 'sne') {  // saved but NOT enabled on map
-          savedStoredLayers.push({ id: agg.key, path: agg.key, enabled: false });
+          savedStoredLayers.push({ ...storedLayerTemplate, enabled: false });
         }
       });
       addStoredLayers(savedStoredLayers);
@@ -625,6 +715,7 @@ function getExtendedMapControl() {
       uiState = mSD.uiState;
       this._lastZIndex = 0;
       $element = $el;
+
       loadSavedStoredLayers();
     },
 

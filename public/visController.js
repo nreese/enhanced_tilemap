@@ -275,6 +275,10 @@ define(function (require) {
       }
     });
 
+    function getMapBounds() {
+      return utils.geoBoundingBoxBounds(map.mapBounds(), 1);
+    }
+
     function getGeoBoundingBox() {
       const geoBoundingBox = utils.geoBoundingBoxBounds(map.mapBounds(), $scope.vis.params.collarScale);
       return { geo_bounding_box: geoBoundingBox };
@@ -622,6 +626,7 @@ define(function (require) {
         getSirenMeta,
         geoShapeMapExtentFilter: getGeoShapeBox,
         geoPointMapExtentFilter: getGeoBoundingBox,
+        getMapBounds,
         respProcessor: new RespProcessor($scope.vis, buildChartData, utils),
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
