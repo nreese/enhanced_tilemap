@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const L = require('leaflet');
-import { markerIcon } from 'plugins/enhanced_tilemap/vislib/markerIcon';
+import { markerIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import utils from 'plugins/enhanced_tilemap/utils';
 

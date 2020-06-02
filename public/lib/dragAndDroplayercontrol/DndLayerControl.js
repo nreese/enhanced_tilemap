@@ -6,6 +6,7 @@ import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
+import utils from 'plugins/enhanced_tilemap/utils';
 
 import { EuiButton } from '@elastic/eui';
 
@@ -18,14 +19,14 @@ function getExtendedMapControl() {
   let esClient;
   let $element;
   let mainSearchDetails;
-  let _currentZoom;
+  let currentZoom;
   let geometryTypeOfSpatialPaths;
   let uiState;
 
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
   function _updateCurrentZoom() {
-    _currentZoom = _leafletMap.getZoom();
+    currentZoom = _leafletMap.getZoom();
   }
 
   function _isHeatmapLayer(layer) {
@@ -33,7 +34,7 @@ function getExtendedMapControl() {
   }
 
   function _visibleForCurrentMapZoom(config) {
-    return _currentZoom >= config.minZoom && _currentZoom <= config.maxZoom;
+    return currentZoom >= config.minZoom && currentZoom <= config.maxZoom;
   }
 
   function _setAvailableConfigs(config, foundConfig) {
@@ -179,7 +180,7 @@ function getExtendedMapControl() {
 
   function _updateEsRefLayerVisibility(id, enabled) {
     // when stored in layer control, elastic map reference indices path is the id
-    for (let i = 0; i < esRefLayersOnMap.length - 1; i++) {
+    for (let i = 0; i <= esRefLayersOnMap.length - 1; i++) {
       if (esRefLayersOnMap[i].id === id || esRefLayersOnMap[i].id.substring(3) === id) {
         esRefLayersOnMap[i].enabled = enabled;
         break;
@@ -249,52 +250,129 @@ function getExtendedMapControl() {
     });
     return existsQueryArray;
   }
+  function _createBoundingBoxFilter(filter) {
+    return {
+      geo_bounding_box: {
+        geometry: {
+          top_left: filter.geo_bounding_box.top_left,
+          bottom_right: filter.geo_bounding_box.bottom_right
+        }
+      }
+    };
+  }
 
+  function _getAggsObject(mapExtentFilter, spatialPath, zoom) {
+    mapExtentFilter = _createBoundingBoxFilter(mapExtentFilter);
+
+    return {
+      2: {
+        filter: {
+          bool: {
+            must: [
+              {
+                match: {
+                  geometrytype: 'Point'
+                }
+              },
+              {
+                match: {
+                  'spatial_path.raw': spatialPath
+                }
+              },
+              mapExtentFilter
+            ]
+          }
+        },
+        aggs: {
+          filtered_geohash: {
+            geohash_grid: {
+              field: 'geometry',
+              precision: utils.getMarkerClusteringPrecision(zoom)
+            },
+            aggs: {
+              3: {
+                geo_centroid: {
+                  field: 'geometry'
+                }
+              }
+            }
+          }
+        }
+      }
+    };
+  }
+
+  function _getQueryTemplate(spatialPath, filter, limit) {
+    filter.push({
+      term: {
+        'spatial_path.raw': spatialPath
+      }
+    });
+
+    const queryTemplate = {
+      index: '.map__*',
+      body: {
+        query: {
+          bool: {
+            must: filter
+          }
+        }
+      }
+    };
+
+    if (limit || limit === 0) {
+      queryTemplate.body.size = limit;
+    }
+
+    return queryTemplate;
+  }
+
+  function aggResponseCheck(resp) {
+    return resp.aggregations && resp.aggregations[2] && resp.aggregations[2].buckets && resp.aggregations[2].buckets.length > 0;
+  }
   async function getEsRefLayer(spatialPath, enabled) {
     const config = _getLayerLevelConfig(spatialPath, mainSearchDetails.storedLayerConfig);
     const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
     const limit = 250;
-    const filter = mainSearchDetails.mapExtentFilter();
+    const filter = [];
+
     let noHitsForCurrentExtent = false;
+    let query;
+    let processedAggResp = {
+      aggFeatures: []
+    };
     let resp;
     if (visibleForCurrentMapZoom) {
-      resp = await esClient.search({
-        index: '.map__*',
-        body: {
-          size: limit,
-          query: {
-            bool: {
-              must: {
-                term: {
-                  'spatial_path.raw': spatialPath
-                }
-              },
-              filter
-            }
-          }
+      if (geometryTypeOfSpatialPaths[spatialPath] === 'point') {
+        query = _getQueryTemplate(spatialPath, [], 0);
+        query.index = '.map__point__*';
+        query.body.query = { match_all: {} };
+        query.body.aggs = _getAggsObject(mainSearchDetails.geoPointMapExtentFilter(), spatialPath, currentZoom);
+        const aggResp = await esClient.search(query);
+        const aggChartData = mainSearchDetails.respProcessor.process(aggResp);
+        processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, mainSearchDetails.geoFilter, limit, 'geometry');
+
+        if (processedAggResp.aggFeatures && processedAggResp.docFilters.bool.should.length >= 1) {
+          filter.push(processedAggResp.docFilters);
+          filter.push(_createBoundingBoxFilter(mainSearchDetails.geoPointMapExtentFilter()));
+          query = _getQueryTemplate(spatialPath, filter, limit);
+          query.index = '.map__point__*';
+          resp = await esClient.search(query);
         }
-      });
+      } else {
+        filter.push(mainSearchDetails.geoShapeMapExtentFilter());
+        query = _getQueryTemplate(spatialPath, filter, limit);
+        query.index = '.map__shape__*';
+        resp = await esClient.search(query);
+      }
     }
 
     if (!resp) {
-      //getting first object if not visible
       noHitsForCurrentExtent = true;
-      resp = await esClient.search({
-        index: '.map__*',
-        body: {
-          size: 1,
-          query: {
-            bool: {
-              must: {
-                term: {
-                  'spatial_path.raw': spatialPath
-                }
-              },
-              should: _makeExistsForConfigFieldTypes(config)
-            }
-          }
-        }
-      });
+      //getting first object if not visible
+      query = _getQueryTemplate(spatialPath, [], 1);
+      query.body.query.bool.should = _makeExistsForConfigFieldTypes(config);
+      resp = await esClient.search(query);
     }
 
     let hits = resp.hits.hits;
@@ -320,9 +398,9 @@ function getExtendedMapControl() {
     });
 
     let geo;
-    if (hits[0] && hits[0]._source && hits[0]._source.type) {
+    if (hits[0] && hits[0]._source && hits[0]._source.geometrytype) {
       geo = {
-        type: hits[0]._source.geometry.type,
+        type: hits[0]._source.geometrytype.toLowerCase(),
         field: 'geometry'
       };
     } else {
@@ -340,7 +418,7 @@ function getExtendedMapControl() {
       options.warning = { limit };
     }
 
-    const layer = new EsLayer().createLayer(hits, geo, 'es_ref', options);
+    const layer = new EsLayer().createLayer(hits, processedAggResp.aggFeatures, geo, 'es_ref', options);
     layer.enabled = enabled;
     layer.close = true;
     return layer;
@@ -406,7 +484,7 @@ function getExtendedMapControl() {
           }
         }
       },
-      _source: ['geometry', 'spatial_path'],
+      _source: ['geometrytype', 'spatial_path'],
       size: 1
     };
 
@@ -433,7 +511,7 @@ function getExtendedMapControl() {
         const spaitalPathSource = spatialPathDoc.hits.hits[0]._source;
 
         let geometryType = 'point';
-        if (spaitalPathSource.geometry.type.includes('Polygon')) {
+        if (spaitalPathSource.geometrytype.includes('Polygon')) {
           geometryType = 'polygon';
         }
 
@@ -478,7 +556,7 @@ function getExtendedMapControl() {
       }
     });
 
-    if (resp.aggregations && resp.aggregations[2] && resp.aggregations[2].buckets) {
+    if (aggResponseCheck(resp)) {
       return resp;
     }
   }
@@ -488,7 +566,7 @@ function getExtendedMapControl() {
     // a check if there are any stored layers
     if (resp) {
       const aggs = resp.aggregations[2].buckets;
-      geometryTypeOfSpatialPaths = _getGeometryTypeOfSpatialPaths(aggs);
+      geometryTypeOfSpatialPaths = await _getGeometryTypeOfSpatialPaths(aggs);
       const savedStoredLayers = [];
 
       aggs.forEach(agg => {

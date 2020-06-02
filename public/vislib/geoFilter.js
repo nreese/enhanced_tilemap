@@ -358,32 +358,7 @@ define(function (require) {
      * @return {Object} elasticsearch geospatial rectangle filter
      */
     function rectFilter(fieldname, geotype, topLeft, bottomRight, meta) {
-      let geofilter = null;
-      if ('geo_point' === geotype) {
-        geofilter = { geo_bounding_box: {} };
-        geofilter.geo_bounding_box[fieldname] = {
-          top_left: topLeft,
-          bottom_right: bottomRight
-        };
-      } else if ('geo_shape' === geotype) {
-        geofilter = { geo_shape: {} };
-        geofilter.geo_shape[fieldname] = {
-          shape: {
-            type: 'envelope',
-            coordinates: [
-              [topLeft.lon, topLeft.lat],
-              [bottomRight.lon, bottomRight.lat]
-            ]
-          }
-        };
-      } else {
-        console.warn('unexpected geotype: ' + geotype);
-      }
-
-      if (meta) {
-        geofilter.meta = meta;
-      }
-      return geofilter;
+      return geoFilterHelper.rectFilter(fieldname, geotype, topLeft, bottomRight, meta);
     }
 
     /**

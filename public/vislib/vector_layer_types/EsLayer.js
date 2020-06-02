@@ -1,47 +1,35 @@
 const _ = require('lodash');
 const L = require('leaflet');
-import { searchIcon } from 'plugins/enhanced_tilemap/vislib/searchIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import utils from 'plugins/enhanced_tilemap/utils';
+import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerClusteringIcon';
+import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
 
 export default class EsLayer {
   constructor() {
   }
 
 
-  createLayer = function (hits, geo, type, options) {
+  createLayer = function (hits, aggs, geo, type, options) {
     const layerControl = options.$element.find('.leaflet-control-layers');
     let layer = null;
     const self = this;
 
-    //handling too many documents warnings
     options.$legend = options.$element.find('a.leaflet-control-layers-toggle').get(0);
     options.$legend.innerHTML = '';
     layerControl.removeClass('leaflet-control-layers-warning');
-    if (options.warning && options.warning.limit) {
-      layerControl.addClass('leaflet-control-layers-warning');
-      options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
-    }
 
-    if (geo.field) {
+    if ((aggs && aggs.length >= 1) || (hits.length >= 1)) {
       //using layer level config
       const layerControlIcon = options.icon;
       const layerControlColor = options.color;
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.icon = _.get(options, 'icon', 'fas fa-map-marker-alt');
-        const markers = _.map(hits, hit => {
 
-          if (type === 'es_ref') {
-            self.assignFeatureLevelConfigurations(hit, geo.type, options);
-          }
-          const marker = self._createMarker(hit, geo.field, options);
-          if (options.popupFields.length) {
-            marker.content = this._popupContent(hit, options.popupFields);
-          }
-          return marker;
-        });
-        layer = new L.FeatureGroup(markers);
+        const featuresForLayer = self._makeIndividualPoints(hits, geo, type, options)
+          .concat(self._makeClusterPoints(aggs, layerControlIcon, layerControlColor, options));
+        layer = new L.FeatureGroup(featuresForLayer);
         layer.type = type + '_point';
         layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${layerControlIcon}" style="color:${layerControlColor};"></i>`;
@@ -130,6 +118,13 @@ export default class EsLayer {
           }
         );
         self.bindPopup(layer, options);
+        if (options.warning && options.warning.limit) {
+          //handling too many documents warnings
+          layerControl.addClass('leaflet-control-layers-warning');
+          options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
+          layer.warning = `There are undisplayed POIs for this overlay due
+        to having reached the limit currently set to ${options.warning.limit}`;
+        }
         layer.icon = `<i class="far fa-stop" style="color:${layerControlColor};"></i>`;
         layer.type = type + '_shape';
         layer.destroy = () => layer.options.destroy();
@@ -140,10 +135,7 @@ export default class EsLayer {
       layer.id = options.id;
       layer.label = options.displayName;
 
-      if (options.warning && options.warning.limit) {
-        layer.warning = `There are undisplayed POIs for this overlay due
-      to having reached the limit currently set to ${options.warning.limit}`;
-      }
+
       layer.filterPopupContent = options.filterPopupContent;
       layer.close = options.close;
 
@@ -163,7 +155,7 @@ export default class EsLayer {
       layer.id = options.id;
       layer.label = options.displayName;
 
-      if (geo.type === 'point') {
+      if (geo.type === 'point' || geo.type === 'geo_point') {
         layer.icon = `<i class="${options.icon}" style="color:${options.color};"></i>`;
       } else {
         layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
@@ -202,6 +194,7 @@ export default class EsLayer {
   bindPopup = function (layer, options) {
     const self = this;
     const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
+    let clusterPolygon;
 
     self._popupMouseOut = function (e) {
       // get the element that the mouse hovered onto
@@ -217,18 +210,45 @@ export default class EsLayer {
 
     layer.on({
       mouseover: function (e) {
-        self._showTooltip(e.layer.content, e.latlng, options.leafletMap);
+        if (e.layer.content) {
+          // for points, polylines or polygons
+          self._showTooltip(e.layer.content, e.latlng, options.leafletMap);
+        } else if (e.layer.geohashRectangle) {
+          //for marker clusters
+          clusterPolygon = self._createClusterGeohashPolygon(e.layer.geohashRectangle, options.color)
+            .addTo(options.leafletMap);
+        }
       },
 
       mouseout: function (e) {
-        const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-        // check to see if the element is a popup
-        if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
-          L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
-          return true;
+        if (e.layer.geohashRectangle && clusterPolygon) {
+          clusterPolygon.remove(options.leafletMap);
+        } else {
+          const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
+          // check to see if the element is a popup
+          if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
+            L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
+            return true;
+          }
+          options.leafletMap.closePopup();
         }
-        options.leafletMap.closePopup();
       }
+    });
+  };
+
+  _createClusterGeohashPolygon = function (rectangle, color) {
+    const corners = [
+      [rectangle[3][0], rectangle[3][1]],
+      [rectangle[1][0], rectangle[1][1]]
+    ];
+
+    return L.rectangle(corners, {
+      stroke: true,
+      color,
+      opacity: 0.7,
+      dashArray: 4,
+      fill: true,
+      fillOpacity: 0.2
     });
   };
 
@@ -270,12 +290,17 @@ export default class EsLayer {
         icon: searchIcon(options.icon, options.color, options.size),
         pane: 'overlayPane'
       });
+
+    if (options.popupFields.length) {
+      feature.content = this._popupContent(hit, options.popupFields);
+    }
+
     return feature;
   };
 
   _popupContent = function (hit, popupFields) {
     let dlContent = '';
-    if(_.isArray(popupFields)) {
+    if (_.isArray(popupFields)) {
       popupFields.forEach(function (field) {
         let popupFieldValue;
         if (hit._source.properties) {
@@ -290,7 +315,51 @@ export default class EsLayer {
       dlContent = popupFields;
     }
     return `<dl>${dlContent}</dl>`;
-  };
+  }
+
+  _makeIndividualPoints = (features, geo, type, options) => {
+    const markerList = [];
+    features.forEach((feature) => {
+      if (type === 'es_ref') {
+        this.assignFeatureLevelConfigurations(feature, geo.type, options);
+      }
+
+      markerList.push(this._createMarker(feature, geo.field, options));
+    });
+    return markerList;
+  }
+
+  _makeClusterPoints = (features, icon, color, options) => {
+    const markerList = [];
+    let maxAggDocCount = 0;
+
+    features.forEach(feature => {
+      if (feature.properties.value > maxAggDocCount) maxAggDocCount = feature.properties.value;
+    });
+
+    features.forEach((feature) => {
+      const markerCount = _.get(feature, 'properties.value');
+      const containerPixels = {
+        topLeft: options.leafletMap.latLngToContainerPoint(feature.properties.rectangle[0]),
+        bottomRight: options.leafletMap.latLngToContainerPoint(feature.properties.rectangle[2]),
+      };
+      const clusterCentroidInPixels = options.leafletMap.latLngToContainerPoint(
+        [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
+      );
+      const offsetCenter = options.leafletMap.containerPointToLatLng(
+        utils.offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
+      );
+
+      const marker = L.marker(offsetCenter, {
+        icon: markerClusteringIcon(markerCount, maxAggDocCount, icon, color),
+        pane: 'overlayPane'
+      });
+
+      marker.geohashRectangle = feature.properties.rectangle;
+      markerList.push(marker);
+    });
+    return markerList;
+  }
 
   capitalizeFirstLetter = (string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
