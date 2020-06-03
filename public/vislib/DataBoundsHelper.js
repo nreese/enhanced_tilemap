@@ -59,18 +59,22 @@ define(function () {
             const chartData = respProcessor.process(searchResp);
             if (_.has(chartData, 'geoJson.features') >= 1) {
               chartData.geoJson.features.forEach(feature => {
-                const currentLon = feature.geometry.coordinates[0];
-                const currentLat = feature.geometry.coordinates[1];
+                const geohashRect = _.get(feature, 'properties.rectangle');
+                const currentTopLeftLat = geohashRect[3][0];
+                const currentTopLeftLon = geohashRect[3][1];
+                const currentBottomRightLat = geohashRect[1][0];
+                const currentBottomRightLon = geohashRect[1][1];
 
-                if (currentLat > maxLat) maxLat = currentLat;
-                if (currentLon > maxLon) maxLon = currentLon;
-                if (currentLat < minLat) minLat = currentLat;
-                if (currentLon < minLon) minLon = currentLon;
+                if (currentTopLeftLat > maxLat) maxLat = currentTopLeftLat;
+                if (currentBottomRightLon > maxLon) maxLon = currentBottomRightLon;
+                if (currentBottomRightLat < minLat) minLat = currentBottomRightLat;
+                if (currentTopLeftLon < minLon) minLon = currentTopLeftLon;
               });
 
-              const topRight = L.latLng(maxLat, maxLon);
-              const bottomLeft = L.latLng(minLat, minLon);
-              return L.latLngBounds(topRight, bottomLeft);
+
+              const topLeft = L.latLng(maxLat, minLon);
+              const bottomRight = L.latLng(minLat, maxLon);
+              return L.latLngBounds(topLeft, bottomRight);
             } else {
               console.warn('Unable to fit bounds as no data were detected');
             }

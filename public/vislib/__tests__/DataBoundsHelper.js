@@ -55,95 +55,84 @@ const fakeChartData = {
         type: 'Feature',
         geometry: {
           type: 'Point',
-          coordinates: [177, -87]
-        }
-      },
-      {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [-176, 86]
-        }
-      },
-      {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [-0, 0]
+          coordinates: [36.5625, -73.125]
+        },
+        properties: {
+          rectangle: [
+            [33.75, -78.75], [33.75, -67.5], [39.375, -67.5], [39.375, -78.75]
+          ]
         }
       }
     ]
   }
 };
 
-describe('DataBoundsHelper', () => {
+describe('Kibi Enhanced Tilemap', () => {
+  describe('DataBoundsHelper', () => {
 
-  let BoundsHelper;
-  let SearchSource;
+    let BoundsHelper;
+    let SearchSource;
 
-  beforeEach(ngMock.module('kibana'));
-  beforeEach(() => {
+    beforeEach(ngMock.module('kibana'));
+    beforeEach(() => {
 
-    ngMock.inject(function (Private) {
-      const SearchSourceStub = createSearchSourceStubProvider();
-      Private.stub(SearchSourceProvider, SearchSourceStub);
-      SearchSource = new SearchSourceStub();
+      ngMock.inject(function (Private) {
+        const SearchSourceStub = createSearchSourceStubProvider();
+        Private.stub(SearchSourceProvider, SearchSourceStub);
+        SearchSource = new SearchSourceStub();
 
-      BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
-      sinon.stub(RespProcessor.prototype, 'process').returns(fakeChartData);
+        BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
+        sinon.stub(RespProcessor.prototype, 'process').returns(fakeChartData);
+
+      });
+    });
+
+    it('should have correct agg dsl and process max bounds correctly', function (done) {
+      const field = 'location';
+      const boundsHelper = new BoundsHelper(SearchSource, field);
+
+      boundsHelper.getBoundsOfEntireDataSelection(fakeVis)
+        .then((entireBounds) => {
+
+          const expectedEntireBounds = {
+            _southWest: {
+              lat: 33.75,
+              lng: -78.75
+            },
+            _northEast: {
+              lat: 39.375,
+              lng: -67.5
+            }
+          };
+
+          const expectedAggsDsl = {
+            geo_bounding_box: {
+              [field]: {
+                bottom_right: { lat: -90, lon: 180 },
+                top_left: { lat: 90, lon: -180 }
+              }
+            }
+          };
+
+          const callBackOfAggs = SearchSource.aggs.getCalls()[0].args[0];
+          const dsl = callBackOfAggs();
+
+          expect(entireBounds).to.eql(expectedEntireBounds);
+          expect(dsl[2].filter).to.eql(expectedAggsDsl);
+          done();
+        }).catch(done);
 
     });
+
+    function createSearchSourceStubProvider() {
+      const searchSourceStub = {};
+      searchSourceStub.aggs = sinon.stub();
+      searchSourceStub.filter = sinon.stub().returns(searchSourceStub);
+      searchSourceStub.fetch = sinon.stub().resolves({});
+      searchSourceStub.inherits = sinon.stub().returns(searchSourceStub);
+      return function SearchSourceStubProvider() {
+        return searchSourceStub;
+      };
+    }
   });
-
-  it('should have correct agg dsl and process max bounds correctly', function (done) {
-    const params = {
-      SearchSource,
-      field: 'location'
-    };
-
-    const boundsHelper = new BoundsHelper(params);
-
-    boundsHelper.getBoundsOfEntireDataSelection(fakeVis)
-      .then((entireBounds) => {
-
-        const expectedEntireBounds = {
-          _southWest: {
-            lat: -87,
-            lng: -176
-          },
-          _northEast: {
-            lat: 86,
-            lng: 177
-          }
-        };
-
-        const expectedAggsDsl = {
-          geo_bounding_box: {
-            [params.field]: {
-              bottom_right: { lat: -90, lon: 180 },
-              top_left: { lat: 90, lon: -180 }
-            }
-          }
-        };
-
-        const callBackOfAggs = SearchSource.aggs.getCalls()[0].args[0];
-        const dsl = callBackOfAggs();
-
-        expect(entireBounds).to.eql(expectedEntireBounds);
-        expect(dsl[2].filter).to.eql(expectedAggsDsl);
-        done();
-      }).catch(done);
-
-  });
-
-  function createSearchSourceStubProvider() {
-    const searchSourceStub = {};
-    searchSourceStub.aggs = sinon.stub();
-    searchSourceStub.filter = sinon.stub().returns(searchSourceStub);
-    searchSourceStub.fetch = sinon.stub().resolves({});
-    searchSourceStub.inherits = sinon.stub().returns(searchSourceStub);
-    return function SearchSourceStubProvider() {
-      return searchSourceStub;
-    };
-  }
 });
