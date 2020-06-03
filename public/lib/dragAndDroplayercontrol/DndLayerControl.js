@@ -16,19 +16,22 @@ function getExtendedMapControl() {
   let _dndListElement;
   let _addLayerElement;
   let _allLayers;
+  let _currentZoom;
+  let _currentMapBounds;
+  let _currentPrecision;
+
   let esClient;
   let $element;
   let mainSearchDetails;
-  let currentZoom;
-  let currentMapBounds;
   let geometryTypeOfSpatialPaths;
   let uiState;
 
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
-  function _updateCurrentZoomAndMapBounds() {
-    currentMapBounds = mainSearchDetails.getMapBounds();
-    currentZoom = _leafletMap.getZoom();
+  function _updateCurrentMapEnvironment() {
+    _currentMapBounds = mainSearchDetails.getMapBounds();
+    _currentZoom = _leafletMap.getZoom();
+    _currentPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
   }
 
   function _isHeatmapLayer(layer) {
@@ -36,7 +39,7 @@ function getExtendedMapControl() {
   }
 
   function _visibleForCurrentMapZoom(config) {
-    return currentZoom >= config.minZoom && currentZoom <= config.maxZoom;
+    return _currentZoom >= config.minZoom && _currentZoom <= config.maxZoom;
   }
 
   function _setAvailableConfigs(config, foundConfig) {
@@ -101,15 +104,12 @@ function getExtendedMapControl() {
     // ensuring the ordering of markers, then overlays, then tile layers
     const tileLayersTemp = [];
     const overlaysTemp = [];
-    const markerTemp = [];
     const markerLayersTemp = [];
 
     const pointTypes = ['poi_point', 'vector_point', 'es_ref_point'];
     _allLayers.forEach((layer) => {
       if (layer.type === 'wms') {
         tileLayersTemp.push(layer);
-      } else if (layer.type === 'marker') {
-        markerTemp.push(layer);
       } else if (pointTypes.includes(layer.type)) {
         markerLayersTemp.push(layer);
       } else if (_isHeatmapLayer(layer)) {
@@ -118,7 +118,7 @@ function getExtendedMapControl() {
         overlaysTemp.push(layer);
       }
     });
-    _allLayers = markerTemp.concat(markerLayersTemp).concat(overlaysTemp).concat(tileLayersTemp);
+    _allLayers = markerLayersTemp.concat(overlaysTemp).concat(tileLayersTemp);
   }
 
   function _drawOverlays() {
@@ -266,7 +266,7 @@ function getExtendedMapControl() {
     };
   }
 
-  function _getAggsObject(mapExtentFilter, spatialPath, zoom) {
+  function _getAggsObject(mapExtentFilter, spatialPath, precision) {
     mapExtentFilter = _createBoundingBoxFilter(mapExtentFilter);
 
     return {
@@ -292,7 +292,7 @@ function getExtendedMapControl() {
           filtered_geohash: {
             geohash_grid: {
               field: 'geometry',
-              precision: utils.getMarkerClusteringPrecision(zoom)
+              precision: precision
             },
             aggs: {
               3: {
@@ -332,7 +332,7 @@ function getExtendedMapControl() {
     return queryTemplate;
   }
 
-  function aggResponseCheck(resp) {
+  function _aggResponseCheck(resp) {
     return resp.aggregations && resp.aggregations[2] && resp.aggregations[2].buckets && resp.aggregations[2].buckets.length > 0;
   }
   async function getEsRefLayer(spatialPath, enabled, config) {
@@ -351,7 +351,7 @@ function getExtendedMapControl() {
         query = _getQueryTemplate(spatialPath, [], 0);
         query.index = '.map__point__*';
         query.body.query = { match_all: {} };
-        query.body.aggs = _getAggsObject(mainSearchDetails.geoPointMapExtentFilter(), spatialPath, currentZoom);
+        query.body.aggs = _getAggsObject(mainSearchDetails.geoPointMapExtentFilter(), spatialPath, _currentPrecision);
         const aggResp = await esClient.search(query);
         const aggChartData = mainSearchDetails.respProcessor.process(aggResp);
         processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, mainSearchDetails.geoFilter, limit, 'geometry');
@@ -430,23 +430,24 @@ function getExtendedMapControl() {
 
   async function _createEsRefLayer(item, config) {
     const layer = await getEsRefLayer(item.path, item.enabled, config);
+    layer.mapParams = {
+      zoomLevel: _currentZoom,
+      mapBounds: _currentMapBounds,
+      precision: _currentPrecision
+    };
     layer.path = item.path;
-    layer.zoomLevel = currentZoom;
-    layer.mapBounds = currentMapBounds;
     return layer;
   }
 
   function redrawLayerCheck(item, visibleForCurrentMapZoom) {
-    const zoomLevel = item.zoomLevel;
-    const type = item.type;
-
     const zoomLevelCheck = (
       // no need to redraw shapes when zooming in
-      currentZoom < zoomLevel && type === 'es_ref_shape') ||
-      //redraw points when zoom has changed as clustering precision is subject to change
-      (currentZoom !== zoomLevel && type === 'es_ref_point');
+      _currentZoom < item.zoomLevel && item.type === 'es_ref_shape') ||
+      //no need to redraw points if layer precsion is the same as the current
+      (_currentPrecision !== item.mapParams.precision && item.type === 'es_ref_point');
 
-    const layerHasDataForCurrentBounds = !utils.contains(item.mapBounds, currentMapBounds);
+    // current map canvas must contain the extent that the layer was rendered for
+    const layerHasDataForCurrentBounds = !utils.contains(item.mapBounds, _currentMapBounds);
 
     return visibleForCurrentMapZoom && item.enabled && (zoomLevelCheck || layerHasDataForCurrentBounds);
   }
@@ -489,7 +490,7 @@ function getExtendedMapControl() {
 
   async function addStoredLayers(list) {
     const esRefLayerList = [];
-    _updateCurrentZoomAndMapBounds();
+    _updateCurrentMapEnvironment();
     for (const item of list) {
       const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
       const layer = await _createEsRefLayer(item, config);
@@ -522,7 +523,7 @@ function getExtendedMapControl() {
   async function _redrawEsRefLayers() {
     const esRefLayers = [];
     if (esRefLayersOnMap.length >= 1) {
-      _updateCurrentZoomAndMapBounds();
+      _updateCurrentMapEnvironment();
       for (const item of esRefLayersOnMap) {
         let layer;
         const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
@@ -639,7 +640,7 @@ function getExtendedMapControl() {
       }
     });
 
-    if (aggResponseCheck(resp)) {
+    if (_aggResponseCheck(resp)) {
       return resp;
     }
   }
@@ -651,14 +652,17 @@ function getExtendedMapControl() {
       const aggs = resp.aggregations[2].buckets;
       geometryTypeOfSpatialPaths = await _getGeometryTypeOfSpatialPaths(aggs);
       const savedStoredLayers = [];
-      _updateCurrentZoomAndMapBounds();
+      _updateCurrentMapEnvironment();
       aggs.forEach(agg => {
         const currentUiState = uiState.get(agg.key);
         const storedLayerTemplate = {
           id: agg.key,
           path: agg.key,
-          zoomLevel: currentZoom,
-          mapBounds: mainSearchDetails.getMapBounds(),
+          mapParams: {
+            zoomLevel: _currentZoom,
+            precision: utils.getMarkerClusteringPrecision(_currentZoom),
+            mapBounds: mainSearchDetails.getMapBounds()
+          },
           onMap: true
         };
         if (currentUiState === 'se') { // saved and enabled on map
