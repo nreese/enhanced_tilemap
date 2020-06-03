@@ -442,12 +442,12 @@ function getExtendedMapControl() {
   function redrawLayerCheck(item, visibleForCurrentMapZoom) {
     const zoomLevelCheck = (
       // no need to redraw shapes when zooming in
-      _currentZoom < item.zoomLevel && item.type === 'es_ref_shape') ||
+      _currentZoom < item.mapParams.zoomLevel && item.type === 'es_ref_shape') ||
       //no need to redraw points if layer precsion is the same as the current
       (_currentPrecision !== item.mapParams.precision && item.type === 'es_ref_point');
 
     // current map canvas must contain the extent that the layer was rendered for
-    const layerHasDataForCurrentBounds = !utils.contains(item.mapBounds, _currentMapBounds);
+    const layerHasDataForCurrentBounds = !utils.contains(item.mapParams.mapBounds, _currentMapBounds);
 
     return visibleForCurrentMapZoom && item.enabled && (zoomLevelCheck || layerHasDataForCurrentBounds);
   }

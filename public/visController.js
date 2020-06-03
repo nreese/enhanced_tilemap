@@ -52,6 +52,11 @@ define(function (require) {
     };
 
     let dragEnded = true;
+    let _currentMapBounds;
+    let _currentZoom;
+    let _currentPrecision;
+
+
 
     $scope.flags = {};
 
@@ -615,6 +620,13 @@ define(function (require) {
 
     }
 
+    function _updateCurrentMapEnvironment() {
+      _currentMapBounds = getMapBounds();
+      _currentZoom = map.getZoom();
+      _currentPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
+    }
+
+
     function appendMap() {
       const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
@@ -646,6 +658,8 @@ define(function (require) {
         uiState: $scope.vis.getUiState(),
         syncMap: params.syncMap
       });
+
+      _updateCurrentMapEnvironment();
     }
 
     function resizeArea() {
@@ -728,6 +742,12 @@ define(function (require) {
         $scope.vis.getUiState().set(e.id, refLayerState);
       } else {
         $scope.vis.getUiState().set(e.id, e.enabled);
+      }
+
+      if (e.enabled) {
+        // todo fetch layer similar to  visibility redrawLayerCheck in dndlayer control.js
+        _updateCurrentMapEnvironment();
+        // todo logic to check if layer type is poi and re-render based on criteria (as is done in stored layers)
       }
     });
 
