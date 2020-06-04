@@ -387,7 +387,7 @@ function getExtendedMapControl() {
       _siren: mainSearchDetails.getSirenMeta(),
       $element,
       leafletMap: _leafletMap,
-      geoFieldName: mainSearchDetails.getGeoField().fieldname,
+      mainVisGeoFieldName: mainSearchDetails.getGeoField().fieldname,
       visible: visibleForCurrentMapZoom
     };
 
@@ -439,19 +439,6 @@ function getExtendedMapControl() {
     return layer;
   }
 
-  function redrawLayerCheck(item, visibleForCurrentMapZoom) {
-    const zoomLevelCheck = (
-      // no need to redraw shapes when zooming in
-      _currentZoom < item.mapParams.zoomLevel && item.type === 'es_ref_shape') ||
-      //no need to redraw points if layer precsion is the same as the current
-      (_currentPrecision !== item.mapParams.precision && item.type === 'es_ref_point');
-
-    // current map canvas must contain the extent that the layer was rendered for
-    const layerHasDataForCurrentBounds = !utils.contains(item.mapParams.mapBounds, _currentMapBounds);
-
-    return visibleForCurrentMapZoom && item.enabled && (zoomLevelCheck || layerHasDataForCurrentBounds);
-  }
-
   async function _addStoredLayerOnVisibilityChange(item) {
     const esRefLayerList = [];
 
@@ -461,7 +448,7 @@ function getExtendedMapControl() {
       let layer;
       const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
       const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
-      if (redrawLayerCheck(item, visibleForCurrentMapZoom)) {
+      if (visibleForCurrentMapZoom && utils.drawLayerCheck(item, _currentMapBounds, _currentZoom, _currentPrecision)) {
         layer = await _createEsRefLayer(item, config);
       } else {
         layer = item;
@@ -528,7 +515,7 @@ function getExtendedMapControl() {
         let layer;
         const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
         const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
-        if (redrawLayerCheck(item, visibleForCurrentMapZoom)) {
+        if (visibleForCurrentMapZoom && utils.drawLayerCheck(item, _currentMapBounds, _currentZoom, _currentPrecision)) {
           layer = await _createEsRefLayer(item, config);
         } else {
           layer = item;

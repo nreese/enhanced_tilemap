@@ -81,7 +81,7 @@ define(function (require) {
        * @param {object} geo: an object containing the field and type of the configured geofield
        * @param {boolean} isAgg: a boolean to indicate if an aggregation query is required
        */
-      const createSearchSource = async (searchSource, savedSearch, geo, docFilters) => {
+      const createSearchSource = async (searchSource, savedSearch, geo, queryType, docFilters) => {
         if (this.draggedState) {
           //For drag and drop overlays
           if (this.isInitialDragAndDrop) {
@@ -145,12 +145,15 @@ define(function (require) {
             searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
           }
         }
-        if (!docFilters) {
+        if (queryType === 'agg') {
+          searchSource.size(0);
           searchSource.aggs(function () {
             options.vis.requesting();
             options.dsl[2].aggs.filtered_geohash.geohash_grid.precision = utils.getMarkerClusteringPrecision(options.zoom);
             return options.dsl;
           });
+        } else {
+          searchSource.size(this.limit || 250);
         }
         searchSource.source({
           includes: _.compact(_.flatten([geo.field, options.popupFields])),
@@ -161,14 +164,16 @@ define(function (require) {
 
       const savedSearch = await savedSearches.get(this.savedSearchId);
       const geoFields = getGeoFields(savedSearch);
-      const geoField = geoFields.find(geoField => {
-        return geoField.name === options.geoFieldName;
-      });
+      // const geoField = geoFields.find(geoField => {
+      //   return geoField.name === options.geoField;
+      // });
 
-      const geo = {
-        type: geoField.type,
-        field: geoField.name
-      };
+      const geo = { };
+      if (geoFields.length === 1) {
+        geo.type = geoFields[0].type;
+        geo.field = geoFields[0].name;
+      }
+
 
       const processLayer = async () => {
         options.popupFields = this.popupFields;
@@ -182,40 +187,48 @@ define(function (require) {
           options.close = true;
         }
 
-        if (geo.type === 'geo_point') {
-          options.color = savedSearch.siren.ui.color;
-        }
-
-        const aggSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo);
-        const aggResp = await aggSearchSource.fetch();
-        const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
-        const aggChartData = respProcessor.process(aggResp);
-
-        const processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
-
         let hits = [];
-        if (processedAggResp.aggFeatures && processedAggResp.docFilters.bool.should.length >= 1) {
-          const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, processedAggResp.docFilters);
+        let processedAggResp = {
+          aggFeatures: []
+        };
+        if (geo.type === 'geo_point') {
+          this.params.type = 'poi_point';
+          options.color = savedSearch.siren.ui.color;
+          const aggSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'agg');
+          const aggResp = await aggSearchSource.fetch();
+          const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
+          const aggChartData = respProcessor.process(aggResp);
+          processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
+
+          if (_.get(processedAggResp, 'docFilters.bool.should.length') >= 1) {
+            const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search', processedAggResp.docFilters);
+            const docResp = await docSearchSource.fetch();
+            hits = docResp.hits.hits;
+          }
+          if (this.draggedState) {
+            //For drag and drop overlays
+            if (this.isInitialDragAndDrop) {
+
+              //Storing this information on the params object for use
+              //in ES Response watcher
+              if (this.isInitialDragAndDrop) {
+                this.params.filterPopupContent = options.filterPopupContent;
+                this.params.icon = options.icon;
+                this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
+                this.params.draggedStateInitial = this.params.draggedState;
+                this.params.geoField = geo.field;
+                this.params.geoType = geo.type;
+                this.params.displayName = options.displayName;
+              }
+            }
+          }
+        } else if (geo.type === 'geo_shape') {
+          this.params.type = 'poi_shape';
+          const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search');
           const docResp = await docSearchSource.fetch();
           hits = docResp.hits.hits;
         }
-        if (this.draggedState) {
-          //For drag and drop overlays
-          if (this.isInitialDragAndDrop) {
 
-            //Storing this information on the params object for use
-            //in ES Response watcher
-            if (this.isInitialDragAndDrop) {
-              this.params.filterPopupContent = options.filterPopupContent;
-              this.params.icon = options.icon;
-              this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
-              this.params.draggedStateInitial = this.params.draggedState;
-              this.params.geoField = geo.field;
-              this.params.geoType = geo.type;
-              this.params.displayName = options.displayName;
-            }
-          }
-        }
         return callback(createEsLayer.createLayer(hits, processedAggResp.aggFeatures, geo, 'poi', options));
       };
 
@@ -304,7 +317,7 @@ define(function (require) {
       //handling case where savedSearch is coming from vis params or drag and drop
       if (geo.field) {
         processLayer();
-      } else if (!geo.type) {
+      } else {
         geoFieldSelectModal();
       }
     };

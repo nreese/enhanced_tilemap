@@ -317,6 +317,20 @@ define(function (require) {
         }
       }
       return { aggFeatures, docFilters };
+    },
+    drawLayerCheck: function (layerParams, mapBounds, zoom, precision) {
+      if (!layerParams.mapParams || !layerParams.type) return true;
+
+      const zoomLevelCheck = (
+        // no need to redraw shapes when zooming in
+        zoom < layerParams.mapParams.zoomLevel && (layerParams.type === 'es_ref_shape'  || layerParams.type === 'poi_shape')) ||
+        //no need to redraw points if layer precsion is the same as the current
+        (precision !== layerParams.mapParams.precision && (layerParams.type === 'es_ref_point' || layerParams.type === 'poi_point'));
+
+      // current map canvas must contain the extent that the layer was rendered for
+      const layerHasDataForCurrentBounds = !this.contains(layerParams.mapParams.mapBounds, mapBounds);
+
+      return layerParams.enabled && (zoomLevelCheck || layerHasDataForCurrentBounds);
     }
   };
 });

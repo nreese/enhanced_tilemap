@@ -45,34 +45,35 @@ define(function (require) {
     let tooltip = null;
     let tooltipFormatter = null;
     let storedTime = _.cloneDeep(timefilter.time);
+    const uiState = $scope.vis.getUiState();
     const appState = getAppState();
     let storedState = {
       filters: _.cloneDeep(appState.filters),
       query: _.cloneDeep(appState.query)
     };
+    $scope.flags = {};
 
     let dragEnded = true;
     let _currentMapBounds;
     let _currentZoom;
     let _currentPrecision;
-
-
-
-    $scope.flags = {};
-
     const notify = createNotifier({
       location: 'Enhanced Coordinate Map'
     });
 
-    backwardsCompatible.updateParams($scope.vis.params);
-    createDragAndDropPoiLayers();
-    appendMap();
-    modifyToDsl();
-    setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
-    drawWfsOverlays();
-    if (_shouldAutoFitMapBoundsToData(true)) {
-      _doFitMapBoundsToData();
+    function initialize() {
+      backwardsCompatible.updateParams($scope.vis.params);
+      createDragAndDropPoiLayers();
+      appendMap();
+      modifyToDsl();
+      setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
+      drawWfsOverlays();
+      if (_shouldAutoFitMapBoundsToData(true)) {
+        _doFitMapBoundsToData();
+      }
     }
+
+    initialize();
 
     const shapeFields = $scope.vis.indexPattern.fields.filter(function (field) {
       return field.type === 'geo_shape';
@@ -150,6 +151,8 @@ define(function (require) {
         .find(field => (field.esType === 'geo_point' || field.esType === 'geo_shape'));
 
       return !!field;
+    function getPoiLayerParamsById(id) {
+      return _.find($scope.vis.params.overlays.savedSearches, layerParams => layerParams.id === id);
     }
 
     async function addPOILayerFromDashboardWithModal(dashboardId) {
@@ -280,8 +283,12 @@ define(function (require) {
       }
     });
 
-    function getMapBounds() {
-      return utils.geoBoundingBoxBounds(map.mapBounds(), 1);
+    // function getMapBounds() {
+    //   return utils.geoBoundingBoxBounds(map.mapBounds(), 1);
+    // }
+
+    function getMapBoundsWithCollar() {
+      return utils.geoBoundingBoxBounds(map.mapBounds(), $scope.vis.params.collarScale);
     }
 
     function getGeoBoundingBox() {
@@ -294,9 +301,31 @@ define(function (require) {
       return { geo_shape: geoShapeBox };
     }
 
+    function _updatePoiLayers() {
+      $scope.vis.params.overlays.savedSearches.forEach(layerParams => {
+        layerParams.enabled = uiState.get(layerParams.id);
+
+        //new layers are always visible on first load, uistate takes precedence from then on
+        if (layerParams.enabled === undefined) {
+          uiState.set(layerParams.id);
+          layerParams.enabled = true;
+        }
+
+        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentPrecision)) {
+          initPOILayer(layerParams);
+        }
+      });
+    }
+
     function initPOILayer(layerParams) {
       const poi = new POIsProvider(layerParams);
       const displayName = layerParams.displayName || layerParams.savedSearchLabel;
+      layerParams.mapParams = {
+        zoomLevel: _currentZoom,
+        precision: utils.getMarkerClusteringPrecision(_currentZoom),
+        mapBounds: getMapBoundsWithCollar()
+      };
+
       const options = {
         vis: $scope.vis,
         dsl: $scope.vis.aggs.toDsl(),
@@ -308,7 +337,8 @@ define(function (require) {
           geo_bounding_box: getGeoBoundingBox(),
           geoField: getGeoField()
         },
-        geoFieldName: getGeoField().fieldname,
+        mainVisGeoFieldName: getGeoField().fieldname,
+        geoFieldName: layerParams.geoField,
         searchSource: $scope.searchSource,
         $element,
         leafletMap: map.leafletMap,
@@ -376,7 +406,9 @@ define(function (require) {
 
         map.saturateTile(visParams.isDesaturated, map._tileLayer);
         //re-draw POI overlays
-        $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+        _updateCurrentMapEnvironment();
+        _updatePoiLayers();
+
         //re-draw vector overlays
         drawWfsOverlays();
       }
@@ -395,13 +427,16 @@ define(function (require) {
         }
         draw();
       }
+      console.log('on es response');
+
+      _updateCurrentMapEnvironment();
+      _updatePoiLayers();
 
       if (isHeatMap()) {
         map.unfixMapTypeTooltips();
       }
 
-      //POI overlays - no need to clear all layers for this watcher
-      $scope.vis.params.overlays.savedSearches.forEach(initPOILayer);
+
       //Drag and Drop POI Overlays - no need to clear all layers for this watcher
 
       if ($scope.vis.params.overlays.dragAndDropPoiLayers &&
@@ -621,8 +656,8 @@ define(function (require) {
     }
 
     function _updateCurrentMapEnvironment() {
-      _currentMapBounds = getMapBounds();
-      _currentZoom = map.getZoom();
+      _currentMapBounds = getMapBoundsWithCollar();
+      _currentZoom = map.leafletMap.getZoom();
       _currentPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
     }
 
@@ -638,7 +673,7 @@ define(function (require) {
         getSirenMeta,
         geoShapeMapExtentFilter: getGeoShapeBox,
         geoPointMapExtentFilter: getGeoBoundingBox,
-        getMapBounds,
+        getMapBounds: getMapBoundsWithCollar,
         respProcessor: new RespProcessor($scope.vis, buildChartData, utils),
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
@@ -659,7 +694,6 @@ define(function (require) {
         syncMap: params.syncMap
       });
 
-      _updateCurrentMapEnvironment();
     }
 
     function resizeArea() {
@@ -744,10 +778,14 @@ define(function (require) {
         $scope.vis.getUiState().set(e.id, e.enabled);
       }
 
-      if (e.enabled) {
-        // todo fetch layer similar to  visibility redrawLayerCheck in dndlayer control.js
+      if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
         _updateCurrentMapEnvironment();
-        // todo logic to check if layer type is poi and re-render based on criteria (as is done in stored layers)
+        const layerParams = getPoiLayerParamsById(e.id);
+        layerParams.enabled = e.enabled;
+        layerParams.type = e.layerType;
+        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentPrecision)) {
+          initPOILayer(layerParams);
+        }
       }
     });
 
@@ -762,6 +800,11 @@ define(function (require) {
         $scope.vis.getUiState().set(e.id, 'sne'); //saved but NOT enabled
       } else {
         $scope.vis.getUiState().set(e.id, false);
+      }
+
+      if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
+        const layerParams = getPoiLayerParamsById(e.id);
+        layerParams.enabled = false;
       }
     });
 
