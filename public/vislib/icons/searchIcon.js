@@ -29,7 +29,7 @@ export const searchIcon = function (faIcon, color, size) {
   return L.divIcon({
     // className is required, otherwise we get a default white square appearing in top left of html div below
     className: '',
-    html: `<div class="marker-icon ${size}"><i class="${faIcon}" style="color:${color};"></i></div>`,
+    html: `<div id="search-icon" class="marker-icon ${size}"><i class="${faIcon}" style="color:${color};"></i></div>`,
     iconSize,
   });
 
