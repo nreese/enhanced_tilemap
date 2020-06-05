@@ -47,7 +47,7 @@ define(function (require) {
       this.popupFields = _.get(params, 'popupFields', []).map(function (obj) {
         return obj.name;
       });
-      this.limit = _.get(params, 'limit', 500);
+      this.limit = _.get(params, 'limit', 250);
       this.syncFilters = _.get(params, 'syncFilters', false);
     }
 
@@ -67,7 +67,6 @@ define(function (require) {
       return geoFilter.rectFilter(rect.geoField.fieldname, rect.geoField.geotype, bounds.top_left, bounds.bottom_right);
     }
 
-
     /**
      * @param {options} options: styling options
      * @param {Function} callback(layer)
@@ -82,6 +81,8 @@ define(function (require) {
        * @param {boolean} isAgg: a boolean to indicate if an aggregation query is required
        */
       const createSearchSource = async (searchSource, savedSearch, geo, queryType, docFilters) => {
+        let allFilters = [createMapExtentFilter(options.mapExtentFilter)];
+
         if (this.draggedState) {
           //For drag and drop overlays
           if (this.isInitialDragAndDrop) {
@@ -89,25 +90,21 @@ define(function (require) {
             searchSource.inherits(false);
             searchSource.index(this.draggedState.index);
             searchSource.query(this.draggedState.query[0]);
-            const allFilters = this.draggedState.filters;
+
+            allFilters = allFilters.concat(this.draggedState.filters);
 
             //adding html of filters from dragged dashboard
             options.filterPopupContent =
               await Promise.resolve(joinExplanation.constructFilterIconMessage(allFilters, this.draggedState.query));
 
 
-
-            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-            searchSource.filter(allFilters);
           } else {
             //When drag and drop layer already exists, i.e. ES response watcher
             searchSource.inherits(false);
             searchSource.index(this.params.draggedStateInitial.index);
             searchSource.query(this.params.draggedStateInitial.query[0]);
-            const allFilters = this.params.draggedStateInitial.filters;
-            allFilters.pop(); // remove previous map extent filter
-            allFilters.push(createMapExtentFilter(options.mapExtentFilter));
-            searchSource.filter(allFilters);
+            this.params.draggedStateInitial.filters.shift(); // remove previous map extent filter
+            allFilters = allFilters.concat(this.params.draggedStateInitial.filters);
             options.filterPopupContent = this.params.filterPopupContent; //adding filter popup content from drop
           }
         } else {
@@ -119,32 +116,25 @@ define(function (require) {
             //_siren from main searchSource is used
             searchSource._siren = options.searchSource._siren;
 
-            let allFilters;
             if (onDashboardPage()) {
-              allFilters = [
-                ...searchSource.filter(),
-                createMapExtentFilter(options.mapExtentFilter)
-              ];
+              allFilters = allFilters.concat(...searchSource.filter());
             } else {
-              allFilters = [
-                ...queryFilter.getFilters(),
-                createMapExtentFilter(options.mapExtentFilter)
-              ];
+              allFilters = allFilters.concat(...queryFilter.getFilters());
             }
 
-            if (docFilters) {
-              allFilters.push(docFilters);
-            }
-
-            searchSource.filter(allFilters);
           } else {
             //Do not filter POIs by time so can not inherit from rootSearchSource
             searchSource.inherits(false);
             searchSource.index(savedSearch.searchSource._state.index);
             searchSource.query(savedSearch.searchSource.get('query'));
-            searchSource.filter(createMapExtentFilter(options.mapExtentFilter));
           }
         }
+
+        if (docFilters) {
+          allFilters.push(docFilters);
+        }
+        searchSource.filter(allFilters);
+
         if (queryType === 'agg') {
           searchSource.size(0);
           searchSource.aggs(function () {
@@ -164,16 +154,21 @@ define(function (require) {
 
       const savedSearch = await savedSearches.get(this.savedSearchId);
       const geoFields = getGeoFields(savedSearch);
-      // const geoField = geoFields.find(geoField => {
-      //   return geoField.name === options.geoField;
-      // });
+      const geoField = geoFields.find(geoField => {
+        return geoField.name === options.geoField;
+      });
 
-      const geo = { };
-      if (geoFields.length === 1) {
+      const geo = {};
+      if (this.params.geoField && this.params.geoType) {
+        geo.type = this.params.geoType;
+        geo.field = this.params.geoField;
+      } else if (geoField) {
+        geo.type = geoField.type;
+        geo.field = geoField.name;
+      } else if (geoFields.length === 1) {
         geo.type = geoFields[0].type;
         geo.field = geoFields[0].name;
       }
-
 
       const processLayer = async () => {
         options.popupFields = this.popupFields;
@@ -191,9 +186,9 @@ define(function (require) {
         let processedAggResp = {
           aggFeatures: []
         };
+        options.color = savedSearch.siren.ui.color;
         if (geo.type === 'geo_point') {
           this.params.type = 'poi_point';
-          options.color = savedSearch.siren.ui.color;
           const aggSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'agg');
           const aggResp = await aggSearchSource.fetch();
           const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
@@ -205,28 +200,25 @@ define(function (require) {
             const docResp = await docSearchSource.fetch();
             hits = docResp.hits.hits;
           }
-          if (this.draggedState) {
-            //For drag and drop overlays
-            if (this.isInitialDragAndDrop) {
-
-              //Storing this information on the params object for use
-              //in ES Response watcher
-              if (this.isInitialDragAndDrop) {
-                this.params.filterPopupContent = options.filterPopupContent;
-                this.params.icon = options.icon;
-                this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
-                this.params.draggedStateInitial = this.params.draggedState;
-                this.params.geoField = geo.field;
-                this.params.geoType = geo.type;
-                this.params.displayName = options.displayName;
-              }
-            }
-          }
         } else if (geo.type === 'geo_shape') {
           this.params.type = 'poi_shape';
           const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search');
           const docResp = await docSearchSource.fetch();
           hits = docResp.hits.hits;
+        }
+
+        if (this.draggedState) {
+          //For drag and drop overlays
+          //Storing this information on the drag and drop params object for subsequent renders
+          if (this.isInitialDragAndDrop) {
+            this.params.filterPopupContent = options.filterPopupContent;
+            this.params.icon = options.icon;
+            this.params.savedDashboardTitleInitial = this.params.savedDashboardTitle;
+            this.params.draggedStateInitial = this.params.draggedState;
+            this.params.geoField = geo.field;
+            this.params.geoType = geo.type;
+            this.params.displayName = options.displayName;
+          }
         }
 
         return callback(createEsLayer.createLayer(hits, processedAggResp.aggFeatures, geo, 'poi', options));

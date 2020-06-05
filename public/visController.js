@@ -188,6 +188,7 @@ define(function (require) {
           dragAndDropPoiLayer.layerGroup = '<b> Drag and Drop Overlays </b>';
           dragAndDropPoiLayer.isInitialDragAndDrop = true;
           if (!dragAndDropPoiLayer.id) dragAndDropPoiLayer.id = uuid.v1();
+          dragAndDropPoiLayer.limit = 250;
           // initialize on drop
           initPOILayer(dragAndDropPoiLayer);
 
