@@ -51,6 +51,8 @@ define(function (require) {
       query: _.cloneDeep(appState.query)
     };
 
+    let dragEnded = true;
+
     $scope.flags = {};
 
     const notify = createNotifier({
@@ -137,6 +139,14 @@ define(function (require) {
       }
     }
 
+    async function searchHasGeofield(savedSearchId) {
+      const savedSearch = await savedSearches.get(savedSearchId);
+      const field = _.get(savedSearch, 'searchSource._state.index.fields', [])
+        .find(field => (field.esType === 'geo_point' || field.esType === 'geo_shape'));
+
+      return !!field;
+    }
+
     async function addPOILayerFromDashboardWithModal(dashboardId) {
       const group = dashboardGroups.getGroup(dashboardId);
       if (group) {
@@ -148,8 +158,9 @@ define(function (require) {
 
           const savedDashboard = await savedDashboards.get(dashboardId);
           const savedSearchId = savedDashboard.getMainSavedSearchId();
+          const hasGeofield = await searchHasGeofield(savedSearchId);
 
-          if (!savedSearchId) {
+          if (!(savedSearchId && hasGeofield)) {
             return;
           }
 
@@ -666,15 +677,14 @@ define(function (require) {
     });
 
     kibiState.on('drag_on_graph', async (showDropHover, dashHasSearch, dashboardId) => {
+      dragEnded = !showDropHover;
       const savedDashboard = await savedDashboards.get(dashboardId);
       const savedSearchId = savedDashboard.getMainSavedSearchId();
 
-      const savedSearch = await savedSearches.get(savedSearchId);
-      const fieldWithGeo = _.get(savedSearch, 'searchSource._state.index.fields', [])
-        .find(field => (field.esType === 'geo_point' || field.esType === 'geo_shape') && dashHasSearch);
-
-      $scope.showDropHover = showDropHover;
-      $scope.showDropMessage = !!fieldWithGeo;
+      if (!dragEnded || !showDropHover) {
+        $scope.showDropHover = showDropHover;
+        $scope.showDropMessage = await searchHasGeofield(savedSearchId);
+      }
     });
 
     // ===========================
