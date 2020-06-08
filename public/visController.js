@@ -35,6 +35,8 @@ define(function (require) {
     const POIsProvider = Private(require('plugins/enhanced_tilemap/vislib/vector_layer_types/POIs'));
     const utils = require('plugins/enhanced_tilemap/utils');
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
+    const aggPrecisions = require('ui/kibi/agg_types/buckets/agg_precision_types');
+    const maxPrecision = parseInt(config.get('visualization:tileMap:maxPrecision'), 10) || 12;
     const TileMapMap = Private(MapProvider);
     const ResizeChecker = Private(ResizeCheckerProvider);
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
@@ -55,19 +57,22 @@ define(function (require) {
 
     let dragEnded = true;
     let _currentMapBounds;
+    let _currentMapBoundsWithCollar;
     let _currentZoom;
-    let _currentPrecision;
+    let _currentClusteringPrecision;
+    let _currentAggregationPrecision;
     const notify = createNotifier({
       location: 'Enhanced Coordinate Map'
     });
 
-    function initialize() {
+    async function initialize() {
       backwardsCompatible.updateParams($scope.vis.params);
       createDragAndDropPoiLayers();
       appendMap();
       modifyToDsl();
       setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
       drawWfsOverlays();
+      await drawAggregationLayer();
       if (_shouldAutoFitMapBoundsToData(true)) {
         _doFitMapBoundsToData();
       }
@@ -278,15 +283,15 @@ define(function (require) {
     }
 
     $scope.$watch('vis.aggs', function () {
-      //'apply changes' creates new vis.aggs object - ensure toDsl is overwritten again
+      // 'apply changes' creates new vis.aggs object - ensure toDsl is overwritten again
       if (!_.has($scope.vis.aggs, 'origToDsl')) {
         modifyToDsl();
       }
     });
 
-    // function getMapBounds() {
-    //   return utils.geoBoundingBoxBounds(map.mapBounds(), 1);
-    // }
+    function getMapBounds() {
+      return utils.geoBoundingBoxBounds(map.mapBounds(), 1);
+    }
 
     function getMapBoundsWithCollar() {
       return utils.geoBoundingBoxBounds(map.mapBounds(), $scope.vis.params.collarScale);
@@ -312,7 +317,7 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
-        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentPrecision)) {
+        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentClusteringPrecision)) {
           initPOILayer(layerParams);
         }
       });
@@ -386,10 +391,11 @@ define(function (require) {
     }
 
 
-    $scope.$watch('vis.params', function (visParams, oldParams) {
+    $scope.$watch('vis.params', async function (visParams, oldParams) {
       if (visParams !== oldParams) {
         //When vis is first opened, vis.params gets updated with old context
         backwardsCompatible.updateParams($scope.vis.params);
+        _updateCurrentMapEnvironment();
         if (_shouldAutoFitMapBoundsToData(true)) _doFitMapBoundsToData();
         $scope.flags.isVisibleSource = 'visParams';
 
@@ -399,54 +405,23 @@ define(function (require) {
         map._layerControl.loadSavedStoredLayers();
 
         map.removeAllLayersFromMapandControl();
+        // base layer
         map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
-
         setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
-
-        draw();
-
-        map.saturateTile(visParams.isDesaturated, map._tileLayer);
+        await drawAggregationLayer(true);
+        drawWmsOverlays();
+        drawGeoFilters();
         //re-draw POI overlays
-        _updateCurrentMapEnvironment();
         _updatePoiLayers();
-
         //re-draw vector overlays
         drawWfsOverlays();
+
+        map.saturateTile(visParams.isDesaturated, map._tileLayer);
       }
     });
 
     $scope.$listen(queryFilter, 'update', function () {
       setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
-    });
-
-    $scope.$watch('esResponse', function (resp) {
-      if (_.has(resp, 'aggregations')) {
-        chartData = respProcessor.process(resp);
-        chartData.searchSource = $scope.searchSource;
-        if (_shouldAutoFitMapBoundsToData()) {
-          _doFitMapBoundsToData();
-        }
-        draw();
-      }
-      console.log('on es response');
-
-      _updateCurrentMapEnvironment();
-      _updatePoiLayers();
-
-      if (isHeatMap()) {
-        map.unfixMapTypeTooltips();
-      }
-
-
-      //Drag and Drop POI Overlays - no need to clear all layers for this watcher
-
-      if ($scope.vis.params.overlays.dragAndDropPoiLayers &&
-        $scope.vis.params.overlays.dragAndDropPoiLayers.length >= 1) {
-        $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
-          dragAndDrop.isInitialDragAndDrop = false;
-          initPOILayer(dragAndDrop);
-        });
-      }
     });
 
     $scope.$on('$destroy', function () {
@@ -462,25 +437,11 @@ define(function (require) {
       kibiState.off('drag_on_graph');
     }
 
-    function draw() {
-      if (!chartData) {
-        return;
-      }
-      //add overlay layer to provide visibility of filtered area
+    function drawGeoFilters() {
       const fieldName = getGeoField().fieldname;
       if (fieldName) {
         map.addFilters(geoFilter.getGeoFilters(fieldName));
       }
-
-      drawWmsOverlays();
-
-      map.addMarkers(
-        chartData,
-        $scope.vis.params,
-        tooltipFormatter,
-        _.get(chartData, 'valueFormatter', _.identity),
-        collar);
-
     }
 
     function setTooltipFormatter(tooltipParams, sirenMeta) {
@@ -657,9 +618,19 @@ define(function (require) {
     }
 
     function _updateCurrentMapEnvironment() {
-      _currentMapBounds = getMapBoundsWithCollar();
+      _currentMapBounds = getMapBounds();
+      _currentMapBoundsWithCollar = getMapBoundsWithCollar();
       _currentZoom = map.leafletMap.getZoom();
-      _currentPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
+      _currentClusteringPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
+
+      if ($scope.vis.aggs[1]) {
+        const precisionType = $scope.vis.aggs[1].params.aggPrecisionType.toLowerCase();
+        if (precisionType === 'default') {
+          _currentAggregationPrecision = aggPrecisions.getDefaultZoomPrecision(maxPrecision)[_currentZoom];
+        } else {
+          _currentAggregationPrecision = aggPrecisions[precisionType][_currentZoom];
+        }
+      }
     }
 
 
@@ -674,7 +645,8 @@ define(function (require) {
         getSirenMeta,
         geoShapeMapExtentFilter: getGeoShapeBox,
         geoPointMapExtentFilter: getGeoBoundingBox,
-        getMapBounds: getMapBoundsWithCollar,
+        getMapBounds,
+        getMapBoundsWithCollar,
         respProcessor: new RespProcessor($scope.vis, buildChartData, utils),
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
@@ -694,11 +666,71 @@ define(function (require) {
         uiState: $scope.vis.getUiState(),
         syncMap: params.syncMap
       });
-
     }
 
     function resizeArea() {
       if (map) map.updateSize();
+    }
+
+    async function drawAggregationLayer(visParamCall) {
+      // console.log('*******************************************');
+      if (!_.has($scope.vis.aggs, 'origToDsl')) {
+        modifyToDsl();
+      }
+
+      let aggResp;
+      let drawAggs;
+      if (_.get($scope.vis, 'aggs[1]')) { // checking that the agg has been configured, e.g. an main spatial field has been set
+        if (map._chartData &&
+          (map.aggLayerParams && map.aggLayerParams.mapParams && map.aggLayerParams.mapParams.zoomLevel)) {
+          const autoPrecision = map._chartData.geohashGridAgg.params.autoPrecision;
+          // console.log('draw layers check: ',
+          // utils.drawLayerCheck(map.aggLayerParams, _currentMapBounds, _currentZoom, _currentAggregationPrecision));
+          if (autoPrecision && utils.drawLayerCheck(map.aggLayerParams, _currentMapBounds, _currentZoom, _currentAggregationPrecision)) {
+            drawAggs = true;
+          } else if (!autoPrecision && (!utils.contains(map.aggLayerParams.mapParams.mapBounds, _currentMapBounds))) {
+            // console.log('autoprecision false clause');
+            drawAggs = true;
+          }
+        } else {
+          // console.log('auto precision undefined clause');
+          drawAggs = true;
+        }
+
+        if (drawAggs || visParamCall) {
+          map.aggLayerParams = {};
+          map.aggLayerParams.enabled = uiState.get('Aggregation');
+
+          // always enabled first time drawn
+          if (map.aggLayerParams.enabled === undefined) {
+            map.aggLayerParams.enable = true;
+            uiState.set('Aggregation', true);
+          }
+          //assigning parameters if available on first pass
+          map.aggLayerParams.type = 'agg';
+          map.aggLayerParams.mapParams = {
+            mapBounds: _currentMapBoundsWithCollar,
+            zoomLevel: _currentZoom,
+            precision: _currentAggregationPrecision
+          };
+
+          aggResp = await $scope.searchSource.fetch();
+        }
+
+        if (_.has(aggResp, 'aggregations')) {
+          chartData = respProcessor.process(aggResp);
+          if (_shouldAutoFitMapBoundsToData()) {
+            _doFitMapBoundsToData();
+          }
+
+          map.addMarkers(
+            chartData,
+            $scope.vis.params,
+            tooltipFormatter,
+            _.get(chartData, 'valueFormatter', _.identity),
+            collar);
+        }
+      }
     }
 
     // ============================
@@ -760,7 +792,7 @@ define(function (require) {
     });
 
     // saving checkbox status to dashboard uiState
-    map.leafletMap.on('showlayer', function (e) {
+    map.leafletMap.on('showlayer', async function (e) {
       map.saturateWMSTiles();
       if (map._markers && e.id === 'Aggregation') {
         if (isHeatMap()) {
@@ -784,9 +816,11 @@ define(function (require) {
         const layerParams = getPoiLayerParamsById(e.id);
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
-        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentPrecision)) {
+        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentClusteringPrecision)) {
           initPOILayer(layerParams);
         }
+      } else if (e.layer.type === 'agg') {
+        await drawAggregationLayer();
       }
     });
 
@@ -818,26 +852,45 @@ define(function (require) {
     });
 
 
-    map.leafletMap.on('moveend', _.debounce(function setZoomCenter() {
+    map.leafletMap.on('moveend', _.debounce(async function setZoomCenter() {
       if (!map.leafletMap) return;
       if (map._hasSameLocation()) return;
 
-      const currentZoom = map.leafletMap.getZoom();
+      _updateCurrentMapEnvironment();
+
       // update internal center and zoom references
       map._mapCenter = map.leafletMap.getCenter();
       $scope.vis.getUiState().set('mapCenter', [
         _.round(map._mapCenter.lat, 5),
         _.round(map._mapCenter.lng, 5)
       ]);
-      $scope.vis.getUiState().set('mapZoom', currentZoom);
+      $scope.vis.getUiState().set('mapZoom', _currentZoom);
 
-      map._callbacks.fetchSearchSource({
-        currentZoom,
-        searchSource: $scope.searchSource,
-        collar: map._collar,
-        chart: map._chartData,
-        mapBounds: map.mapBounds()
-      });
+      await drawAggregationLayer();
+      drawWmsOverlays();
+      drawGeoFilters();
+      _updatePoiLayers();
+      if (isHeatMap()) {
+        map.unfixMapTypeTooltips();
+      }
+
+      //Drag and Drop POI Overlays - no need to clear all layers for this watcher
+      if ($scope.vis.params.overlays.dragAndDropPoiLayers &&
+        $scope.vis.params.overlays.dragAndDropPoiLayers.length >= 1) {
+        $scope.vis.params.overlays.dragAndDropPoiLayers.forEach(dragAndDrop => {
+          dragAndDrop.isInitialDragAndDrop = false;
+          initPOILayer(dragAndDrop);
+        });
+      }
+
+
+      // map._callbacks.fetchSearchSource({
+      //   _currentZoom,
+      //   searchSource: $scope.searchSource,
+      //   collar: map._collar,
+      //   chart: map._chartData,
+      //   mapBounds: map.mapBounds()
+      // });
     }, 500, false));
 
     map.leafletMap.on('setview:fitBounds', function () {

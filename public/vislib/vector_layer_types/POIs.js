@@ -155,7 +155,7 @@ define(function (require) {
       const savedSearch = await savedSearches.get(this.savedSearchId);
       const geoFields = getGeoFields(savedSearch);
       const geoField = geoFields.find(geoField => {
-        return geoField.name === options.geoField;
+        return geoField.name === options.geoFieldName;
       });
 
       const geo = {};

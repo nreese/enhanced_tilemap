@@ -323,9 +323,16 @@ define(function (require) {
 
       const zoomLevelCheck = (
         // no need to redraw shapes when zooming in
-        zoom < layerParams.mapParams.zoomLevel && (layerParams.type === 'es_ref_shape'  || layerParams.type === 'poi_shape')) ||
+        zoom < layerParams.mapParams.zoomLevel && (
+          layerParams.type === 'es_ref_shape' ||
+          layerParams.type === 'poi_shape')
+      ) ||
         //no need to redraw points if layer precsion is the same as the current
-        (precision !== layerParams.mapParams.precision && (layerParams.type === 'es_ref_point' || layerParams.type === 'poi_point'));
+        (precision !== layerParams.mapParams.precision &&
+          (layerParams.type === 'es_ref_point' ||
+            layerParams.type === 'poi_point' ||
+            layerParams.type === 'agg')
+        );
 
       // current map canvas must contain the extent that the layer was rendered for
       const layerHasDataForCurrentBounds = !this.contains(layerParams.mapParams.mapBounds, mapBounds);

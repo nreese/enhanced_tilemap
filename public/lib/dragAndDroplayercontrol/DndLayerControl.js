@@ -432,7 +432,7 @@ function getExtendedMapControl() {
     const layer = await getEsRefLayer(item.path, item.enabled, config);
     layer.mapParams = {
       zoomLevel: _currentZoom,
-      mapBounds: _currentMapBounds,
+      mapBounds: mainSearchDetails.getMapBoundsWithCollar(),
       precision: _currentPrecision
     };
     layer.path = item.path;
@@ -648,7 +648,7 @@ function getExtendedMapControl() {
           mapParams: {
             zoomLevel: _currentZoom,
             precision: utils.getMarkerClusteringPrecision(_currentZoom),
-            mapBounds: mainSearchDetails.getMapBounds()
+            mapBounds: mainSearchDetails.getMapBoundsWithCollar()
           },
           onMap: true
         };
