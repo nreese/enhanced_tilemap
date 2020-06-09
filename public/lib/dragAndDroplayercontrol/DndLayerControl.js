@@ -484,7 +484,7 @@ function getExtendedMapControl() {
           }
         }
       },
-      _source: ['geometry', 'spatial_path'],
+      _source: ['geometrytype', 'spatial_path'],
       size: 1
     };
 
@@ -511,7 +511,7 @@ function getExtendedMapControl() {
         const spatialPathSource = spatialPathDoc.hits.hits[0]._source;
 
         let geometryType = 'point';
-        if (spatialPathSource.geometry.type.includes('Polygon')) {
+        if (spatialPathSource.geometrytype && spatialPathSource.geometrytype.includes('Polygon')) {
           geometryType = 'polygon';
         }
 
