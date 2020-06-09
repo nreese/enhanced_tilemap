@@ -508,14 +508,14 @@ function getExtendedMapControl() {
 
     resp.responses.forEach(spatialPathDoc => {
       if (spatialPathDoc.hits.hits.length === 1) {
-        const spaitalPathSource = spatialPathDoc.hits.hits[0]._source;
+        const spatialPathSource = spatialPathDoc.hits.hits[0]._source;
 
         let geometryType = 'point';
-        if (spaitalPathSource.geometrytype.includes('Polygon')) {
+        if (spatialPathSource.geometrytype && spatialPathSource.geometrytype.includes('Polygon')) {
           geometryType = 'polygon';
         }
 
-        layerTypes[spaitalPathSource.spatial_path] = geometryType;
+        layerTypes[spatialPathSource.spatial_path] = geometryType;
       }
     });
     return layerTypes;
