@@ -57,7 +57,7 @@ define(function (require) {
         'trailing': false
       });
 
-      if (!this._disableTooltips && this._attr.addTooltip) {
+      if (!this._disableTooltips && this._attr.addTooltip && this.uiState.get('Aggregation')) {
         this.leafletMap.on('mousemove', debouncedMouseMoveLocation);
         this.leafletMap.on('mouseout', function () {
           self.leafletMap.closePopup();

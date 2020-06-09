@@ -259,6 +259,7 @@ define(function (require) {
         prevState: prevState,
         attr: this._attr
       });
+      this._markers.show();
     };
 
     /**

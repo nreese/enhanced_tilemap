@@ -319,7 +319,7 @@ define(function (require) {
       return { aggFeatures, docFilters };
     },
     drawLayerCheck: function (layerParams, mapBounds, zoom, precision) {
-      if (!layerParams.mapParams || !layerParams.type) return true;
+      if (!layerParams.mapParams || !layerParams.type || !mapBounds || !zoom || !precision) return true;
 
       const zoomLevelCheck = (
         // no need to redraw shapes when zooming in
