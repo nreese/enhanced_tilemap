@@ -5,13 +5,6 @@ require('./../DndLayerControl.js');
 
 const fakeAllLayers = [
   {
-    enabled: true,
-    icon: '<i class="fas fa-map-marker" style="color:green;"></i>',
-    id: 'Markers',
-    label: 'Markers',
-    type: 'marker'
-  },
-  {
     close: true,
     enabled: true,
     icon: '<i class="fas fa-map-marker-alt" style="color:0x72032d;"></i>',
@@ -160,7 +153,7 @@ describe('Kibi Enhanced Tilemap', () => {
         };
 
         layerControl._addOrReplaceLayer(newLayer);
-        expect(_allLayers[4].label).to.eql(newLayer.label);
+        expect(_allLayers[3].label).to.eql(newLayer.label);
       });
     });
 
@@ -180,21 +173,6 @@ describe('Kibi Enhanced Tilemap', () => {
         const _allLayers = layerControl.getAllLayers();
 
         expect(_allLayers[_allLayers.length - 1].id).to.eql(wmsLayer.id);
-        expect(_allLayers[0].id).to.eql('Markers');
-      });
-
-      it('should move markers to front of array', () => {
-        const fakeAllLayersCloned = cloneDeep(fakeAllLayers);
-
-        //moving markers to end of array
-        const markerLayer = fakeAllLayersCloned.shift();
-        fakeAllLayersCloned.push(markerLayer);
-
-        layerControl = L.control.dndLayerControl(fakeAllLayersCloned, fakeEsClient, fakeMainSearchDetails, null);
-        layerControl._orderLayersByType();
-        const _allLayers = layerControl.getAllLayers();
-
-        expect(_allLayers[0].id).to.eql('Markers');
       });
 
       it('should move point layer to below Markers', () => {
@@ -224,7 +202,7 @@ describe('Kibi Enhanced Tilemap', () => {
         layerControl._orderLayersByType();
         const _allLayers = layerControl.getAllLayers();
 
-        expect(_allLayers[2].id).to.eql(geoFiltersLayer.id);
+        expect(_allLayers[1].id).to.eql(geoFiltersLayer.id);
       });
     });
     describe('_getLayerLevelConfig', () => {

@@ -635,7 +635,7 @@ define(function (require) {
                 enabled = layerParams.isVisible;
               }
 
-              const presentInUiState = uiState().get(name);
+              const presentInUiState = uiState.get(name);
               if (presentInUiState) {
                 enabled = true;
               } else if (presentInUiState === false) {
