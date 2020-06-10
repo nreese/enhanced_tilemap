@@ -76,7 +76,10 @@ define(function (require) {
       drawWfsOverlays();
       if (!onDashboardPage()) {
         await drawLayers();
+      } else {
+        _drawGeoFilters();
       }
+
       if (_shouldAutoFitMapBoundsToData(true)) {
         _doFitMapBoundsToData();
       }
