@@ -37,7 +37,11 @@ export default class EsLayer {
           layer.unbindPopup();
         };
         self.bindPopup(layer, options);
-      } else if ('geo_shape' === geo.type || 'polygon' === geo.type || 'multipolygon' === geo.type) {
+      } else if ('geo_shape' === geo.type ||
+        'polygon' === geo.type ||
+        'multipolygon' === geo.type ||
+        'linestring' === geo.type ||
+        'multilinestring' === geo.type) {
         const shapesWithGeometry = _.remove(hits, hit => {
           return _.get(hit, `_source[${geo.field}]`);
         });
@@ -47,7 +51,11 @@ export default class EsLayer {
 
           geometry.type = self.capitalizeFirstLetter(geometry.type);
           if (geometry.type === 'Multipolygon') {
-            geometry.type === 'MultiPolygon';
+            geometry.type = 'MultiPolygon';
+          } else if (geometry.type === 'Linestring') {
+            geometry.type = 'LineString';
+          } else if (geometry.type === 'Multilinestring') {
+            geometry.type = 'MultiLineString';
           }
 
           if (type === 'es_ref') {
@@ -74,7 +82,8 @@ export default class EsLayer {
                 polygon.content = feature.properties.label;
               }
 
-              if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
+              if (feature.geometry && (feature.geometry.type === 'Polygon' ||
+              feature.geometry.type === 'MultiPolygon')) {
                 polygon._click = function fireEtmSelectFeature() {
                   polygon._map.fire('etm:select-feature-vector', {
                     args: {
@@ -125,6 +134,11 @@ export default class EsLayer {
           layer.warning = `There are undisplayed POIs for this overlay due
         to having reached the limit currently set to ${options.warning.limit}`;
         }
+        if (geo.type.includes('line')) {
+          layer.icon = `<i class="far fa-horizontal-rule" style="color:${layerControlColor};"></i>`;
+        } else {
+          layer.icon = `<i class="far fa-draw-square" style="color:${layerControlColor};"></i>`;
+        }
         layer.icon = `<i class="far fa-stop" style="color:${layerControlColor};"></i>`;
         layer.type = type + '_shape';
         layer.destroy = () => layer.options.destroy();
@@ -157,8 +171,10 @@ export default class EsLayer {
 
       if (geo.type === 'point' || geo.type === 'geo_point') {
         layer.icon = `<i class="${options.icon}" style="color:${options.color};"></i>`;
+      } else if (geo.type.includes('line')) {
+        layer.icon = `<i class="far fa-horizontal-rule" style="color:${options.color};"></i>`;
       } else {
-        layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
+        layer.icon = `<i class="far fa-draw-square" style="color:${options.color};"></i>`;
       }
 
       layer.options = { pane: 'overlayPane' };

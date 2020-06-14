@@ -589,6 +589,9 @@ function getExtendedMapControl() {
         if (spatialPathSource.geometrytype && spatialPathSource.geometrytype.includes('Polygon')) {
           geometryType = 'polygon';
         }
+        if (spatialPathSource.geometrytype && spatialPathSource.geometrytype.includes('Line')) {
+          geometryType = 'line';
+        }
 
         layerTypes[spatialPathSource.spatial_path] = geometryType;
       }
