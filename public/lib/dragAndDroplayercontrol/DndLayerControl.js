@@ -16,9 +16,7 @@ function getExtendedMapControl() {
   let _dndListElement;
   let _addLayerElement;
   let _allLayers;
-  let _currentZoom;
-  let _currentMapBounds;
-  let _currentPrecision;
+  const _currentMapEnvironment = {};
 
   let esClient;
   let $element;
@@ -29,9 +27,9 @@ function getExtendedMapControl() {
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
   function _updateCurrentMapEnvironment() {
-    _currentMapBounds = mainSearchDetails.getMapBounds();
-    _currentZoom = _leafletMap.getZoom();
-    _currentPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
+    _currentMapEnvironment.currentMapBounds = mainSearchDetails.getMapBounds();
+    _currentMapEnvironment.currentZoom = _leafletMap.getZoom();
+    _currentMapEnvironment.currentPrecision = utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
   }
 
   function _isHeatmapLayer(layer) {
@@ -39,7 +37,7 @@ function getExtendedMapControl() {
   }
 
   function _visibleForCurrentMapZoom(config) {
-    return _currentZoom >= config.minZoom && _currentZoom <= config.maxZoom;
+    return _currentMapEnvironment.currentZoom >= config.minZoom && _currentMapEnvironment.currentZoom <= config.maxZoom;
   }
 
   function _setAvailableConfigs(config, foundConfig) {
@@ -292,7 +290,7 @@ function getExtendedMapControl() {
           filtered_geohash: {
             geohash_grid: {
               field: 'geometry',
-              precision: precision
+              precision,
             },
             aggs: {
               3: {
@@ -351,7 +349,7 @@ function getExtendedMapControl() {
         query = _getQueryTemplate(spatialPath, [], 0);
         query.index = '.map__point__*';
         query.body.query = { match_all: {} };
-        query.body.aggs = _getAggsObject(mainSearchDetails.geoPointMapExtentFilter(), spatialPath, _currentPrecision);
+        query.body.aggs = _getAggsObject(mainSearchDetails.geoPointMapExtentFilter(), spatialPath, _currentMapEnvironment.currentPrecision);
         const aggResp = await esClient.search(query);
         const aggChartData = mainSearchDetails.respProcessor.process(aggResp);
         processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, mainSearchDetails.geoFilter, limit, 'geometry');
@@ -431,9 +429,9 @@ function getExtendedMapControl() {
   async function _createEsRefLayer(item, config) {
     const layer = await getEsRefLayer(item.path, item.enabled, config);
     layer.mapParams = {
-      zoomLevel: _currentZoom,
+      zoomLevel: _currentMapEnvironment.currentZoom,
       mapBounds: mainSearchDetails.getMapBoundsWithCollar(),
-      precision: _currentPrecision
+      precision: _currentMapEnvironment.currentPrecision
     };
     layer.path = item.path;
     return layer;
@@ -448,7 +446,10 @@ function getExtendedMapControl() {
       let layer;
       const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
       const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
-      if (visibleForCurrentMapZoom && utils.drawLayerCheck(item, _currentMapBounds, _currentZoom, _currentPrecision)) {
+      if (visibleForCurrentMapZoom && utils.drawLayerCheck(item,
+        _currentMapEnvironment.currentMapBounds,
+        _currentMapEnvironment.currentZoom,
+        _currentMapEnvironment.currentPrecision)) {
         layer = await _createEsRefLayer(item, config);
       } else {
         layer = item;
@@ -515,7 +516,10 @@ function getExtendedMapControl() {
         let layer;
         const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
         const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
-        if (visibleForCurrentMapZoom && utils.drawLayerCheck(item, _currentMapBounds, _currentZoom, _currentPrecision)) {
+        if (visibleForCurrentMapZoom && utils.drawLayerCheck(item,
+          _currentMapEnvironment.currentMapBounds,
+          _currentMapEnvironment.currentZoom,
+          _currentMapEnvironment.currentPrecision)) {
           layer = await _createEsRefLayer(item, config);
         } else {
           layer = item;
@@ -646,8 +650,8 @@ function getExtendedMapControl() {
           id: agg.key,
           path: agg.key,
           mapParams: {
-            zoomLevel: _currentZoom,
-            precision: utils.getMarkerClusteringPrecision(_currentZoom),
+            zoomLevel: _currentMapEnvironment.currentZoom,
+            precision: utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom),
             mapBounds: mainSearchDetails.getMapBoundsWithCollar()
           },
           onMap: true

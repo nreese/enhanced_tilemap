@@ -209,7 +209,7 @@ describe('Kibi Enhanced Tilemap', () => {
       };
       createZoomAndPrecisionOptions();
 
-      it('should return true AND false for layer enabled AND not enabled', () => {
+      it('should initialise options with correct values for "enabled" property', () => {
         const _currentMapBounds = startingState.mapBounds; // the new zoomed in map extent
         const _currentZoom = 4; // zoom has changed, but that is not important for point or agg layer types
         const _currentPrecision = 3; // precision has changed since previous layer render - THIS WILL CAUSE REDRAW

@@ -20,7 +20,7 @@ import {
 import EsLayer from './EsLayer';
 
 define(function (require) {
-  return function POIsFactory(Private, savedSearches, joinExplanation) {
+  return function POIsFactory(Private, savedSearches, joinExplanation, createNotifier) {
 
     const SearchSource = Private(SearchSourceProvider);
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
@@ -28,6 +28,9 @@ define(function (require) {
     const RespProcessor = require('plugins/enhanced_tilemap/resp_processor');
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const createEsLayer = new EsLayer();
+    const notify = createNotifier({
+      location: 'Enhanced Coordinate Map'
+    });
 
     /**
      * Points of Interest
@@ -152,6 +155,14 @@ define(function (require) {
         return searchSource;
       };
 
+      const fetchData = async (searchSource) => {
+        try {
+          return await searchSource.fetch();
+        } catch (e) {
+          notify.warning(`Unsuccessful POI fetch request - ${e}`);
+        }
+      };
+
       const savedSearch = await savedSearches.get(this.savedSearchId);
       const geoFields = getGeoFields(savedSearch);
       const geoField = geoFields.find(geoField => {
@@ -190,20 +201,20 @@ define(function (require) {
         if (geo.type === 'geo_point') {
           this.params.type = 'poi_point';
           const aggSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'agg');
-          const aggResp = await aggSearchSource.fetch();
+          const aggResp = await fetchData(aggSearchSource);
           const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
           const aggChartData = respProcessor.process(aggResp);
           processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
 
           if (_.get(processedAggResp, 'docFilters.bool.should.length') >= 1) {
             const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search', processedAggResp.docFilters);
-            const docResp = await docSearchSource.fetch();
+            const docResp = await fetchData(docSearchSource);
             hits = docResp.hits.hits;
           }
         } else if (geo.type === 'geo_shape') {
           this.params.type = 'poi_shape';
           const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search');
-          const docResp = await docSearchSource.fetch();
+          const docResp = await fetchData(docSearchSource);
           hits = docResp.hits.hits;
         }
 

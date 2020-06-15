@@ -47,7 +47,7 @@ define(function (require) {
     let tooltip = null;
     let tooltipFormatter = null;
     let storedTime = _.cloneDeep(timefilter.time);
-    const uiState = $scope.vis.getUiState();
+    const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
     const appState = getAppState();
     let storedState = {
       filters: _.cloneDeep(appState.filters),
@@ -56,12 +56,7 @@ define(function (require) {
     $scope.flags = {};
 
     let dragEnded = true;
-    let _currentMapBounds;
-    let _currentMapBoundsWithCollar;
-    let _currentZoom;
-    let _currentClusteringPrecision;
-    let _currentAggregationPrecision;
-
+    const _currentMapEnvironment = {};
 
     const notify = createNotifier({
       location: 'Enhanced Coordinate Map'
@@ -166,7 +161,7 @@ define(function (require) {
     }
 
     function getPoiLayerParamsById(id) {
-      return _.find($scope.vis.params.overlays.savedSearches, layerParams => layerParams.id === id);
+      return _.find($scope.vis.params.overlays.savedSearches, { id });
     }
 
     async function addPOILayerFromDashboardWithModal(dashboardId) {
@@ -322,7 +317,10 @@ define(function (require) {
         }
 
         if ((queryFilterChange && layerParams.enabled) ||
-          utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentClusteringPrecision)) {
+          utils.drawLayerCheck(layerParams,
+            _currentMapEnvironment.currentMapBounds,
+            _currentMapEnvironment.currentZoom,
+            _currentMapEnvironment.currentClusteringPrecision)) {
           initPOILayer(layerParams);
         }
       });
@@ -332,8 +330,8 @@ define(function (require) {
       const poi = new POIsProvider(layerParams);
       const displayName = layerParams.displayName || layerParams.savedSearchLabel;
       layerParams.mapParams = {
-        zoomLevel: _currentZoom,
-        precision: utils.getMarkerClusteringPrecision(_currentZoom),
+        zoomLevel: _currentMapEnvironment.currentZoom,
+        precision: utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom),
         mapBounds: getMapBoundsWithCollar()
       };
 
@@ -661,17 +659,18 @@ define(function (require) {
     }
 
     function _updateCurrentMapEnvironment() {
-      _currentMapBounds = getMapBounds();
-      _currentMapBoundsWithCollar = getMapBoundsWithCollar();
-      _currentZoom = map.leafletMap.getZoom();
-      _currentClusteringPrecision = utils.getMarkerClusteringPrecision(_currentZoom);
+      _currentMapEnvironment.currentMapBounds = getMapBounds();
+      _currentMapEnvironment.currentMapBoundsWithCollar = getMapBoundsWithCollar();
+      _currentMapEnvironment.currentZoom = map.leafletMap.getZoom();
+      _currentMapEnvironment.currentClusteringPrecision = utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
 
       if ($scope.vis.aggs[1]) {
         const precisionType = $scope.vis.aggs[1].params.aggPrecisionType.toLowerCase();
         if (precisionType === 'default') {
-          _currentAggregationPrecision = aggPrecisions.getDefaultZoomPrecision(maxPrecision)[_currentZoom];
+          _currentMapEnvironment.currentAggregationPrecision =
+            aggPrecisions.getDefaultZoomPrecision(maxPrecision)[_currentMapEnvironment.currentZoom];
         } else {
-          _currentAggregationPrecision = aggPrecisions[precisionType][_currentZoom];
+          _currentMapEnvironment.currentAggregationPrecision = aggPrecisions[precisionType][_currentMapEnvironment.currentZoom];
         }
       }
     }
@@ -738,9 +737,12 @@ define(function (require) {
         if (map._chartData && // if parameters haven't been assigned yet, fire the query
           (map.aggLayerParams && map.aggLayerParams.mapParams && map.aggLayerParams.mapParams.zoomLevel)) {
           const autoPrecision = _.get(map, '_chartData.geohashGridAgg.params.autoPrecision') || map.aggLayerParams.autoPrecision; //use previous as default
-          if (autoPrecision && utils.drawLayerCheck(map.aggLayerParams, _currentMapBounds, _currentZoom, _currentAggregationPrecision)) {
+          if (autoPrecision && utils.drawLayerCheck(map.aggLayerParams,
+            _currentMapEnvironment.currentMapBounds,
+            _currentMapEnvironment.currentZoom,
+            _currentMapEnvironment.currentAggregationPrecision)) {
             drawAggs = true;
-          } else if (!autoPrecision && (!utils.contains(map.aggLayerParams.mapParams.mapBounds, _currentMapBounds))) {
+          } else if (!autoPrecision && (!utils.contains(map.aggLayerParams.mapParams.mapBounds, _currentMapEnvironment.currentMapBounds))) {
             drawAggs = true;
           }
         } else {
@@ -765,9 +767,9 @@ define(function (require) {
           }
 
           map.aggLayerParams.mapParams = {
-            mapBounds: _currentMapBoundsWithCollar,
-            zoomLevel: _currentZoom,
-            precision: _currentAggregationPrecision
+            mapBounds: _currentMapEnvironment.currentMapBoundsWithCollar,
+            zoomLevel: _currentMapEnvironment.currentZoom,
+            precision: _currentMapEnvironment.currentAggregationPrecision
           };
           aggResp = await $scope.searchSource.fetch();
         }
@@ -864,7 +866,10 @@ define(function (require) {
         const layerParams = getPoiLayerParamsById(e.id);
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
-        if (utils.drawLayerCheck(layerParams, _currentMapBounds, _currentZoom, _currentClusteringPrecision)) {
+        if (utils.drawLayerCheck(layerParams,
+          _currentMapEnvironment.currentMapBounds,
+          _currentMapEnvironment.currentZoom,
+          _currentMapEnvironment.currentClusteringPrecision)) {
           initPOILayer(layerParams);
         }
       } else if (e.layerType === 'agg') {
@@ -917,7 +922,7 @@ define(function (require) {
         _.round(map._mapCenter.lat, 5),
         _.round(map._mapCenter.lng, 5)
       ]);
-      uiState.set('mapZoom', _currentZoom);
+      uiState.set('mapZoom', _currentMapEnvironment.currentZoom);
 
       await drawLayers();
     }, 500, false));
