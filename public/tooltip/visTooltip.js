@@ -57,6 +57,10 @@ define(function (require) {
           return geoFilter.rectFilter(self.fieldname, self.geotype, bounds.top_left, bounds.bottom_right, meta);
         }
 
+        function nodeContainsVis(node, visId, panelIndex) {
+          return _.find(node.d.widgets, widget => widget.id === visId && widget.panelIndex === panelIndex);
+        }
+
         return function (feature, leafletMap) {
           if (!feature) return '';
           if (!self.$visEl) return 'initializing';
@@ -74,8 +78,7 @@ define(function (require) {
 
           let sirenMetaCloned = null;
           if (self.sirenMeta) {
-            const panelIndexObj = {};
-            const panelIndex = Math.floor(Math.random() * 10000) + 1000;
+            const panelIndexObj = { panelIndex: (self.sirenMeta.vis.panelIndex + 1000) };
             //cloneDeep required as document count on dashboard updates when map popup is created otherwise
             sirenMetaCloned = _.cloneDeep(self.sirenMeta);
 
@@ -93,21 +96,25 @@ define(function (require) {
               if (!mainNode.d.widgets) {
                 mainNode.d.widgets = [];
               }
-              mainNode.d.widgets.push({
-                id: self.visId,
-                panelIndex
-              });
+
+              if (!nodeContainsVis(mainNode, self.visId, panelIndexObj.panelIndex)) {
+                mainNode.d.widgets.push({
+                  id: self.visId,
+                  panelIndex: panelIndexObj.panelIndex
+                });
+              }
             } else if (_.has(etmVisNode, 'd.widgets')) {
-              etmVisNode.d.widgets.push({
-                id: self.visId,
-                panelIndex
-              });
+              if (!nodeContainsVis(etmVisNode, self.visId, panelIndexObj.panelIndex)) {
+                etmVisNode.d.widgets.push({
+                  id: self.visId,
+                  panelIndex: panelIndexObj.panelIndex
+                });
+              }
+
             }
 
             sirenMetaCloned.vis.id = self.visId;
-            sirenMetaCloned.vis.panelIndex = panelIndex;
-            panelIndexObj.panelIndex = panelIndex;
-
+            panelIndexObj.panelIndex = sirenMetaCloned.vis.panelIndex;
             addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaCloned, panelIndexObj);
           }
 
