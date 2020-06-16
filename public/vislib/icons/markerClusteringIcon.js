@@ -2,18 +2,31 @@ const L = require('leaflet');
 
 export const markerClusteringIcon = function (thisClusterCount, maxAggDocCount, faIcon, color) {
 
-  const mediumSizeThreshold = maxAggDocCount * 0.20;
-  const largeSizeThreshold = maxAggDocCount * 0.85;
+  faIcon = `${faIcon} fa-2x`; // current default is medium size
 
-  let backgroundColor = '#80a2ff';
-  if (thisClusterCount >= mediumSizeThreshold) backgroundColor = '#fff780';
-  if (thisClusterCount >= largeSizeThreshold) backgroundColor = '#ff8880';
+  function colorLuminance(lum) {
+    const hex = '444444'; // constant color
+    lum = lum || 0;
 
-  faIcon = `${faIcon} fa-2x`; // current default is medium
+    // convert to decimal and change luminosity
+    let rgb = '#';
+    let c;
+    let i;
+    for (i = 0; i < 3; i++) {
+      c = parseInt(hex.substr(i * 2, 2), 16);
+      c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+      rgb += ('00' + c).substr(c.length);
+    }
+
+    return rgb;
+  }
+
+  const luminosityFactor = 1 - (thisClusterCount / maxAggDocCount); // making it lighter
+  const backgroundColor = colorLuminance(luminosityFactor);
 
   function getBaseStyle() {
     return 'width: fit-content; ' +
-      'height: fit-content;';
+      'height: 21px;';
   }
 
   function getOuterStyle() {
@@ -24,11 +37,8 @@ export const markerClusteringIcon = function (thisClusterCount, maxAggDocCount, 
   function getCountStyle() {
     return getBaseStyle() +
       'border-radius: 10px; ' +
-      'border: solid;' +
-      'border-width: 0.5px; ' +
-      `border-color: ${color}; ` +
-      'opacity: 1; ' +
       `background-color: ${backgroundColor}; ` +
+      'color: #FFFFFF;' +
       'padding: 2px;';
   }
 
