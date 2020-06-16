@@ -193,7 +193,7 @@ define(function (require) {
           options.close = true;
         }
 
-        let hits = [];
+        let docResp;
         let processedAggResp = {
           aggFeatures: []
         };
@@ -202,21 +202,23 @@ define(function (require) {
           this.params.type = 'poi_point';
           const aggSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'agg');
           const aggResp = await fetchData(aggSearchSource);
-          const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
-          const aggChartData = respProcessor.process(aggResp);
-          processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
+
+          if (_.get(aggResp, 'aggregations')) {
+            const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
+            const aggChartData = respProcessor.process(aggResp);
+            processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
+          }
 
           if (_.get(processedAggResp, 'docFilters.bool.should.length') >= 1) {
             const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search', processedAggResp.docFilters);
-            const docResp = await fetchData(docSearchSource);
-            hits = docResp.hits.hits;
+            docResp = await fetchData(docSearchSource);
           }
         } else if (geo.type === 'geo_shape') {
           this.params.type = 'poi_shape';
           const docSearchSource = await createSearchSource(new SearchSource(), savedSearch, geo, 'search');
-          const docResp = await fetchData(docSearchSource);
-          hits = docResp.hits.hits;
+          docResp = await fetchData(docSearchSource);
         }
+        const hits = _.get(docResp, 'hits.hits', []);
 
         if (this.draggedState) {
           //For drag and drop overlays
