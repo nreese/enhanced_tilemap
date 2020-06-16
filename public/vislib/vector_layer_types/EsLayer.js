@@ -134,7 +134,7 @@ export default class EsLayer {
           layer.warning = `There are undisplayed POIs for this overlay due
         to having reached the limit currently set to ${options.warning.limit}`;
         }
-        if (geo.type.includes('line')) {
+        if (geo.type === 'line') {
           layer.icon = `<i class="far fa-horizontal-rule" style="color:${layerControlColor};"></i>`;
         } else {
           layer.icon = `<i class="far fa-draw-square" style="color:${layerControlColor};"></i>`;
