@@ -5,13 +5,7 @@ export const markerClusteringIcon = function (thisClusterCount, maxAggDocCount, 
   faIcon = `${faIcon} fa-2x`; // current default is medium size
 
   function colorLuminance(lum) {
-    const hex = '444444'; // constant color, pass hex to this function and uncomment below if layer specific colors are desired
-    // validate hex string
-    // hex = String(hex).replace(/[^0-9a-f]/gi, '');
-    // if (hex.length < 6) {
-    //   hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    // }
-
+    const hex = '444444'; // constant color
     lum = lum || 0;
 
     // convert to decimal and change luminosity
@@ -29,7 +23,6 @@ export const markerClusteringIcon = function (thisClusterCount, maxAggDocCount, 
 
   const luminosityFactor = 1 - (thisClusterCount / maxAggDocCount); // making it lighter
   const backgroundColor = colorLuminance(luminosityFactor);
-  // console.log(thisClusterCount, 'luminosityFactor: ', luminosityFactor, 'backgroundColor: ' , backgroundColor);
 
   function getBaseStyle() {
     return 'width: fit-content; ' +
