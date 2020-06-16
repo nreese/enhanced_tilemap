@@ -19,7 +19,7 @@ export default class EsLayer {
     options.$legend.innerHTML = '';
     layerControl.removeClass('leaflet-control-layers-warning');
 
-    if ((aggs && aggs.length >= 1) || (hits.length >= 1)) {
+    if ((aggs && aggs.length >= 1) || hits.length >= 1) {
       //using layer level config
       const layerControlIcon = options.icon;
       const layerControlColor = options.color;
@@ -79,7 +79,7 @@ export default class EsLayer {
                   polygon._map.fire('etm:select-feature-vector', {
                     args: {
                       _siren: options._siren,
-                      geoFieldName: options.geoFieldName,
+                      geoFieldName: options.mainVisGeoFieldName,
                       indexPattern: options.indexPattern,
                       type: feature.geometry.type
                     },

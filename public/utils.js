@@ -280,7 +280,7 @@ define(function (require) {
         13: 5,
         14: 5,
         15: 5,
-        16: 5,
+        16: 6,
         17: 6,
         18: 6,
         19: 6,
@@ -317,6 +317,27 @@ define(function (require) {
         }
       }
       return { aggFeatures, docFilters };
+    },
+    drawLayerCheck: function (layerParams, mapBounds, zoom, precision) {
+      if (!layerParams.mapParams || !layerParams.type || !mapBounds || !zoom || !precision) return true;
+
+      const zoomLevelCheck = (
+        // no need to redraw shapes when zooming in
+        zoom < layerParams.mapParams.zoomLevel && (
+          layerParams.type === 'es_ref_shape' ||
+          layerParams.type === 'poi_shape')
+      ) ||
+        //no need to redraw points if layer precsion is the same as the current
+        (precision !== layerParams.mapParams.precision &&
+          (layerParams.type === 'es_ref_point' ||
+            layerParams.type === 'poi_point' ||
+            layerParams.type === 'agg')
+        );
+
+      // current map canvas must contain the extent that the layer was rendered for
+      const layerHasDataForCurrentBounds = !this.contains(layerParams.mapParams.mapBounds, mapBounds);
+
+      return layerParams.enabled && (zoomLevelCheck || layerHasDataForCurrentBounds);
     }
   };
 });
