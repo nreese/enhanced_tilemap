@@ -307,7 +307,7 @@ You can still see the available layers for the WMS by running a
 
 
 image::add_wfs_layer_button.png[image]
-This allows for point and polygon (including multipolygon) types to be rendered onto the the Enhanced Coordinate Map. Polygons can be clicked on for geo filter creation
+This allows for point, linestring (including multilinestring) and polygon (including multipolygon) types to be rendered onto the the Enhanced Coordinate Map. Polygons can be clicked on for geo filter creation
 See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name*, *Url* and *WFS Layers* fields. For details on setting up a WFS server, see the <<Getting started with GeoServer>> guide. Additional fields specific for editing WFS layers:
 
   * *Styling* - Set color in Hex value form and specify the size of the
@@ -559,7 +559,7 @@ image:load_map_reference_console_output.png[Console output]
 
 In this section, you can learn how to load stored layers into the map. 
 
-NOTE: You will need to have layers stored in elasticsearch in indices that have a `.map__` prefix. See <<Loading map layers into Elasticsearch>> for details on our recommended way to load these.
+NOTE: You will need to have layers stored in elasticsearch in indices that have a `.map__` prefix. See <<Loading Stored Layers into Elasticsearch>> for details on our recommended way to load these.
 
 In top right click of an Enhanced Coordinate Map visualization, click on the Layer Control to toggle it open. When the ‘Add Layers’ button is clicked, a modal (below) will appear displaying Stored Layers (e.g. Irish Counties) and the group they are in (i.e. World Countries). 
 
@@ -575,7 +575,7 @@ It is possible to add a layer type corresponding to a group and we will explain 
 
 * If either a nested group or a layer box is unticked, the group will become indeterminate indicating that some of the boxes in that group are unchecked
 
-* Finally, if no items in a group a checked, the group checkbox will be unchecked
+* Finally, if no items in a group are checked, the group checkbox will be unchecked
 
 To add the selected layers to the map but keep them hidden for now, click *Add*.  To add the layers to the map and also make them visible, click *Add and Enable*. 
 
@@ -583,6 +583,8 @@ You can configure the stored layers when your visualization is in edit mode. For
 
 ==== Stored layers and the map
 If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
+
+NOTE: This only applies to Polygons and NOT Points or Lines
 
 === Layer control
 The *Layers* function is located in the top-right corner of any Enhanced Coordinate Map. It allows you to select which layers that you want to display on the map.
@@ -597,7 +599,7 @@ NOTE: Layers will be automatically positioned at the top or bottom of their type
 
 * Markers
 * Point Layers
-* Polygon Layers
+* Shape Layers (polygons and lines)
 * Tile Layers
 
 
