@@ -42,12 +42,30 @@ export const markerClusteringIcon = function (thisClusterCount, maxAggDocCount, 
       'padding: 2px;';
   }
 
+  const widthOptions = {
+    1: 34,
+    2: 41,
+    3: 46,
+    4: 53,
+    5: 61,
+    6: 68,
+    7: 73,
+    8: 79,
+    9: 85,
+    10: 89
+  };
+
+  const width = widthOptions[thisClusterCount.toString().length];
+
   return L.divIcon({
     // className is required, otherwise we get a default white square appearing in top left of html div below
     className: '',
     html: `<div data-test-subj="clustering-icon" style="${getOuterStyle()}">` +
       `<i class="${faIcon}" style="color:${color};"></i>` +
       `<div style="${getCountStyle()}">${thisClusterCount}</div>` +
-      `</div>`
+      `</div>`,
+    // this is necessary so that clusters remain within their respective geohash
+    // when quick zooming (with no layer re-render). With no set size, the icon can move out of place
+    iconSize: [width, 25]
   });
 };
