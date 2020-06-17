@@ -280,14 +280,14 @@ define(function (require) {
         11: 5,
         12: 5,
         13: 5,
-        14: 5,
-        15: 5,
+        14: 6,
+        15: 6,
         16: 6,
-        17: 6,
-        18: 6,
-        19: 6,
-        20: 6,
-        21: 6
+        17: 7,
+        18: 7,
+        19: 7,
+        20: 7,
+        21: 7
       };
       return clusteringPrecisionBasedOnZoom[currentZoom];
     },

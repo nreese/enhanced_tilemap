@@ -4,7 +4,6 @@ import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerClusteringIcon';
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
-import { markerIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerIcon';
 
 export default class EsLayer {
   constructor() {
@@ -196,7 +195,6 @@ export default class EsLayer {
     const self = this;
     const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
     let clusterPolygon;
-    let tempclusterpoint;
 
     self._popupMouseOut = function (e) {
       // get the element that the mouse hovered onto
@@ -219,17 +217,12 @@ export default class EsLayer {
           //for marker clusters
           clusterPolygon = self._createClusterGeohashPolygon(e.layer.geohashRectangle, options.color)
             .addTo(options.leafletMap);
-          tempclusterpoint = L.marker(e.latlng,
-            {
-              icon: markerIcon(options.color, options.size)
-            }).addTo(options.leafletMap);
         }
       },
 
       mouseout: function (e) {
         if (e.layer.geohashRectangle && clusterPolygon) {
           clusterPolygon.remove(options.leafletMap);
-          tempclusterpoint.remove(options.leafletMap);
         } else {
           const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
           // check to see if the element is a popup
@@ -358,10 +351,8 @@ export default class EsLayer {
         utils.offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
       );
 
-      // const offsetCenter = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-
       const marker = L.marker(offsetCenter, {
-        icon: markerClusteringIcon(markerCount, maxAggDocCount, icon, color, offsetCenter),
+        icon: markerClusteringIcon(markerCount, maxAggDocCount, icon, color),
         pane: 'overlayPane'
       });
 
