@@ -361,6 +361,7 @@ export default class EsLayer {
       const clusterCentroidInPixels = options.leafletMap.latLngToContainerPoint(
         [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
       );
+
       const offsetCenter = options.leafletMap.containerPointToLatLng(
         utils.offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
       );

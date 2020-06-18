@@ -333,6 +333,14 @@ function getExtendedMapControl() {
   function _aggResponseCheck(resp) {
     return resp.aggregations && resp.aggregations[2] && resp.aggregations[2].buckets && resp.aggregations[2].buckets.length > 0;
   }
+
+  function _storedLayerRedrawCheck(visibleForCurrentMapZoom, item) {
+    return visibleForCurrentMapZoom && (!item.mapParams.visible || utils.drawLayerCheck(item,
+      _currentMapEnvironment.currentMapBounds,
+      _currentMapEnvironment.currentZoom,
+      _currentMapEnvironment.currentPrecision));
+  }
+
   async function getEsRefLayer(spatialPath, enabled, config) {
     const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
     const limit = 250;
@@ -446,21 +454,19 @@ function getExtendedMapControl() {
       let layer;
       const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
       const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
-      if (visibleForCurrentMapZoom && utils.drawLayerCheck(item,
-        _currentMapEnvironment.currentMapBounds,
-        _currentMapEnvironment.currentZoom,
-        _currentMapEnvironment.currentPrecision)) {
+      if (_storedLayerRedrawCheck(visibleForCurrentMapZoom, item)) {
         layer = await _createEsRefLayer(item, config);
+        layer.mapParams.visible = visibleForCurrentMapZoom;
       } else {
         layer = item;
       }
 
+      layer.visible = visibleForCurrentMapZoom;
+
       if (!visibleForCurrentMapZoom) {
         _clearLayerFromMapById(layer.id);
-        layer.visible = false;
-      } else {
-        layer.visible = true;
       }
+
       esRefLayerList.push(layer);
 
       if (layer.enabled) {
@@ -481,8 +487,10 @@ function getExtendedMapControl() {
     _updateCurrentMapEnvironment();
     for (const item of list) {
       const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
+      const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
       const layer = await _createEsRefLayer(item, config);
-      if (!_visibleForCurrentMapZoom(config)) {
+      layer.mapParams.visible = visibleForCurrentMapZoom;
+      if (!visibleForCurrentMapZoom) {
         _clearLayerFromMapById(layer.id);
         layer.visible = false;
       } else {
@@ -516,20 +524,14 @@ function getExtendedMapControl() {
         let layer;
         const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
         const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
-        if (visibleForCurrentMapZoom && utils.drawLayerCheck(item,
-          _currentMapEnvironment.currentMapBounds,
-          _currentMapEnvironment.currentZoom,
-          _currentMapEnvironment.currentPrecision)) {
+        if (_storedLayerRedrawCheck(visibleForCurrentMapZoom, item)) {
           layer = await _createEsRefLayer(item, config);
+          layer.mapParams.visible = visibleForCurrentMapZoom;
         } else {
           layer = item;
         }
-        if (!visibleForCurrentMapZoom) {
-          _clearLayerFromMapById(layer.id);
-          layer.visible = false;
-        } else {
-          layer.visible = true;
-        }
+
+        layer.visible = visibleForCurrentMapZoom;
 
         esRefLayers.push(layer);
       }

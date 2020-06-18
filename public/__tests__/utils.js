@@ -61,7 +61,7 @@ describe('Kibi Enhanced Tilemap', () => {
         };
 
         utils.offsetMarkerCluster(pixels, clusterCentroidInPixels, count);
-        expect(clusterCentroidInPixels.x).to.be(5);
+        expect(clusterCentroidInPixels.x).to.be(34);
         expect(clusterCentroidInPixels.y).to.be(976);
       });
 
@@ -72,7 +72,7 @@ describe('Kibi Enhanced Tilemap', () => {
         };
 
         utils.offsetMarkerCluster(pixels, clusterCentroidInPixels, count);
-        expect(clusterCentroidInPixels.x).to.be(969);
+        expect(clusterCentroidInPixels.x).to.be(986);
         expect(clusterCentroidInPixels.y).to.be(976);
       });
 
@@ -82,8 +82,8 @@ describe('Kibi Enhanced Tilemap', () => {
           y: 0
         };
         utils.offsetMarkerCluster(pixels, clusterCentroidInPixels, count);
-        expect(clusterCentroidInPixels.x).to.be(969);
-        expect(clusterCentroidInPixels.y).to.be(7);
+        expect(clusterCentroidInPixels.x).to.be(986);
+        expect(clusterCentroidInPixels.y).to.be(14);
       });
 
       it('should offset as centroid is to the bottom and left of the geohash', () => {
@@ -92,8 +92,8 @@ describe('Kibi Enhanced Tilemap', () => {
           y: 0
         };
         utils.offsetMarkerCluster(pixels, clusterCentroidInPixels, count);
-        expect(clusterCentroidInPixels.x).to.be(5);
-        expect(clusterCentroidInPixels.y).to.be(7);
+        expect(clusterCentroidInPixels.x).to.be(34);
+        expect(clusterCentroidInPixels.y).to.be(14);
       });
 
       it('should offset based on different number of digits', () => {
@@ -103,20 +103,21 @@ describe('Kibi Enhanced Tilemap', () => {
         };
 
         const expectedOffset = {
-          1: 969,
-          2: 965,
-          3: 957,
-          4: 950,
-          5: 942,
-          6: 935,
-          7: 930,
-          8: 924,
-          9: 918,
+          1: 986,
+          2: 982,
+          3: 977,
+          4: 972,
+          5: 969,
+          6: 965,
+          7: 960,
+          8: 954,
+          9: 948,
+          10: 944,
           y: 976
         };
 
         let count = '2';
-        for (let i = 1; i <= 9; i++) {
+        for (let i = 1; i <= 10; i++) {
           if (i !== 1) count += '2';
           const offsetCentroid = utils.offsetMarkerCluster(pixels, clusterCentroidInPixels, Number(count));
           expect(offsetCentroid.x).to.be(expectedOffset[i]);
@@ -141,14 +142,14 @@ describe('Kibi Enhanced Tilemap', () => {
           11: 5,
           12: 5,
           13: 5,
-          14: 5,
-          15: 5,
+          14: 6,
+          15: 6,
           16: 6,
-          17: 6,
-          18: 6,
-          19: 6,
-          20: 6,
-          21: 6
+          17: 7,
+          18: 7,
+          19: 7,
+          20: 7,
+          21: 7
         };
 
         for (let i = 0; i <= 21; i++) {

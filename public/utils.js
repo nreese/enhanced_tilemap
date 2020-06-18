@@ -227,21 +227,23 @@ define(function (require) {
     offsetMarkerCluster: function (pixels, clusterCentroidInPixels, count) {
       //function to offset the center of the geoHash so that the marker cluster will fit in geohash
       const minDistToRight = {
-        1: 31,
-        2: 35,
-        3: 43,
-        4: 50,
-        5: 58,
-        6: 65,
-        7: 70,
-        8: 76,
-        9: 82
+        1: 14,
+        2: 18,
+        3: 23,
+        4: 28,
+        5: 31,
+        6: 35,
+        7: 40,
+        8: 46,
+        9: 52,
+        10: 56
       };
 
-      const minDistanceToLeft = 5;
+      const minDistanceToLeft = 34;
       const minDistanceToBottom = 24;
       const minDistanceToRight = minDistToRight[count.toString().length];
-      const minDistanceToTop = 7;
+      const minDistanceToTop = 14;
+
       //x axis offset
       const distToLeftEdge = clusterCentroidInPixels.x - pixels.topLeft.x;
       const distToRightEdge = pixels.bottomRight.x - clusterCentroidInPixels.x;
@@ -278,14 +280,14 @@ define(function (require) {
         11: 5,
         12: 5,
         13: 5,
-        14: 5,
-        15: 5,
+        14: 6,
+        15: 6,
         16: 6,
-        17: 6,
-        18: 6,
-        19: 6,
-        20: 6,
-        21: 6
+        17: 7,
+        18: 7,
+        19: 7,
+        20: 7,
+        21: 7
       };
       return clusteringPrecisionBasedOnZoom[currentZoom];
     },
