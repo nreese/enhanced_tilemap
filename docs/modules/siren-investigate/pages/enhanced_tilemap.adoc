@@ -597,7 +597,6 @@ Layers are drawn on the map in the same order they are in the Layer Control. Lay
 
 NOTE: Layers will be automatically positioned at the top or bottom of their type in the event that they are dropped out of order. The precedence is: 
 
-* Markers
 * Point Layers
 * Shape Layers (polygons and lines)
 * Tile Layers
