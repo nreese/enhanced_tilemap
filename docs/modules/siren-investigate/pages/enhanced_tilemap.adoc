@@ -322,7 +322,7 @@ You can configure the stored layers by modifying the following parameters:
 
 * *Spatial path* - Defines the path that corresponds to a layer, for example, `continents/europe/ireland`.
 
-NOTE: The default configuration does not require the spatial_path attribute to be defined. Values will be taken from it if they are not found within the <<Cascading Configuration Process>>.
+NOTE: The default configuration does not require the spatial_path attribute to be defined. Values will be taken from it if they are not found within the <<The cascading configuration process>>.
 
 * *Icon* - Defines the favicon that is displayed for points on a map and layer control.
 * *Color* - Defines the color that is displayed on a map and in the Layer Control dialog.
@@ -579,7 +579,7 @@ It is possible to add a layer type corresponding to a group and we will explain 
 
 To add the selected layers to the map but keep them hidden for now, click *Add*.  To add the layers to the map and also make them visible, click *Add and Enable*. 
 
-You can configure the stored layers when your visualization is in edit mode. For more information, see <<Stored Layer Configurations, when in Visualization edit mode>>.
+You can configure the stored layers when your visualization is in edit mode. For more information, see <<Configuring Stored Layers, when in Visualization edit mode>>.
 
 ==== Stored layers and the map
 If a Polygon is clicked when loaded on the map, Geo Filter(s) will be created
