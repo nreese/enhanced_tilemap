@@ -134,12 +134,11 @@ export default class EsLayer {
           layer.warning = `There are undisplayed POIs for this overlay due
         to having reached the limit currently set to ${options.warning.limit}`;
         }
-        if (geo.type === 'line') {
+        if (geo.type === 'linestring' || geo.type === 'multilinestring') {
           layer.icon = `<i class="far fa-horizontal-rule" style="color:${layerControlColor};"></i>`;
         } else {
           layer.icon = `<i class="far fa-draw-square" style="color:${layerControlColor};"></i>`;
         }
-        layer.icon = `<i class="far fa-stop" style="color:${layerControlColor};"></i>`;
         layer.type = type + '_shape';
         layer.destroy = () => layer.options.destroy();
       } else {
@@ -171,7 +170,7 @@ export default class EsLayer {
 
       if (geo.type === 'point' || geo.type === 'geo_point') {
         layer.icon = `<i class="${options.icon}" style="color:${options.color};"></i>`;
-      } else if (geo.type.includes('line')) {
+      } else if (geo.type === 'line') {
         layer.icon = `<i class="far fa-horizontal-rule" style="color:${options.color};"></i>`;
       } else {
         layer.icon = `<i class="far fa-draw-square" style="color:${options.color};"></i>`;
