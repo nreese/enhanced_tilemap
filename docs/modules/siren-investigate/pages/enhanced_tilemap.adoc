@@ -477,17 +477,19 @@ image:folder_spatial_path.png[Spatial path]
 
 
 ==== File validation
-Each file need to meet the following criteria:
+Each file needs to meet the following criteria:
 
 * Can not be empty
-* Must be of geometry type Polygon and MultiPolygon OR Point
-NOTE: Polygons and Points must be in a separate file. A spatial path must be either Point OR Polygon, not a mixture of both
+* Must only contain one of the following type categories:
+** polygon - including Polygon or MultiPolygon
+** line - including LineString or MultiLineString
+** point - Point
 * If using the spatial path loading method, each GeoJSON feature must contain the spatial_path property 
 
-If these requirements are not met, the validation process will fail without loading the GeoJSONs.
+If these requirements are not met, the validation process will fail, only files to that point will be loaded.
 
 ==== Spatial path
-Spatial path is the scope/layer of a feature. Documents that have the same Spatial path, will be part of the same layer when used in Investigate.
+Spatial path is the scope/layer of a feature. Documents that have the same spatial path, will be part of the same layer when used in Investigate.
 
 *Folder structure*
 
@@ -495,7 +497,7 @@ When using the folder structure loading method the spatial path will be construc
 
 Here is an example of a spatial path for `Continents/Europe/Poland/counties.geojson` => `continents/europe/poland`
 
-The file `.../Poland/counties.geojson` contains 34 counties that make up Poland while .../counties 2.json` contains the other 8 Polish counties. The spatial path of both GeoJSONs when ingested is specified below. They will be loaded as one layer on Enhanced Coordinate Map Visualization, i.e. one 42 county layer: `continents/europe/poland`
+The file `.../Poland/counties.geojson` contains 34 counties that make up Poland while `.../counties 2.json` contains the other 8 Polish counties. The spatial path of both GeoJSONs when ingested is specified below. They will be loaded as one layer on Enhanced Coordinate Map Visualization, i.e. one 42 county layer: `continents/europe/poland`
 
 
 *Spatial Path*
@@ -519,17 +521,24 @@ The spatial path loading method requires each feature to contain a spatial_path 
 ....
 
 ==== Usage
-To load files into Elasticsearch go to `siren-investigate/bin` folder and run `load_map_reference_indices` script with appropriate arguments. 
+To load files into Elasticsearch go to `siren-investigate` folder and run `./bin/load_map_reference_indices` script with appropriate arguments. 
 
 NOTE: Make sure a user that has Elasticserach write permissions is used for authorization.
+
+*Mappings*
+
+The load script will automatically differantiate between *shape* and *point* geoJSON files and use appropriate mapping file from `/src/map_indices_loader` to create an elasticsearch inxed, a custom mapping can be passed in with arguments.
 
 *Arguments*
 
 * *-p/--path/--inputdir* specifies a path to the folder containg files
 * *-y/--yml* allows for using a custom investigate.yml. If omitted, the default configuration from `/config/investigate.yml` will be used
 * *--username <username> --password <password>* allows for specification of Elasticsearch authorization credentials. If <username> and <password> are left blank, environmental variables LOAD_LAYERS_ES_USERNAME, LOAD_LAYERS_ES_PASSWORD will be used. If not used at all, credentials specified in `/config/investigate.yml` will be used instead
+* *--ms* allows for use of a custom mappings JSON file for geo_shape objects (Polygons and Lines) instead of the default `/src/map_indices_loader/mappings_geoshape.json`
+* *--mp*  allows for use of a custom mappings JSON file for geo_point objects (Points) instead of the default `/src/map_indices_loader/mappings_geopoint.json`
+* *-s/--settings*  allows for use of a custom index settings JSON file instead of the default `/src/map_indices_loader/index_settings.json`
 * *--dryrun* will run the validation stage of the script, but will not connect to Elasticsearch
-* *--delete* deletes all `.map__` prefixed indices before loading new ones, useful for reloading files
+* *--overwrite* if an index already exists it will be overwritten with a new one
 * *--structure/--spatialpath* determines the loading method
 * *-n* specifies the maximum number of documents per single request - higher number will result in heavier requests (default 500)
 * *-r/--simrequests* specifies the number of simultaneous requests made to Elasticsearch (default 40)
