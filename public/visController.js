@@ -639,7 +639,8 @@ define(function (require) {
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
 
-              if (layerParams.url.includes('{x}') && layerParams.url.includes('{y}') && layerParams.url.includes('{z}')) { // checking for XYZ tile server
+              const urlLowerCase = layerParams.url.toLowerCase();
+              if (urlLowerCase.includes('{x}') && urlLowerCase.includes('{y}') && urlLowerCase.includes('{z}')) { // checking for XYZ tile server
                 layerParams.url = layerParams.url;
               } else if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') {
                 layerParams.url = layerParams.url + '/wms?';
