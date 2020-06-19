@@ -304,6 +304,10 @@ define(function (require) {
       return { geo_shape: geoShapeBox };
     }
 
+    function saturateWMSTile(layer) {
+      map.saturateTile($scope.vis.params.isDesaturated, layer);
+    }
+
     function _drawPoiLayers(poiLayerArray, queryFilterChange) {
       if (!poiLayerArray) return;
 
@@ -430,8 +434,6 @@ define(function (require) {
         await drawLayers(true);
         //re-draw vector overlays
         drawWfsOverlays();
-
-        map.saturateTile(visParams.isDesaturated, map._tileLayer);
       }
     });
 
@@ -629,20 +631,7 @@ define(function (require) {
               let enabled;
               if ($scope.flags.isVisibleSource === 'visParams') {
                 enabled = layerParams.isVisible;
-                // } else if (prevState.enabled ||
-                //   $scope.flags.isVisibleSource === 'layerControlCheckbox') {
-                //   enabled = prevState.enabled;
-              } else {
-                enabled = layerParams.isVisible;
               }
-
-              const presentInUiState = uiState.get(name);
-              if (presentInUiState) {
-                enabled = true;
-              } else if (presentInUiState === false) {
-                enabled = false;
-              }
-
               $scope.flags.visibleSource = '';
 
               const options = {
@@ -650,12 +639,16 @@ define(function (require) {
                 nonTiled: _.get(layerParams, 'nonTiled', false)
               };
 
-              if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') layerParams.url = layerParams.url + '/wms?';
+              const urlLowerCase = layerParams.url.toLowerCase();
+              if (urlLowerCase.includes('{x}') && urlLowerCase.includes('{y}') && urlLowerCase.includes('{z}')) { // checking for XYZ tile server
+                layerParams.url = layerParams.url;
+              } else if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') {
+                layerParams.url = layerParams.url + '/wms?';
+              }
               return map.addWmsOverlay(layerParams.url, name, wmsOptions, options, layerParams.id);
             });
         });
       });
-
     }
 
     function _updateCurrentMapEnvironment() {
@@ -693,6 +686,7 @@ define(function (require) {
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
         uiState,
+        saturateWMSTile,
       };
 
       map = new TileMapMap(container, {
@@ -849,8 +843,6 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.leafletMap.on('showlayer', async function (e) {
-      map.saturateWMSTiles();
-
       if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
         let refLayerState = 'sne'; //saved but NOT enabled
         if (e.enabled) {
@@ -903,7 +895,6 @@ define(function (require) {
 
     // saving checkbox status to dashboard uiState
     map.leafletMap.on('overlayadd', function (e) {
-      map.saturateWMSTiles();
       if (map._markers && e.id === 'Aggregation') {
         map._markers.show();
       }

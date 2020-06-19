@@ -132,6 +132,11 @@ function getExtendedMapControl() {
         zIndex++;
       }
     }
+    _leafletMap.eachLayer(layer => {
+      if (layer.type === 'base' || layer.type === 'wms') {
+        mainSearchDetails.saturateWMSTile(layer);
+      }
+    });
   }
 
   function _addOrReplaceLayer(layer) {

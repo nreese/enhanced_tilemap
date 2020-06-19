@@ -307,25 +307,15 @@ define(function (require) {
       overlay.label = name;
       overlay.icon = `<i class="fas fa-map" style="color:#000000;"></i>`;
       overlay.visible = true;
-      // if (options.enabled) this.leafletMap.addLayer(overlay);
 
       const presentInUiState = this.uiState.get(id);
-      if (presentInUiState) {
+      if (presentInUiState || options.enabled) {
         overlay.enabled = true;
       } else if (presentInUiState === false) {
         overlay.enabled = false;
       }
 
       this._layerControl.addOverlays([overlay], options);
-      this.saturateTile(this._attr.isDesaturated, overlay);
-    };
-
-    TileMapMap.prototype.saturateWMSTiles = function () {
-      this.allLayers.forEach(layer => {
-        if (layer.type === 'wms') {
-          this.saturateTile(this._attr.isDesaturated, layer);
-        }
-      });
     };
 
     TileMapMap.prototype.mapBounds = function () {
@@ -477,6 +467,7 @@ define(function (require) {
       this._tileLayer.setZIndex(-10);
       this._tileLayer.type = 'base';
       this._tileLayer.addTo(this.leafletMap);
+      this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
       // see note in _addDrawControl function
       // this._layerControl.addOverlays([this._drawnItems]);
