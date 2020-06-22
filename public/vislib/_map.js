@@ -55,9 +55,8 @@ define(function (require) {
       this.aggLayerParams;
       this._callbacks = _.get(params, 'callbacks');
       this._setMarkerType(params.mapType);
-      const centerArray = _.get(params, 'center') || defaultMapCenter;
-      this._mapCenter = L.latLng(centerArray[0], centerArray[1]);
-      this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
+      this._mapCenter = L.latLng(this.uiState.get('mapCenter')) || L.latLng(defaultMapCenter);
+      this._mapZoom = this.uiState.get('mapZoom') || defaultMapZoom;
       this._setAttr(params.attr);
       this._isEditable = params.editable || false;
 
@@ -424,16 +423,19 @@ define(function (require) {
       });
     };
 
-    TileMapMap.prototype._hasSameLocation = function () {
+    TileMapMap.prototype._hasSameLocation = function (currentCenter, currentZoom) {
       const oldLat = this._mapCenter.lat.toFixed(5);
       const oldLon = this._mapCenter.lng.toFixed(5);
-      const newLat = this.leafletMap.getCenter().lat.toFixed(5);
-      const newLon = this.leafletMap.getCenter().lng.toFixed(5);
+      const newLat = currentCenter.lat.toFixed(5);
+      const newLon = currentCenter.lng.toFixed(5);
       let isSame = false;
       if (oldLat === newLat
         && oldLon === newLon
         && this.leafletMap.getZoom() === this._mapZoom) {
         isSame = true;
+      } else {
+        this._mapZoom = currentZoom;
+        this._mapCenter = L.latLng(currentCenter);
       }
       return isSame;
     };

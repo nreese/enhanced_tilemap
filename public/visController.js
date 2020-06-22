@@ -670,6 +670,7 @@ define(function (require) {
       _currentMapEnvironment.currentMapBoundsWithCollar = getMapBoundsWithCollar();
       _currentMapEnvironment.currentZoom = map.leafletMap.getZoom();
       _currentMapEnvironment.currentClusteringPrecision = utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
+      _currentMapEnvironment.mapCenter = map.leafletMap.getCenter();
 
       if ($scope.vis.aggs[1]) {
         const precisionType = $scope.vis.aggs[1].params.aggPrecisionType.toLowerCase();
@@ -921,15 +922,14 @@ define(function (require) {
 
     map.leafletMap.on('moveend', _.debounce(async function setZoomCenter() {
       if (!map.leafletMap) return;
-      if (map._hasSameLocation()) return;
-
       _updateCurrentMapEnvironment();
+      // check if map zoom/center has change and update uiState if so
+      if (map._hasSameLocation(_currentMapEnvironment.mapCenter, _currentMapEnvironment.currentZoom)) return;
 
-      // update internal center and zoom references
-      map._mapCenter = map.leafletMap.getCenter();
+      // update uiState center and zoom references
       uiState.set('mapCenter', [
-        _.round(map._mapCenter.lat, 5),
-        _.round(map._mapCenter.lng, 5)
+        _.round(_currentMapEnvironment.mapCenter.lat, 5),
+        _.round(_currentMapEnvironment.mapCenter.lng, 5)
       ]);
       uiState.set('mapZoom', _currentMapEnvironment.currentZoom);
 
