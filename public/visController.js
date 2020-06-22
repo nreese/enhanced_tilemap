@@ -642,10 +642,12 @@ define(function (require) {
               const urlLowerCase = layerParams.url.toLowerCase();
               if (urlLowerCase.includes('{x}') && urlLowerCase.includes('{y}') && urlLowerCase.includes('{z}')) { // checking for XYZ tile server
                 layerParams.url = layerParams.url;
+                layerParams.type = 'xyz';
               } else if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') {
                 layerParams.url = layerParams.url + '/wms?';
+                layerParams.type = 'wms';
               }
-              return map.addWmsOverlay(layerParams.url, name, wmsOptions, options, layerParams.id);
+              return map.addWmsOverlay(layerParams.url, name, wmsOptions, options, layerParams.id, layerParams.type, notify);
             });
         });
       });

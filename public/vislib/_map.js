@@ -292,30 +292,40 @@ define(function (require) {
       this._layerControl.addOverlays([this._filters]);
     };
 
-    TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, options, id) {
+    TileMapMap.prototype.addWmsOverlay = function (url, name, wmsOptions, options, id, type, notify) {
 
       let overlay = null;
-      if (options.nonTiled) {
-        overlay = new L.NonTiledLayer.WMS(url, wmsOptions);
-      } else {
-        overlay = L.tileLayer.wms(url, wmsOptions);
+      if (type === 'wms') {
+        if (options.nonTiled) {
+          overlay = new L.NonTiledLayer.WMS(url, wmsOptions);
+        } else {
+          overlay = L.tileLayer.wms(url, wmsOptions);
+        }
+      } else if (type === 'xyz') {
+        if (options.nonTiled) {
+          notify.error('Non-Tiled option detected: not supported with XYZ tile layers');
+        } else {
+          overlay = L.tileLayer(url, wmsOptions);
+        }
       }
 
-      overlay.layerOptions = options;
-      overlay.id = id;
-      overlay.type = 'wms';
-      overlay.label = name;
-      overlay.icon = `<i class="fas fa-map" style="color:#000000;"></i>`;
-      overlay.visible = true;
+      if (overlay) {
+        overlay.layerOptions = options;
+        overlay.id = id;
+        overlay.type = 'wms';
+        overlay.label = name;
+        overlay.icon = `<i class="fas fa-map" style="color:#000000;"></i>`;
+        overlay.visible = true;
 
-      const presentInUiState = this.uiState.get(id);
-      if (presentInUiState || options.enabled) {
-        overlay.enabled = true;
-      } else if (presentInUiState === false) {
-        overlay.enabled = false;
+        const presentInUiState = this.uiState.get(id);
+        if (presentInUiState || options.enabled) {
+          overlay.enabled = true;
+        } else if (presentInUiState === false) {
+          overlay.enabled = false;
+        }
+
+        this._layerControl.addOverlays([overlay], options);
       }
-
-      this._layerControl.addOverlays([overlay], options);
     };
 
     TileMapMap.prototype.mapBounds = function () {
