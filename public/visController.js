@@ -24,7 +24,7 @@ define(function (require) {
   ]);
 
   module.controller('KbnEnhancedTilemapVisController', function (
-    kibiState, savedSearches, savedDashboards, dashboardGroups,
+    kibiState, savedSearches, savedDashboards, dashboardGroups, savedVisualizations,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
     timefilter, createNotifier, es) {
@@ -67,7 +67,7 @@ define(function (require) {
       createDragAndDropPoiLayers();
       appendMap();
       modifyToDsl();
-      setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
+      await setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
       drawWfsOverlays();
       if (!onDashboardPage()) {
         await drawLayers();
@@ -422,7 +422,7 @@ define(function (require) {
         map.removeAllLayersFromMapandControl();
         // base layer
         map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
-        setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
+        await setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
 
         if (isHeatMap()) {
           map.unfixMapTypeTooltips();
@@ -457,7 +457,7 @@ define(function (require) {
     });
 
     $scope.$listen(queryFilter, 'update', async function () {
-      setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
+      await setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
       //redraw these layers because they are specific to filters
       await drawAggregationLayer();
       _drawPoiLayers($scope.vis.params.overlays.savedSearches, true);
@@ -485,7 +485,7 @@ define(function (require) {
       }
     }
 
-    function setTooltipFormatter(tooltipParams, sirenMeta) {
+    async function setTooltipFormatter(tooltipParams, sirenMeta) {
       if (tooltip) {
         tooltip.destroy();
       }
@@ -496,8 +496,10 @@ define(function (require) {
       };
       const geoField = getGeoField();
       if (_.get(tooltipParams, 'type') === 'visualization') {
+        const visId = _.get(tooltipParams, 'options.visId');
+        const savedVis = await savedVisualizations.get(visId);
         tooltip = new VisTooltip(
-          _.get(tooltipParams, 'options.visId'),
+          savedVis,
           geoField.fieldname,
           geoField.geotype,
           sirenMeta,
