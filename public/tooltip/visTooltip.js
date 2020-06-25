@@ -3,13 +3,11 @@ import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { addSirenPropertyToVisOrSearch } from 'ui/kibi/components/dashboards360/add_property_to_vis_or_search.js';
-import { findItemByVisIdAndPanelIndex } from 'ui/kibi/components/dashboards360/lib/coat/find_item_by_vis_id_and_panel_index';
-import { findMainCoatNode } from 'ui/kibi/components/dashboards360/coat_tree';
+import tooltipTemplate from './visTooltip.html';
+import pollUntil from 'ui/kibi/utils/_poll_until';
 
 define(function (require) {
-  return function VisTooltipFactory(
-    $compile, $rootScope, $timeout,
-    getAppState, Private, savedVisualizations) {
+  return function VisTooltipFactory($compile, $rootScope, $timeout, getAppState, Private) {
 
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
     const queryFilter = Private(FilterBarQueryFilterProvider);
@@ -17,8 +15,8 @@ define(function (require) {
     const UI_STATE_ID = 'popupVis';
 
     class VisTooltip {
-      constructor(visId, fieldname, geotype, sirenMeta, options) {
-        this.visId = visId;
+      constructor(savedVis, fieldname, geotype, sirenMeta, options) {
+        this.savedVis = savedVis;
         this.fieldname = fieldname;
         this.geotype = geotype;
         this.options = options;
@@ -37,20 +35,32 @@ define(function (require) {
       }
 
       getFormatter() {
-        const linkFn = $compile(require('./visTooltip.html'));
+        const linkFn = $compile(tooltipTemplate);
         let renderbot = null;
         let fetchTimestamp;
 
         const self = this;
-        savedVisualizations.get(this.visId).then(function (savedVis) {
-          self.$tooltipScope.savedObj = savedVis;
-          const uiState = savedVis.uiStateJSON ? JSON.parse(savedVis.uiStateJSON) : {};
-          self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
-          self.$visEl = linkFn(self.$tooltipScope);
-          $timeout(function () {
+        self.$tooltipScope.savedObj = this.savedVis;
+        const uiState = this.savedVis.uiStateJSON ? JSON.parse(this.savedVis.uiStateJSON) : {};
+        self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
+        self.$visEl = linkFn(self.$tooltipScope);
+
+        // Note:
+        // It takes some time for renderbot to be available
+        // not clear to me why but on avarage on fast machine
+        // renderbot is available after 30ms
+        // Below we poll until it is available for up to max of 1000 ms
+        pollUntil(
+          () => {
+            return self.$visEl[0].getScope().renderbot;
+          }, 1000, 10,
+          (err) => {
+            if (err) {
+              throw err;
+            }
             renderbot = self.$visEl[0].getScope().renderbot;
-          });
-        });
+          }
+        );
 
         function createFilter(rect, meta) {
           const bounds = utils.getRectBounds(rect);
@@ -74,41 +84,14 @@ define(function (require) {
 
           let sirenMetaCloned = null;
           if (self.sirenMeta) {
-            const panelIndexObj = {};
-            const panelIndex = Math.floor(Math.random() * 10000) + 1000;
-            //cloneDeep required as document count on dashboard updates when map popup is created otherwise
             sirenMetaCloned = _.cloneDeep(self.sirenMeta);
-
-            //retrieving and adding popup vis to coat so that join filters work
-            const etmVisNode = findItemByVisIdAndPanelIndex(
-              sirenMetaCloned.coat.items,
-              self.sirenMeta.vis.id,
-              self.sirenMeta.vis.panelIndex
-            );
-
-            const mainNode = findMainCoatNode(sirenMetaCloned.coat.items);
-            //if vis is not assigned in coat tree AND
-            //there is an search assigned to dashboard (i.e. main node)
-            if (!etmVisNode && mainNode) {
-              if (!mainNode.d.widgets) {
-                mainNode.d.widgets = [];
-              }
-              mainNode.d.widgets.push({
-                id: self.visId,
-                panelIndex
-              });
-            } else if (_.has(etmVisNode, 'd.widgets')) {
-              etmVisNode.d.widgets.push({
-                id: self.visId,
-                panelIndex
-              });
-            }
-
-            sirenMetaCloned.vis.id = self.visId;
-            sirenMetaCloned.vis.panelIndex = panelIndex;
-            panelIndexObj.panelIndex = panelIndex;
-
-            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaCloned, panelIndexObj);
+            sirenMetaCloned.vis.id = self.savedVis.id;
+            sirenMetaCloned.vis.title = self.savedVis.title;
+            sirenMetaCloned.vis.panelIndex = null; // no panel index as this vis is not part of a dashboard
+            sirenMetaCloned.search = {
+              id: self.$tooltipScope.savedObj.savedSearchId
+            };
+            addSirenPropertyToVisOrSearch(self.$tooltipScope.savedObj, sirenMetaCloned);
           }
 
           //adding pre-existing filter(s) and geohash specific filter to popup visualization
@@ -134,7 +117,7 @@ define(function (require) {
               $popup.append(self.$visEl);
 
               //query for record table is fired from doc_table.js, fired from here for all other vis
-              if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table') {
+              if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table' && renderbot) {
                 try {
                   renderbot.render(esResp);
                 } catch (err) {
