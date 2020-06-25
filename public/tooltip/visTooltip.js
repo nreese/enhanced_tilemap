@@ -3,6 +3,8 @@ import $ from 'jquery';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { addSirenPropertyToVisOrSearch } from 'ui/kibi/components/dashboards360/add_property_to_vis_or_search.js';
+import tooltipTemplate from './visTooltip.html';
+import pollUntil from 'ui/kibi/utils/_poll_until';
 
 define(function (require) {
   return function VisTooltipFactory($compile, $rootScope, $timeout, getAppState, Private) {
@@ -33,7 +35,7 @@ define(function (require) {
       }
 
       getFormatter() {
-        const linkFn = $compile(require('./visTooltip.html'));
+        const linkFn = $compile(tooltipTemplate);
         let renderbot = null;
         let fetchTimestamp;
 
@@ -42,9 +44,23 @@ define(function (require) {
         const uiState = this.savedVis.uiStateJSON ? JSON.parse(this.savedVis.uiStateJSON) : {};
         self.$tooltipScope.uiState = self.parentUiState.createChild(UI_STATE_ID, uiState, true);
         self.$visEl = linkFn(self.$tooltipScope);
-        $timeout(function () {
-          renderbot = self.$visEl[0].getScope().renderbot;
-        });
+
+        // Note:
+        // It takes some time for renderbot to be available
+        // not clear to me why but on avarage on fast machine
+        // renderbot is available after 30ms
+        // Below we poll until it is available for up to max of 1000 ms
+        pollUntil(
+          () => {
+            return self.$visEl[0].getScope().renderbot;
+          }, 1000, 10,
+          (err) => {
+            if (err) {
+              throw err;
+            }
+            renderbot = self.$visEl[0].getScope().renderbot;
+          }
+        );
 
         function createFilter(rect, meta) {
           const bounds = utils.getRectBounds(rect);
@@ -101,7 +117,7 @@ define(function (require) {
               $popup.append(self.$visEl);
 
               //query for record table is fired from doc_table.js, fired from here for all other vis
-              if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table') {
+              if (self.$tooltipScope.savedObj.searchSource.vis.type.name !== 'kibi-data-table' && renderbot) {
                 try {
                   renderbot.render(esResp);
                 } catch (err) {
