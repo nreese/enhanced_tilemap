@@ -642,7 +642,7 @@ define(function (require) {
               }
 
               layerParams.type = 'wms';
-              if (utils.isXYZurl(layerParams.url)) {
+              if (utils.isXyzUrl(layerParams.url)) {
                 layerParams.url = layerParams.url;
                 layerParams.type = 'xyz';
               } else if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') {

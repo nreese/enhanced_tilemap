@@ -49,14 +49,14 @@ define(function (require) {
         }
 
         //this is for the initial rendering of the map
-        if (scope.layer.url && !utils.isXYZurl(scope.layer.url)) {
+        if (scope.layer.url && !utils.isXyzUrl(scope.layer.url)) {
           wmsRequest(scope.layer.url);
         }
 
         //Watchers for url and getCapabilitiesSwitch equals to 0 or 1
         //this is for subsequent rendering based on changes to the wms url
         scope.$watch('layer.url', function (newUrl, oldUrl) {
-          if (newUrl !== oldUrl && !utils.isXYZurl(newUrl)) {
+          if (newUrl !== oldUrl && !utils.isXyzUrl(newUrl)) {
             wmsRequest(newUrl);
           }
         });
