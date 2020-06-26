@@ -107,11 +107,10 @@ export default class EsLayer {
             },
             style: {
               fillColor: options.color || '#8510d8',
-              weight: 2,
-              opacity: 1,
-              color: options.color || '#000000',
-              dashArray: '3',
-              fillOpacity: 0.75
+              weight: 1,
+              opacity: 0.6,
+              color: '#444444',
+              fillOpacity: 0.6
             },
             destroy: function onEachFeature(feature, polygon) {
               if (feature && options.leafletMap._popup) {
@@ -170,18 +169,16 @@ export default class EsLayer {
 
       if (geo.type === 'point' || geo.type === 'geo_point') {
         layer.icon = `<i class="${options.icon}" style="color:${options.color};"></i>`;
+        layer.type = type + '_point';
       } else if (geo.type === 'line') {
         layer.icon = `<i class="far fa-horizontal-rule" style="color:${options.color};"></i>`;
+        layer.type = type + '_shape';
       } else {
         layer.icon = `<i class="far fa-draw-square" style="color:${options.color};"></i>`;
+        layer.type = type + '_shape';
       }
 
       layer.options = { pane: 'overlayPane' };
-      if (geo.type === 'point') {
-        layer.type = type + '_point';
-      } else {
-        layer.type = type + '_shape';
-      }
 
       layer.visible = options.visible || true;
       return layer;
