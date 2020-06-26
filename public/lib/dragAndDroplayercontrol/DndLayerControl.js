@@ -681,7 +681,7 @@ function getExtendedMapControl() {
   }
 
   function getLayerById(id) {
-    return find(_allLayers, layer => layer.id === id);
+    return find(_allLayers, { id });
   }
 
   function removeAllLayersFromMapandControl() {
