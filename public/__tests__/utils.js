@@ -250,6 +250,22 @@ describe('Kibi Enhanced Tilemap', () => {
         }
       });
 
+      it('zoom IN documents with/without warning on previous extent check', () => {
+        const layerParams = zoomInFromStartingState.layerParams; // layer parameters including zoom, precision and map bounds of the last successful fetch
+        layerParams.enabled = true; // always enabled, this way the other factors determine the result
+        layerParams.type = 'es_ref_shape';
+
+        const _currentMapBounds = zoomInFromStartingState.mapBounds; // the new zoomed in map extent is INSIDE the bounds that the layer has data fetched for
+
+        const zoom = 6;
+        const precision = aggPrecision[zoom];
+
+        [true, false].forEach(warning => { // true means there were too many documents to show on previous map extent
+          const result = utils.drawLayerCheck(layerParams, _currentMapBounds, zoom, precision, warning);
+          expect(result).to.be(warning);
+        });
+      });
+
       it('should redraw because map zoomed outside of collar', () => {
         const layerParams = zoomOutFromStartingState.layerParams; // layer parameters including zoom, precision and map bounds of the last successful fetch
         const _currentMapBounds = zoomOutFromStartingState.mapBounds; // the new zoomed in map extent is INSIDE the bounds that the layer has data fetched for
@@ -263,7 +279,7 @@ describe('Kibi Enhanced Tilemap', () => {
         expect(result).to.be(true);
       });
 
-      it('should redraw becase map is panned outside of current map bounds check', () => {
+      it('should redraw because map is panned outside of current map bounds check', () => {
         const layerParams = panOutsideOfStartingStateCollar.layerParams; // layer parameters including zoom, precision and map bounds of the last successful fetch
         const _currentMapBounds = panOutsideOfStartingStateCollar.mapBounds; // the new zoomed in map extent is INSIDE the bounds that the layer has data fetched for
         layerParams.enabled = true; // always enabled, this way the other factors determine the result

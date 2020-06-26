@@ -325,12 +325,12 @@ define(function (require) {
       }
       return { aggFeatures, docFilters };
     },
-    drawLayerCheck: function (layerParams, mapBounds, zoom, precision) {
+    drawLayerCheck: function (layerParams, mapBounds, zoom, precision, warning = false) {
       if (!layerParams.mapParams || !layerParams.type || !mapBounds || !zoom || !precision) return true;
 
       const zoomLevelCheck = (
-        // no need to redraw shapes when zooming in
-        zoom < layerParams.mapParams.zoomLevel && (
+        // no need to redraw shapes when zooming in, unless the limit was exceeded on the last time layer was created
+        ((warning && zoom > layerParams.mapParams.zoomLevel) || zoom < layerParams.mapParams.zoomLevel) && (
           layerParams.type === 'es_ref_shape' ||
           layerParams.type === 'poi_shape')
       ) ||

@@ -320,11 +320,14 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
+        const warning = map._layerControl.getLayerById(layerParams.id).warning;
+
         if ((queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
             _currentMapEnvironment.currentMapBounds,
             _currentMapEnvironment.currentZoom,
-            _currentMapEnvironment.currentClusteringPrecision)) {
+            _currentMapEnvironment.currentClusteringPrecision,
+            warning)) {
           initPOILayer(layerParams);
         }
       });
@@ -862,12 +865,14 @@ define(function (require) {
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
         const layerParams = getPoiLayerParamsById(e.id);
+        const warning = map._layerControl.getLayerById(e.id).warning;
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
         if (utils.drawLayerCheck(layerParams,
           _currentMapEnvironment.currentMapBounds,
           _currentMapEnvironment.currentZoom,
-          _currentMapEnvironment.currentClusteringPrecision)) {
+          _currentMapEnvironment.currentClusteringPrecision,
+          warning)) {
           initPOILayer(layerParams);
         }
       } else if (e.layerType === 'agg') {
