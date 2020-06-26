@@ -52,7 +52,7 @@ define(function (require) {
       // keep a reference to all of the optional params
       this.mainSearchDetails = params.mainSearchDetails;
       this.uiState = params.uiState;
-      this.aggLayerParams;
+      this.aggLayerParams = {};
       this._callbacks = _.get(params, 'callbacks');
       this._setMarkerType(params.mapType);
       this._mapCenter = L.latLng(this.uiState.get('mapCenter')) || L.latLng(defaultMapCenter);

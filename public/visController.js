@@ -685,7 +685,6 @@ define(function (require) {
 
 
     function appendMap() {
-      const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
       container.id = `etm-vis-${$scope.vis.panelIndex}`;
@@ -708,8 +707,6 @@ define(function (require) {
         mainSearchDetails,
         $element,
         es,
-        center: initialMapState.center,
-        zoom: initialMapState.zoom,
         callbacks: callbacks,
         mapType: params.mapType,
         attr: params,
