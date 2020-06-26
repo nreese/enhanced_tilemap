@@ -1,6 +1,6 @@
 /* eslint-disable siren/memory-leak */
 
-import { debounce, remove, get, findIndex, pick, cloneDeep } from 'lodash';
+import { debounce, remove, get, findIndex, pick, cloneDeep, find } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
@@ -340,10 +340,13 @@ function getExtendedMapControl() {
   }
 
   function _storedLayerRedrawCheck(visibleForCurrentMapZoom, item) {
+    const warning = getLayerById(item.id).warning;
+
     return visibleForCurrentMapZoom && (!item.mapParams.visible || utils.drawLayerCheck(item,
       _currentMapEnvironment.currentMapBounds,
       _currentMapEnvironment.currentZoom,
-      _currentMapEnvironment.currentPrecision));
+      _currentMapEnvironment.currentPrecision,
+      warning));
   }
 
   async function getEsRefLayer(spatialPath, enabled, config) {
@@ -677,6 +680,10 @@ function getExtendedMapControl() {
     }
   }
 
+  function getLayerById(id) {
+    return find(_allLayers, { id });
+  }
+
   function removeAllLayersFromMapandControl() {
     _clearAllLayersFromMap();
     _allLayers = [];
@@ -738,6 +745,7 @@ function getExtendedMapControl() {
     _makeExistsForConfigFieldTypes,
     getPathList, // retrieves a list of spatial paths from indices with a .map__ prefix
     loadSavedStoredLayers, //checks the uiState for stored layers and draws the ones that are present
+    getLayerById,
 
     getAllLayers: () => {
       return _allLayers;
