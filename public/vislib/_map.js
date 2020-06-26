@@ -316,13 +316,7 @@ define(function (require) {
         overlay.label = name;
         overlay.icon = `<i class="fas fa-map" style="color:#000000;"></i>`;
         overlay.visible = true;
-
-        const presentInUiState = this.uiState.get(id);
-        if (presentInUiState || options.enabled) {
-          overlay.enabled = true;
-        } else if (presentInUiState === false) {
-          overlay.enabled = false;
-        }
+        overlay.enabled = options.enabled;
 
         this._layerControl.addOverlays([overlay], options);
       }

@@ -120,6 +120,11 @@ define(function (require) {
       }
       return aggConfig;
     },
+    isXYZurl: function (url) {
+      if (!url) return;
+      const urlLowerCase = url.toLowerCase();
+      return urlLowerCase.includes('{x}') && urlLowerCase.includes('{y}') && urlLowerCase.includes('{z}');
+    },
     /*
      * @param rect {Array of Array(lat, lon)} grid rectangle
      * created from KIBANA_HOME/src/ui/public/agg_response/geo_json/rows_to_features.js

@@ -550,6 +550,19 @@ define(function (require) {
       }
 
       $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
+
+        let enabled = true;
+        if ($scope.flags.isVisibleSource === 'visParams') {
+          enabled = layerParams.isVisible;
+        } else if (uiState.get(layerParams.id) === false) {
+          enabled = false;
+        }
+        const options = {
+          enabled,
+          nonTiled: _.get(layerParams, 'nonTiled', false)
+        };
+
+
         // const prevState = map.clearLayerAndReturnPrevState(layerParams.id);
         const wmsIndexId = _.get(layerParams, 'indexId', getIndexPatternId());
         return indexPatterns.get(wmsIndexId).then(function (indexPattern) {
@@ -628,29 +641,18 @@ define(function (require) {
                 wmsOptions.format_options = formatOptions;
               }
 
-              let enabled;
-              if ($scope.flags.isVisibleSource === 'visParams') {
-                enabled = layerParams.isVisible;
-              }
-              $scope.flags.visibleSource = '';
-
-              const options = {
-                enabled,
-                nonTiled: _.get(layerParams, 'nonTiled', false)
-              };
-
-              const urlLowerCase = layerParams.url.toLowerCase();
-              if (urlLowerCase.includes('{x}') && urlLowerCase.includes('{y}') && urlLowerCase.includes('{z}')) { // checking for XYZ tile server
+              layerParams.type = 'wms';
+              if (utils.isXYZurl(layerParams.url)) {
                 layerParams.url = layerParams.url;
                 layerParams.type = 'xyz';
               } else if (layerParams.url.substr(layerParams.url.length - 5).toLowerCase() !== '/wms?') {
                 layerParams.url = layerParams.url + '/wms?';
-                layerParams.type = 'wms';
               }
               return map.addWmsOverlay(layerParams.url, name, wmsOptions, options, layerParams.id, layerParams.type, notify);
             });
         });
       });
+      $scope.flags.isVisibleSource = '';
     }
 
     function _updateCurrentMapEnvironment() {
