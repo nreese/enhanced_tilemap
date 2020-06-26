@@ -107,9 +107,9 @@ export default class EsLayer {
             },
             style: {
               fillColor: options.color || '#8510d8',
-              weight: 1,
+              weight: self.isLine(geo.type) ? 2 : 1,
               opacity: 0.6,
-              color: '#444444',
+              color: self.isLine(geo.type) ? options.color : '#444444',
               fillOpacity: 0.6
             },
             destroy: function onEachFeature(feature, polygon) {
@@ -183,6 +183,11 @@ export default class EsLayer {
       layer.visible = options.visible || true;
       return layer;
     }
+  }
+
+  isLine = function (type) {
+    if (!type) return false;
+    return type === 'linestring' || type === 'multilinestring';
   }
 
   assignFeatureLevelConfigurations = function (hit, type, options) {
