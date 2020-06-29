@@ -7,6 +7,7 @@ import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 import utils from 'plugins/enhanced_tilemap/utils';
+import SpinControl from './../../vislib/SpinControlHelper';
 
 import { EuiButton } from '@elastic/eui';
 
@@ -23,6 +24,8 @@ function getExtendedMapControl() {
   let mainSearchDetails;
   let geometryTypeOfSpatialPaths;
   let uiState;
+  let _spinControl;
+
 
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
@@ -170,6 +173,7 @@ function getExtendedMapControl() {
   function _redrawOverlays() {
     _clearAllLayersFromMap();
     _drawOverlays();
+    _spinControl.remove();
   }
 
   function _clearLayerFromMapById(id) {
@@ -518,6 +522,7 @@ function getExtendedMapControl() {
   }
 
   function addOverlays(layers) {
+    _spinControl.create();
     layers.forEach(_addOrReplaceLayer);
     _orderLayersByType();
     _updateLayerControl();
@@ -525,6 +530,7 @@ function getExtendedMapControl() {
   }
 
   async function _redrawEsRefLayers() {
+    _spinControl.create();
     const esRefLayers = [];
     if (esRefLayersOnMap.length >= 1) {
       _updateCurrentMapEnvironment();
@@ -708,6 +714,7 @@ function getExtendedMapControl() {
     });
     _leafletMap.off('click').off('wheel');
     _allLayers = undefined;
+    // _removeSpinControl();
   }
 
   return L.Control.extend({
@@ -756,6 +763,7 @@ function getExtendedMapControl() {
         _redrawEsRefLayers();
       }, 200);
       _leafletMap = map;
+      _spinControl = new SpinControl(map);
       _leafletMap.on('moveend', debouncedHandler);
       this._initLayout();
       return this._container;

@@ -320,7 +320,7 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
-        const warning = map._layerControl.getLayerById(layerParams.id).warning;
+        const warning = _.get(map._layerControl.getLayerById(layerParams.id), 'warning');
 
         if ((queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
@@ -865,7 +865,7 @@ define(function (require) {
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
         const layerParams = getPoiLayerParamsById(e.id);
-        const warning = map._layerControl.getLayerById(e.id).warning;
+        const warning = _.get(map._layerControl.getLayerById(e.id), 'warning');
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
         if (utils.drawLayerCheck(layerParams,
