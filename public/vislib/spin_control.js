@@ -14,8 +14,6 @@ export default class SpinControl {
         const container = L.DomUtil.create('div', 'leaflet-control leaflet-spin-control');
         container.innerHTML = '<a class="fa fa-spinner fa-pulse fa-2x fa-fw" href="#" title="Loading Layers"></a>';
         return container;
-      },
-      onRemove: function () {
       }
     });
 

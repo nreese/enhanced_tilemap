@@ -14,7 +14,7 @@ import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_toolt
 import Vector from './vislib/vector_layer_types/vector';
 import { compareStates } from 'ui/kibi/state_management/compare_states';
 import { onDashboardPage } from 'ui/kibi/utils/on_page';
-import SpinControl from './vislib/SpinControl';
+import SpinControl from './vislib/spin_control';
 
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
