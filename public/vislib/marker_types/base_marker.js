@@ -313,7 +313,6 @@ define(function (require) {
           this._markerGroup = L.geoJson(self.geoJson.features.slice(0, 100), _.defaults(defaultOptions, options));
           this._stopLoadingGeohash();
 
-          this._createSpinControl();
           let place = 100;
           this._intervalId = setInterval(
             function () {
@@ -387,40 +386,12 @@ define(function (require) {
       this.leafletMap.closePopup();
     };
 
-    BaseMarker.prototype._createSpinControl = function () {
-      if (this._spinControl) return;
-
-      const SpinControl = L.Control.extend({
-        options: {
-          position: 'topright'
-        },
-        onAdd: function () {
-          const container = L.DomUtil.create('div', 'leaflet-control leaflet-spin-control');
-          container.innerHTML = '<a class="fa fa-spinner fa-pulse fa-2x fa-fw" href="#" title="Loading Geohash Grids"></a>';
-          return container;
-        },
-        onRemove: function () {
-        }
-      });
-
-      this._spinControl = new SpinControl();
-      this.leafletMap.addControl(this._spinControl);
-    };
-
-    BaseMarker.prototype._removeSpinControl = function () {
-      if (!this._spinControl) return;
-
-      this.leafletMap.removeControl(this._spinControl);
-      this._spinControl = null;
-    };
-
     BaseMarker.prototype._stopLoadingGeohash = function () {
       if (this._intervalId) {
         window.clearInterval(this._intervalId);
       }
       this._intervalId = null;
 
-      this._removeSpinControl();
     };
 
     /**

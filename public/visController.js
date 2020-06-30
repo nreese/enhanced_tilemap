@@ -14,6 +14,7 @@ import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_toolt
 import Vector from './vislib/vector_layer_types/vector';
 import { compareStates } from 'ui/kibi/state_management/compare_states';
 import { onDashboardPage } from 'ui/kibi/utils/on_page';
+import SpinControl from './vislib/spin_control';
 
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
@@ -48,6 +49,7 @@ define(function (require) {
     let tooltipFormatter = null;
     let storedTime = _.cloneDeep(timefilter.time);
     const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
+    let spinControl;
     const appState = getAppState();
     let storedState = {
       filters: _.cloneDeep(appState.filters),
@@ -320,7 +322,7 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
-        const warning = map._layerControl.getLayerById(layerParams.id).warning;
+        const warning = _.get(map._layerControl.getLayerById(layerParams.id), 'warning');
 
         if ((queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
@@ -334,6 +336,7 @@ define(function (require) {
     }
 
     function initPOILayer(layerParams) {
+      spinControl.create();
       const poi = new POIsProvider(layerParams);
       const displayName = layerParams.displayName || layerParams.savedSearchLabel;
       layerParams.mapParams = {
@@ -367,7 +370,7 @@ define(function (require) {
     }
 
     function initVectorLayer(id, displayName, geoJsonCollection, options) {
-
+      spinControl.create();
       let popupFields = [];
       if (_.get(options, 'popupFields') === '' || !_.get(options, 'popupFields')) {
         popupFields = [];
@@ -523,6 +526,7 @@ define(function (require) {
         $scope.vis.params.overlays.wfsOverlays.length === 0) {
         return;
       }
+      spinControl.create();
       _.each($scope.vis.params.overlays.wfsOverlays, wfsOverlay => {
         const options = {
           color: _.get(wfsOverlay, 'color', '#10aded'),
@@ -554,6 +558,7 @@ define(function (require) {
         return;
       }
 
+      spinControl.create();
       $scope.vis.params.overlays.wmsOverlays.map(function (layerParams) {
 
         let enabled = true;
@@ -695,7 +700,7 @@ define(function (require) {
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
         uiState,
-        saturateWMSTile,
+        saturateWMSTile
       };
 
       map = new TileMapMap(container, {
@@ -711,6 +716,7 @@ define(function (require) {
         uiState,
         syncMap: params.syncMap
       });
+      mainSearchDetails.spinControl = spinControl = new SpinControl(map.leafletMap);
     }
 
     function resizeArea() {
@@ -753,6 +759,7 @@ define(function (require) {
         }
 
         if (drawAggs || fromVisParams) {
+          spinControl.create();
           $scope.flags.drawingAggs = true;
           map.aggLayerParams = {};
           map.aggLayerParams.enabled = uiState.get('Aggregation');
@@ -865,7 +872,7 @@ define(function (require) {
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
         const layerParams = getPoiLayerParamsById(e.id);
-        const warning = map._layerControl.getLayerById(e.id).warning;
+        const warning = _.get(map._layerControl.getLayerById(e.id), 'warning');
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
         if (utils.drawLayerCheck(layerParams,

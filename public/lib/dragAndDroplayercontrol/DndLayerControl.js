@@ -24,6 +24,7 @@ function getExtendedMapControl() {
   let geometryTypeOfSpatialPaths;
   let uiState;
 
+
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
 
   function _updateCurrentMapEnvironment() {
@@ -170,6 +171,7 @@ function getExtendedMapControl() {
   function _redrawOverlays() {
     _clearAllLayersFromMap();
     _drawOverlays();
+    mainSearchDetails.spinControl.remove();
   }
 
   function _clearLayerFromMapById(id) {
@@ -463,6 +465,7 @@ function getExtendedMapControl() {
       const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
       const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
       if (_storedLayerRedrawCheck(visibleForCurrentMapZoom, item)) {
+        mainSearchDetails.spinControl.create();
         layer = await _createEsRefLayer(item, config);
         layer.mapParams.visible = visibleForCurrentMapZoom;
       } else {
@@ -533,6 +536,7 @@ function getExtendedMapControl() {
         const config = _getLayerLevelConfig(item.path, mainSearchDetails.storedLayerConfig);
         const visibleForCurrentMapZoom = _visibleForCurrentMapZoom(config);
         if (_storedLayerRedrawCheck(visibleForCurrentMapZoom, item)) {
+          mainSearchDetails.spinControl.create();
           layer = await _createEsRefLayer(item, config);
           layer.mapParams.visible = visibleForCurrentMapZoom;
         } else {
@@ -708,6 +712,7 @@ function getExtendedMapControl() {
     });
     _leafletMap.off('click').off('wheel');
     _allLayers = undefined;
+    mainSearchDetails.spinControl.remove();
   }
 
   return L.Control.extend({

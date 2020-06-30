@@ -107,12 +107,17 @@
     }
   }
 
-  .leaflet-spin-control {
-    margin-right: 14px !important;
-  }
+  div[class="leaflet-control leaflet-spin-control"] {
+    margin-right: 11px !important;
+    background: @kibanaGray7;
+    border: 2px solid rgba(0,0,0,0.2);
+    background-clip: padding-box;
+    border-radius: 5px;
+    padding: 4px 1px 2px 1px;
 
-  .leaflet-spin-control a {
-    color: #000;
+    a {
+      color: #000;
+    }
   }
 
   .leaflet-draw-tooltip {
