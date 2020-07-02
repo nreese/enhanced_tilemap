@@ -756,6 +756,14 @@ function getExtendedMapControl() {
       return _allLayers;
     },
 
+    mapHasLayerType: (type) => {
+      return findIndex(_allLayers, layer => layer.type.includes(type)) !== -1;
+    },
+
+    mapHasCluster: () => {
+      return findIndex(_allLayers, layer => layer.hasCluster) !== -1;
+    },
+
     onAdd: function (map) {
       const debouncedHandler = debounce(() => {
         _redrawEsRefLayers();

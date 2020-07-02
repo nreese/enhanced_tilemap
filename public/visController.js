@@ -365,7 +365,7 @@ define(function (require) {
       };
 
       poi.getLayer(options, function (layer) {
-        map.addPOILayer(layer);
+        map.addFeatureLayer(layer);
       });
     }
 
@@ -399,7 +399,7 @@ define(function (require) {
 
       const layer = new Vector(geoJsonCollection).getLayer(optionsWithDefaults);
       layer.id = id;
-      map.addVectorLayer(layer, optionsWithDefaults);
+      map.addFeatureLayer(layer, optionsWithDefaults);
 
     }
 
@@ -997,8 +997,9 @@ define(function (require) {
 
     map.leafletMap.on('toolbench:poiFilter', function (e) {
       const poiLayers = [];
-      map.allLayers.forEach(layer => {
-        if (layer.type === 'poi') {
+      const allLayers = map._layerControl.getAllLayers();
+      allLayers.forEach(layer => {
+        if (layer.type.includes('point') && !layer.hasClusters && _.size(layer._layers) <= 100) {
           poiLayers.push(layer);
         }
       });
