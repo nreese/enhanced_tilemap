@@ -767,7 +767,7 @@ function getExtendedMapControl() {
     totalNumberOfPointsOnMap: () => {
       let count = 0;
       _allLayers.forEach(layer => {
-        if (layer.type.includes('point')) {
+        if (layer.type.endsWith('point')) {
           count += size(layer._layers);
         }
       });
