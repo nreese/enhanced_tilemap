@@ -999,7 +999,7 @@ define(function (require) {
       const poiLayers = [];
       const allLayers = map._layerControl.getAllLayers();
       allLayers.forEach(layer => {
-        if (layer.type.includes('point') && !layer.hasClusters && _.size(layer._layers) <= 100) {
+        if (layer.type.includes('point') && !layer.hasClusters && map._layerControl.totalNumberOfPointsOnMap() <= 80) {
           poiLayers.push(layer);
         }
       });

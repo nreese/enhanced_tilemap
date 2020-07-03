@@ -216,7 +216,9 @@ define(function (require) {
       //Add tool to l.draw.toolbar so users can filter by vector layers
       if (this._toolbench) this._toolbench.removeTools();
       if (!this._toolbench) this._addDrawControl();
-      if (this._layerControl.mapHasLayerType('point') && !this._layerControl.mapHasCluster()) {
+      if (this._layerControl.mapHasLayerType('point') &&
+        !this._layerControl.mapHasCluster() &&
+        this._layerControl.totalNumberOfPointsOnMap() <= 80) {
         this._toolbench.addTool();
       }
     };
