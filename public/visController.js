@@ -28,7 +28,7 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups, savedVisualizations,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timefilter, createNotifier, es) {
+    timefilter, createNotifier, es, sirenSession, $route) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -48,8 +48,23 @@ define(function (require) {
     let tooltip = null;
     let tooltipFormatter = null;
     let storedTime = _.cloneDeep(timefilter.time);
-    const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
     let spinControl;
+
+    const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
+    const sirenSessionData = sirenSession.getData();
+    let sirenSessionState;
+    // Note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
+    // A temporary fix is to use siren session to store uiState. This is pending an overall uistate improvement.
+    // See comment on - https://sirensolutions.atlassian.net/browse/INVE-11900
+    if (sirenSessionData.map && sirenSessionData.map[$route.current.params.id + $scope.vis.id]) {
+      sirenSessionState = sirenSessionData.map[$route.current.params.id + $scope.vis.id];
+    } else if (sirenSessionData.map) {
+      sirenSessionState = sirenSessionData.map[$route.current.params.id + $scope.vis.id] = _.cloneDeep(uiState);
+    } else {
+      const sirenSessionMap = sirenSessionData.map = {};
+      sirenSessionState = sirenSessionMap[$route.current.params.id + $scope.vis.id] = _.cloneDeep(uiState);
+    }
+
     const appState = getAppState();
     let storedState = {
       filters: _.cloneDeep(appState.filters),
@@ -275,6 +290,7 @@ define(function (require) {
             map.leafletMap.fitBounds(entireBounds);
             //update uiState zoom so correct geohash precision will be used
             uiState.set('mapZoom', map.leafletMap.getZoom());
+            sirenSessionState.set('mapZoom', map.leafletMap.getZoom());
           }
         });
     }
@@ -314,11 +330,12 @@ define(function (require) {
       if (!poiLayerArray) return;
 
       poiLayerArray.forEach(layerParams => {
-        layerParams.enabled = uiState.get(layerParams.id);
+        layerParams.enabled = sirenSessionState.get(layerParams.id);
 
         //new layers are always visible on first load, uistate takes precedence from then on
         if (layerParams.enabled === undefined) {
           uiState.set(layerParams.id);
+          sirenSessionState.set(layerParams.id);
           layerParams.enabled = true;
         }
 
@@ -700,7 +717,8 @@ define(function (require) {
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
         uiState,
-        saturateWMSTile
+        sirenSessionState,
+        saturateWMSTile,
       };
 
       map = new TileMapMap(container, {
@@ -712,6 +730,7 @@ define(function (require) {
         attr: params,
         editable: $scope.vis.getEditableVis() ? true : false,
         uiState,
+        sirenSessionState,
         syncMap: params.syncMap
       });
       mainSearchDetails.spinControl = spinControl = new SpinControl(map.leafletMap);
@@ -760,11 +779,12 @@ define(function (require) {
           spinControl.create();
           $scope.flags.drawingAggs = true;
           map.aggLayerParams = {};
-          map.aggLayerParams.enabled = uiState.get('Aggregation');
+          map.aggLayerParams.enabled = sirenSessionState.get('Aggregation');
           // always enabled first time drawn
           if (map.aggLayerParams.enabled === undefined) {
             map.aggLayerParams.enabled = true;
             uiState.set('Aggregation', true);
+            sirenSessionState.set('Aggregation', true);
           }
           map.aggLayerParams.type = 'agg';
 
@@ -853,6 +873,7 @@ define(function (require) {
       }
       //scope for saving dnd poi overlays
       uiState.set(e.id, false);
+      sirenSessionState.set(e.id, false);
     });
 
     // saving checkbox status to dashboard uiState
@@ -864,8 +885,10 @@ define(function (require) {
         }
 
         uiState.set(e.id, refLayerState);
+        sirenSessionState.set(e.id, refLayerState);
       } else {
         uiState.set(e.id, e.enabled);
+        sirenSessionState.set(e.id, e.enabled);
       }
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
@@ -893,8 +916,10 @@ define(function (require) {
 
       if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
         uiState.set(e.id, 'sne'); //saved but NOT enabled
+        sirenSessionState.set(e.id, 'sne'); //saved but NOT enabled
       } else {
         uiState.set(e.id, false);
+        sirenSessionState.set(e.id, false);
       }
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
@@ -929,6 +954,12 @@ define(function (require) {
         _.round(_currentMapEnvironment.mapCenter.lng, 5)
       ]);
       uiState.set('mapZoom', _currentMapEnvironment.currentZoom);
+
+      sirenSessionState.set('mapCenter', [
+        _.round(_currentMapEnvironment.mapCenter.lat, 5),
+        _.round(_currentMapEnvironment.mapCenter.lng, 5)
+      ]);
+      sirenSessionState.set('mapZoom', _currentMapEnvironment.currentZoom);
 
       await drawLayers();
     }, 500, false));

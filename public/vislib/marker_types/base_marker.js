@@ -16,6 +16,7 @@ define(function (require) {
      */
     function BaseMarker(leafletMap, geoJson, layerControl, params) {
       this.uiState = params.uiState;
+      this.sirenSessionState = params.sirenSessionState;
       this.leafletMap = leafletMap;
       this.geoJson = geoJson;
       this.layerControl = layerControl;
@@ -266,7 +267,7 @@ define(function (require) {
     BaseMarker.prototype._addToMap = function () {
       this._markerGroup.enabled = true;
       // the uiState takes precedence
-      if (this.uiState.get('Aggregation') === false) {
+      if (this.sirenSessionState.get('Aggregation') === false) {
         this._markerGroup.enabled = false;
       }
 
