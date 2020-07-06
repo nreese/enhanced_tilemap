@@ -33,6 +33,7 @@ export default class EsLayer {
         layer.type = type + '_point';
         layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${layerControlIcon}" style="color:${layerControlColor};"></i>`;
+        layer.hasCluster = aggs.length >= 1;
         layer.destroy = () => {
           layer.unbindPopup();
         };

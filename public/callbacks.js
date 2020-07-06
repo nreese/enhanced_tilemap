@@ -4,7 +4,6 @@ define(function (require) {
   return function CallbacksFactory(Private) {
     const _ = require('lodash');
     const geoFilter = Private(require('plugins/enhanced_tilemap/vislib/geoFilter'));
-    const utils = require('plugins/enhanced_tilemap/utils');
     const L = require('leaflet');
 
     return {
@@ -31,19 +30,6 @@ define(function (require) {
             }
           });
         });
-      },
-      fetchSearchSource: async function (event) {
-        //Fetch new data if map bounds are outsize of collar
-        const bounds = utils.geoBoundingBoxBounds(event.mapBounds, 1);
-        const autoPrecision = _.get(event, 'chart.geohashGridAgg.params.autoPrecision');
-        const previousZoom = _.get(event, 'chart.geoJson.properties.zoom');
-        if (_.has(event, 'collar.top_left')) {
-          if (autoPrecision && (event.currentZoom !== previousZoom || !utils.contains(event.collar, bounds))) {
-            return event.searchSource.fetch();
-          } else if (!autoPrecision && !utils.contains(event.collar, bounds))  {
-            return event.searchSource.fetch();
-          }
-        }
       },
       poiFilter: function (event) {
 

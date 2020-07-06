@@ -1,6 +1,6 @@
 /* eslint-disable siren/memory-leak */
 
-import { debounce, remove, get, findIndex, pick, cloneDeep, find } from 'lodash';
+import { debounce, remove, get, findIndex, pick, cloneDeep, find, size } from 'lodash';
 import React from 'react';
 import { render, unmountComponentAtNode } from 'react-dom';
 import { showAddLayerTreeModal } from './layerContolTree';
@@ -754,6 +754,24 @@ function getExtendedMapControl() {
 
     getAllLayers: () => {
       return _allLayers;
+    },
+
+    mapHasLayerType: (type) => {
+      return findIndex(_allLayers, layer => layer.type.includes(type)) !== -1;
+    },
+
+    mapHasCluster: () => {
+      return findIndex(_allLayers, layer => layer.hasCluster) !== -1;
+    },
+
+    totalNumberOfPointsOnMap: () => {
+      let count = 0;
+      _allLayers.forEach(layer => {
+        if (layer.type.endsWith('point')) {
+          count += size(layer._layers);
+        }
+      });
+      return count;
     },
 
     onAdd: function (map) {

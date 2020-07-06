@@ -208,28 +208,17 @@ define(function (require) {
       this._layerControl.removeLayerFromMapAndControlById(id);
     };
 
-    TileMapMap.prototype.addPOILayer = function (layer) {
+    TileMapMap.prototype.addFeatureLayer = function (layer) {
       const id = layer.id;
       if (this.uiState.get(id) || this.uiState.get(id) === undefined) layer.enabled = true;
       this._layerControl.addOverlays([layer]);
 
-      //Add tool to l.draw.toolbar so users can filter by POIs
-      if (Object.keys(this.allLayers).length === 1) {
-        if (this._toolbench) this._toolbench.removeTools();
-        if (!this._toolbench) this._addDrawControl();
-        this._toolbench.addTool();
-      }
-    };
-
-    TileMapMap.prototype.addVectorLayer = function (layer) {
-      const id = layer.id;
-      layer.enabled = this.uiState.get(id) || true;
-      this._layerControl.addOverlays([layer]);
-
       //Add tool to l.draw.toolbar so users can filter by vector layers
-      if (Object.keys(this.allLayers).length === 1) {
-        if (this._toolbench) this._toolbench.removeTools();
-        if (!this._toolbench) this._addDrawControl();
+      if (this._toolbench) this._toolbench.removeTools();
+      if (!this._toolbench) this._addDrawControl();
+      if (this._layerControl.mapHasLayerType('point') &&
+        !this._layerControl.mapHasCluster() &&
+        this._layerControl.totalNumberOfPointsOnMap() <= 80) {
         this._toolbench.addTool();
       }
     };
@@ -408,16 +397,6 @@ define(function (require) {
 
     TileMapMap.prototype._attachEvents = function () {
       const self = this;
-
-      this.leafletMap.on('removeLayer', (e) => {
-        const id = e.layerId;
-        if (_.has(this.allLayers, id)) {
-          const layer = this.allLayers[id];
-          this.allLayers[id].destroy();
-          this.leafletMap.removeLayer(layer);
-          delete this.allLayers[id];
-        }
-      });
 
       this.leafletMap.on('etm:select-feature-vector', function (e) {
         self._callbacks.polygonVector({
