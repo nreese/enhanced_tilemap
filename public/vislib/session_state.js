@@ -15,13 +15,20 @@ export default class SirenSessionState {
     if (sirenSessionData.map && sirenSessionData.map[sirenSessionId]) {
       this._sessionState = sirenSessionData.map[sirenSessionId];
     } else {
-      //create new state for this dashboard/vis combination
+      // create new state for this dashboard/vis combination
       if (!sirenSessionData.map) {
         sirenSessionData.map = {};
       }
       if (onDashboardPage()) {
-        this._sessionState = sirenSessionData.map[sirenSessionId] = cloneDeep(uiState._defaultState[uiState._path]);
+        if (typeof uiState._parent._changedState[uiState._path] === 'object') {
+          // use the dashboard specific state if there is one
+          this._sessionState = sirenSessionData.map[sirenSessionId] = cloneDeep(uiState._parent._changedState[uiState._path]);
+        } else {
+          // otherwise use the state that is saved with the visualization
+          this._sessionState = sirenSessionData.map[sirenSessionId] = cloneDeep(uiState._defaultState[uiState._path]);
+        }
       } else {
+        // if in vis edit mode
         this._sessionState = sirenSessionData.map[sirenSessionId] = cloneDeep(uiState._mergedState);
       }
     }

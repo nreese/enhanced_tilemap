@@ -209,8 +209,7 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addFeatureLayer = function (layer) {
-      const id = layer.id;
-      if (this.sirenSessionState.get(id)) layer.enabled = true;
+      if (this.sirenSessionState.get(layer.id)) layer.enabled = true;
       this._layerControl.addOverlays([layer]);
 
       //Add tool to l.draw.toolbar so users can filter by vector layers
