@@ -507,13 +507,11 @@ function getExtendedMapControl() {
         layer.visible = true;
       }
       esRefLayerList.push(layer);
-      if (layer.enabled) {
-        _leafletMap.fire('showlayer', {
-          layerType: layer.type,
-          id: layer.id,
-          enabled: layer.enabled
-        });
-      }
+      _leafletMap.fire('showlayer', {
+        layerType: layer.type,
+        id: layer.id,
+        enabled: layer.enabled
+      });
     }
     addOverlays(esRefLayerList);
     addEsRefLayers(esRefLayerList);

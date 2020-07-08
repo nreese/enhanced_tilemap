@@ -13,8 +13,8 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 import Vector from './vislib/vector_layer_types/vector';
 import { compareStates } from 'ui/kibi/state_management/compare_states';
-import { onDashboardPage } from 'ui/kibi/utils/on_page';
 import SpinControl from './vislib/spin_control';
+import SirenSessionState from './vislib/session_state';
 
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
@@ -42,28 +42,16 @@ define(function (require) {
     const ResizeChecker = Private(ResizeCheckerProvider);
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
     const BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
-    let map = null;
     let collar = null;
     let chartData = null;
+    let map = null;
     let tooltip = null;
     let tooltipFormatter = null;
     let storedTime = _.cloneDeep(timefilter.time);
     let spinControl;
+    let sirenSessionState;
 
     const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
-    const sirenSessionData = sirenSession.getData();
-    let sirenSessionState;
-    // Note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
-    // A temporary fix is to use siren session to store uiState. This is pending an overall uistate improvement.
-    // See comment on - https://sirensolutions.atlassian.net/browse/INVE-11900
-    if (sirenSessionData.map && sirenSessionData.map[$route.current.params.id + $scope.vis.id]) {
-      sirenSessionState = sirenSessionData.map[$route.current.params.id + $scope.vis.id];
-    } else if (sirenSessionData.map) {
-      sirenSessionState = sirenSessionData.map[$route.current.params.id + $scope.vis.id] = _.cloneDeep(uiState);
-    } else {
-      const sirenSessionMap = sirenSessionData.map = {};
-      sirenSessionState = sirenSessionMap[$route.current.params.id + $scope.vis.id] = _.cloneDeep(uiState);
-    }
 
     const appState = getAppState();
     let storedState = {
@@ -81,16 +69,14 @@ define(function (require) {
 
     async function initialize() {
       backwardsCompatible.updateParams($scope.vis.params);
+      sirenSessionState = new SirenSessionState();
+      sirenSessionState.register(uiState, sirenSession, $route.current.params.id, $scope.vis.id);
       createDragAndDropPoiLayers();
       appendMap();
       modifyToDsl();
       await setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
       drawWfsOverlays();
-      if (!onDashboardPage()) {
-        await drawLayers();
-      } else {
-        _drawGeoFilters();
-      }
+      await drawLayers();
 
       if (_shouldAutoFitMapBoundsToData(true)) {
         _doFitMapBoundsToData();
@@ -334,14 +320,15 @@ define(function (require) {
 
         //new layers are always visible on first load, uistate takes precedence from then on
         if (layerParams.enabled === undefined) {
-          uiState.set(layerParams.id);
-          sirenSessionState.set(layerParams.id);
+          uiState.set(layerParams.id, true);
+          sirenSessionState.set(layerParams.id, true);
           layerParams.enabled = true;
         }
 
         const warning = _.get(map._layerControl.getLayerById(layerParams.id), 'warning');
-
-        if ((queryFilterChange && layerParams.enabled) ||
+        const layerOnMap = map._layerControl.getLayerById(layerParams.id);
+        if (!layerOnMap || // add the layer to the map so it will appear on layer control
+          (queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
             _currentMapEnvironment.currentMapBounds,
             _currentMapEnvironment.currentZoom,
@@ -763,10 +750,12 @@ define(function (require) {
         if (map._chartData && // if parameters haven't been assigned yet, fire the query
           (map.aggLayerParams && map.aggLayerParams.mapParams && map.aggLayerParams.mapParams.zoomLevel)) {
           const autoPrecision = _.get(map, '_chartData.geohashGridAgg.params.autoPrecision') || map.aggLayerParams.autoPrecision; //use previous as default
-          if (autoPrecision && utils.drawLayerCheck(map.aggLayerParams,
-            _currentMapEnvironment.currentMapBounds,
-            _currentMapEnvironment.currentZoom,
-            _currentMapEnvironment.currentAggregationPrecision)) {
+          const layerOnMap = map._layerControl.getLayerById(map.aggLayerParams.id);
+          if (!layerOnMap ||
+            autoPrecision && utils.drawLayerCheck(map.aggLayerParams,
+              _currentMapEnvironment.currentMapBounds,
+              _currentMapEnvironment.currentZoom,
+              _currentMapEnvironment.currentAggregationPrecision)) {
             drawAggs = true;
           } else if (!autoPrecision && (!utils.contains(map.aggLayerParams.mapParams.mapBounds, _currentMapEnvironment.currentMapBounds))) {
             drawAggs = true;
@@ -896,11 +885,13 @@ define(function (require) {
         const warning = _.get(map._layerControl.getLayerById(e.id), 'warning');
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
-        if (utils.drawLayerCheck(layerParams,
-          _currentMapEnvironment.currentMapBounds,
-          _currentMapEnvironment.currentZoom,
-          _currentMapEnvironment.currentClusteringPrecision,
-          warning)) {
+        const layerOnMap = map._layerControl.getLayerById(layerParams.id);
+        if (!layerOnMap ||
+          utils.drawLayerCheck(layerParams,
+            _currentMapEnvironment.currentMapBounds,
+            _currentMapEnvironment.currentZoom,
+            _currentMapEnvironment.currentClusteringPrecision,
+            warning)) {
           initPOILayer(layerParams);
         }
       } else if (e.layerType === 'agg') {
