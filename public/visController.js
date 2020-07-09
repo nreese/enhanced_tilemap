@@ -325,8 +325,8 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
-        const warning = _.get(map._layerControl.getLayerById(layerParams.id), 'warning');
         const layerOnMap = map._layerControl.getLayerById(layerParams.id);
+        const warning = _.get(layerOnMap, 'warning');
         if (!layerOnMap || // add the layer to the map so it will appear on layer control
           (queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
@@ -882,10 +882,10 @@ define(function (require) {
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
         const layerParams = getPoiLayerParamsById(e.id);
-        const warning = _.get(map._layerControl.getLayerById(e.id), 'warning');
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
         const layerOnMap = map._layerControl.getLayerById(layerParams.id);
+        const warning = _.get(layerOnMap, 'warning');
         if (!layerOnMap ||
           utils.drawLayerCheck(layerParams,
             _currentMapEnvironment.currentMapBounds,
