@@ -4,7 +4,7 @@ import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerClusteringIcon';
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
-
+import { offsetMarkerCluster } from './../marker_cluster_helper';
 export default class EsLayer {
   constructor() {
   }
@@ -358,7 +358,7 @@ export default class EsLayer {
       );
 
       const offsetCenter = options.leafletMap.containerPointToLatLng(
-        utils.offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
+        offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
       );
 
       const marker = L.marker(offsetCenter, {

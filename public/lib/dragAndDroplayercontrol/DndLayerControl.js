@@ -7,6 +7,9 @@ import { showAddLayerTreeModal } from './layerContolTree';
 import { LayerControlDnd } from './uiLayerControlDnd';
 import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 import utils from 'plugins/enhanced_tilemap/utils';
+import {
+  getMarkerClusteringPrecision,
+  processAggRespForMarkerClustering } from './../../vislib/marker_cluster_helper';
 
 import { EuiButton } from '@elastic/eui';
 
@@ -29,7 +32,7 @@ function getExtendedMapControl() {
   function _updateCurrentMapEnvironment() {
     _currentMapEnvironment.currentMapBounds = mainSearchDetails.getMapBounds();
     _currentMapEnvironment.currentZoom = _leafletMap.getZoom();
-    _currentMapEnvironment.currentPrecision = utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
+    _currentMapEnvironment.currentPrecision = getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
   }
 
   function _isHeatmapLayer(layer) {
@@ -384,7 +387,7 @@ function getExtendedMapControl() {
         query.body.aggs = _getAggsObject(mainSearchDetails.geoPointMapExtentFilter(), spatialPath, _currentMapEnvironment.currentPrecision);
         const aggResp = await esClient.search(query);
         const aggChartData = mainSearchDetails.respProcessor.process(aggResp);
-        processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, mainSearchDetails.geoFilter, limit, 'geometry');
+        processedAggResp = processAggRespForMarkerClustering(aggChartData, mainSearchDetails.geoFilter, limit, 'geometry');
 
         if (processedAggResp.aggFeatures && processedAggResp.docFilters.bool.should.length >= 1) {
           filter.push(processedAggResp.docFilters);
@@ -681,7 +684,7 @@ function getExtendedMapControl() {
           path: agg.key,
           mapParams: {
             zoomLevel: _currentMapEnvironment.currentZoom,
-            precision: utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom),
+            precision: getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom),
             mapBounds: mainSearchDetails.getMapBoundsWithCollar()
           },
           onMap: true
