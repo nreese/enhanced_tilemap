@@ -327,10 +327,16 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
-        const layerOnMap = map._layerControl.getLayerById(layerParams.id);
-        const warning = _.get(layerOnMap, 'warning');
-        if (!layerOnMap || // add the layer to the map so it will appear on layer control
-          (queryFilterChange && layerParams.enabled) ||
+        const layer = map._layerControl.getLayerById(layerParams.id);
+        let warning;
+        if (layer) {
+          warning = layer.warning;
+          if (layer.unspiderfy) {
+            layer.unspiderfy();
+          }
+        }
+
+        if ((queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
             _currentMapEnvironment.currentMapBounds,
             _currentMapEnvironment.currentZoom,

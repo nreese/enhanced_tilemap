@@ -1,6 +1,4 @@
 import expect from 'expect.js';
-// eslint-disable-next-line import/default
-import { find } from 'lodash';
 
 import {
   offsetMarkerCluster,
