@@ -197,13 +197,12 @@ geospatial server may provide the solution. See
 
 
 Point of Interest layers::
-  Add any elasticsearch index with a geo_point or geo_shape field as a
-  marker or polygons:
+  Add any Elasticsearch index with a geo_point or geo_shape field as a
+  marker or polygon layer:
 
-  * Geo_point type POI layers can be viewed and can include popups
-  activated and deactivated on mouseover and mouseout.
-  * Geo_shape type POI layers are suitable for viewing, popups and
-  creating geo-filters which are applied to aggregations, other POI
+  * You can draw geo_point type POI layers by using the <<Marker Clustering>> process.
+  * You can create geo_shape type POI layers to enable viewing, pop-ups, and to create geo-filters.
+  Geo-filters are applied to aggregations, other POI
   layers and other visualizations when on the dashboards (see *Apply
   filters* below).
 +
@@ -307,7 +306,13 @@ You can still see the available layers for the WMS by running a
 
 
 image::add_wfs_layer_button.png[image]
-This allows for point, linestring (including multilinestring) and polygon (including multipolygon) types to be rendered onto the the Enhanced Coordinate Map. Polygons can be clicked on for geo filter creation
+This allows for point, linestring (including multi-linestring) and polygon (including multi-polygon) types to be rendered onto the Enhanced Coordinate Map. To create a geo-filter, click a polygon.
+
+[NOTE]
+==== 
+Point layers from WFS sources will not <<Marker Clustering, cluster>>. Instead, single document features are drawn.
+====
+
 See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name*, *Url* and *WFS Layers* fields. For details on setting up a WFS server, see the <<Getting started with GeoServer>> guide. Additional fields specific for editing WFS layers:
 
   * *Styling* - Set color in Hex value form and specify the size of the
@@ -315,7 +320,22 @@ See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name
   * *Output Format* - The format that your spatial server is capable of responding with. The format for ArcGis Server is GeoJSON, and the format for Geoserver is JSON.
   * *Popup Content* - To configure a pop-up tooltip, create a comma-separated list of fields in the properties object of your GeoJSON features. For example, the parameter `City_name,Pop_est` adds the city name and the estimated population fields to each feature that is added to the map. *Note*: This parameter is case-sensitive. 
 
-==== Configuring Stored Layers
+==== Marker clustering
+Marker clustering is a method that allows all documents on the current map canvas to be represented at once. It is used by <<Point of Interest layers, Point of Interest>> layers and <<Loading Stored Layers into Elasticsearch, Stored Layer>> sources. 
+
+===== How does it work?
+Each time this layer type is re-rendered, the following two queries are used: 
+* Firstly, a geo-hash aggregation query is initiated. Based on this query, geo-hashes that have the least number of documents present are selected up to the limit that is configured. These selected geo-hashes are removed and geo-filters are created for these instead. 
+* Secondly, a document query is initiated to retrieve individual documents in these areas. 
+The configured <<The Options Tab, Map Collar Scale>> aggregation is used for both queries.
+
+===== How does it look?
+The result is displayed in the following image. The cluster can be distinguished by the number (391). When you hover your cursor over a cluster, the corresponding geo-hash is displayed. 
+When a marker that corresponds to one document is hovered over, a pop-up window can be displayed if it is configured. For more information, see <<Configuring Stored Layers, Stored Layers>> and <<Point of Interest layers, POI>> for respective configuration steps.
+
+image:marker_clustering.png[Example of marker clustering]
+
+==== Configuring stored layers
 
 Before you begin, ensure that you have ingested the data for stored layers. For more information about ingesting stored layer data, see <<Loading Stored Layers into Elasticsearch>>. 
 You can configure the stored layers by modifying the following parameters: 
@@ -599,6 +619,7 @@ NOTE: Layers will be automatically positioned at the top or bottom of their type
 
 * Point Layers
 * Shape Layers (polygons and lines)
+* Heatmap aggregation layer: If this type of aggregation is selected, this will appear above tile layers and below all other shape layers.
 * Tile Layers
 
 
