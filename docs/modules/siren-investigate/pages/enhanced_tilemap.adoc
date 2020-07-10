@@ -197,12 +197,12 @@ geospatial server may provide the solution. See
 
 
 Point of Interest layers::
-  Add any elasticsearch index with a geo_point or geo_shape field as a
+  Add any Elasticsearch index with a geo_point or geo_shape field as a
   marker or polygon layer:
 
-  * Geo_point type POI layers are drawn using the <<Marker Clustering>> process.
-  * Geo_shape type POI layers are suitable for viewing, popups and
-  creating geo-filters which are applied to aggregations, other POI
+  * You can draw geo_point type POI layers by using the <<Marker Clustering>> process.
+  * You can create geo_shape type POI layers to enable viewing, pop-ups, and to create geo-filters.
+  Geo-filters are applied to aggregations, other POI
   layers and other visualizations when on the dashboards (see *Apply
   filters* below).
 +
@@ -306,7 +306,7 @@ You can still see the available layers for the WMS by running a
 
 
 image::add_wfs_layer_button.png[image]
-This allows for point, linestring (including multilinestring) and polygon (including multipolygon) types to be rendered onto the the Enhanced Coordinate Map. Polygons can be clicked on for geo filter creation
+This allows for point, linestring (including multi-linestring) and polygon (including multi-polygon) types to be rendered onto the Enhanced Coordinate Map. To create a geo-filter, click a polygon.
 
 [NOTE]
 ==== 
@@ -320,18 +320,22 @@ See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name
   * *Output Format* - The format that your spatial server is capable of responding with. The format for ArcGis Server is GeoJSON, and the format for Geoserver is JSON.
   * *Popup Content* - To configure a pop-up tooltip, create a comma-separated list of fields in the properties object of your GeoJSON features. For example, the parameter `City_name,Pop_est` adds the city name and the estimated population fields to each feature that is added to the map. *Note*: This parameter is case-sensitive. 
 
-==== Marker Clustering
-Point layers from <<Point of Interest layers, Point of Interest>> and <<Loading Stored Layers into Elasticsearch, Stored Layer>> sources use Marker Clustering. This approach means that all documents on the current map canvas are represented at once. 
+==== Marker clustering
+Marker clustering is a method that allows all documents on the current map canvas to be represented at once. It is used by <<Point of Interest layers, Point of Interest>> layers and <<Loading Stored Layers into Elasticsearch, Stored Layer>> sources. 
 
 ===== How does it work?
-Two queries are used each time this layer type is re-rendered. Initially, a geohash aggregation query is fired. Based on this, geohashes that have the least number of documents present are selected up to the point that the configured limit would be exceeded. These selected geohashes are removed and Geo-Filters are created for these instead. A document query is then fired to retrive individual documents within these areas. The configured aggregation <<The Options Tab, Map Collar Scale>> is used for both queries.
+Each time this layer type is re-rendered, the following two queries are used: 
+* Firstly, a geo-hash aggregation query is initiated. Based on this query, geo-hashes that have the least number of documents present are selected up to the limit that is configured. These selected geo-hashes are removed and geo-filters are created for these instead. 
+* Secondly, a document query is initiated to retrieve individual documents in these areas. 
+The configured <<The Options Tab, Map Collar Scale>> aggregation is used for both queries.
 
 ===== How does it look?
-The result is demonstrated below, the cluster can be distinguished from the number to the right (391). When a cluster is hovered over, the corresponding geohash appears. When a marker corresponding to one document is hovered over, a popup, if configured (see <<Configuring Stored Layers, Stored Layers>> and <<Point of Interest layers, POI>> for respective configurations) appears.
+The result is displayed in the following image. The cluster can be distinguished by the number (391). When you hover your cursor over a cluster, the corresponding geo-hash is displayed. 
+When a marker that corresponds to one document is hovered over, a pop-up window can be displayed if it is configured. For more information, see <<Configuring Stored Layers, Stored Layers>> and <<Point of Interest layers, POI>> for respective configuration steps.
 
-image:marker_clustering.png[Marker Clustering Example]
+image:marker_clustering.png[Example of marker clustering]
 
-==== Configuring Stored Layers
+==== Configuring stored layers
 
 Before you begin, ensure that you have ingested the data for stored layers. For more information about ingesting stored layer data, see <<Loading Stored Layers into Elasticsearch>>. 
 You can configure the stored layers by modifying the following parameters: 
@@ -615,7 +619,7 @@ NOTE: Layers will be automatically positioned at the top or bottom of their type
 
 * Point Layers
 * Shape Layers (polygons and lines)
-* Heatmap Aggregation layer (if this type of Aggregation is selected, this will appear above tile layers and below all other Shape layers)
+* Heatmap aggregation layer: If this type of aggregation is selected, this will appear above tile layers and below all other shape layers.
 * Tile Layers
 
 
