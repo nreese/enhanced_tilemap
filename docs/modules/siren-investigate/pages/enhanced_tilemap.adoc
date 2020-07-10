@@ -310,7 +310,7 @@ This allows for point, linestring (including multi-linestring) and polygon (incl
 
 [NOTE]
 ==== 
-Point layers from WFS sources will render single document features rather than the <<Marker Clustering>> support for other point layer types
+Point layers from WFS sources will not <<Marker Clustering, cluster>>. Instead, single document features are drawn.
 ====
 
 See image:15d88cecd8dd9c.png[image] section above for description on *Layer Name*, *Url* and *WFS Layers* fields. For details on setting up a WFS server, see the <<Getting started with GeoServer>> guide. Additional fields specific for editing WFS layers:
