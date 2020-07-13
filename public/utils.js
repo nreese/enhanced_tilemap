@@ -154,32 +154,6 @@ define(function (require) {
         }
       };
     },
-    getMapStateFromVis: function (vis) {
-      const mapState = {};
-      //Visualizations created in 5.x will have map state in uiState
-      if (vis.hasUiState()) {
-        const uiStateCenter = vis.uiStateVal('mapCenter');
-        const uiStateZoom = vis.uiStateVal('mapZoom');
-        if (uiStateCenter && uiStateZoom) {
-          mapState.center = uiStateCenter;
-          mapState.zoom = uiStateZoom;
-        }
-      }
-      //Visualizations created in 4.x will have map state in segment aggregation
-      if (!_.has(mapState, 'center') && !_.has(mapState, 'zoom')) {
-        const agg = this.getAggConfig(vis.aggs, 'segment');
-        if (agg) {
-          mapState.center = _.get(agg, 'params.mapCenter');
-          mapState.zoom = _.get(agg, 'params.mapZoom');
-        }
-      }
-      //Provide defaults if no state found
-      if (!_.has(mapState, 'center') && !_.has(mapState, 'zoom')) {
-        mapState.center = [15, 5];
-        mapState.zoom = 2;
-      }
-      return mapState;
-    },
     /**
      * Avoid map auto panning. Use the offset option to
      * anchor popups so content fits inside map bounds.

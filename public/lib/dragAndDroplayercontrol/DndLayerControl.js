@@ -22,7 +22,6 @@ function getExtendedMapControl() {
   let $element;
   let mainSearchDetails;
   let geometryTypeOfSpatialPaths;
-  let uiState;
 
 
   const _debouncedRedrawOverlays = debounce(_redrawOverlays, 400);
@@ -508,13 +507,11 @@ function getExtendedMapControl() {
         layer.visible = true;
       }
       esRefLayerList.push(layer);
-      if (layer.enabled) {
-        _leafletMap.fire('showlayer', {
-          layerType: layer.type,
-          id: layer.id,
-          enabled: layer.enabled
-        });
-      }
+      _leafletMap.fire('showlayer', {
+        layerType: layer.type,
+        id: layer.id,
+        enabled: layer.enabled
+      });
     }
     addOverlays(esRefLayerList);
     addEsRefLayers(esRefLayerList);
@@ -663,7 +660,7 @@ function getExtendedMapControl() {
       const savedStoredLayers = [];
       _updateCurrentMapEnvironment();
       aggs.forEach(agg => {
-        const currentUiState = uiState.get(agg.key);
+        const currentUiState = mainSearchDetails.sirenSessionState.get(agg.key);
         const storedLayerTemplate = {
           id: agg.key,
           path: agg.key,
@@ -730,7 +727,6 @@ function getExtendedMapControl() {
       _allLayers = allLayers;
       esClient = es;
       mainSearchDetails = mSD;
-      uiState = mSD.uiState;
       this._lastZIndex = 0;
       $element = $el;
 

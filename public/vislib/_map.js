@@ -52,12 +52,12 @@ define(function (require) {
       // keep a reference to all of the optional params
       this.mainSearchDetails = params.mainSearchDetails;
       this.uiState = params.uiState;
-      this.aggLayerParams;
+      this.sirenSessionState = params.sirenSessionState;
+      this.aggLayerParams = {};
       this._callbacks = _.get(params, 'callbacks');
       this._setMarkerType(params.mapType);
-      const centerArray = _.get(params, 'center') || defaultMapCenter;
-      this._mapCenter = L.latLng(centerArray[0], centerArray[1]);
-      this._mapZoom = _.get(params, 'zoom') || defaultMapZoom;
+      this._mapCenter = L.latLng(this.sirenSessionState.get('mapCenter')) || L.latLng(defaultMapCenter);
+      this._mapZoom = this.sirenSessionState.get('mapZoom') || defaultMapZoom;
       this._setAttr(params.attr);
       this._isEditable = params.editable || false;
 
@@ -209,8 +209,7 @@ define(function (require) {
     };
 
     TileMapMap.prototype.addFeatureLayer = function (layer) {
-      const id = layer.id;
-      if (this.uiState.get(id) || this.uiState.get(id) === undefined) layer.enabled = true;
+      if (this.sirenSessionState.get(layer.id)) layer.enabled = true;
       this._layerControl.addOverlays([layer]);
 
       //Add tool to l.draw.toolbar so users can filter by vector layers
@@ -243,6 +242,7 @@ define(function (require) {
 
       this._markers = this._createMarkers({
         uiState: this.uiState,
+        sirenSessionState: this.sirenSessionState,
         tooltipFormatter: tooltipFormatter,
         valueFormatter: valueFormatter,
         prevState: prevState,
@@ -276,7 +276,7 @@ define(function (require) {
       this._filters.type = 'filter';
       this._filters.icon = `<i class="far fa-filter" style="color:${style.color};"></i>`;
       // the uiState takes precedence
-      this._filters.enabled = this.uiState.get(this._filters.id);
+      this._filters.enabled = this.sirenSessionState.get(this._filters.id);
       this._filters.visible = true;
       this._layerControl.addOverlays([this._filters]);
     };
@@ -424,16 +424,19 @@ define(function (require) {
       });
     };
 
-    TileMapMap.prototype._hasSameLocation = function () {
+    TileMapMap.prototype._hasSameLocation = function (currentCenter, currentZoom) {
       const oldLat = this._mapCenter.lat.toFixed(5);
       const oldLon = this._mapCenter.lng.toFixed(5);
-      const newLat = this.leafletMap.getCenter().lat.toFixed(5);
-      const newLon = this.leafletMap.getCenter().lng.toFixed(5);
+      const newLat = currentCenter.lat.toFixed(5);
+      const newLon = currentCenter.lng.toFixed(5);
       let isSame = false;
       if (oldLat === newLat
         && oldLon === newLon
         && this.leafletMap.getZoom() === this._mapZoom) {
         isSame = true;
+      } else {
+        this._mapZoom = currentZoom;
+        this._mapCenter = L.latLng(currentCenter);
       }
       return isSame;
     };

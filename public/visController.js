@@ -13,8 +13,8 @@ import { uiModules } from 'ui/modules';
 import { TileMapTooltipFormatterProvider } from 'ui/agg_response/geo_json/_tooltip_formatter';
 import Vector from './vislib/vector_layer_types/vector';
 import { compareStates } from 'ui/kibi/state_management/compare_states';
-import { onDashboardPage } from 'ui/kibi/utils/on_page';
 import SpinControl from './vislib/spin_control';
+import SirenSessionState from './vislib/session_state';
 
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
@@ -28,7 +28,7 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups, savedVisualizations,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timefilter, createNotifier, es) {
+    timefilter, createNotifier, es, sirenSession, $route) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -42,14 +42,17 @@ define(function (require) {
     const ResizeChecker = Private(ResizeCheckerProvider);
     const VisTooltip = Private(require('plugins/enhanced_tilemap/tooltip/visTooltip'));
     const BoundsHelper = Private(require('plugins/enhanced_tilemap/vislib/DataBoundsHelper'));
-    let map = null;
     let collar = null;
     let chartData = null;
+    let map = null;
     let tooltip = null;
     let tooltipFormatter = null;
     let storedTime = _.cloneDeep(timefilter.time);
-    const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
     let spinControl;
+    let sirenSessionState;
+
+    const uiState = $scope.vis.getUiState(); // note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
+
     const appState = getAppState();
     let storedState = {
       filters: _.cloneDeep(appState.filters),
@@ -66,16 +69,15 @@ define(function (require) {
 
     async function initialize() {
       backwardsCompatible.updateParams($scope.vis.params);
+      // Note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
+      sirenSessionState = new SirenSessionState();
+      sirenSessionState.register(uiState, sirenSession, $route.current.params.id, $scope.vis.id);
       createDragAndDropPoiLayers();
       appendMap();
       modifyToDsl();
       await setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
       drawWfsOverlays();
-      if (!onDashboardPage()) {
-        await drawLayers();
-      } else {
-        _drawGeoFilters();
-      }
+      await drawLayers();
 
       if (_shouldAutoFitMapBoundsToData(true)) {
         _doFitMapBoundsToData();
@@ -275,6 +277,7 @@ define(function (require) {
             map.leafletMap.fitBounds(entireBounds);
             //update uiState zoom so correct geohash precision will be used
             uiState.set('mapZoom', map.leafletMap.getZoom());
+            sirenSessionState.set('mapZoom', map.leafletMap.getZoom());
           }
         });
     }
@@ -314,17 +317,19 @@ define(function (require) {
       if (!poiLayerArray) return;
 
       poiLayerArray.forEach(layerParams => {
-        layerParams.enabled = uiState.get(layerParams.id);
+        layerParams.enabled = sirenSessionState.get(layerParams.id);
 
         //new layers are always visible on first load, uistate takes precedence from then on
         if (layerParams.enabled === undefined) {
-          uiState.set(layerParams.id);
+          uiState.set(layerParams.id, true);
+          sirenSessionState.set(layerParams.id, true);
           layerParams.enabled = true;
         }
 
-        const warning = _.get(map._layerControl.getLayerById(layerParams.id), 'warning');
-
-        if ((queryFilterChange && layerParams.enabled) ||
+        const layerOnMap = map._layerControl.getLayerById(layerParams.id);
+        const warning = _.get(layerOnMap, 'warning');
+        if (!layerOnMap || // add the layer to the map so it will appear on layer control
+          (queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
             _currentMapEnvironment.currentMapBounds,
             _currentMapEnvironment.currentZoom,
@@ -670,6 +675,7 @@ define(function (require) {
       _currentMapEnvironment.currentMapBoundsWithCollar = getMapBoundsWithCollar();
       _currentMapEnvironment.currentZoom = map.leafletMap.getZoom();
       _currentMapEnvironment.currentClusteringPrecision = utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
+      _currentMapEnvironment.mapCenter = map.leafletMap.getCenter();
 
       if ($scope.vis.aggs[1]) {
         const precisionType = $scope.vis.aggs[1].params.aggPrecisionType.toLowerCase();
@@ -684,7 +690,6 @@ define(function (require) {
 
 
     function appendMap() {
-      const initialMapState = utils.getMapStateFromVis($scope.vis);
       const params = $scope.vis.params;
       const container = $element[0].querySelector('.tilemap');
       container.id = `etm-vis-${$scope.vis.panelIndex}`;
@@ -700,20 +705,20 @@ define(function (require) {
         geoFilter,
         storedLayerConfig: getStoredLayerConfig(),
         uiState,
-        saturateWMSTile
+        sirenSessionState,
+        saturateWMSTile,
       };
 
       map = new TileMapMap(container, {
         mainSearchDetails,
         $element,
         es,
-        center: initialMapState.center,
-        zoom: initialMapState.zoom,
         callbacks: callbacks,
         mapType: params.mapType,
         attr: params,
         editable: $scope.vis.getEditableVis() ? true : false,
         uiState,
+        sirenSessionState,
         syncMap: params.syncMap
       });
       mainSearchDetails.spinControl = spinControl = new SpinControl(map.leafletMap);
@@ -746,10 +751,12 @@ define(function (require) {
         if (map._chartData && // if parameters haven't been assigned yet, fire the query
           (map.aggLayerParams && map.aggLayerParams.mapParams && map.aggLayerParams.mapParams.zoomLevel)) {
           const autoPrecision = _.get(map, '_chartData.geohashGridAgg.params.autoPrecision') || map.aggLayerParams.autoPrecision; //use previous as default
-          if (autoPrecision && utils.drawLayerCheck(map.aggLayerParams,
-            _currentMapEnvironment.currentMapBounds,
-            _currentMapEnvironment.currentZoom,
-            _currentMapEnvironment.currentAggregationPrecision)) {
+          const layerOnMap = map._layerControl.getLayerById(map.aggLayerParams.id);
+          if (!layerOnMap ||
+            autoPrecision && utils.drawLayerCheck(map.aggLayerParams,
+              _currentMapEnvironment.currentMapBounds,
+              _currentMapEnvironment.currentZoom,
+              _currentMapEnvironment.currentAggregationPrecision)) {
             drawAggs = true;
           } else if (!autoPrecision && (!utils.contains(map.aggLayerParams.mapParams.mapBounds, _currentMapEnvironment.currentMapBounds))) {
             drawAggs = true;
@@ -762,11 +769,12 @@ define(function (require) {
           spinControl.create();
           $scope.flags.drawingAggs = true;
           map.aggLayerParams = {};
-          map.aggLayerParams.enabled = uiState.get('Aggregation');
+          map.aggLayerParams.enabled = sirenSessionState.get('Aggregation');
           // always enabled first time drawn
           if (map.aggLayerParams.enabled === undefined) {
             map.aggLayerParams.enabled = true;
             uiState.set('Aggregation', true);
+            sirenSessionState.set('Aggregation', true);
           }
           map.aggLayerParams.type = 'agg';
 
@@ -855,6 +863,7 @@ define(function (require) {
       }
       //scope for saving dnd poi overlays
       uiState.set(e.id, false);
+      sirenSessionState.set(e.id, false);
     });
 
     // saving checkbox status to dashboard uiState
@@ -866,20 +875,24 @@ define(function (require) {
         }
 
         uiState.set(e.id, refLayerState);
+        sirenSessionState.set(e.id, refLayerState);
       } else {
         uiState.set(e.id, e.enabled);
+        sirenSessionState.set(e.id, e.enabled);
       }
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
         const layerParams = getPoiLayerParamsById(e.id);
-        const warning = _.get(map._layerControl.getLayerById(e.id), 'warning');
         layerParams.enabled = e.enabled;
         layerParams.type = e.layerType;
-        if (utils.drawLayerCheck(layerParams,
-          _currentMapEnvironment.currentMapBounds,
-          _currentMapEnvironment.currentZoom,
-          _currentMapEnvironment.currentClusteringPrecision,
-          warning)) {
+        const layerOnMap = map._layerControl.getLayerById(layerParams.id);
+        const warning = _.get(layerOnMap, 'warning');
+        if (!layerOnMap ||
+          utils.drawLayerCheck(layerParams,
+            _currentMapEnvironment.currentMapBounds,
+            _currentMapEnvironment.currentZoom,
+            _currentMapEnvironment.currentClusteringPrecision,
+            warning)) {
           initPOILayer(layerParams);
         }
       } else if (e.layerType === 'agg') {
@@ -895,8 +908,10 @@ define(function (require) {
 
       if (e.layerType === 'es_ref_shape' || e.layerType === 'es_ref_point') {
         uiState.set(e.id, 'sne'); //saved but NOT enabled
+        sirenSessionState.set(e.id, 'sne'); //saved but NOT enabled
       } else {
         uiState.set(e.id, false);
+        sirenSessionState.set(e.id, false);
       }
 
       if (e.layerType === 'poi_shape' || e.layerType === 'poi_point') {
@@ -921,17 +936,22 @@ define(function (require) {
 
     map.leafletMap.on('moveend', _.debounce(async function setZoomCenter() {
       if (!map.leafletMap) return;
-      if (map._hasSameLocation()) return;
-
       _updateCurrentMapEnvironment();
+      // check if map zoom/center has change and update uiState if so
+      if (map._hasSameLocation(_currentMapEnvironment.mapCenter, _currentMapEnvironment.currentZoom)) return;
 
-      // update internal center and zoom references
-      map._mapCenter = map.leafletMap.getCenter();
+      // update uiState center and zoom references
       uiState.set('mapCenter', [
-        _.round(map._mapCenter.lat, 5),
-        _.round(map._mapCenter.lng, 5)
+        _.round(_currentMapEnvironment.mapCenter.lat, 5),
+        _.round(_currentMapEnvironment.mapCenter.lng, 5)
       ]);
       uiState.set('mapZoom', _currentMapEnvironment.currentZoom);
+
+      sirenSessionState.set('mapCenter', [
+        _.round(_currentMapEnvironment.mapCenter.lat, 5),
+        _.round(_currentMapEnvironment.mapCenter.lng, 5)
+      ]);
+      sirenSessionState.set('mapZoom', _currentMapEnvironment.currentZoom);
 
       await drawLayers();
     }, 500, false));
