@@ -2,7 +2,6 @@ import { cloneDeep } from 'lodash';
 import { onDashboardPage } from 'ui/kibi/utils/on_page';
 
 export default class SirenSessionState {
-  // Note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
   // A temporary fix is to use siren session to store uiState. This is pending an overall uistate improvement.
   // See comment on - https://sirensolutions.atlassian.net/browse/INVE-11900
   constructor() {

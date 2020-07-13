@@ -69,6 +69,7 @@ define(function (require) {
 
     async function initialize() {
       backwardsCompatible.updateParams($scope.vis.params);
+      // Note - true, false, se (saved and enabled on map), sne (saved but not enabled on map) and undefined (new to uistate) are all possible states
       sirenSessionState = new SirenSessionState();
       sirenSessionState.register(uiState, sirenSession, $route.current.params.id, $scope.vis.id);
       createDragAndDropPoiLayers();
