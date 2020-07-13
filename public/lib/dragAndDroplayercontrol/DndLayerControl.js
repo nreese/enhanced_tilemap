@@ -9,7 +9,8 @@ import EsLayer from './../../vislib/vector_layer_types/EsLayer';
 import utils from 'plugins/enhanced_tilemap/utils';
 import {
   getMarkerClusteringPrecision,
-  processAggRespForMarkerClustering } from './../../vislib/marker_cluster_helper';
+  processAggRespForMarkerClustering
+} from './../../vislib/marker_cluster_helper';
 
 import { EuiButton } from '@elastic/eui';
 
@@ -556,6 +557,9 @@ function getExtendedMapControl() {
           layer.mapParams.visible = visibleForCurrentMapZoom;
         } else {
           layer = item;
+          if (layer.unspiderfy) {
+            layer.unspiderfy();
+          }
         }
 
         layer.visible = visibleForCurrentMapZoom;

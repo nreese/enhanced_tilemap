@@ -11,7 +11,7 @@ import { offsetMarkerCluster } from './../marker_cluster_helper';
 let oms;
 export default class EsLayer {
   constructor() {
-    require('overlapping-marker-spiderfier-leaflet');
+    require('plugins/enhanced_tilemap/lib/leaflet.overlapping_marker_spiderfyer/oms');
   }
 
   createLayer = function (hits, aggs, geo, type, options) {
@@ -305,12 +305,12 @@ export default class EsLayer {
     }
   }
 
-  _createMarker = (hit, geoField, options) => {
+  _createMarker = (hit, geoField, overlap, options) => {
     const hitCoords = this._createHitCoords(hit, geoField);
     const feature = L.marker(
       toLatLng(hitCoords),
       {
-        icon: searchIcon(options.icon, options.color, options.size),
+        icon: searchIcon(options.icon, options.color, options.size, overlap),
         pane: 'overlayPane'
       });
 
@@ -348,7 +348,7 @@ export default class EsLayer {
         usual: '#00444444',
         highlighted: color
       },
-      nearbyDistance: 20
+      nearbyDistance: 50
     };
     oms = new OverlappingMarkerSpiderfier(leafletMap, options);
     markers.forEach((marker) => {
@@ -359,16 +359,51 @@ export default class EsLayer {
         popup.setLatLng(marker.getLatLng());
         leafletMap.openPopup(popup);
       });
+
+      oms.addListener('spiderfy', (spiderfyedMarkers) => {
+        spiderfyedMarkers.forEach(marker => {
+          if (_.get(marker, '_icon.children[0].children[1]')) {
+            marker._icon.children[0].children[1].innerHTML = '';
+          }
+        });
+      });
+
+      oms.addListener('unspiderfy', (unSpiderfyedMarkers) => {
+        unSpiderfyedMarkers.forEach(marker => {
+          if (_.get(marker, '_icon.children[0].children[1]')) {
+            marker._icon.children[0].children[1].innerHTML = '+';
+          }
+        });
+      });
     });
   }
 
   _makeIndividualPoints = (features, geo, type, options) => {
     const markerList = [];
-    features.forEach((feature) => {
+    const markerMap = new Map();
+    const calculateGroup = (feature) => {
+      const pixels = 10;
+      const containerPoints = options.leafletMap.latLngToContainerPoint(toLatLng(feature._source[geo.field]));
+      return `${this.roundToTheNearest(containerPoints.x, pixels)}${this.roundToTheNearest(containerPoints.y, pixels)}`;
+    };
+
+    //populate hashmap groups
+    features.forEach(feature => {
+      const group = calculateGroup(feature);
+      markerMap[group] ? markerMap[group].push(feature) : markerMap[group] = [feature];
+    });
+
+    //creating markers
+    features.forEach(feature => {
+      const group = calculateGroup(feature);
       if (type === 'es_ref') {
         this.assignFeatureLevelConfigurations(feature, geo.type, options);
       }
-      markerList.push(this._createMarker(feature, geo.field, options));
+      let overlap;
+      if (markerMap[group].length > 1) {
+        overlap = true;
+      }
+      markerList.push(this._createMarker(feature, geo.field, overlap, options));
     });
 
     this._spiderify(options.leafletMap, markerList, options.color);
