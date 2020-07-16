@@ -238,7 +238,22 @@ function getExtendedMapControl() {
     remove(esRefLayersOnMap, (layer) => layer.path === path);
   }
 
+  function _someLayerHasTooManyDocumentsWarning() {
+    return findIndex(_allLayers, layer => layer.warning) !== -1;
+  }
+
   function _updateLayerControl() {
+    const $layerControl = $element.find('.leaflet-control-layers');
+    const $warningElement = get($layerControl, '[0].children[0]');
+    if ($warningElement) {
+      if (_someLayerHasTooManyDocumentsWarning()) {
+        $layerControl.addClass('leaflet-control-layers-warning');
+        $warningElement.innerHTML = '<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>';
+      } else {
+        $layerControl.removeClass('leaflet-control-layers-warning');
+        $warningElement.innerHTML = '';
+      }
+    }
     render(<LayerControlDnd
       dndCurrentListOrder={_allLayers}
       dndListOrderChange={dndListOrderChange}
