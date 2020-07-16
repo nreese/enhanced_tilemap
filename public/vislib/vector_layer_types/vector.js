@@ -2,7 +2,7 @@ const _ = require('lodash');
 const L = require('leaflet');
 import { markerIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerIcon';
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
-import utils from 'plugins/enhanced_tilemap/utils';
+import { bindPopup } from './bindPopup';
 
 /**
  * Vector overlay
@@ -56,7 +56,7 @@ export default class Vector {
       layer.destroy = () => {
         layer.unbindPopup();
       };
-      self.bindPopup(layer, options);
+      bindPopup(layer, options);
       layer.id = options.id;
       layer.label = options.displayName;
       layer.type = 'vector_point';
@@ -70,6 +70,7 @@ export default class Vector {
           popupContent = self._popupContent(feature, options.popupFields);
         }
         return {
+          id: feature.id,
           type: 'Feature',
           properties: {
             label: popupContent
@@ -81,6 +82,7 @@ export default class Vector {
       layer = L.geoJson(
         shapes,
         {
+          className: 'polygon-popup',
           style: { color: options.color },
           onEachFeature: function onEachFeature(feature, polygon) {
             if (feature.properties.label) {
@@ -116,7 +118,7 @@ export default class Vector {
           }
         }
       );
-      self.bindPopup(layer, options);
+      bindPopup(layer, options);
       layer.type = 'vectoroverlay';
       layer.label = options.displayName;
       layer.icon = `<i class="far fa-stop" style="color:${options.color};"></i>`;
@@ -129,71 +131,6 @@ export default class Vector {
     return layer;
   };
 
-
-
-  /**
- * Binds popup and events to each feature on map
- *
- * @method bindPopup
- * @param feature {Object}
- * @param layer {Object}
- * return {undefined}
- */
-  bindPopup = function (layer, options) {
-    const self = this;
-    const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
-
-    self._popupMouseOut = function (e) {
-      // get the element that the mouse hovered onto
-      const target = e.toElement || e.relatedTarget;
-      // check to see if the element is a popup
-      if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
-        return true;
-      }
-
-      // detach the event
-      L.DomEvent.off(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
-      options.leafletMap.closePopup();
-
-    };
-
-    layer.on({
-      mouseover: function (e) {
-        self._showTooltip(e.layer.content, e.latlng, options.leafletMap);
-      },
-
-      mouseout: function (e) {
-        const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-        // check to see if the element is a popup
-        if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
-          L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
-          return true;
-        }
-        options.leafletMap.closePopup();
-      }
-    });
-  };
-
-  _showTooltip = function (content, latLng, leafletMap) {
-    if (!leafletMap) return;
-    if (!content) return;
-
-    const popupDimensions = {
-      height: leafletMap.getSize().y * 0.9,
-      width: Math.min(leafletMap.getSize().x * 0.9, 400)
-    };
-
-    L.popup({
-      autoPan: false,
-      maxHeight: popupDimensions.height,
-      maxWidth: popupDimensions.width,
-      offset: utils.popupOffset(leafletMap, content, latLng, popupDimensions)
-    })
-      .setLatLng(latLng)
-      .setContent(content)
-      .openOn(leafletMap);
-  };
-
   addClickToGeoShape = function (polygon) {
     polygon.on('click', polygon._click);
   };
@@ -204,6 +141,8 @@ export default class Vector {
       {
         icon: markerIcon(options.color, options.size)
       });
+    _.set(feature, 'feature.id', hit.id);
+
     return feature;
   };
 
@@ -220,4 +159,3 @@ export default class Vector {
     return string.charAt(0).toUpperCase() + string.slice(1);
   }
 }
-

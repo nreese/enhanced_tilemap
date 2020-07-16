@@ -8,6 +8,7 @@ import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/mark
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
 import { offsetMarkerCluster } from './../marker_cluster_helper';
 import { spiderfyPlus } from '../../config/config';
+import { bindPopup } from './bindPopup';
 
 let oms;
 export default class EsLayer {
@@ -44,7 +45,8 @@ export default class EsLayer {
             oms.clearListeners('click');
           }
         };
-        self.bindPopup(layer, options);
+        console.log('a secret agents, EsLayer.js reporting for duty');
+        bindPopup(layer, options);
       } else if ('geo_shape' === geo.type ||
         'polygon' === geo.type ||
         'multipolygon' === geo.type ||
@@ -75,6 +77,7 @@ export default class EsLayer {
             popupContent = self._popupContent(hit, options.popupFields);
           }
           return {
+            id: hit._id,
             type: 'Feature',
             properties: {
               label: popupContent
@@ -85,6 +88,7 @@ export default class EsLayer {
         layer = L.geoJson(
           shapes,
           {
+            className: 'polygon-popup',
             onEachFeature: function onEachFeature(feature, polygon) {
               if (feature.properties.label) {
                 polygon.content = feature.properties.label;
@@ -133,7 +137,8 @@ export default class EsLayer {
             }
           }
         );
-        self.bindPopup(layer, options);
+        console.log('a secret agent, EsLayer.js reporting for duty');
+        bindPopup(layer, options);
         if (options.warning && options.warning.limit) {
           //handling too many documents warnings
           layer.warning = `There are undisplayed POIs for this overlay due
@@ -206,95 +211,6 @@ export default class EsLayer {
     options.color = properties.color || options.color || '#FF0000';
   }
 
-  /**
-   * Binds popup and events to each feature on map
-   *
-   * @method bindPopup
-   * @param feature {Object}
-   * @param layer {Object}
-   * return {undefined}
-   */
-  bindPopup = function (layer, options) {
-    const self = this;
-    const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
-    let clusterPolygon;
-
-    self._popupMouseOut = function (e) {
-      // get the element that the mouse hovered onto
-      const target = e.toElement || e.relatedTarget;
-      // check to see if the element is a popup
-      if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
-        return true;
-      }
-      // detach the event
-      L.DomEvent.off(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
-      options.leafletMap.closePopup();
-    };
-
-    layer.on({
-      mouseover: function (e) {
-        if (e.layer.content) {
-          // for points, polylines or polygons
-          self._showTooltip(e.layer.content, e.latlng, options.leafletMap);
-        } else if (e.layer.geohashRectangle) {
-          //for marker clusters
-          clusterPolygon = self._createClusterGeohashPolygon(e.layer.geohashRectangle, options.color)
-            .addTo(options.leafletMap);
-        }
-      },
-
-      mouseout: function (e) {
-        if (e.layer.geohashRectangle && clusterPolygon) {
-          clusterPolygon.remove(options.leafletMap);
-        } else {
-          const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
-          // check to see if the element is a popup
-          if (utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES)) {
-            L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', self._popupMouseOut, self);
-            return true;
-          }
-          options.leafletMap.closePopup();
-        }
-      }
-    });
-  };
-
-  _createClusterGeohashPolygon = function (rectangle, color) {
-    const corners = [
-      [rectangle[3][0], rectangle[3][1]],
-      [rectangle[1][0], rectangle[1][1]]
-    ];
-
-    return L.rectangle(corners, {
-      stroke: true,
-      color,
-      opacity: 0.7,
-      dashArray: 4,
-      fill: true,
-      fillOpacity: 0.2
-    });
-  };
-
-  _showTooltip = function (content, latLng, leafletMap) {
-    if (!leafletMap) return;
-    if (!content) return;
-
-    const popupDimensions = {
-      height: leafletMap.getSize().y * 0.9,
-      width: Math.min(leafletMap.getSize().x * 0.9, 400)
-    };
-
-    L.popup({
-      autoPan: false,
-      maxHeight: popupDimensions.height,
-      maxWidth: popupDimensions.width,
-      offset: utils.popupOffset(leafletMap, content, latLng, popupDimensions)
-    })
-      .setLatLng(latLng)
-      .setContent(content)
-      .openOn(leafletMap);
-  };
-
   addClickToGeoShape = function (polygon) {
     polygon.on('click', polygon._click);
   };
@@ -315,6 +231,7 @@ export default class EsLayer {
         icon: searchIcon(options.icon, options.color, options.size, overlap),
         pane: 'overlayPane'
       });
+    _.set(feature, 'feature.id', hit._id);
 
     if (options.popupFields.length) {
       feature.content = this._popupContent(hit, options.popupFields);
