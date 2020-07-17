@@ -384,7 +384,7 @@ export default class EsLayer {
     const markerList = [];
     const markerMap = new Map();
     const calculateGroup = (feature) => {
-      const pixels = 10;
+      const pixels = 5;
       const containerPoints = options.leafletMap.latLngToContainerPoint(toLatLng(feature._source[geo.field]));
       return `${this.roundToTheNearest(containerPoints.x, pixels)}${this.roundToTheNearest(containerPoints.y, pixels)}`;
     };
