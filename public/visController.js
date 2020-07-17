@@ -15,6 +15,7 @@ import Vector from './vislib/vector_layer_types/vector';
 import { compareStates } from 'ui/kibi/state_management/compare_states';
 import SpinControl from './vislib/spin_control';
 import SirenSessionState from './vislib/session_state';
+import { getMarkerClusteringPrecision } from './vislib/marker_cluster_helper';
 
 define(function (require) {
   const module = uiModules.get('kibana/enhanced_tilemap', [
@@ -326,10 +327,16 @@ define(function (require) {
           layerParams.enabled = true;
         }
 
-        const layerOnMap = map._layerControl.getLayerById(layerParams.id);
-        const warning = _.get(layerOnMap, 'warning');
-        if (!layerOnMap || // add the layer to the map so it will appear on layer control
-          (queryFilterChange && layerParams.enabled) ||
+        const layer = map._layerControl.getLayerById(layerParams.id);
+        let warning;
+        if (layer) {
+          warning = layer.warning;
+          if (layer.unspiderfy) {
+            layer.unspiderfy();
+          }
+        }
+
+        if ((queryFilterChange && layerParams.enabled) ||
           utils.drawLayerCheck(layerParams,
             _currentMapEnvironment.currentMapBounds,
             _currentMapEnvironment.currentZoom,
@@ -346,7 +353,7 @@ define(function (require) {
       const displayName = layerParams.displayName || layerParams.savedSearchLabel;
       layerParams.mapParams = {
         zoomLevel: _currentMapEnvironment.currentZoom,
-        precision: utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom),
+        precision: getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom),
         mapBounds: getMapBoundsWithCollar()
       };
 
@@ -673,8 +680,8 @@ define(function (require) {
       _currentMapEnvironment.currentMapBounds = getMapBounds();
       _currentMapEnvironment.currentMapBoundsWithCollar = getMapBoundsWithCollar();
       _currentMapEnvironment.currentZoom = map.leafletMap.getZoom();
-      _currentMapEnvironment.currentClusteringPrecision = utils.getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
       _currentMapEnvironment.mapCenter = map.leafletMap.getCenter();
+      _currentMapEnvironment.currentClusteringPrecision = getMarkerClusteringPrecision(_currentMapEnvironment.currentZoom);
 
       if ($scope.vis.aggs[1]) {
         const precisionType = $scope.vis.aggs[1].params.aggPrecisionType.toLowerCase();

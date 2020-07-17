@@ -1,14 +1,19 @@
+/* eslint-disable no-undef */
 const _ = require('lodash');
 const L = require('leaflet');
+
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerClusteringIcon';
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
+import { offsetMarkerCluster } from './../marker_cluster_helper';
+import { spiderfyPlus } from '../../config/config';
 
+let oms;
 export default class EsLayer {
   constructor() {
+    require('plugins/enhanced_tilemap/lib/leaflet.overlapping_marker_spiderfyer/oms');
   }
-
 
   createLayer = function (hits, aggs, geo, type, options) {
     let layer = null;
@@ -21,7 +26,6 @@ export default class EsLayer {
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.icon = _.get(options, 'icon', 'fas fa-map-marker-alt');
-
         const featuresForLayer = self._makeIndividualPoints(hits, geo, type, options)
           .concat(self._makeClusterPoints(aggs, layerControlIcon, layerControlColor, options));
         layer = new L.FeatureGroup(featuresForLayer);
@@ -29,8 +33,16 @@ export default class EsLayer {
         layer.options = { pane: 'overlayPane' };
         layer.icon = `<i class="${layerControlIcon}" style="color:${layerControlColor};"></i>`;
         layer.hasCluster = aggs.length >= 1;
+        layer.unspiderfy = () => {
+          if (oms.unspiderfy) {
+            oms.unspiderfy();
+          }
+        };
         layer.destroy = () => {
           layer.unbindPopup();
+          if (oms.clearListeners) {
+            oms.clearListeners('click');
+          }
         };
         self.bindPopup(layer, options);
       } else if ('geo_shape' === geo.type ||
@@ -79,7 +91,7 @@ export default class EsLayer {
               }
 
               if (feature.geometry && (feature.geometry.type === 'Polygon' ||
-              feature.geometry.type === 'MultiPolygon')) {
+                feature.geometry.type === 'MultiPolygon')) {
                 polygon._click = function fireEtmSelectFeature() {
                   polygon._map.fire('etm:select-feature-vector', {
                     args: {
@@ -123,6 +135,7 @@ export default class EsLayer {
         );
         self.bindPopup(layer, options);
         if (options.warning && options.warning.limit) {
+          //handling too many documents warnings
           layer.warning = `There are undisplayed POIs for this overlay due
         to having reached the limit currently set to ${options.warning.limit}`;
         }
@@ -286,18 +299,20 @@ export default class EsLayer {
     polygon.on('click', polygon._click);
   };
 
-  _createMarker = function (hit, geoField, options) {
-    let hitCoords;
+  _createHitCoords = function (hit, geoField) {
     if (_.has(hit, '_source.geometry.coordinates') && _.has(hit, '_source.geometry.type')) {
-      hitCoords = hit._source.geometry.coordinates;
+      return hit._source.geometry.coordinates;
     } else {
-      hitCoords = _.get(hit, `_source[${geoField}]`);
+      return _.get(hit, `_source[${geoField}]`);
     }
+  }
 
+  _createMarker = (hit, geoField, overlap, options) => {
+    const hitCoords = this._createHitCoords(hit, geoField);
     const feature = L.marker(
       toLatLng(hitCoords),
       {
-        icon: searchIcon(options.icon, options.color, options.size),
+        icon: searchIcon(options.icon, options.color, options.size, overlap),
         pane: 'overlayPane'
       });
 
@@ -327,15 +342,74 @@ export default class EsLayer {
     return `<dl>${dlContent}</dl>`;
   }
 
+  _spiderify = (leafletMap, markers, color) => {
+    const options = {
+      circleSpiralSwitchover: 30,
+      legWeight: 1.5,
+      legColors: {
+        usual: '#00444444',
+        highlighted: color
+      },
+      nearbyDistance: 40
+    };
+    oms = new OverlappingMarkerSpiderfier(leafletMap, options);
+    markers.forEach((marker) => {
+      oms.addMarker(marker);
+      const popup = new L.Popup();
+      oms.addListener('click', function (marker) {
+        // popup.setContent(marker.content);
+        popup.setLatLng(marker.getLatLng());
+        leafletMap.openPopup(popup);
+      });
+
+      oms.addListener('spiderfy', (spiderfyedMarkers) => {
+        spiderfyedMarkers.forEach(marker => {
+          if (_.get(marker, '_icon.children[0].children[1]')) {
+            marker._icon.children[0].children[1].innerHTML = '';
+          }
+        });
+      });
+
+      oms.addListener('unspiderfy', (unSpiderfyedMarkers) => {
+        unSpiderfyedMarkers.forEach(marker => {
+          if (_.get(marker, '_icon.children[0].children[1]')) {
+            marker._icon.children[0].children[1].innerHTML = spiderfyPlus;
+          }
+        });
+      });
+    });
+  }
+
   _makeIndividualPoints = (features, geo, type, options) => {
     const markerList = [];
-    features.forEach((feature) => {
+    const markerMap = new Map();
+    const calculateGroup = (feature) => {
+      const pixels = 5;
+      const containerPoints = options.leafletMap.latLngToContainerPoint(toLatLng(feature._source[geo.field]));
+      return `${this.roundToTheNearest(containerPoints.x, pixels)}${this.roundToTheNearest(containerPoints.y, pixels)}`;
+    };
+
+    //populate hashmap groups
+    features.forEach(feature => {
+      const group = calculateGroup(feature);
+      markerMap[group] ? markerMap[group].push(feature) : markerMap[group] = [feature];
+    });
+
+    //creating markers
+    features.forEach(feature => {
+      const group = calculateGroup(feature);
       if (type === 'es_ref') {
         this.assignFeatureLevelConfigurations(feature, geo.type, options);
       }
-
-      markerList.push(this._createMarker(feature, geo.field, options));
+      let overlap;
+      if (markerMap[group].length > 1) {
+        overlap = true;
+      }
+      markerList.push(this._createMarker(feature, geo.field, overlap, options));
     });
+
+    this._spiderify(options.leafletMap, markerList, options.color);
+
     return markerList;
   }
 
@@ -358,7 +432,7 @@ export default class EsLayer {
       );
 
       const offsetCenter = options.leafletMap.containerPointToLatLng(
-        utils.offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
+        offsetMarkerCluster(containerPixels, clusterCentroidInPixels, markerCount)
       );
 
       const marker = L.marker(offsetCenter, {
@@ -370,6 +444,10 @@ export default class EsLayer {
       markerList.push(marker);
     });
     return markerList;
+  }
+
+  roundToTheNearest = (number, nearest) => {
+    return Math.ceil(number / nearest) * nearest;
   }
 
   capitalizeFirstLetter = (string) => {

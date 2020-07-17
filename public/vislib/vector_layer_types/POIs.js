@@ -4,6 +4,8 @@ import { FilterBarQueryFilterProvider } from 'ui/filter_bar/query_filter';
 import { onDashboardPage } from 'ui/kibi/utils/on_page';
 import utils from 'plugins/enhanced_tilemap/utils';
 import { VislibVisTypeBuildChartDataProvider } from 'ui/vislib_vis_type/build_chart_data';
+import { getMarkerClusteringPrecision,
+  processAggRespForMarkerClustering } from './../../vislib/marker_cluster_helper';
 
 //react modal
 import React from 'react';
@@ -142,7 +144,7 @@ define(function (require) {
           searchSource.size(0);
           searchSource.aggs(function () {
             options.vis.requesting();
-            options.dsl[2].aggs.filtered_geohash.geohash_grid.precision = utils.getMarkerClusteringPrecision(options.zoom);
+            options.dsl[2].aggs.filtered_geohash.geohash_grid.precision = getMarkerClusteringPrecision(options.zoom);
             return options.dsl;
           });
         } else {
@@ -206,7 +208,7 @@ define(function (require) {
           if (_.get(aggResp, 'aggregations')) {
             const respProcessor = new RespProcessor(options.vis, buildChartData, utils);
             const aggChartData = respProcessor.process(aggResp);
-            processedAggResp = utils.processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
+            processedAggResp = processAggRespForMarkerClustering(aggChartData, geoFilter, this.limit, geo.field);
           }
 
           if (_.get(processedAggResp, 'docFilters.bool.should.length') >= 1) {
