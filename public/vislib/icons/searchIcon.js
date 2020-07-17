@@ -1,10 +1,8 @@
+import { spiderfyPlus } from '../../config/config';
+
 const L = require('leaflet');
 
 export const searchIcon = function (faIcon, color, size, overlap) {
-
-  function getPlusStyle() {
-    return `color: ${color}; `;
-  }
 
   let iconSize = [0, 0];
   switch (size) {
@@ -34,7 +32,7 @@ export const searchIcon = function (faIcon, color, size, overlap) {
   if (overlap) {
     html = `<div data-test-subj="search-icon" class="marker-icon ${size}">` +
       `<i class="${faIcon}" style="color:${color};"></i>` +
-      `<div style="${getPlusStyle()}">+</div>` +
+      `${spiderfyPlus}` +
       `</div>`;
   } else {
     html = `<div data-test-subj="search-icon" class="marker-icon ${size}"><i class="${faIcon}" style="color:${color};"></i></div>`;

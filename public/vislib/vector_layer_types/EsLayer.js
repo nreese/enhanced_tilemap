@@ -7,6 +7,7 @@ import utils from 'plugins/enhanced_tilemap/utils';
 import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerClusteringIcon';
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
 import { offsetMarkerCluster } from './../marker_cluster_helper';
+import { spiderfyPlus } from '../../config/config';
 
 let oms;
 export default class EsLayer {
@@ -134,6 +135,7 @@ export default class EsLayer {
         );
         self.bindPopup(layer, options);
         if (options.warning && options.warning.limit) {
+          //handling too many documents warnings
           layer.warning = `There are undisplayed POIs for this overlay due
         to having reached the limit currently set to ${options.warning.limit}`;
         }
@@ -348,7 +350,7 @@ export default class EsLayer {
         usual: '#00444444',
         highlighted: color
       },
-      nearbyDistance: 50
+      nearbyDistance: 40
     };
     oms = new OverlappingMarkerSpiderfier(leafletMap, options);
     markers.forEach((marker) => {
@@ -371,7 +373,7 @@ export default class EsLayer {
       oms.addListener('unspiderfy', (unSpiderfyedMarkers) => {
         unSpiderfyedMarkers.forEach(marker => {
           if (_.get(marker, '_icon.children[0].children[1]')) {
-            marker._icon.children[0].children[1].innerHTML = '+';
+            marker._icon.children[0].children[1].innerHTML = spiderfyPlus;
           }
         });
       });

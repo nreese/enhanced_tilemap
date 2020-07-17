@@ -13,6 +13,7 @@ import {
 } from './../../vislib/marker_cluster_helper';
 
 import { EuiButton } from '@elastic/eui';
+import { tooManyDocsWarningIcon } from '../../config/config';
 
 function getExtendedMapControl() {
   let esRefLayersOnMap = [];
@@ -252,7 +253,7 @@ function getExtendedMapControl() {
     if ($warningElement) {
       if (_someLayerHasTooManyDocumentsWarning()) {
         $layerControl.addClass('leaflet-control-layers-warning');
-        $warningElement.innerHTML = '<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>';
+        $warningElement.innerHTML = tooManyDocsWarningIcon;
       } else {
         $layerControl.removeClass('leaflet-control-layers-warning');
         $warningElement.innerHTML = '';
