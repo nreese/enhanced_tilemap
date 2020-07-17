@@ -364,7 +364,6 @@ define(function (require) {
         mainVisGeoFieldName: getGeoField().fieldname,
         geoFieldName: layerParams.geoField,
         searchSource: $scope.searchSource,
-        $element,
         leafletMap: map.leafletMap,
         zoom: map.leafletMap.getZoom()
       };

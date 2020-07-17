@@ -11,13 +11,8 @@ export default class EsLayer {
 
 
   createLayer = function (hits, aggs, geo, type, options) {
-    const layerControl = options.$element.find('.leaflet-control-layers');
     let layer = null;
     const self = this;
-
-    options.$legend = options.$element.find('a.leaflet-control-layers-toggle').get(0);
-    options.$legend.innerHTML = '';
-    layerControl.removeClass('leaflet-control-layers-warning');
 
     if ((aggs && aggs.length >= 1) || hits.length >= 1) {
       //using layer level config
@@ -128,9 +123,6 @@ export default class EsLayer {
         );
         self.bindPopup(layer, options);
         if (options.warning && options.warning.limit) {
-          //handling too many documents warnings
-          layerControl.addClass('leaflet-control-layers-warning');
-          options.$legend.innerHTML = `<i class="fa fa-exclamation-triangle text-color-warning doc-viewer-underscore"></i>`;
           layer.warning = `There are undisplayed POIs for this overlay due
         to having reached the limit currently set to ${options.warning.limit}`;
         }
