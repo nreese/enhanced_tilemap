@@ -17,6 +17,7 @@
     "lintfix": "eslint --fix public server index.js gulp.js",
     "build": "gulp build"
   },
+  "license": "SEE LICENSE IN LICENSE.md",
   "dependencies": {
     "angularjs-dropdown-multiselect": "^2.0.0-beta.10",
     "angularjs-slider": "~6.5.1",
