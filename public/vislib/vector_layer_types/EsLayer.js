@@ -8,7 +8,7 @@ import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/mark
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
 import { offsetMarkerCluster } from './../marker_cluster_helper';
 import { spiderfyPlus } from '../../config/config';
-import { bindPopup } from './bindPopup';
+import { bindPopup } from './bind_popup';
 
 let oms;
 export default class EsLayer {

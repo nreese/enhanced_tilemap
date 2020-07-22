@@ -1,7 +1,7 @@
 import utils from 'plugins/enhanced_tilemap/utils';
 const L = require('leaflet');
 
-const _createClusterGeohashPolygon = function (rectangle, color) {
+const createClusterGeohashPolygon = function (rectangle, color) {
   const corners = [
     [rectangle[3][0], rectangle[3][1]],
     [rectangle[1][0], rectangle[1][1]]
@@ -92,7 +92,7 @@ const bindPopup = function (layer, options) {
         }
       } else if (e.layer.geohashRectangle) {
         //for marker clusters
-        clusterPolygon = _createClusterGeohashPolygon(e.layer.geohashRectangle, options.color)
+        clusterPolygon = createClusterGeohashPolygon(e.layer.geohashRectangle, options.color)
           .addTo(options.leafletMap);
       }
     },
