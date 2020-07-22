@@ -3,7 +3,6 @@ const _ = require('lodash');
 const L = require('leaflet');
 
 import { toLatLng } from 'plugins/enhanced_tilemap/vislib/geo_point';
-import utils from 'plugins/enhanced_tilemap/utils';
 import { markerClusteringIcon } from 'plugins/enhanced_tilemap/vislib/icons/markerClusteringIcon';
 import { searchIcon } from 'plugins/enhanced_tilemap/vislib/icons/searchIcon';
 import { offsetMarkerCluster } from './../marker_cluster_helper';
@@ -27,6 +26,7 @@ export default class EsLayer {
       geo.type = geo.type.toLowerCase();
       if ('geo_point' === geo.type || 'point' === geo.type) {
         options.icon = _.get(options, 'icon', 'fas fa-map-marker-alt');
+        options.className = 'point-popup';
         const featuresForLayer = self._makeIndividualPoints(hits, geo, type, options)
           .concat(self._makeClusterPoints(aggs, layerControlIcon, layerControlColor, options));
         layer = new L.FeatureGroup(featuresForLayer);
