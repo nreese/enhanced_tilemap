@@ -48,6 +48,7 @@ const showTooltip = function (content, latLng, leafletMap, className) {
    */
 const bindPopup = function (layer, options) {
   let mouseoverId;
+  let isPoint;
   const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
   let clusterPolygon;
   const keepPopupOpen = (target) => {
@@ -55,7 +56,11 @@ const bindPopup = function (layer, options) {
     let popupClassnameCheck;
     if (popupType && popupType.className) {
       popupClassnameCheck = popupType.className.includes(mouseoverId);
-    } else if (target && target.classList && target.classList.contains('polygon-popup')) {
+    }
+    else if(isPoint) {
+      return false;
+    }
+    else if (target && target.classList && target.classList.contains('polygon-popup')) {
       popupClassnameCheck = true;
     }
     return popupClassnameCheck;
@@ -80,6 +85,9 @@ const bindPopup = function (layer, options) {
         // for points, polylines or polygons
         if (mouseoverId !== e.sourceTarget.feature.id) {
           mouseoverId = e.sourceTarget.feature.id;
+          if(e.sourceTarget.options.className === 'point-popup') {
+            isPoint = true;
+          }
           showTooltip(e.layer.content, e.latlng, options.leafletMap, e.sourceTarget.feature.id);
         }
       } else if (e.layer.geohashRectangle) {
@@ -99,6 +107,7 @@ const bindPopup = function (layer, options) {
           L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', _popupMouseOut);
           return true;
         }
+        isPoint = null;
         mouseoverId = null;
         options.leafletMap.closePopup();
       }

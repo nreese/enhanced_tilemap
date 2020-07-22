@@ -45,7 +45,6 @@ export default class EsLayer {
             oms.clearListeners('click');
           }
         };
-        console.log('a secret agents, EsLayer.js reporting for duty');
         bindPopup(layer, options);
       } else if ('geo_shape' === geo.type ||
         'polygon' === geo.type ||
@@ -137,7 +136,6 @@ export default class EsLayer {
             }
           }
         );
-        console.log('a secret agent, EsLayer.js reporting for duty');
         bindPopup(layer, options);
         if (options.warning && options.warning.limit) {
           //handling too many documents warnings
@@ -228,6 +226,7 @@ export default class EsLayer {
     const feature = L.marker(
       toLatLng(hitCoords),
       {
+        className: 'point-popup',
         icon: searchIcon(options.icon, options.color, options.size, overlap),
         pane: 'overlayPane'
       });

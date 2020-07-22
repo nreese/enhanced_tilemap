@@ -139,6 +139,7 @@ export default class Vector {
     const feature = L.marker(
       toLatLng(hit.geometry.coordinates),
       {
+        className: 'point-popup',
         icon: markerIcon(options.color, options.size)
       });
     _.set(feature, 'feature.id', hit.id);
