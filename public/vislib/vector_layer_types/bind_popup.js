@@ -51,7 +51,7 @@ const bindPopup = function (layer, options) {
   let isPoint;
   const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
   let clusterPolygon;
-  const keepPopupOpen = (target) => {
+  const keepPopupOpen = (target, currentTarget) => {
     const popupType = utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES);
     let popupClassnameCheck;
     if (popupType && popupType.className) {
@@ -60,7 +60,8 @@ const bindPopup = function (layer, options) {
     else if(isPoint) {
       return false;
     }
-    else if (target && target.classList && target.classList.contains('polygon-popup')) {
+    else if (target.classList.contains('polygon-popup') &&
+    currentTarget && currentTarget.classList.contains(mouseoverId)) {
       popupClassnameCheck = true;
     }
     return popupClassnameCheck;
@@ -70,7 +71,7 @@ const bindPopup = function (layer, options) {
     // get the element that the mouse hovered onto
     const target = e.toElement || e.relatedTarget;
     // check to see if the element is a popup OR id is the same as the feature hovered onto previously
-    if (keepPopupOpen(target)) {
+    if (keepPopupOpen(target, e.currentTarget)) {
       return true;
     }
     // detach the event
@@ -103,7 +104,7 @@ const bindPopup = function (layer, options) {
       } else {
         const target = e.originalEvent.toElement || e.originalEvent.relatedTarget;
         // check to see if the element is a popup
-        if (keepPopupOpen(target)) {
+        if (keepPopupOpen(target, e.currentTarget)) {
           L.DomEvent.on(options.leafletMap._popup._container, 'mouseout', _popupMouseOut);
           return true;
         }
