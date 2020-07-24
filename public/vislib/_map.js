@@ -449,7 +449,7 @@ define(function (require) {
       return isSame;
     };
 
-    TileMapMap.prototype.createBaseLayer = async function (getTileMapFromInvestigateYaml = false, url, options, enabled) {
+    TileMapMap.prototype.createBaseLayer = async function (getTileMapFromInvestigateYaml = null, url, options, enabled) {
       if (this._tileLayer) this._tileLayer.remove();
       if (getTileMapFromInvestigateYaml) {
         mapTiles = await getDefaultBaseLayer(getTileMapFromInvestigateYaml);
