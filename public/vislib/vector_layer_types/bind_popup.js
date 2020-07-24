@@ -60,8 +60,8 @@ const bindPopup = function (layer, options) {
     else if(isPoint) {
       return false;
     }
-    else if (target.classList.contains('polygon-popup') &&
-    currentTarget && currentTarget.classList.contains(mouseoverId)) {
+    else if (target && target.classList && target.classList.contains('polygon-popup') &&
+    currentTarget && currentTarget.classList && currentTarget.classList.contains(mouseoverId)) {
       popupClassnameCheck = true;
     }
     return popupClassnameCheck;
