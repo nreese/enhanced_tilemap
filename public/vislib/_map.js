@@ -23,18 +23,26 @@ define(function (require) {
     const defaultMapCenter = [15, 5];
     const defaultMarkerType = 'Scaled Circle Markers';
 
-    const mapTiles = {
-      url: '//a.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      options: {
-        attribution: 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-      }
-    };
+    let mapTiles;
+
     const markerTypes = {
       'Scaled Circle Markers': Private(require('./marker_types/scaled_circles')),
       'Shaded Circle Markers': Private(require('./marker_types/shaded_circles')),
       'Shaded Geohash Grid': Private(require('./marker_types/geohash_grid')),
       'Heatmap': Private(require('./marker_types/heatmap')),
     };
+
+    async function getDefaultBaseLayer(getTileMapFromInvestigateYaml) {
+      const tmsFromYaml = await getTileMapFromInvestigateYaml();
+      return {
+        url: tmsFromYaml.url || '//a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        options: {
+          maxZoom: tmsFromYaml.maxZoom || 18,
+          minZoom: tmsFromYaml.minZoom || 0,
+          attribution: tmsFromYaml.attribution || 'Map data © <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+        }
+      };
+    }
 
     /**
      * Tile Map Maps
@@ -441,45 +449,33 @@ define(function (require) {
       return isSame;
     };
 
-    TileMapMap.prototype.redrawDefaultMapLayers = function (url, options, enabled) {
+    TileMapMap.prototype.createBaseLayer = async function (getTileMapFromInvestigateYaml = null, url, options, enabled) {
+      if (this._tileLayer) this._tileLayer.remove();
+      if (getTileMapFromInvestigateYaml) {
+        mapTiles = await getDefaultBaseLayer(getTileMapFromInvestigateYaml);
+      }
+
       // Use WMS compliant server, if not enabled, use OSM mapTiles as default
       if (enabled) {
-        this._tileLayer.remove();
         this._tileLayer = L.tileLayer.wms(url, options);
       } else {
-        this._tileLayer.remove();
         this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
       }
-      this._tileLayer.setZIndex(-10);
       this._tileLayer.type = 'base';
+      this._tileLayer.setZIndex(-10);
+      // add base layer based on above logic and decide saturation based on saved settings
       this._tileLayer.addTo(this.leafletMap);
-      this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
-      // see note in _addDrawControl function
-      // this._layerControl.addOverlays([this._drawnItems]);
+      this.saturateTile(this._attr.isDesaturated, this._tileLayer);
     };
 
     TileMapMap.prototype._createMap = function (mapOptions) {
       if (this.leafletMap) this.destroy();
 
-      // Use WMS compliant server, if not enabled, use OSM mapTiles as default
-      if (this._attr.wms && this._attr.wms.enabled) {
-        this._tileLayer = L.tileLayer.wms(this._attr.wms.url, this._attr.wms.options);
-      } else {
-        this._tileLayer = L.tileLayer(mapTiles.url, mapTiles.options);
-      }
-      this._tileLayer.type = 'base';
-      this._tileLayer.setZIndex(-10);
-
       mapOptions.center = this._mapCenter;
       mapOptions.zoom = this._mapZoom;
 
       this.leafletMap = L.map(this._container, mapOptions);
-
-      // add base layer based on above logic and decide saturation based on saved settings
-      this._tileLayer.addTo(this.leafletMap);
-
-      this.saturateTile(this._attr.isDesaturated, this._tileLayer);
 
       this._layerControl = L.control.dndLayerControl(this.allLayers, this.esClient, this.mainSearchDetails, this.$element);
       this._layerControl.addTo(this.leafletMap);
