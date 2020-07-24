@@ -46,8 +46,8 @@ const showTooltip = function (content, latLng, leafletMap, className) {
    * @param layer {Object}
    * return {undefined}
    */
+let _mouseoverId;
 const bindPopup = function (layer, options) {
-  let mouseoverId;
   let isPoint;
   const KEEP_POPUP_OPEN_CLASS_NAMES = ['leaflet-popup', 'tooltip'];
   let clusterPolygon;
@@ -55,13 +55,13 @@ const bindPopup = function (layer, options) {
     const popupType = utils.getParent(target, KEEP_POPUP_OPEN_CLASS_NAMES);
     let popupClassnameCheck;
     if (popupType && popupType.className) {
-      popupClassnameCheck = popupType.className.includes(mouseoverId);
+      popupClassnameCheck = popupType.className.includes(_mouseoverId);
     }
-    else if(isPoint) {
+    else if (isPoint) {
       return false;
     }
     else if (target && target.classList && target.classList.contains('polygon-popup') &&
-    currentTarget && currentTarget.classList && currentTarget.classList.contains(mouseoverId)) {
+      currentTarget && currentTarget.classList && currentTarget.classList.contains(_mouseoverId)) {
       popupClassnameCheck = true;
     }
     return popupClassnameCheck;
@@ -76,7 +76,7 @@ const bindPopup = function (layer, options) {
     }
     // detach the event
     L.DomEvent.off(options.leafletMap._popup._container, 'mouseout', _popupMouseOut);
-    mouseoverId = null;
+    _mouseoverId = null;
     options.leafletMap.closePopup();
   };
 
@@ -84,9 +84,9 @@ const bindPopup = function (layer, options) {
     mouseover: function (e) {
       if (e.layer.content && e.sourceTarget.feature.id) {
         // for points, polylines or polygons
-        if (mouseoverId !== e.sourceTarget.feature.id) {
-          mouseoverId = e.sourceTarget.feature.id;
-          if(e.sourceTarget.options.className === 'point-popup') {
+        if (_mouseoverId !== e.sourceTarget.feature.id) {
+          _mouseoverId = e.sourceTarget.feature.id;
+          if (e.sourceTarget.options.className === 'point-popup') {
             isPoint = true;
           }
           showTooltip(e.layer.content, e.latlng, options.leafletMap, e.sourceTarget.feature.id);
@@ -109,11 +109,11 @@ const bindPopup = function (layer, options) {
           return true;
         }
         isPoint = null;
-        mouseoverId = null;
+        _mouseoverId = null;
         options.leafletMap.closePopup();
       }
     }
   });
 };
 
-export { bindPopup,  showTooltip };
+export { bindPopup, showTooltip };
