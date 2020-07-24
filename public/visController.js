@@ -29,7 +29,7 @@ define(function (require) {
     kibiState, savedSearches, savedDashboards, dashboardGroups, savedVisualizations,
     $scope, $rootScope, $element, $timeout, joinExplanation,
     Private, courier, config, getAppState, indexPatterns, $http, $injector,
-    timefilter, createNotifier, es, sirenSession, $route) {
+    timefilter, createNotifier, es, sirenSession, $route, serviceSettings) {
     const buildChartData = Private(VislibVisTypeBuildChartDataProvider);
     const queryFilter = Private(FilterBarQueryFilterProvider);
     const callbacks = Private(require('plugins/enhanced_tilemap/callbacks'));
@@ -75,6 +75,7 @@ define(function (require) {
       sirenSessionState.register(uiState, sirenSession, $route.current.params.id, $scope.vis.id);
       createDragAndDropPoiLayers();
       appendMap();
+      map.createBaseLayer(getTileMapFromInvestigateYaml, map._attr.wms.url, map._attr.wms.options, _.get(map, '_attr.wms.enabled', null));
       modifyToDsl();
       await setTooltipFormatter($scope.vis.params.tooltip, $scope.vis._siren);
       drawWfsOverlays();
@@ -442,7 +443,7 @@ define(function (require) {
 
         map.removeAllLayersFromMapandControl();
         // base layer
-        map.redrawDefaultMapLayers(visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
+        map.createBaseLayer(null, visParams.wms.url, visParams.wms.options, visParams.wms.enabled);
         await setTooltipFormatter(visParams.tooltip, $scope.vis._siren);
 
         if (isHeatMap()) {
@@ -694,6 +695,10 @@ define(function (require) {
       }
     }
 
+    async function getTileMapFromInvestigateYaml() {
+      const tmsService = await serviceSettings.getTMSService();
+      return tmsService.getTMSOptions();
+    }
 
     function appendMap() {
       const params = $scope.vis.params;
