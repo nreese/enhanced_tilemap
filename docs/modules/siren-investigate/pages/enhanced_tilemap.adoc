@@ -1,19 +1,15 @@
 == Enhanced Coordinate Map
 :page-partial:
 
-The Enhanced Coordinate Map visualization (beta) displays a geographic
-area overlaid with circles keyed to the data determined by the buckets
-you specify.
+The Enhanced Coordinate Map visualization (beta) displays a geographic area that is overlaid with circles. The circles are keyed to the data that is determined by the buckets that you specify.
 
-NOTE: By default, Siren Investigate uses a demonstration Siren tilemap server
-http://www.openstreetmap.org/[Open Street Maps] service to display map
-tiles. This server has limited features and you should update the
-tilemap settings to another tilemap provider that you have configured,
-especially in a production setting. To use other tile service providers,
-configure the
-ifdef::output-html[xref:setting-up-siren-investigate.adoc#_configuring_siren_investigate[tilemap settings]]
-ifdef::output-pdf[<<modules/siren-investigate/pages/setting-up-siren-investigate.adoc#_configuring_siren_investigate,tilemap settings>>]
-in `+investigate.yml+`.
+[IMPORTANT]
+====
+The default tilemap server service that is used to display map tiles, http://www.openstreetmap.org/[Open Street Maps], has limited features. Particularly in a production setting, it is recommended that you choose another tilemap provider and 
+ifdef::output-html[xref:setting-up-siren-investigate.adoc#_configuring_siren_investigate[configure the tilemap settings]]
+ifdef::output-pdf[<<modules/siren-investigate/pages/setting-up-siren-investigate.adoc#_configuring_siren_investigate,configure the tilemap settings>>]
+in the `+investigate.yml+` file.
+====
 
 
 [[UUID-b9e905a6-60f7-bacf-a8cc-92b18c8e234d]]
@@ -152,7 +148,7 @@ Tooltip Formatter::
 Close tooltip on mouseout::
   When mouse is hovered over aggregation a tooltip will appear. When the
   mouse is moved away from aggregation, the tool tip will disappear if
-  this box is ticked; it will remain if unticked.
+  this box is checked; it will remain if unchecked.
 Legend Scale::
   Configuration settings for how the aggregation is displayed on legend
   +
@@ -165,7 +161,7 @@ Legend Scale::
   classes for the legend scale
 
 Scroll Wheel Zoom::
-  When ticked, it is possible to use the mouse scroll wheel to toggle
+  When checked, it is possible to use the mouse scroll wheel to toggle
   map zoom level. (+ and - work toggle zoom regardless of this)
 Desaturate map tiles::
   Desaturates the map’s color to make the markers stand out more
@@ -300,7 +296,7 @@ You can still see the available layers for the WMS by running a
   company index in Siren’s classic demo (“location” has a Geo_Point
   field type):
   `+{ "agg": { "geohash_grid": { "field": "location" } } }+`
-  ** Sync Filters - When ticked, the WMS response includes the filters
+  ** Sync Filters - When checked, the WMS response includes the filters
   made using Selection tools, visualizations in the same and
   visualizations from other dashboards.
 
@@ -363,6 +359,7 @@ For more information, see the <<Detailed example of a stored layer configuration
 
 ===== Configurations by parameter or field
 You can configure some parameters by using one of the following methods: 
+
 * The *parameter* method outlines the exact parameter to use on the map. Parameters are configured by a string.
 * The *field* method relies on configuring a field that exists within the documents of each layer. Fields are configured by using a single element array. 
 
@@ -543,15 +540,15 @@ The spatial path loading method requires each feature to contain a spatial_path 
 ==== Usage
 To load files into Elasticsearch go to `siren-investigate` folder and run `./bin/load_map_reference_indices` script with appropriate arguments. 
 
-NOTE: Make sure a user that has Elasticserach write permissions is used for authorization.
+NOTE: Make sure a user that has Elasticsearch write permissions is used for authorization.
 
 *Mappings*
 
-The load script will automatically differantiate between *shape* and *point* geoJSON files and use appropriate mapping file from `/src/map_indices_loader` to create an elasticsearch inxed, a custom mapping can be passed in with arguments.
+The load script will automatically differentiate between *shape* and *point* geoJSON files and use appropriate mapping file from `/src/map_indices_loader` to create an elasticsearch index, a custom mapping can be passed in with arguments.
 
 *Arguments*
 
-* *-p/--path/--inputdir* specifies a path to the folder containg files
+* *-p/--path/--inputdir* specifies a path to the folder containing files
 * *-y/--yml* allows for using a custom investigate.yml. If omitted, the default configuration from `/config/investigate.yml` will be used
 * *--username <username> --password <password>* allows for specification of Elasticsearch authorization credentials. If <username> and <password> are left blank, environmental variables LOAD_LAYERS_ES_USERNAME, LOAD_LAYERS_ES_PASSWORD will be used. If not used at all, credentials specified in `/config/investigate.yml` will be used instead
 * *--ms* allows for use of a custom mappings JSON file for geo_shape objects (Polygons and Lines) instead of the default `/src/map_indices_loader/mappings_geoshape.json`
@@ -562,7 +559,7 @@ The load script will automatically differantiate between *shape* and *point* geo
 * *--structure/--spatialpath* determines the loading method
 * *-n* specifies the maximum number of documents per single request - higher number will result in heavier requests (default 500)
 * *-r/--simrequests* specifies the number of simultaneous requests made to Elasticsearch (default 40)
-* *--debug* outputs additional debug information, including Elasticsearch autorization credentials
+* *--debug* outputs additional debug information, including Elasticsearch authorization credentials
 
 *Examples*
 
@@ -593,7 +590,7 @@ It is possible to add a layer type corresponding to a group and we will explain 
 
 ** If the California nested group is toggled, only the checkboxes within that group will be toggled
 
-* If either a nested group or a layer box is unticked, the group will become indeterminate indicating that some of the boxes in that group are unchecked
+* If either a nested group or a layer box is unchecked, the group will become indeterminate indicating that some of the boxes in that group are unchecked
 
 * Finally, if no items in a group are checked, the group checkbox will be unchecked
 
